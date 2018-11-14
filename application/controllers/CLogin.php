@@ -23,7 +23,7 @@ class CLogin extends MY_Controller {
 		parent::__construct();
 		/*Additional code which you want to run automatically in every function call */
 		if($this->session->userdata('cbjsess001')){ 
-			redirect(base_url("welcome/test"),"_parent");
+			redirect(base_url("welcome/dashboard"),"_parent");
 		}
 	}
 	
