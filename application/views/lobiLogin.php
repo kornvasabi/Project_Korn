@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!--Author     : @arboshiki-->
 <html>
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-        <title>Login to LobiAdmin</title>
+        <title>Login to YTKMini</title>
         <link rel="shortcut icon" href="../public/lobiadmin-master/version/1.0/ajax/img/logo/lobiadmin-logo-16.ico" />
 
         <link rel="stylesheet" href="../public/lobiadmin-master/version/1.0/ajax/css/bootstrap.min.css">

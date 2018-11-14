@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 ?><!DOCTYPE html>
 <html lang="en">
@@ -87,7 +87,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 							<li>
 								<a href="#CHomenew/TypeCar">
 									<i class="fa fa-tags" aria-hidden="true"></i>
-									<span class="inner-text">ฟอร์มเปลี่ยนประเภทรถ</span>
+									<span class="inner-text">ฟอร์มเปลี่ยนกลุ่มรถ</span>
 								</a>
 							</li>	
 						</ul>
