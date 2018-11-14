@@ -100,23 +100,23 @@ class CHomenew extends MY_Controller {
 		$cond = "";
 		
 		if(isset($_REQUEST["inpCONTNO"])){
-			$cond .= " and a.CONTNO like '%".$_REQUEST["inpCONTNO"]."%'";
+			$cond .= " and isnull(a.CONTNO,'') like '%".$_REQUEST["inpCONTNO"]."%'";
 		}
 		
 		if(isset($_REQUEST["inpSTRNO"])){
-			$cond .= " and a.STRNO like '%".$_REQUEST["inpSTRNO"]."%'";
+			$cond .= " and isnull(a.STRNO,'') like '%".$_REQUEST["inpSTRNO"]."%'";
 		}
 		
 		if(isset($_REQUEST["inpLOCAT"])){
-			$cond .= " and a.CRLOCAT like '%".$_REQUEST["inpLOCAT"]."%'";
+			$cond .= " and isnull(a.CRLOCAT,'') like '%".$_REQUEST["inpLOCAT"]."%'";
 		}
 		
 		if(isset($_REQUEST["inpCUSCOD"])){
-			$cond .= " and c.CUSCOD like '%".$_REQUEST["inpCUSCOD"]."%'";
+			$cond .= " and isnull(c.CUSCOD,'') like '%".$_REQUEST["inpCUSCOD"]."%'";
 		}
 		
 		if(isset($_REQUEST["inpCUSNAME"])){
-			$cond .= " and d.SNAM+d.NAME1+' '+d.NAME2 like '%".$_REQUEST["inpCUSNAME"]."%'";
+			$cond .= " and isnull(d.SNAM,'')+isnull(d.NAME1,'')+' '+isnull(d.NAME2,'') like '%".$_REQUEST["inpCUSNAME"]."%'";
 		}
 		
 		if(isset($_REQUEST["inpGCODE"])){
