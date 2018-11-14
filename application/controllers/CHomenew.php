@@ -72,10 +72,23 @@ class CHomenew extends MY_Controller {
 						<select id='inpGCODE' class='form-control input-sm select2'>
 							<option value=''>ทั้งหมด</option>
 							<option value='02'>02.รถจักรยานยนต์มือสอง (เกรด A)</option>
+							<option value='04'>04.มือสองเกรด A รุ่นสปอร์ต (รุ่นเล็ก)</option>
 							<option value='15'>15.รอซ่อม</option>
 							<option value='16'>16.ระหว่างการซ่อม</option>
+							<option value='022'>022.มือสองเกรด A รุ่นครอบครัว</option>
+							<option value='023'>023.มือสองเกรด A รุ่นสปอร์ต (รุ่นใหญ่)</option>
+							<option value='024'>024.มือสองเกรด A รุ่นAT</option>
 							<option value='29'>29.รถมือสองซ่อมเสร็จรอQC</option>
 							<option value='30'>30.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
+							
+							<option value='04F'>04F.มือสองเกรด A รุ่นสปอร์ต (รุ่นเล็ก)</option>
+							<option value='15F'>15F.รอซ่อม</option>
+							<option value='16F'>16F.ระหว่างการซ่อม</option>
+							<option value='22F'>22F.มือสองเกรด A รุ่นครอบครัว</option>
+							<option value='23F'>23F.มือสองเกรด A รุ่นสปอร์ต (รุ่นใหญ่)</option>
+							<option value='24F'>24F.มือสองเกรด A รุ่นAT</option>
+							<option value='29F'>29F.รถมือสองซ่อมเสร็จรอQC</option>
+							<option value='30F'>30F.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
 						</select>
 					</div>
 				</div>
@@ -121,12 +134,12 @@ class CHomenew extends MY_Controller {
 		
 		if(isset($_REQUEST["inpGCODE"])){
 			if($_REQUEST["inpGCODE"] == ''){
-				$cond .= " and a.GCODE in ('02','15','16','29','30') ";
+				$cond .= " and a.GCODE in ('02','04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
 			}else{
 				$cond .= " and a.GCODE = '".$_REQUEST["inpGCODE"]."' ";				
 			}
 		}else{
-			$cond .= " and a.GCODE in ('02','15','16','29','30') ";
+			$cond .= " and a.GCODE in ('02','04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
 		}
 		
 		$sql = "
@@ -223,7 +236,7 @@ class CHomenew extends MY_Controller {
 				select CONTNO,CUSCOD from HIINCOME.dbo.HARFINC
 			) c on a.CONTNO=c.CONTNO
 			left join HIINCOME.dbo.CUSTMAST d on c.CUSCOD=d.CUSCOD
-			where a.STRNO='".$STRNO."' and a.GCODE in ('02','15','16','29','30')
+			where a.STRNO='".$STRNO."' and a.GCODE in ('02','04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F')
 		";
 		$query = $this->db->query($sql);
 		
@@ -290,11 +303,24 @@ class CHomenew extends MY_Controller {
 							<b>เปลี่ยนเป็นกลุ่ม</b>
 							<select id='t2inpGCODENEW' class='form-control input-sm select2'>
 								<option value=''>เลือก</option>
-								<option value='02' ".($data['GCODE'] == '02' ? 'disabled':'').">02.รถจักรยานยนต์มือสอง (เกรด A)</option>
-								<option value='15' ".($data['GCODE'] == '15' ? 'disabled':'').">15.รอซ่อม</option>
-								<option value='16' ".($data['GCODE'] == '16' ? 'disabled':'').">16.ระหว่างการซ่อม</option>
-								<option value='29' ".($data['GCODE'] == '29' ? 'disabled':'').">29.รถมือสองซ่อมเสร็จรอQC</option>
-								<option value='30' ".($data['GCODE'] == '30' ? 'disabled':'').">30.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
+								<option value='02' ".($data['GCODE'] == '02' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">02.รถจักรยานยนต์มือสอง (เกรด A)</option>
+								<option value='04' ".($data['GCODE'] == '04' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">04.มือสองเกรด A รุ่นสปอร์ต (รุ่นเล็ก)</option>
+								<option value='15' ".($data['GCODE'] == '15' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">15.รอซ่อม</option>
+								<option value='16' ".($data['GCODE'] == '16' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">16.ระหว่างการซ่อม</option>
+								<option value='022' ".($data['GCODE'] == '022' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">022.มือสองเกรด A รุ่นครอบครัว</option>
+								<option value='023' ".($data['GCODE'] == '023' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">023.มือสองเกรด A รุ่นสปอร์ต (รุ่นใหญ่)</option>
+								<option value='024' ".($data['GCODE'] == '024' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">024.มือสองเกรด A รุ่นAT</option>
+								<option value='29' ".($data['GCODE'] == '29' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">29.รถมือสองซ่อมเสร็จรอQC</option>
+								<option value='30' ".($data['GCODE'] == '30' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">30.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
+								
+								<option value='04F' ".($data['GCODE'] == '15F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">04F.มือสองเกรด A รุ่นสปอร์ต (รุ่นเล็ก)</option>
+								<option value='15F' ".($data['GCODE'] == '15F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">15F.รอซ่อม</option>
+								<option value='16F' ".($data['GCODE'] == '16F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">16F.ระหว่างการซ่อม</option>
+								<option value='22F' ".($data['GCODE'] == '22F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">22F.มือสองเกรด A รุ่นครอบครัว</option>
+								<option value='23F' ".($data['GCODE'] == '23F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">23F.มือสองเกรด A รุ่นสปอร์ต (รุ่นใหญ่)</option>
+								<option value='24F' ".($data['GCODE'] == '24F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">24F.มือสองเกรด A รุ่นAT</option>
+								<option value='29F' ".($data['GCODE'] == '29F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">29F.รถมือสองซ่อมเสร็จรอQC</option>
+								<option value='30F' ".($data['GCODE'] == '30F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">30F.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
 							</select>
 						</div>
 					</div>
