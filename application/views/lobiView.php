@@ -78,12 +78,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 						<span class="inner-text">Dashboard</span>
 					</a>
 				</li>
-				<li>
+				<li class="opened">
 					<a href="#">
 						<i class="fa fa-folder-o" aria-hidden="true"></i>
 						<span class="inner-text">MENU</span>
-						
-						<ul>
+						<i class="menu-item-toggle-icon fa fa-chevron-circle-down"></i>
+						<ul style='display:block;'>
 							<li>
 								<a href="#CHomenew/TypeCar">
 									<i class="fa fa-tags" aria-hidden="true"></i>

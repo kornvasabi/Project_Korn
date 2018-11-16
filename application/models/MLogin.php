@@ -16,4 +16,7 @@ class MLogin extends CI_Model {
 		return $this->db->query($sql);
 	}
 	
+	public function getmenuclaim(){
+		
+	}
 }
