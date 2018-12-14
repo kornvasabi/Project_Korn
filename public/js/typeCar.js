@@ -62,6 +62,13 @@ function afterSearch(){
 			success:function(data){
 				$('#tab2_main').find('.spinner, .spinner-backdrop').remove();
 				$('#tab2_main').html(data.html);
+				
+				if($('.tab1[name="home"]').attr('cup') == 'T'){
+					$('#tab2save').attr('disabled',false);	
+				}else{
+					$('#tab2save').attr('disabled',true);	
+				}				
+				
 				afterSelect();
 			}
 		});

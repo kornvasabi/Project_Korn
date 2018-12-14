@@ -26,6 +26,21 @@ class CLogout extends MY_Controller {
 	function lock(){
 		$sess = $this->session->userdata('cbjsess001');
 		
+		$this->session->unset_userdata('cbjsess001');
+		$sess_array = array(
+			'employeeCode' => $sess['employeeCode'],
+			'IDNo' => $sess['IDNo'],
+			'USERID' => $sess['USERID'],
+			'password' => $sess['password'],
+			'name' => $sess['name'],
+			'positionName' => $sess['positionName'],
+			'corpName' => $sess['corpName'],
+			'branch' => $sess['branch'],
+			'lock' => 'yes',
+			'db' => $sess['db']
+		);
+		$this->session->set_userdata('cbjsess001',$sess_array);
+		
 		$data["user"]	  = $sess["name"];
 		$data["position"] = $sess["positionName"];
 		$this->load->view('lobiLock',$data);
@@ -46,7 +61,23 @@ class CLogout extends MY_Controller {
 		
 		if($sess["password"] == md5($_REQUEST["pass"])){
 			//redirect(base_url("/welcome/test"),"_parent"); exit;
-
+			$sess = $this->session->userdata('cbjsess001');
+		
+			$this->session->unset_userdata('cbjsess001');
+			$sess_array = array(
+				'employeeCode' => $sess['employeeCode'],
+				'IDNo' => $sess['IDNo'],
+				'USERID' => $sess['USERID'],
+				'password' => $sess['password'],
+				'name' => $sess['name'],
+				'positionName' => $sess['positionName'],
+				'corpName' => $sess['corpName'],
+				'branch' => $sess['branch'],
+				'lock' => 'no',
+				'db' => $sess['db']
+			);
+			$this->session->set_userdata('cbjsess001',$sess_array);
+			
 			$response = array("html"=>"","status"=>true);
 			echo json_encode($response);
 		}else{

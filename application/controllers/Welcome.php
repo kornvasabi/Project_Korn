@@ -2,58 +2,45 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Welcome extends MY_Controller {
-
-	/**
-	 * Index Page for this controller.
-	 *
-	 * Maps to the following URL
-	 * 		http://example.com/index.php/welcome
-	 *	- or -
-	 * 		http://example.com/index.php/welcome/index
-	 *	- or -
-	 * Since this controller is set as the default controller in
-	 * config/routes.php, it's displayed at http://example.com/
-	 *
-	 * So any other public methods not prefixed with an underscore will
-	 * map to /index.php/welcome/<method_name>
-	 * @see https://codeigniter.com/user_guide/general/urls.html
-	 */
+	private $sess = array();
+	
 	function __construct()
 	{
 		parent::__construct();
 		/*Additional code which you want to run automatically in every function call */
-		
-		if(!$this->session->userdata('cbjsess001')){ 
+		$sess = $this->session->userdata('cbjsess001');
+		if(!$sess){ 
 			//$data["user"] = $this->username;
 			//$this->load->view('lobiLock',$data); 
 			$html = "คุณทิ้งระบบไว้นานเกินไป โปรดเข้าสู่ระบบใหม่อีกครั้ง <a href='".base_url("/clogin/index")."'>คลิก</a>";
 			echo $html; exit;
+		}else{
+			foreach ($sess as $key => $value) {
+				if($key == "lock" and $value == "yes"){
+					redirect(base_url("clogout/lock"),"_parent");
+				}
+				
+                $this->sess[$key] = $value;
+            }
 		}
 	}
 	
 	public function index()
 	{
-		$this->load->view('lobiView');
-	}
-	
-	function testload(){
-		$html = "
-			<div style='width:100%;height:calc(100vh - 135px);background-color:#fff;'>			
-				<div class='col-md-3'>
-					".$this->input("text","idTest",array('form-control','test'),array(),'test')."
-				</div>
-				<div class='col-md-3'>
-					".$this->input("button","idTest",array('btn btn-primary btn-outline btn-pretty','test'),array(),'click')."
-				</div>				
-			</div>
-		";
+		$this->load->model('MLogin');
 		
-		echo $html;
-	}
-	
-	function logout(){
-		$this->session->unset_userdata('cbjsess001');
+		$data = array();
+		$data["menu"] = $this->MLogin->getmenuclaim();
+		$data["branch"] = $this->sess["branch"];
+		$data["name"] = $this->sess["employeeCode"].'<br>'.$this->sess["name"];
+		$data["db"] = $this->sess["db"];
 		
+		$this->load->view('lobiView',$data);
+	}	
+	
+	function getmenu(){
+		$mid = $_REQUEST['mid'];
+		return json_encode($this->MLogin->getclaim($mid));
 	}
 	
 	function pages(){

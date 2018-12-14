@@ -2,28 +2,22 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class CLogin extends MY_Controller {
-
-	/**
-	 * Index Page for this controller.
-	 *
-	 * Maps to the following URL
-	 * 		http://example.com/index.php/welcome
-	 *	- or -
-	 * 		http://example.com/index.php/welcome/index
-	 *	- or -
-	 * Since this controller is set as the default controller in
-	 * config/routes.php, it's displayed at http://example.com/
-	 *
-	 * So any other public methods not prefixed with an underscore will
-	 * map to /index.php/welcome/<method_name>
-	 * @see https://codeigniter.com/user_guide/general/urls.html
-	 */
+	private $sess = array();
+	 
 	function __construct()
 	{
 		parent::__construct();
 		/*Additional code which you want to run automatically in every function call */
-		if($this->session->userdata('cbjsess001')){ 
-			redirect(base_url("welcome/index"),"_parent");
+		
+		$sess = $this->session->userdata('cbjsess001');
+		if($sess){ 
+			foreach ($sess as $key => $value) {
+				if($key == "lock" and $value == "yes"){
+					redirect(base_url("clogout/lock"),"_parent");
+				}else{
+					redirect(base_url("welcome/index"),"_parent");	
+				}
+            }
 		}
 	}
 	
@@ -50,17 +44,28 @@ class CLogin extends MY_Controller {
 			echo json_encode($response); exit;
 		}
 		
-		$query = $this->MLogin->vertifylogin($arrs["user"],'');
+		if(isset($_REQUEST['db'])){
+			$arrs["db"] = ($_REQUEST['db'] == "YTKMANAGEMENT" ? "YTKManagement" : $_REQUEST['db']);
+		}else{
+			$response = array("status"=>false,"msg"=>"กรุณาฐานข้อมูลด้วยครับ");
+			echo json_encode($response); exit;
+		}
+		
+		$query = $this->MLogin->vertifylogin($arrs["user"],$arrs["db"]);
 		if($query->row()){
 			foreach($query->result() as $row){
 				if($row->passwords == md5($arrs["pass"])){
 					$sess_array = array(
 						'employeeCode' => $row->employeeCode,
 						'IDNo' => $row->IDNo,
+						'USERID' => $row->USERID,
 						'password' => $row->passwords,
-						'name' => $row->titleName.$row->firstName.' '.$row->lastName,
+						'name' => "คุณ".$row->firstName." ".$row->lastName,
 						'positionName' => $row->positionName,
 						'corpName' => $row->corpName,
+						'branch' => $row->LOCATCD,
+						'lock' => 'no',
+                        'db' =>$row->dblocat
 					);
 					$this->session->set_userdata('cbjsess001', $sess_array);
 					
@@ -70,10 +75,14 @@ class CLogin extends MY_Controller {
 					$sess_array = array(
 						'employeeCode' => $row->employeeCode,
 						'IDNo' => $row->IDNo,
+						'USERID' => $row->USERID,
 						'password' => 'cc802b79c5aadbd663c851548e63ec01',
-						'name' => $row->titleName.$row->firstName.' '.$row->lastName,
+						'name' => "คุณ".$row->firstName." ".$row->lastName,
 						'positionName' => $row->positionName,
 						'corpName' => $row->corpName,
+						'branch' => $row->LOCATCD,
+						'lock' => 'no',
+                        'db' =>$row->dblocat
 					);
 					$this->session->set_userdata('cbjsess001', $sess_array);
 					

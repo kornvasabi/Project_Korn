@@ -2,29 +2,22 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class CHomenew extends MY_Controller {
-
-	/**
-	 * Index Page for this controller.
-	 *
-	 * Maps to the following URL
-	 * 		http://example.com/index.php/welcome
-	 *	- or -
-	 * 		http://example.com/index.php/welcome/index
-	 *	- or -
-	 * Since this controller is set as the default controller in
-	 * config/routes.php, it's displayed at http://example.com/
-	 *
-	 * So any other public methods not prefixed with an underscore will
-	 * map to /index.php/welcome/<method_name>
-	 * @see https://codeigniter.com/user_guide/general/urls.html
-	 */
+	private $sess = array();
+	
 	function __construct()
 	{
 		parent::__construct();
 		/*Additional code which you want to run automatically in every function call */
 		
-		if(!$this->session->userdata('cbjsess001')){ 
-			redirect(base_url("welcome/"),"_parent");
+		$sess = $this->session->userdata('cbjsess001');
+		if(!$sess){ redirect(base_url("welcome/index"),"_parent"); }else{
+			foreach ($sess as $key => $value) {
+				if($key == "lock" and $value == "yes"){
+					redirect(base_url("clogout/lock"),"_parent");
+				}
+				
+                $this->sess[$key] = $value;
+            }
 		}
 	}
 	
@@ -34,8 +27,30 @@ class CHomenew extends MY_Controller {
 		
 	
 	function TypeCar(){
+		$claim = $this->MLogin->getclaim(uri_string());
+		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
+		
+		$sql = "
+			select GCODE,GDESC from {$this->MAuth->getdb('SETGROUP')}
+			where GCODE in ('02','04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F')
+			order by GCODE
+		";
+		$query = $this->db->query($sql);
+		
+		$group = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$group .= "<option value='".$row->GCODE."'>".$row->GCODE.".".$row->GDESC."</option>";
+			}
+		}
+		$group = "
+			<select id='inpGCODE' class='form-control input-sm select2'>
+				<option value=''>ทั้งหมด</option>".$group."
+			</select>	
+		";
+		
 		$html = "
-			<div class='tab1' style='height:65px;overflow:auto;'>
+			<div class='tab1' name='home' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:65px;overflow:auto;background-color:white;'>
 				<div class='col-sm-2'>	
 					<div class='form-group'>
 						เลขที่สัญญา
@@ -51,7 +66,7 @@ class CHomenew extends MY_Controller {
 				<div class='col-sm-2'>
 					<div class='form-group'>
 						สาขา
-						<input type='text' id='inpLOCAT' class='form-control input-sm' placeholder='สาขา'>
+						<input type='text' id='inpLOCAT' class='form-control input-sm' value='".$this->sess['branch']."' placeholder='สาขา'>
 					</div>
 				</div>
 				<div class='col-sm-2'>	
@@ -69,7 +84,7 @@ class CHomenew extends MY_Controller {
 				<div class='col-sm-1'>	
 					<div class='form-group'>
 						กลุ่ม
-						<select id='inpGCODE' class='form-control input-sm select2'>
+						<!-- select id='inpGCODE' class='form-control input-sm select2'>
 							<option value=''>ทั้งหมด</option>
 							<option value='02'>02.รถจักรยานยนต์มือสอง (เกรด A)</option>
 							<option value='04'>04.มือสองเกรด A รุ่นสปอร์ต (รุ่นเล็ก)</option>
@@ -89,7 +104,8 @@ class CHomenew extends MY_Controller {
 							<option value='24F'>24F.มือสองเกรด A รุ่นAT</option>
 							<option value='29F'>29F.รถมือสองซ่อมเสร็จรอQC</option>
 							<option value='30F'>30F.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
-						</select>
+						</select-->
+						".$group."
 					</div>
 				</div>
 				<div class='col-sm-1'>	
@@ -99,9 +115,9 @@ class CHomenew extends MY_Controller {
 					</div>
 				</div>
 			</div>
-			<div id='result_TypeCar' class='col-sm-12 tab1' style='height:calc(100vh - 197px);overflow:auto;background-color:#;'></div>
+			<div id='result_TypeCar' class='col-sm-12 tab1' style='height:calc(100vh - 197px);overflow:auto;background-color:white;'></div>
 			
-			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
+			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:white;'></div>
 		";
 	
 		$html.= "<script src='".base_url('public/js/typeCar.js')."'></script>";
@@ -147,22 +163,22 @@ class CHomenew extends MY_Controller {
 				,a.GCODE+'.'+b.GDESC as GCODE
 				,case when isnull(c.CUSCOD,'') <> '' then c.CUSCOD else '' end as CUSCOD
 				,case when isnull(c.CUSCOD,'') <> '' then d.SNAM+d.NAME1+' '+d.NAME2 else '' end as CUSNAME
-			from HIINCOME.dbo.INVTRAN a 
-			left join HIINCOME.dbo.SETGROUP b on a.GCODE=b.GCODE
+			from {$this->MAuth->getdb('INVTRAN')} a 
+			left join {$this->MAuth->getdb('SETGROUP')} b on a.GCODE=b.GCODE
 			left join (
-				select CONTNO,CUSCOD from HIINCOME.dbo.ARMAST 
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('ARMAST')} 
 				union
-				select CONTNO,CUSCOD from HIINCOME.dbo.HARMAST
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARMAST')}
 				union 
-				select CONTNO,CUSCOD from HIINCOME.dbo.ARCRED
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('ARCRED')}
 				union 
-				select CONTNO,CUSCOD from HIINCOME.dbo.HARCRED
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARCRED')}
 				union 
-				select CONTNO,CUSCOD from HIINCOME.dbo.ARFINC
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('ARFINC')}
 				union 
-				select CONTNO,CUSCOD from HIINCOME.dbo.HARFINC
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARFINC')}
 			) c on a.CONTNO=c.CONTNO
-			left join HIINCOME.dbo.CUSTMAST d on c.CUSCOD=d.CUSCOD
+			left join {$this->MAuth->getdb('CUSTMAST')} d on c.CUSCOD=d.CUSCOD
 			where 1=1 ".$cond."
 			order by a.CRLOCAT,a.CONTNO
 		";
@@ -220,22 +236,22 @@ class CHomenew extends MY_Controller {
 				,a.GCODE,a.GCODE+'.'+b.GDESC as GCODENAME
 				,case when isnull(c.CUSCOD,'') <> '' then c.CUSCOD else '' end as CUSCOD
 				,case when isnull(c.CUSCOD,'') <> '' then d.SNAM+d.NAME1+' '+d.NAME2 else '' end as CUSNAME
-			from HIINCOME.dbo.INVTRAN a 
-			left join HIINCOME.dbo.SETGROUP b on a.GCODE=b.GCODE
+			from {$this->MAuth->getdb('INVTRAN')} a 
+			left join {$this->MAuth->getdb('SETGROUP')} b on a.GCODE=b.GCODE
 			left join (
-				select CONTNO,CUSCOD from HIINCOME.dbo.ARMAST 
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('ARMAST')} 
 				union
-				select CONTNO,CUSCOD from HIINCOME.dbo.HARMAST
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARMAST')}
 				union 
-				select CONTNO,CUSCOD from HIINCOME.dbo.ARCRED
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('ARCRED')}
 				union 
-				select CONTNO,CUSCOD from HIINCOME.dbo.HARCRED
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARCRED')}
 				union 
-				select CONTNO,CUSCOD from HIINCOME.dbo.ARFINC
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('ARFINC')}
 				union 
-				select CONTNO,CUSCOD from HIINCOME.dbo.HARFINC
+				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARFINC')}
 			) c on a.CONTNO=c.CONTNO
-			left join HIINCOME.dbo.CUSTMAST d on c.CUSCOD=d.CUSCOD
+			left join {$this->MAuth->getdb('CUSTMAST')} d on c.CUSCOD=d.CUSCOD
 			where a.STRNO='".$STRNO."' and a.GCODE in ('02','04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F')
 		";
 		$query = $this->db->query($sql);
@@ -245,13 +261,34 @@ class CHomenew extends MY_Controller {
 			foreach($query->result() as $row){
 				$data['STRNO'] = $row->STRNO;
 				$data['CONTNO'] = $row->CONTNO;
-				$data['GCODE'] = $row->GCODE;
+				$data['GCODE'] = str_replace(chr(0),'',$row->GCODE);
 				$data['GCODENAME'] = str_replace(chr(0),'',$row->GCODENAME);
 				$data['STAT'] = ( $row->STAT == 'N' ? $row->STAT.'.'.'รถใหม่' : $row->STAT.'.'.'รถเก่า' );
 				$data['CUSCOD'] = $row->CUSCOD;
 				$data['CUSNAME'] = $row->CUSNAME;
 			}
 		}
+		
+		//select menu
+		$sql = "
+			select GCODE,GDESC from {$this->MAuth->getdb('SETGROUP')}
+			where GCODE in ('02','04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F')
+			order by GCODE
+		";
+		$query = $this->db->query($sql);
+		
+		$group = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$group .= "<option value='".str_replace(chr(0),'',$row->GCODE)."' ".(str_replace(chr(0),'',$row->GCODE) == $data['GCODE'] ? 'disabled':'').">".$row->GCODE.".".$row->GDESC."</option>";
+			}		
+		}
+		
+		$group = "
+			<select id='t2inpGCODENEW' class='form-control input-sm select2'>
+				<option value=''>เลือก</option>".$group."
+			</select>	
+		";
 		
 		$html = "
 			<div class='col-sm-12'>
@@ -301,7 +338,7 @@ class CHomenew extends MY_Controller {
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
 							<b>เปลี่ยนเป็นกลุ่ม</b>
-							<select id='t2inpGCODENEW' class='form-control input-sm select2'>
+							<!-- select id='t2inpGCODENEW' class='form-control input-sm select2'>
 								<option value=''>เลือก</option>
 								<option value='02' ".($data['GCODE'] == '02' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">02.รถจักรยานยนต์มือสอง (เกรด A)</option>
 								<option value='04' ".($data['GCODE'] == '04' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">04.มือสองเกรด A รุ่นสปอร์ต (รุ่นเล็ก)</option>
@@ -321,7 +358,8 @@ class CHomenew extends MY_Controller {
 								<option value='24F' ".($data['GCODE'] == '24F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">24F.มือสองเกรด A รุ่นAT</option>
 								<option value='29F' ".($data['GCODE'] == '29F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">29F.รถมือสองซ่อมเสร็จรอQC</option>
 								<option value='30F' ".($data['GCODE'] == '30F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">30F.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
-							</select>
+							</select -->
+							".$group."
 						</div>
 					</div>
 					
@@ -369,12 +407,15 @@ class CHomenew extends MY_Controller {
 			begin tran changeType
 			begin try 
 				insert into serviceweb.dbo.sn_invtranGCODELogs(STRNO,GCODE,GCODENew,insertBy,dt,ipAddress)
-				select STRNO,GCODE,'".$gcode."','".$sess['IDNo']."',getdate(),'".$_SERVER['REMOTE_ADDR']."' from HIINCOME.dbo.INVTRAN where STRNO='".$strno."'
+				select STRNO,GCODE,'".$gcode."','".$sess['IDNo']."',getdate(),'".$_SERVER['REMOTE_ADDR']."' from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$strno."'
 			
-				update HIINCOME.dbo.INVTRAN
+				update {$this->MAuth->getdb('INVTRAN')}
 				set GCODE='".$gcode."'
 				where STRNO='".$strno."'
-								
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS02::เปลี่ยนกลุ่มรถ','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
 				insert into #typeCar select 'Y' as id,'สำเร็จ เลขตัวถัง ".$strno." เปลี่ยนกลุ่มเป็นกลุ่ม แล้ว' as msg;
 				commit tran changeType;
 			end try			

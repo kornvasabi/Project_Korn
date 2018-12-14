@@ -37,7 +37,7 @@ $(function(){
     
     //LobiBox default options
     Lobibox.notify.OPTIONS = $.extend({}, Lobibox.notify.OPTIONS, {
-        soundPath: 'sound/lobibox/'
+        soundPath: '../../YTKMini/public/lobiadmin-master/version/1.0/ajax/sound/lobibox/'
     });
     
     /**
