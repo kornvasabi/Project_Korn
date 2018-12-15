@@ -21,78 +21,79 @@ class CReport011 extends MY_Controller {
 				
 		$html = "
 			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div style='height:65px;overflow:auto;'>					
-					<div class='col-xs-2 col-sm-1'>	
-						<div class='form-group'>
-							รหัสสาขา
-							<select id='LOCAT' class='form-control input-sm chosen-select' data-placeholder='รหัสสาขา'>
-								<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>
-							</select>
+				<div class='col-sm-12' style='height:130px;overflow:auto;'>					
+					<div class='row'>
+						<div class='col-xs-2 col-sm-2'>	
+							<div class='form-group'>
+								รหัสสาขา
+								<select id='LOCAT' class='form-control input-sm chosen-select' data-placeholder='รหัสสาขา'>
+									<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>
+								</select>
+							</div>
+						</div>
+						<div class='col-xs-2 col-sm-2'>	
+							<div class='form-group'>
+								เลขที่สัญญา
+								<input type='text' id='CONTNO' class='form-control input-sm' placeholder='เลขที่สัญญา' >
+							</div>
+						</div>
+						<div class='col-xs-2 col-sm-2'>	
+							<div class='form-group'>
+								จากวันที่ชำระ
+								<input type='text' id='FPAYDT' class='form-control input-sm' placeholder='จากวันที่ชำระ' data-provide='datepicker' data-date-language='th-th'>
+							</div>
+						</div>
+						<div class='col-xs-2 col-sm-2'>	
+							<div class='form-group'>
+								ถึงวันที่ชำระ
+								<input type='text' id='TPAYDT' class='form-control input-sm' placeholder='ถึงวันที่ชำระ' data-provide='datepicker' data-date-language='th-th'>
+							</div>
+						</div>
+						<div class='col-xs-2 col-sm-2'>	
+							<div class='form-group'>
+								พนักงานเก็บเงิน
+								<select id='BILLCOLL' class='form-control input-sm chosen-select' data-placeholder='พนักงานเก็บเงิน'></select>
+							</div>
+						</div>						
+						<div class='col-xs-2 col-sm-2'>	
+							<div class='form-group'>
+								กลุ่มสินค้า
+								<select id='GCODE' class='form-control input-sm chosen-select' data-placeholder='กลุ่มสินค้า'></select>
+							</div>
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-1'>	
-						<div class='form-group'>
-							เลขที่สัญญา
-							<input type='text' id='CONTNO' class='form-control input-sm' placeholder='เลขที่สัญญา' >
+					<div class='row'>	
+						<div class='col-xs-2 col-sm-2'>	
+							<div class='form-group'>
+								เรียงข้อมูลตาม
+								<select id='ORDERBY' class='form-control input-sm chosen-select' data-placeholder='เรียงข้อมูลตาม'>
+									<option value='LOCAT' selected>รหัสสาขา</option>
+									<option value='CONTNO'>เลขที่สัญญา</option>
+									<option value='CUSCOD'>รหัสลูกค้า</option>
+									<option value='SDATE'>วันที่ทำสัญญา</option>
+								</select>
+							</div>
 						</div>
-					</div>
-					
-					<div class='col-xs-2 col-sm-1'>	
-						<div class='form-group'>
-							จากวันที่ชำระ
-							<input type='text' id='FPAYDT' class='form-control input-sm' placeholder='จากวันที่ชำระ' data-provide='datepicker' data-date-language='th-th'>
+						<div class='col-xs-2 col-sm-2'>	
+							<div class='form-group'>
+								วิธีรับรู้
+								<select id='WAY' class='form-control input-sm chosen-select' data-placeholder='เรียงข้อมูลตาม'>
+									<option value='1'>สัญญาก่อน 01/01/2551 อายุสัญญา <= 4 ปี</option>
+									<option value='2'>สัญญาก่อน 01/01/2551 อายุสัญญา > 4 ปี</option>
+									<option value='3'>สัญญาตั้งแต่ 01/01/2551</option>
+									<option value='4' selected>สัญญาตั้งแต่ 01/10/2561</option>
+								</select>
+							</div>
 						</div>
-					</div>
-					<div class='col-xs-2 col-sm-1'>	
-						<div class='form-group'>
-							ถึงวันที่ชำระ
-							<input type='text' id='TPAYDT' class='form-control input-sm' placeholder='ถึงวันที่ชำระ' data-provide='datepicker' data-date-language='th-th'>
+						<div class='col-xs-2 col-sm-1'>	
+							<div class='form-group'>
+								<br>
+								<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+							</div>
 						</div>
-					</div>
-					
-					<div class='col-xs-2 col-sm-2'>	
-						<div class='form-group'>
-							พนักงานเก็บเงิน
-							<select id='BILLCOLL' class='form-control input-sm chosen-select' data-placeholder='พนักงานเก็บเงิน'></select>
-						</div>
-					</div>
-					
-					<div class='col-xs-2 col-sm-1'>	
-						<div class='form-group'>
-							กลุ่มสินค้า
-							<select id='GCODE' class='form-control input-sm chosen-select' data-placeholder='กลุ่มสินค้า'></select>
-						</div>
-					</div>
-					
-					<div class='col-xs-2 col-sm-2'>	
-						<div class='form-group'>
-							เรียงข้อมูลตาม
-							<select id='ORDERBY' class='form-control input-sm chosen-select' data-placeholder='เรียงข้อมูลตาม'>
-								<option value='LOCAT' selected>รหัสสาขา</option>
-								<option value='CONTNO'>เลขที่สัญญา</option>
-								<option value='CUSCOD'>รหัสลูกค้า</option>
-								<option value='SDATE'>วันที่ทำสัญญา</option>
-							</select>
-						</div>
-					</div>
-					<div class='col-xs-2 col-sm-2'>	
-						<div class='form-group'>
-							วิธีรับรู้
-							<select id='WAY' class='form-control input-sm chosen-select' data-placeholder='เรียงข้อมูลตาม'>
-								<option value='1'>สัญญาก่อน 01/01/2551 อายุสัญญา <= 4 ปี</option>
-								<option value='2'>สัญญาก่อน 01/01/2551 อายุสัญญา > 4 ปี</option>
-								<option value='3' selected>สัญญาตั้งแต่ 01/01/2551</option>
-							</select>
-						</div>
-					</div>
-					<div class='col-xs-2 col-sm-1'>	
-						<div class='form-group'>
-							<br>
-							<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
-						</div>
-					</div>					
+					</div>		
 				</div>
-				<div id='resultt1users' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div>
+				<div class='col-sm-12' id='resultt1users' style='height:calc(100% - 130px);overflow:auto;background-color:white;'></div>
 			</div>
 		";
 		
@@ -137,9 +138,12 @@ class CReport011 extends MY_Controller {
 		}else if($arrs['WAY'] == 2){
 			$cond .= " 
 			and A.PROF_METHOD = 'EFF' and A.SDATE < '2008-1-1' AND (A.TOTPRC > 0) AND (A.NPROFIT > 0) ";
-		}else{
+		}else if($arrs['WAY'] == 3){
 			$cond .= " 
 			and A.PROF_METHOD = 'EFF' and A.SDATE >= '2008-1-1' AND (A.TOTPRC > 0) AND (A.NPROFIT > 0) ";
+		}else{
+			$cond .= " 
+			and A.PROF_METHOD = 'EFF' and A.SDATE >= '2018-10-01' AND (A.TOTPRC > 0) AND (A.NPROFIT > 0) ";
 		}
 		
 		if($arrs['BILLCOLL'] != ""){
@@ -225,42 +229,6 @@ class CReport011 extends MY_Controller {
 		";	
 		//echo $sql; 
 		$this->db->query($sql);
-		/*
-		$sql = "
-			select LOCAT,CONTNO,CUSCOD,CNAME,T_NOPAY,NOFROM,NOTO
-				,SDATE,FDATE,EFFRT_AFADJ
-				,TKANG - (NPROFIT + VKANG) as c1i,NPROFIT as c1ii,VKANG as c1iii
-				,TKANG - VKANG as c2ii,TKANG as c2iii
-				,LPAYAMT - (LPROFEFF + LPAYAMT_V) as c3i,LPROFEFF as c3ii,LPAYAMT_V as c3iii
-				,LPAYAMT_N as c4ii,LPAYAMT as c4iii
-				,CPAYAMT - (CPROFEFF + CPAYAMT_V) as c5i,CPROFEFF as c5ii,CPAYAMT_V as c5iii
-				,CPAYAMT_N as c6ii,CPAYAMT as c6iii
-				,case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else (TKANG - (NPROFIT + VKANG)) - (LPAYAMT - (LPROFEFF + LPAYAMT_V)) - (CPAYAMT - (CPROFEFF + CPAYAMT_V)) end as c7i
-				,case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else NPROFIT - LPROFEFF - CPROFEFF end as c7ii
-				,case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else VKANG - LPAYAMT_V - CPAYAMT_V end as c7iii
-				,case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else (TKANG - VKANG) - LPAYAMT_N - CPAYAMT_N end as c8ii
-				,case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else TKANG - LPAYAMT - CPAYAMT end as c8iii
-			from #tempREPORT11_2
-			
-			union all 
-			select 'ZZZ' LOCAT,'ZZZ' CONTNO,'ZZZ' CUSCOD,NULL CNAME,NULL T_NOPAY,NULL NOFROM,NULL NOTO
-				,NULL SDATE,NULL FDATE,NULL EFFRT_AFADJ
-				,sum(TKANG - (NPROFIT + VKANG)) as c1i,sum(NPROFIT) as c1ii,sum(VKANG) as c1iii
-				,sum(TKANG - VKANG) as c2ii,sum(TKANG) as c2iii
-				,sum(LPAYAMT - (LPROFEFF + LPAYAMT_V)) as c3i,sum(LPROFEFF) as c3ii,sum(LPAYAMT_V) as c3iii
-				,sum(LPAYAMT_N) as c4ii,sum(LPAYAMT) as c4iii
-				,sum(CPAYAMT - (CPROFEFF + CPAYAMT_V)) as c5i,sum(CPROFEFF) as c5ii,sum(CPAYAMT_V) as c5iii
-				,sum(CPAYAMT_N) as c6ii,sum(CPAYAMT) as c6iii
-				,sum(case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else (TKANG - (NPROFIT + VKANG)) - (LPAYAMT - (LPROFEFF + LPAYAMT_V)) - (CPAYAMT - (CPROFEFF + CPAYAMT_V)) end) as c7i
-				,sum(case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else NPROFIT - LPROFEFF - CPROFEFF end) as c7ii
-				,sum(case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else VKANG - LPAYAMT_V - CPAYAMT_V end) as c7iii
-				,sum(case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else (TKANG - VKANG) - LPAYAMT_N - CPAYAMT_N end) as c8ii
-				,sum(case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else TKANG - LPAYAMT - CPAYAMT end) as c8iii
-			from #tempREPORT11_2
-			
-			order by ".$arrs['ORDERBY']."
-		";
-		*/
 		
 		$sql = "
 			if OBJECT_ID('tempdb..#tempREPORT11_3') is not null drop table #tempREPORT11_3

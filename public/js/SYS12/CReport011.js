@@ -83,8 +83,8 @@ function start(){
 		width: '100%'
 	});
 	
-	$('#ORDERBY').select2({ minimumResultsForSearch: -1 });
-	$('#WAY').select2({ minimumResultsForSearch: -1 });
+	$('#ORDERBY').select2({ minimumResultsForSearch: -1,width: '100%' });
+	$('#WAY').select2({ minimumResultsForSearch: -1,width: '100%' });
 }
 
 
@@ -98,6 +98,7 @@ $('#btnt1search').click(function(){
 	dataToPost.GCODE  	= $('#GCODE').val();
 	dataToPost.ORDERBY  = $('#ORDERBY').val();
 	dataToPost.WAY  	= $('#WAY').val();
+	
 	
 	var spinner = $('body>.spinner').clone().removeClass('hide');
     $('#resultt1users').html('');
