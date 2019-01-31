@@ -403,7 +403,13 @@ function getDetailsFN($this){
 			$('#t2alocat').select2({
 				placeholder: 'เลือก',
 				ajax: {
-					url: '../Cselect2/getLOCAT',
+					url: '../SYS99/CUsers/getLOCAT',
+					data: function (params) {
+						return {
+							q: params.term, // search term
+							dblocat: $('#tab1dblocat').attr('dblocat')
+						};
+					},
 					dataType: 'json',
 					delay: 1000,
 					processResults: function (data) {

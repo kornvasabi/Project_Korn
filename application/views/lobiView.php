@@ -17,7 +17,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	
 	
 </head>
-<body class='menu-fixed'>
+<body class='menu-fixed' baseUrl='<?php echo $baseUrl; ?>' >
 	<nav class="navbar navbar-default navbar-header header">
 		<a class="navbar-brand" href="#">
 			<div class="navbar-brand-img"></div>
@@ -55,7 +55,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			<ul class="nav navbar-nav navbar-right user-actions">
 				<li class="dropdown">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">						
-						<div style='font-size:8pt;'><?php echo $branch; ?></div>						
+						<div id='LOCATCHANGE' style='font-size:8pt;'><?php echo $branch; ?></div>						
 					</a>
 					<!--ul class="dropdown-menu">
 						<li><a href="#">Fบน</a></li>
@@ -250,8 +250,99 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			alert('x');
 		},60000);
 	*/
+	var setwidth = $(window).width();
+	var setheight = $(window).height();
+	if(setwidth > 1000){
+		setwidth = 1000;
+	}else{
+		setwidth = setwidth - 50;
+	}
+
+	if(setheight > 800){
+		setheight = 800;
+	}else{
+		setheight = setheight - 50;
+	}
+	
 	$('.xccc').datepicker({ autoclose: true });
 	$('#content').css({'background-color':'whiteSmoke'});
+	
+	$("#LOCATCHANGE").click(function(){
+		$.ajax({
+			url: '../CHomenew/LocatChangeView',
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				if(data.html['LOCATClaim'] > 0){
+					Lobibox.window({
+						title: 'สิทธิ์การเข้าถึงสาขา',
+						content: data.html['data'],
+						shown: function($this){
+							document.getElementById("table-fixed-changelocat").addEventListener("scroll", function(){
+								var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
+								this.querySelector("thead").style.transform = translate;						
+							});	
+							
+							$('.ChangeLOCAT').click(function(){
+								dataToPost = new Object();
+								dataToPost.LOCAT = $(this).attr('LOCAT');
+								
+								$.ajax({
+									url: '../CHomenew/LocatChange',
+									data: dataToPost,
+									type: 'POST',
+									dataType: 'json',
+									success: function(data){
+										if(data.status){
+											window.open('<?php echo base_url("welcome/"); ?>','_parent');
+											
+											$("#LOCATCHANGE").html(dataToPost.LOCAT);
+											
+											Lobibox.notify('info', {
+												title: 'ข้อมูล',
+												closeOnClick: true,
+												delay: 10000,
+												pauseDelayOnHover: true,
+												continueDelayOnInactiveTab: false,
+												icon: false,
+												messageHeight: '90vh',
+												soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+												soundExt: '.ogg',
+												msg: data.msg
+											});
+											
+											$this.destroy();
+										}else{
+											Lobibox.notify('info', {
+												title: 'ข้อมูล',
+												closeOnClick: true,
+												delay: 10000,
+												pauseDelayOnHover: true,
+												continueDelayOnInactiveTab: false,
+												icon: false,
+												messageHeight: '90vh',
+												soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+												soundExt: '.ogg',
+												msg: data.msg
+											});
+										}
+									}
+								});	
+							});
+						}
+						//height: $(window).height(),
+						//width: $(window).width()
+					});
+					
+					ChangeLOCAT();
+				}
+			}
+		});
+	});
+	
+	function ChangeLOCAT(){
+		
+	}
 	
 	var tableToExcel = (function() {
 		var uri = 'data:application/vnd.ms-excel;base64,'

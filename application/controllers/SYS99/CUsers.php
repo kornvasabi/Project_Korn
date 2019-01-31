@@ -676,6 +676,28 @@ class CUsers extends MY_Controller {
 		$response['msg'] = $msg;
 		echo json_encode($response);
 	}
+	
+	function getLOCAT(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$dblocat = $_REQUEST["dblocat"];
+		
+		$sql = "
+			select top 20 LOCATCD from {$dblocat}.dbo.INVLOCAT
+			where LOCATCD like '%".$dataSearch."%' collate Thai_CI_AS or LOCATNM like '%".$dataSearch."%' collate Thai_CI_AS
+			order by LOCATCD
+		";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->LOCATCD), 'text'=>str_replace(chr(0),'',$row->LOCATCD)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
 }
 
 

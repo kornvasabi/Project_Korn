@@ -19,41 +19,197 @@ class Cautotransferscars extends MY_Controller {
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
-		$html = "
+		$html = "			
 			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div style='height:65px;overflow:auto;'>					
-					<div class='col-sm-2'>	
-						<div class='form-group'>
-							สาขารับโอน
-							<select id='RVLOCAT' class='form-control input-sm'>
-								 <option value='THคน7' selected>THคน7</option>								
-							</select>
-						</div>
-					</div>
-					<div class='col-sm-2'>	
-						<div class='form-group'>
-							วันที่รับรถ
-							<input type='text' id='RECVDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่รับรถ'>
-						</div>
-					</div>
-					<div class='col-sm-2'>	
-						<div class='form-group'>
-							เลขที่บิลรับรถ
-							<select id='RECVNO' class='form-control input-sm'></select>
-						</div>
-					</div>
-					<div class='col-sm-1 col-sm-offset-5'>	
-						<div class='form-group'>
-							<br>
-							<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
-						</div>
+				<div id='demo-wizard2' class='wizard-wrapper'>    
+					<div class='wizard'>
+						<form id='demo-form2' action='' class='lobi-form' novalidate='novalidate'>
+							<ul class='wizard-tabs wizard-tab-balls nav-justified nav nav-pills'>
+								<li class='active'>
+									<a href='#tab11' prev='#' data-toggle='tab' aria-expanded='true'>
+										<span class='step'>1</span>
+										<span class='title'>การจัดรถ</span>
+									</a>
+								</li>
+								<li>
+									<a href='#tab22' prev='#tab11' data-toggle='tab'>
+										<span class='step'>2</span>
+										<span class='title'>ตรวจสอบ/ยืนยัน</span>
+									</a>
+								</li>
+								<li>
+									<a href='#tab33' prev='#tab22' data-toggle='tab'>
+										<span class='step'>3</span>
+										<span class='title'>แสดงผล</span>
+									</a>
+								</li>
+							</ul>
+							<div class='tab-content bg-white'>
+								<div class='tab-pane active' name='tab11' style='height:calc(100vh - 260px);overflow:auto;'>
+									<fieldset>
+										<div class='col-sm-8'>
+											<div style='border:0.1px dotted red;background-color:white;height:calc(100vh - 320px);'>
+												<div id='table-fixed-choose' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+													<table id='table-choose' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' style='width:100%;background-color:white;'>
+														<thead>
+															<tr>
+																<th style='width:100px;'><button id='addSTRNO' LOCAT='' class='btn btn-sm btn-primary btn-block'>เพิ่มรถ</button></th>
+																<th>เลขตัวถัง</th>
+																<th>รุ่น</th>
+																<th>สี</th>
+																<th>สถานะ</th>
+																<th>สาขา</th>
+															</tr>
+														</thead>
+														<tbody>
+															
+														</tbody>
+													</table>
+												</div>
+											</div>
+										</div>
+										<div class='col-sm-4'>	
+											<div style='border:0.1px dotted red;height:calc(100vh - 320px);overflow:auto;'>
+												<table class='col-sm-12' >
+													<tr>
+														<th colspan='2' style='font-size:12pt;text-align:center;'>เงื่อนไข<hr></th>
+													</tr>
+													<tr>
+														<th style='text-align:center;'>จังหวัด</th>
+														<td>
+															<div class='col-sm-12'>
+																<div class='col-sm-6'>
+																	<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='tab11prov1' value='ตรัง' >
+																	<label class='form-check-label' style='cursor:pointer;' for='tab11prov1'>ตรัง</label>
+																</div>
+																<div class='col-sm-6'>
+																	<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='tab11prov2' value='สุราษฎร์ธานี' >
+																	<label class='form-check-label' style='cursor:pointer;' for='tab11prov2'>สุราษฎร์ธานี</label>
+																</div>
+																<div class='col-sm-6'>
+																	<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='tab11prov3' value='ชุมพร' >
+																	<label class='form-check-label' style='cursor:pointer;' for='tab11prov3'>ชุมพร</label>																			
+																</div>
+																<div class='col-sm-6'>
+																	<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='tab11prov4' value='กระบี่' >
+																	<label class='form-check-label' style='cursor:pointer;' for='tab11prov4'>กระบี่</label>
+																</div>
+																<div class='col-sm-6'>
+																	<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='tab11prov5' value='พังงา' >
+																	<label class='form-check-label' style='cursor:pointer;' for='tab11prov5'>พังงา</label>
+																</div>																
+															</div>
+														</td>
+													</tr>
+													<!-- tr>
+														<th style='text-align:center;'>วิธีคำนวณ</th>
+														<td>
+															<div class='col-sm-12'>
+																<div class='col-sm-6'>
+																	<label class='radio lobiradio lobiradio-info'>
+																		<input type='radio' name='ship_info' value='1' checked> 
+																		<i></i> กระจายสาขา
+																	</label>
+																</div>
+																<div class='col-sm-6'>
+																	<label class='radio lobiradio lobiradio-info'>
+																		<input type='radio' name='ship_info' value='2'> 
+																		<i></i> ลงสาขาสูงสุด
+																	</label>
+																</div>
+															</div>
+														</td>
+													</tr -->
+													<tr>
+														<th class='col-sm-3' style='text-align:center;'>พท.ว่าง <br>ที่จะจัดรถ</th>
+														<td>
+															<div class='col-sm-6'>
+																<input type='number' class='input input-sm' min='-10' max='20' value='0'>
+															</div>
+														</td>
+													</tr>
+													<tr>
+														<th class='col-sm-3' style='text-align:center;'>limit</th>
+														<td>
+															<div class='col-sm-6'>
+																<input type='number' class='input input-sm' min='1' max='20' value='0'>
+															</div>
+														</td>
+													</tr>
+												</table>
+												
+											</div>
+										</div>
+																	
+										<div class='col-sm-12'>
+											<div class='row'>
+												<div class='col-sm-2 col-sm-offset-8'>
+													<button id='tab11Clear' name='tab11' class='btn btn-sm btn-default btn-block'>เคลียร์</button>
+												</div>
+												<div class='col-sm-2 '>													
+													<button id='tab11processCar' name='tab11' class='btn btn-sm btn-primary btn-block'>ถัดไป</button>
+												</div>
+											</div>
+										</div>
+									</fieldset>
+								</div>
+								<div class='tab-pane' name='tab22' style='height:calc(100vh - 260px);overflow:auto;'>
+									<fieldset>
+										<div class='col-sm-12' id='tab22Body' style='height:calc(100vh - 320px);background-color:#ddd;'></div>
+										<div class='col-sm-12'>
+											<div class='row'>
+												<div class='col-sm-2'>
+													<button id='tab22Back' name='tab22' class='btn btn-sm btn-danger btn-block'>ย้อนกลับ</button>
+												</div>
+												<div class='col-sm-2 col-sm-offset-8'>
+													<button id='tab22processCar' name='tab22' class='btn btn-sm btn-primary btn-block'>ถัดไป</button>
+												</div>
+											</div>
+										</div>
+									</fieldset>
+								</div>
+								<div class='tab-pane' name='tab33' style='height:calc(100vh - 260px);overflow:auto;'>
+									<fieldset>
+										<div class='col-sm-12' id='tab33Body' style='height:calc(100vh - 320px);background-color:#aaa;'></div>
+										<div class='col-sm-12'>
+											<div class='row'>
+												<div class='col-sm-2'>
+													<button id='tab33Back' name='tab33' class='btn btn-sm btn-danger btn-block'>ย้อนกลับ</button>
+												</div>
+												<div class='col-sm-2 col-sm-offset-8'>
+													<button id='tab33processCar' name='tab33' class='btn btn-sm btn-primary btn-block'>ถัดไป</button>
+												</div>
+											</div>
+										</div>
+									</fieldset>
+								</div>
+								
+								<!-- ul class='pager'>
+									<li class='previous first disabled' style='display:none;'><a href='javascript:void(0)'>First</a></li>
+									<li class='previous disabled'><a href='javascript:void(0)'>ย้อนกลับ</a></li>
+									<li class='next last' style='display:none;'><a href='javascript:void(0)'>Last</a></li>
+									<li class='next'><a href='javascript:void(0)'>ถัดไป</a></li>
+								</ul -->
+							</div>
+						</form>
 					</div>
 				</div>
-				<div id='resultt1received' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div>
-			</div>		
+			</div>
+			
+			<script>
+				$('.select2-demo').select2();
+				$('.panel').lobiPanel({					
+					reload: false,
+					close: false,
+					isOnFullScreen: false,
+					unpin: false,
+					minimize: false,
+					editTitle: false
+				});
+			</script>
 		";
 		
-		$html.= "<script src='".base_url('public/js/SYS02/Cautotransferscars.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/SYS02/Cautotransferscars2.js')."'></script>";
 		echo $html;
 	}
 	
@@ -255,7 +411,7 @@ class Cautotransferscars extends MY_Controller {
 	}
 	
 	
-	function search(){
+	function search_old2(){
 		$html='';
 		$colhead='';
 		$arrs;
@@ -590,6 +746,635 @@ class Cautotransferscars extends MY_Controller {
 		";
 		$response = array('html'=>$html,'status'=>true);
 		echo json_encode($response);
+	}
+	
+	function getFormSTRNO(){
+		$LOCAT = $_REQUEST["LOCAT"];
+		
+		$html = "
+			<div style='background-color:#ccc;height:calc(100vh - 120px);'>
+				<div style='height:150px;overflow:auto;'>
+					<div class='row col-sm-12'>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								สาขา
+								<select id='t1LOCAT' class='form-control input-sm' ".($LOCAT == "" ? "":"disabled").">
+									<option value='".($LOCAT == "" ? $this->sess["branch"]:$LOCAT)."'>".($LOCAT == "" ? $this->sess["branch"]:$LOCAT)."</option>
+								</select>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								เลขที่บิลรับรถ
+								<select id='t1RECVNO' class='form-control input-sm'></select>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								รุ่นรถ
+								<select id='t1MODEL' class='form-control input-sm'></select>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								สี
+								<select id='t1COLOR' class='form-control input-sm'></select>
+							</div>
+						</div>
+					</div>
+					
+					<div class='row col-sm-12'>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								เลขตัวถัง
+								<input type='text' id='t1STRNO' class='form-control input-sm' placeholder='เลขตัวถัง'>
+							</div>
+						</div>
+						<div class='col-sm-2' style='display:none;'>	
+							<div class='form-group'>
+								สถานะรถ
+								<select id='t1STAT' class='form-control input-sm'>
+									<option value=''>ทั้งหมด</option>
+									<option value='N'>รถใหม่</option>
+									<option value='O'>รถเก่า</option>
+								</select>
+							</div>
+						</div>
+						<div class='col-sm-1 col-sm-offset-0'>	
+							<div class='form-group'>
+								<br>
+								<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'>แสดง</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div id='resultSearcht1' style='height:calc(100% - 150px);overflow:auto;background-color:white;'></div>
+			</div>
+		";
+		
+		$response = array('html'=>$html,'status'=>true);
+		echo json_encode($response);
+	}
+	
+	function getSearchSTRNO(){
+		$arrs = array();
+		$arrs["LOCAT"]  = $_REQUEST["LOCAT"];
+		$arrs["RECVNO"] = $_REQUEST["RECVNO"];
+		$arrs["STRNO"]  = $_REQUEST["STRNO"];
+		$arrs["MODEL"]  = $_REQUEST["MODEL"];
+		$arrs["COLOR"]  = $_REQUEST["COLOR"];
+		$arrs["STAT"]   = $_REQUEST["STAT"];
+		
+		$cond = "";
+		if($arrs["LOCAT"] != ""){
+			$cond .= " and CRLOCAT='".$arrs["LOCAT"]."'";
+		}else{
+			$response = array('html'=>"โปรดระบุสาขาที่จะทำรายการกระจายรถด้วยครับ",'status'=>false);
+			echo json_encode($response); exit;
+		}
+		if($arrs["RECVNO"] != ""){
+			$cond = " and RECVNO='".$arrs["RECVNO"]."'";
+		}
+		if($arrs["STRNO"] != ""){
+			$cond .= " and STRNO like '".$arrs["STRNO"]."%'";
+		}
+		if($arrs["MODEL"] != ""){
+			$cond .= " and MODEL='".$arrs["MODEL"]."'";
+		}
+		if($arrs["COLOR"] != ""){
+			$cond .= " and COLOR='".$arrs["COLOR"]."'";
+		}
+		if($arrs["STAT"] != ""){
+			$cond .= " and STAT='".$arrs["STAT"]."'";
+		}
+		
+		$sql = "
+			select * from {$this->MAuth->getdb('INVTRAN')}
+			where 1=1 and ISNULL(SDATE,'')='' and ISNULL(RESVNO,'')='' and FLAG='D' ".$cond."
+			order by CRLOCAT,STAT,MODEL,COLOR,STRNO
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .= "
+					<tr class='trow' seq=".$NRow.">
+						<td class='getit' seq=".$NRow++." 
+							STRNO='".$row->STRNO."' 
+							MODEL='".$row->MODEL."' 
+							COLOR='".$row->COLOR."' 
+							STAT=".($row->STAT == "N" ? "รถใหม่" : "รถเก่า")."
+							LOCAT='".$row->CRLOCAT."' 
+							style='width:50px;cursor:pointer;text-align:center;'><b><i class='glyphicon glyphicon-check' style='z-index:20;'></i></b></td>
+						<td>".$row->STRNO."</td>
+						<td>".$row->MODEL."</td>
+						<td>".$row->COLOR."</td>
+						<td>".($row->STAT == "N" ? "รถใหม่" : "รถเก่า")."</td>
+						<td>".$row->CRLOCAT."</td>
+						<td>".$row->RVLOCAT."</td>
+					</tr>
+				";
+			}
+		}else{
+			$html .= "
+				<tr>
+					<td colspan='6'>ไม่พบข้อมูลสต๊อกรถ</td>
+				</tr>
+			";
+		}
+		
+		$html = "
+			<div id='table-fixed-SearchSTRNO' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+				<table id='table-SearchSTRNO' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr style='background-color:#ddd'>
+							<th id='getithead' style='width:50px;cursor:pointer;text-align:center;'>
+								<i class='glyphicon glyphicon-hand-down'></i>
+							</th>
+							<th>เลขตัวถัง</th>
+							<th>รุ่น</th>
+							<th>สี</th>
+							<th>สถานะรถ</th>
+							<th>ที่อยู่สาขา</th>
+							<th>สถานที่รับรถ</th>
+						</tr>
+					</thead>
+					<tbody>
+						".$html."
+					</tbody>
+				</table>
+			</div>	
+		";
+		
+		$response = array('html'=>$html,'status'=>true);
+		echo json_encode($response);
+	}
+	
+	function search(){
+		$html='';
+		$colhead='';
+		$arrs;
+		$arrs['RECVNO'] = $_REQUEST['RECVNO'];
+		$arrs['RECVDT'] = $this->Convertdate(1,$_REQUEST['RECVDT']);
+		$arrs['RVLOCAT'] = $_REQUEST['RVLOCAT'];
+		
+		$cond='';
+		if($arrs['RECVNO'] == ''){
+			$response = array('html'=>'โปรดระบุเลขที่บิลรับรถด้วยครับ','status'=>false);
+			echo json_encode($response); exit;
+		}else{
+			$cond .= " and RECVNO like '".$arrs['RECVNO']."%'";
+		}
+		
+		if($arrs['RECVDT'] != ''){
+			$cond .= " and convert(varchar(8),RECVDT,112) = '".$arrs['RECVDT']."'";
+		}
+		
+		if($arrs['RVLOCAT'] == ''){
+			$response = array('html'=>'โปรดระบุสาขารับรถด้วยครับ','status'=>false);
+			echo json_encode($response); exit;			
+		}else{
+			$cond .= " and RVLOCAT = '".$arrs['RVLOCAT']."'";
+		}
+		
+		$fn = $this->MAuth->getdb('fn_autocars');
+		$sql = "select LOCAT,MODEL,COLOR,STORDER,MEMO1 from {$fn}('".$arrs['RVLOCAT']."','".$arrs['RECVNO']."')";
+		//echo $sql; exit;
+		$query4 = $this->db->query($sql);
+		
+		$html = "";
+		$NRow = 1;
+		if($query4->row()){
+			foreach($query4->result() as $row4){
+				$html .= "
+					<tr>
+						<td>".$NRow++."</td>
+						<td>".$row4->LOCAT."</td>
+						<td>".$row4->MODEL."</td>
+						<td>".$row4->COLOR."</td>
+						<td>".$row4->STORDER."</td>
+						<td>".$row4->MEMO1."</td>
+					</tr>
+				";
+			}
+		}else{
+			$html .= "
+				<tr>
+					<td colspan='5' style='color:red;'>เลขที่บิลรับรถ ".$arrs['RECVNO']." ไม่มีรถที่สามารถโอนย้าย </td>					
+				</tr>
+			";
+		}
+		
+		$html = "
+			<div id='table-fixed-Cautotransferscars' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+				<table id='table-Cautotransferscars' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>สาขา</th>
+							<th>รุ่น</th>
+							<th>สี</th>
+							<th>จำนวน</th>
+							<th>จัดแบบ</th>
+						</tr>
+					</thead>
+					<tbody>
+						".$html."
+					</tbody>
+				</table>
+			</div>	
+		";
+		
+		$sql = "
+			select a.RECVNO,a.STRNO,a.GCODE,b.GDESC,a.STAT,a.TYPE,a.MODEL,a.BAAB,a.COLOR,a.CC,a.CRLOCAT,a.RVLOCAT from {$this->MAuth->getdb('INVTRAN')} a
+			left join {$this->MAuth->getdb('SETGROUP')} b on a.GCODE=b.GCODE
+			where a.RECVNO='".$arrs['RECVNO']."'
+		";
+		$query = $this->db->query($sql);
+		$htmlRECV  = "";
+		
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$color = "red;";
+				if($row->CRLOCAT == $row->RVLOCAT){
+					$color = "black;";
+				}
+				
+				$htmlRECV .= "
+					<tr style='color:".$color."'>
+						<td>".$NRow++."</td>
+						<td>".$row->RECVNO."</td>
+						<td>".$row->STRNO."</td>
+						<td title='".$row->GDESC."'>".$row->GCODE." </td>
+						<td>".$row->STAT."</td>
+						<td>".$row->TYPE."</td>
+						<td>".$row->MODEL."</td>
+						<td>".$row->BAAB."</td>
+						<td>".$row->COLOR."</td>
+						<td>".$row->CC."</td>
+						<td>".$row->CRLOCAT."</td>
+						<td>".$row->RVLOCAT."</td>
+					</tr>
+				";
+			}
+		}else{
+			$htmlRECV .= "
+				<tr>
+					<td colspan='11' style='color:red;'>ไม่พบเลขที่บิลรับรถ ".$arrs['RECVNO']." ในระบบ</td>					
+				</tr>
+			";
+		}
+		
+		$htmlRECV = "
+			<div id='table-fixed-CautotransferscarsRECV' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+				<table id='table-CautotransferscarsRECV' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>เลขที่บิลรับ</th>
+							<th>เลขตัวถัง</th>
+							<th>กลุ่มรถ</th>
+							<th>สถานะ</th>
+							<th>ยี่ห้อ</th>
+							<th>รุ่น</th>
+							<th>แบบ</th>
+							<th>สี</th>
+							<th>ขนาด</th>
+							<th>รถอยู่ที่</th>
+							<th>สถานที่รับ</th>
+						</tr>
+					</thead>
+					<tbody>
+						".$htmlRECV."
+					</tbody>
+				</table>
+			</div>	
+		";
+		
+		$response = array('htmlRECV'=>$htmlRECV,'html'=>$html,'status'=>true);
+		echo json_encode($response);
+	}
+	
+	function confirmResultt1AT_old(){
+		$DATATABLE = $_REQUEST["DATATABLE"];
+		//print_r($DATATABLE);
+		$size = sizeof($DATATABLE);
+		
+		$html = "";
+		for($i=0;$i<$size;$i++){
+			$dsize = sizeof($DATATABLE[$i]);
+			if($dsize <> 0){
+				$html .= "<tr>";
+			}
+			for($j=0;$j<$dsize;$j++){
+				$html .= "<td>".$DATATABLE[$i][$j]."</td>";
+			}
+			if($dsize <> 0){
+				$html .= "</tr>";
+			}
+		}
+		
+		$html = "
+			<table style='width:100%;background-color:white;'>
+				<tr>
+					<th>สาขา</th>
+					<th>รุ่น</th>
+					<th>สี</th>
+					<th>จำนวน</th>
+					<th>จัดแบบ</th>
+				</tr>
+				".$html."
+			</table>
+		";
+		$response = array('html'=>$html,'status'=>true);
+		echo json_encode($response);
+	}
+	
+	function confirmResultt1AT(){
+		$LOCAT 		= $_REQUEST["LOCAT"];
+		$RECVNO 	= $_REQUEST["RECVNO"];
+		$DATATABLE  = $_REQUEST["DATATABLE"];
+		//print_r($DATATABLE);
+		$size = sizeof($DATATABLE);
+		
+		$sql = "";
+		for($i=0;$i<$size;$i++){
+			$dsize = sizeof($DATATABLE[$i]);
+			
+			$sql .= ($sql == "" ? "select " : " union all select ");
+			
+			for($j=1;$j<$dsize;$j++){
+				if($j!=1){ $sql .= ","; }
+				$sql .= "'".$DATATABLE[$i][$j]."'";
+			}
+		}
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#temp') is not null drop table #temp;
+			create table #temp (LOCAT varchar(20),MODEL varchar(30),COLOR varchar(30),CN int,FRM varchar(20));
+
+			insert into #temp ".$sql."
+		";
+		//echo $sql;
+		$this->db->query($sql);
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#temptran') is not null drop table #temptran;
+			create table #temptran (id varchar(20),msg varchar(max));
+			
+			begin tran transaction1
+			begin try
+				declare cs_stock cursor for select LOCAT,MODEL,COLOR,COUNT(*) from #temp group by LOCAT,MODEL,COLOR;
+
+				declare @LOCAT varchar(20);
+				declare @LOCATOLD varchar(20) = '';
+				declare @MODEL varchar(30);
+				declare @COLOR varchar(30);
+				declare @CN int; --จำนวนรถใหม้ จำแนกตามรุ่น สี
+				declare @TRANSNO varchar(12); --เลขที่ใบโอนย้าย
+				declare @RECVNO varchar(12) = '".$RECVNO."'; --เลขที่บิลรับ
+				declare @FLOCAT varchar(20) = (select LOCAT from INVINVO where RECVNO=@RECVNO);
+				declare @STRNO varchar(30);
+				
+				open cs_stock 
+				fetch next from cs_stock into @LOCAT,@MODEL,@COLOR,@CN
+
+				while @@FETCH_STATUS = 0  
+				begin 
+					IF @LOCATOLD <> @LOCAT
+					BEGIN
+						/* @symbol = สัญลักษณ์แทนประเภทของเลขที่ นั้นๆ */
+						declare @symbol varchar(10) = (select H_TFCAR from {$this->MAuth->getdb('CONDPAY')});
+						/* @rec = รหัสพื้นฐาน */
+						declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$LOCAT."');
+						/* @TRANSNO = รหัสที่จะใช้ */		
+						set @TRANSNO = (select isnull(MAX(TRANSNO),@rec+'0000') from ( 
+							select TRANSNO collate Thai_CS_AS as TRANSNO from {$this->MAuth->getdb('INVTransfers')} where TRANSNO like ''+@rec+'%' 
+							union select moveno collate Thai_CS_AS as moveno from {$this->MAuth->getdb('INVMOVM')} where MOVENO like ''+@rec+'%'
+						) as a);
+						set @TRANSNO = left(@TRANSNO ,8)+right(right(@TRANSNO ,4)+10001,4);
+						
+						insert into {$this->MAuth->getdb('INVTransfers')} (
+							TRANSNO,TRANSDT,TRANSFM,TRANSTO,EMPCARRY,APPROVED,
+							TRANSQTY,TRANSSTAT,MEMO1,SYSTEM,INSERTBY,INSERTDT
+						) values (
+							@TRANSNO,CONVERT(varchar(8),getdate(),112),@FLOCAT,@LOCAT,'','".$this->sess["IDNo"]."'
+							,(select sum(CN) from #temp where LOCAT=@LOCAT group by LOCAT)
+							,'Sendding','auto เลขที่บิลรับ::'+@RECVNO,'AT','".$this->sess["IDNo"]."',getdate()
+						);	
+					END
+					
+					while @CN > 0
+					begin
+						declare @CNMODEL int = (select CN from #temp where LOCAT=@LOCAT and MODEL=@MODEL and COLOR=@COLOR);
+						
+						while @CNMODEL > 0
+						begin
+							set @STRNO = isnull((
+								select top 1 STRNO from {$this->MAuth->getdb('INVTRAN')}
+								where isnull(SDATE,'')='' and isnull(TSALE,'') = '' and isnull(RESVNO,'') = ''
+									and isnull(RESVDT,'') = '' and FLAG='D' and RECVNO=@RECVNO and CRLOCAT=RVLOCAT 
+									and MODEL=@MODEL and COLOR=@COLOR 
+							),'');
+							
+							if (@STRNO <> '')
+							begin
+								update {$this->MAuth->getdb('INVTRAN')}
+								set CRLOCAT='TRANS'
+								where STRNO=@STRNO
+								
+								insert into {$this->MAuth->getdb('INVTransfersDetails')} (
+									TRANSNO,TRANSITEM,STRNO,EMPCARRY,TRANSDT,MOVENO,RECEIVEBY,RECEIVEDT,INSERTBY,INSERTDT
+								) values (
+									@TRANSNO,'1',@STRNO,NULL,NULL,null,null,null,'".$this->sess["IDNo"]."',getdate()
+								);
+							end
+							else
+							begin 
+								update {$this->MAuth->getdb('INVTransfers')}
+								set TRANSQTY = TRANSQTY - 1
+								where TRANSNO=@TRANSNO;
+								
+								delete from {$this->MAuth->getdb('INVTransfers')}								
+								where TRANSNO=@TRANSNO and TRANSQTY=0;
+							end
+							
+							set @CNMODEL -= 1;
+						end
+						
+						set @CN -= 1;
+					end	
+					
+					set @LOCATOLD = @LOCAT;	
+					fetch next from cs_stock into @LOCAT,@MODEL,@COLOR,@CN
+				end
+									
+				declare @TRANSLOG varchar(max) = '';				
+				select @TRANSLOG = replace((@TRANSLOG + QUOTENAME(TRANSNO)),'][',''',''') from (
+					select distinct TRANSNO from {$this->MAuth->getdb('INVTransfersDetails')} a
+					left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO collate Thai_CI_AS
+					where RECVNO=@RECVNO
+				) as data
+				/*
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS02::บันทึก โอนย้ายรถ(auto)',@TRANSLOG+' RECVNO='+@RECVNO,getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				*/
+				close cs_stock;
+				deallocate cs_stock;
+				
+				insert into #temptran select 'Y','จัดรถให้แล้ว เลขที่โอนย้าย = '+@TRANSLOG;
+				commit tran transaction1;
+			end try
+			begin catch
+				rollback tran transaction1;
+				insert into #temptran select 'N',ERROR_MESSAGE();
+			end catch
+		";
+		//echo $sql; exit;
+		$this->db->query($sql);
+		
+		$sql = "select * from #temptran";
+		$query = $this->db->query($sql);
+		
+		$response = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["html"] = $row->msg;
+				$response["status"] = ($row->id == "Y" ? true : false);
+			}
+		}else{
+			$response = array('html'=>"ผิดพลาด",'status'=>false);
+		}
+		
+		echo json_encode($response);
+	}
+	
+	function calcurate(){
+		$arrs = array();
+		$arrs['STRNO'] = $_REQUEST['STRNO'];
+		$arrs['tab11prov1'] = $_REQUEST['tab11prov1'];
+		$arrs['tab11prov2'] = $_REQUEST['tab11prov2'];
+		$arrs['tab11prov3'] = $_REQUEST['tab11prov3'];
+		$arrs['tab11prov4'] = $_REQUEST['tab11prov4'];
+		$arrs['tab11prov5'] = $_REQUEST['tab11prov5'];
+		
+		
+		$strsize = sizeof($arrs['STRNO']);
+		$str = "";
+		for($i=0;$i<$strsize;$i++){
+			$dstrsize = sizeof($arrs['STRNO'][$i]);
+			for($j=0;$j<$dstrsize;$j++){
+				if($j == 0){
+					//เริ่มต้น select ข้อมูล
+					if($i != 0){ 
+						//กรณี มีการจัดรถมากกว่า 1 คัน 
+						$str .= " union all "; 
+					}
+					$str .= " select ";
+				}else{
+					$str .= ",";
+				}
+				
+				if($j == 3){
+					$str .= ($arrs['STRNO'][$i][$j] == "รถใหม่" ? "'N'" : "'O'");
+				}else{
+					$str .= "'".$arrs['STRNO'][$i][$j]."'";					
+				}
+			}
+		}
+		if($str == ""){
+			$response = array('html'=>"คุณยังไม่ได้ระบุรถที่ต้องการกระจายออกเลยที่ต้องการจัดรถ",'status'=>false);
+			echo json_encode($response); exit;
+		}
+		
+		// $locat เลือกจัดรถไปสาขาในจังหวัดไหนบ้าง
+		$locat = "";
+		if($arrs['tab11prov1'][0] == "true"){
+			$locat .= "select '".$arrs['tab11prov1'][1]."'";
+		}
+		if($arrs['tab11prov2'][0] == "true"){
+			$locat .= "select '".$arrs['tab11prov2'][1]."'";
+		}
+		if($arrs['tab11prov3'][0] == "true"){
+			$locat .= "select '".$arrs['tab11prov3'][1]."'";
+		}
+		if($arrs['tab11prov4'][0] == "true"){
+			$locat .= "select '".$arrs['tab11prov4'][1]."'";
+		}
+		if($arrs['tab11prov5'][0] == "true"){
+			$locat .= "select '".$arrs['tab11prov5'][1]."'";
+		}
+		
+		if($locat != ""){
+			$locat = str_replace("'select","' union all select ",$locat);			
+		}else{
+			$response = array('html'=>"คุณยังไม่ได้ระบุจังหวัดที่ต้องการจัดรถ",'status'=>false);
+			echo json_encode($response); exit;
+		}
+		
+		$sql = "		
+			declare @str listSTRNo;
+			insert into @str ".$str."
+			
+			declare @lc listLOCAT;
+			insert into @lc ".$locat."	
+						
+			select * into #temp from [dbo].[fn_autocars_beta](@str,@lc,-5,2);
+		";
+		//echo $sql; exit;
+		$this->db->query($sql);
+		$sql = "select * from #temp ";		
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .= "
+					<tr>
+						<td>xxx</td>
+						<td>".$row->LOCAT."</td>
+						<td>".$row->MODEL."</td>
+						<td>".$row->COLOR."</td>
+						<td>".$row->STORDER."</td>
+						<td>".$row->MEMO1."</td>
+					</tr>
+				";
+			}
+		}
+		
+		if ($html != ""){
+			$html = "
+				<div id='table-fixed-tab22' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+					<table id='table-tab22' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>สาขา</th>
+								<th>รุ่น</th>
+								<th>สี</th>
+								<th>จำนวน</th>
+								<th>จัดแบบ</th>
+							</tr>
+						</thead>
+						<tbody>
+							".$html."
+						</tbody>
+					</table>
+				</div>	
+			";
+		}
+		
+		
+		$response = array('html'=>$html,'status'=>true);
+		echo json_encode($response); exit;
+		
+		
+		
 	}
 }
 

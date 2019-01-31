@@ -24,7 +24,6 @@ class CHomenew extends MY_Controller {
 	function index(){
 		$this->load->view('lobiLogin');
 	}
-		
 	
 	function TypeCar(){
 		$claim = $this->MLogin->getclaim(uri_string());
@@ -440,6 +439,131 @@ class CHomenew extends MY_Controller {
 		}
 		
 		echo json_encode($response); 
+	}
+	
+	function LocatChangeView(){
+		
+		$sql = "
+			select count(*) r from YTKManagement.dbo.hp_maplocat
+			where USERID='".$this->sess["USERID"]."' and dblocat='".$this->sess["db"]."'
+		";
+		$query = $this->db->query($sql);
+		
+		$html = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html["LOCATClaim"] = $row->r;
+			}
+		}else{
+			$html["LOCATClaim"] = 0;
+		}
+		
+		$sql = "
+			select LOCATCD from YTKManagement.dbo.hp_maplocat
+			where USERID='".$this->sess["USERID"]."' and dblocat='".$this->sess["db"]."'
+		";
+		$query = $this->db->query($sql);
+		
+		$html["data"] = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html["data"] .= "
+					<tr>
+						<td>".$row->LOCATCD."</td>
+						<td>".($row->LOCATCD == $this->sess["branch"] ? "" : "<input type='button' class='ChangeLOCAT' LOCAT='".$row->LOCATCD."' value='เปลี่ยน'>")."</td>
+					</tr>
+				";
+			}
+		}else{
+			$html["data"] .= "
+				<tr>
+					<td colspan='2'>-</td>					
+				</tr>
+			";
+		}
+		
+		$html["data"] = "
+			<div id='table-fixed-changelocat' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+				<table id='table-changelocat' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>สาขา</th>
+							<th style='width:80px;'>#</th>
+						</tr>
+					</thead>
+					".$html["data"]."
+				</table>
+			</div>
+		";
+		
+		$response = array();
+		$response["html"] = $html;
+		echo json_encode($response);
+	}
+	
+	function LocatChange(){
+		$LOCAT = $_REQUEST["LOCAT"];
+		
+		$sql = "
+			if object_id('tempdb..#transaction') is not null drop table #transaction;
+			create table #transaction (id varchar(20),msg varchar(max));
+
+			begin tran ins
+			begin try
+				update YTKManagement.dbo.hp_maplocat
+				set action = 'F'
+				where USERID='".$this->sess["USERID"]."' and dblocat='".$this->sess["db"]."'
+				
+				update YTKManagement.dbo.hp_maplocat
+				set action = 'T'
+				where LOCATCD='".$LOCAT."' and USERID='".$this->sess["USERID"]."' and dblocat='".$this->sess["db"]."'
+				
+				insert into #transaction select 'y' as id,'เปลี่ยนเป็นสาขา ".$LOCAT." แล้ว' as msg;
+				commit tran ins;
+			end try
+			begin catch
+				rollback tran ins;
+				insert into #transaction select 'n' as id,ERROR_MESSAGE() as msg;
+			end catch
+		";
+		$this->db->query($sql);
+		
+		$sql = "select * from #transaction";   
+		$query = $this->db->query($sql);
+		$stat = true;
+		$msg  = '';
+		if ($query->row()) {
+			foreach ($query->result() as $row) {
+				$stat = ($row->id == "y" ? true : false);
+				$msg = $row->msg;
+			}
+		}else{
+			$stat = false;
+			$msg = "ผิดพลาด :: ไม่สามารถทำรายการได้ในขณะนี้ โปรดลองทำรายการใหม่ภายหลัง";
+		}
+		
+		if($stat){
+			$sess = $this->session->userdata('cbjsess001');
+			$this->session->unset_userdata('cbjsess001');
+			$sess_array = array(
+				'employeeCode' => $sess['employeeCode'],
+				'IDNo' => $sess['IDNo'],
+				'USERID' => $sess['USERID'],
+				'password' => $sess['password'],
+				'name' => $sess['name'],
+				'positionName' => $sess['positionName'],
+				'corpName' => $sess['corpName'],
+				'branch' => $LOCAT,
+				'lock' => 'no',
+				'db' => $sess['db']
+			);
+			$this->session->set_userdata('cbjsess001', $sess_array);
+		}
+		
+		$response = array();
+		$response['status'] = $stat;
+		$response['msg'] = $msg;
+		echo json_encode($response);
 	}
 }
 

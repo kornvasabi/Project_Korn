@@ -12,7 +12,26 @@ class Welcome extends MY_Controller {
 		if(!$sess){ 
 			//$data["user"] = $this->username;
 			//$this->load->view('lobiLock',$data); 
-			$html = "คุณทิ้งระบบไว้นานเกินไป โปรดเข้าสู่ระบบใหม่อีกครั้ง <a href='".base_url("/clogin/index")."'>คลิก</a>";
+			$html = "
+				<span id='sessTimeout'>
+					คุณทิ้งระบบไว้นานเกินไป โปรดเข้าสู่ระบบใหม่อีกครั้ง <br><a href='".base_url("/clogin/index")."'>เข้าสู่ระบบ</a>
+				</span>	
+				
+				<style>
+					#sessTimeout {
+						position:fixed;
+						top: 40%;
+						left: 40%;
+						font-size: 12pt;
+						text-align: center;
+						color: red;
+					}
+					
+					#sessTimeout a {
+						font-size: 15pt;
+					}
+				</style>
+			";
 			echo $html; exit;
 		}else{
 			foreach ($sess as $key => $value) {
@@ -34,6 +53,8 @@ class Welcome extends MY_Controller {
 		$data["branch"] = $this->sess["branch"];
 		$data["name"] = $this->sess["employeeCode"].'<br>'.$this->sess["name"];
 		$data["db"] = $this->sess["db"];
+		$data["baseUrl"] = base_url();
+		//echo base_url(); exit;
 		
 		$this->load->view('lobiView',$data);
 	}	

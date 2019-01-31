@@ -15,7 +15,7 @@ class CStock extends MY_Controller {
 		}
 	}
 	
-	function group(){
+	public function group(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
@@ -55,10 +55,10 @@ class CStock extends MY_Controller {
 		echo $html;
 	}
 	
-	function groupSearch(){
+	public function groupSearch(){
 		$arrs = array();
 		$arrs['gcode'] = !isset($_REQUEST['gcode']) ? '' : $_REQUEST['gcode'];
-		$arrs['gdesc'] = !isset($_REQUEST['gcode']) ? '' : $_REQUEST['gcode'];
+		$arrs['gdesc'] = !isset($_REQUEST['gdesc']) ? '' : $_REQUEST['gdesc'];
 		
 		$cond = "";
 		if($arrs['gcode'] != ''){
@@ -70,9 +70,10 @@ class CStock extends MY_Controller {
 		}
 		
 		$sql = "
-			select * from hic2shortl.dbo.setgroup
+			select * from {$this->MAuth->getdb('setgroup')}
 			where 1=1 ".$cond."
 		";
+		//echo $sql;exit;
 		$query = $this->db->query($sql);
 				
 		$NRow = 1;
@@ -119,7 +120,7 @@ class CStock extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	function groupGetFormAE(){
+	public function groupGetFormAE(){
 		$arrs = array();
 		$arrs['GCODE'] = (!isset($_REQUEST['GCODE']) ? '' : $_REQUEST['GCODE']);
 		
@@ -130,7 +131,7 @@ class CStock extends MY_Controller {
 		);
 		if($arrs['GCODE'] != ''){
 			$sql = "
-				select * from hic2shortl.dbo.SETGROUP
+				select * from {$this->MAuth->getdb('SETGROUP')}
 				where GCODE='".$arrs['GCODE']."'
 			";
 			$query = $this->db->query($sql);
@@ -185,7 +186,7 @@ class CStock extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	function groupSave(){
+	public function groupSave(){
 		$arrs = array();
 		$arrs['gcode'] = (!isset($_REQUEST['gcode'])?'':$_REQUEST['gcode']);
 		$arrs['gdesc'] = (!isset($_REQUEST['gdesc'])?'':$_REQUEST['gdesc']);
@@ -195,13 +196,13 @@ class CStock extends MY_Controller {
 		$data = "";
 		if($arrs['action'] == 'add'){
 			$data = "
-				declare @isval int = isnull((select count(*) from hic2shortl.dbo.SETGROUP where GCODE='".$arrs['gcode']."'),0);
+				declare @isval int = isnull((select count(*) from {$this->MAuth->getdb('SETGROUP')} where GCODE='".$arrs['gcode']."'),0);
 				if(@isval = 0)
 				begin 
-					insert into hic2shortl.dbo.SETGROUP(GCODE,GDESC,MEMO1)
+					insert into {$this->MAuth->getdb('SETGROUP')} (GCODE,GDESC,MEMO1)
 					select '".$arrs['gcode']."','".$arrs['gdesc']."',MEMO1='".$arrs['memo1']."'
 					
-					insert into hic2shortl.dbo.hp_UserOperationLog(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')}(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 					values ('".$this->sess["IDNo"]."','กลุ่มรถ เพิ่ม','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				end 
 				else
@@ -213,11 +214,11 @@ class CStock extends MY_Controller {
 			";
 		}else{			
 			$data = "
-				update hic2shortl.dbo.SETGROUP
+				update {$this->MAuth->getdb('SETGROUP')}
 				set GDESC='".$arrs['gdesc']."',MEMO1='".$arrs['memo1']."'
 				where GCODE='".$arrs['gcode']."'
 				
-				insert into hic2shortl.dbo.hp_UserOperationLog(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')}(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','กลุ่มรถ แก้ไข','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 			";
 		}
@@ -257,7 +258,7 @@ class CStock extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	function groupDel(){
+	public function groupDel(){
 		$arrs = array();
 		$arrs['gcode'] = (!isset($_REQUEST['gcode'])?'':$_REQUEST['gcode']);
 		$arrs['gdesc'] = (!isset($_REQUEST['gdesc'])?'':$_REQUEST['gdesc']);
@@ -270,10 +271,10 @@ class CStock extends MY_Controller {
 			
 			begin tran tsc
 			begin try			
-				delete hic2shortl.dbo.SETGROUP
+				delete {$this->MAuth->getdb('SETGROUP')}
 				where GCODE='".$arrs['gcode']."'
 				
-				insert into hic2shortl.dbo.hp_UserOperationLog(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')}(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','กลุ่มรถ ลบ','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				
 				insert into #tempolary select 'Y' as id,'สำเร็จ ลบกลุ่ม ".$arrs['gcode'].$arrs['gdesc']."  รถแล้ว' as msg;
@@ -300,6 +301,184 @@ class CStock extends MY_Controller {
 			$response['msg'] = 'ผิดพลาด';
 		}
 		
+		echo json_encode($response);
+	}
+	
+	
+	public function type(){
+		$html = "
+			<div class='tab1' name='home' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:65px;overflow:auto;'>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						รหัสกลุ่ม
+						<input type='text' id='gcode' class='form-control input-sm' placeholder='รหัสกลุ่ม'>
+					</div>
+				</div>
+				<div class='col-sm-8'>	
+					<div class='form-group'>
+						ชื่อกลุ่ม
+						<input type='text' id='gdesc' class='form-control input-sm' placeholder='ชื่อกลุ่ม'>	
+					</div>
+				</div>					
+				<div class='col-sm-1'>	
+					<div class='form-group'>
+						<br>
+						<input type='button' id='search_group' class='btn btn-primary btn-sm btn-block' value='แสดง'>
+					</div>
+				</div>
+				<div class='col-sm-1'>	
+					<div class='form-group'>
+						<br>
+						<input type='button' id='add_group' class='btn btn-cyan btn-sm btn-block' value='เพิ่ม' >
+					</div>
+				</div>
+			</div>
+			<div id='setgroupResult' class='col-sm-12 tab1' style='height:calc(100vh - 197px);overflow:auto;background-color:#;'></div>
+			
+			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
+		";
+	
+		$html.= "<script src='".base_url('public/js/setup/setgroup.js')."'></script>";
+		echo $html;
+	}
+	
+	
+	public function maxstock(){
+		$claim = $this->MLogin->getclaim(uri_string());
+		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
+		
+		$html = "
+			<div class='tab1' name='home' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:65px;overflow:auto;'>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						สาขา
+						<input type='text' id='locat' class='form-control input-sm' data-alert='สาขา' placeholder='สาขา'>
+					</div>
+				</div>
+				<div class='col-sm-8'>	
+					<div class='form-group'>
+						จังหวัด
+						<select class='form-control input-sm'>
+							<option value='x'>x</option>
+							<option value='xx'>xx</option>
+						</select>
+					</div>
+				</div>					
+				<div class='col-sm-1'>	
+					<div class='form-group'>
+						<br>
+						<input type='button' id='search_group' class='btn btn-primary btn-sm btn-block' value='แสดง'>
+					</div>
+				</div>
+				<div class='col-sm-1'>	
+					<div class='form-group'>
+						<br>
+						<input type='button' id='add_group' class='btn btn-cyan btn-sm btn-block' value='เพิ่ม' >
+					</div>
+				</div>
+			</div>
+			<div id='setmaxstockResult' class='col-sm-12 tab1' style='height:calc(100vh - 197px);overflow:auto;background-color:#;'></div>
+			
+			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
+		";
+	
+		$html.= "<script src='".base_url('public/js/setup/setmaxstock.js')."'></script>";
+		echo $html;
+	}
+	
+	function maxstock_search(){
+		
+		$sql = "
+			select * from {$this->MAuth->getdb('std_locatStock')}
+			order by Prov,LINE,AREA,LOCAT
+		";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html.= "
+					<tr class='trow' seq=".$NRow.">
+						<td class='getit' seq=".$NRow++." align='center'>
+							<b><i class='glyphicon glyphicon-edit mst-edit' LOCAT='".$row->LOCAT."'  style='cursor:pointer;'></i></b>
+						</td>
+						<td>".$row->LOCAT."</td>
+						<td>".$row->Prov."</td>
+						<td>".$row->LINE."</td>
+						<td>".$row->AREA."</td>
+						<td>".$row->MaxStockN."</td>
+						<td>".$row->MaxStockO."</td>
+						<td>".$row->MaxStock."</td>
+						<td>".$row->MaxStore."</td>
+						<td>".$row->locatStatus."</td>
+					</tr>
+				";
+			}
+		}
+		
+		$html = "
+			<div id='table-fixed-maxstockSearch' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='table-maxstockSearch' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th align='center'>#</th>
+							<th>สาขา</th>
+							<th>จังหวัด</th>
+							<th>สาย</th>
+							<th>พื้นที่</th>
+							<th>max stock (รถใหม่)</th>
+							<th>max stock (รถเก่า)</th>
+							<th>max stock (รวม)</th>
+							<th>max คลัง</th>
+							<th>สถานะ</th>
+						</tr>
+					</thead>
+					<tbody>
+						".$html."
+					</tbody>
+				</table>
+			</div>
+		";
+		
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	
+	public function maxstock_form_edit(){
+		$html = "";
+		
+		$arrs =  array(
+			"LOCAT" => $_REQUEST["LOCAT"]
+		);
+		
+		$sql = "
+			select * from {$this->MAuth->getdb('std_locatStock')}
+			where LOCAT='".$arrs["LOCAT"]."'
+		";
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html = "
+					<div class='row'>
+						<div class='col-sm-4 col-sm-offset-4'>
+							<div class='form-group'>
+								สาขา
+								<input class='form-control input-sm' value='".$row->LOCAT."'>
+							</div>
+							<div class='form-group'>
+								สาขา
+								<input class='form-control input-sm' value='".$row->LOCAT."'>
+							</div>
+							
+						</div>
+					</div>
+				";				
+			}
+		}
+		
+		$response = array("html"=>$html);
 		echo json_encode($response);
 	}
 }
