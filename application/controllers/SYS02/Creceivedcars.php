@@ -168,6 +168,8 @@ class Creceivedcars extends MY_Controller {
 											<th>สี</th>
 											<th>ขนาด (CC)</th>
 											<th>สถานะ</th>
+											<th>วันที่โอนย้าย</th>
+											<th>พขร.</th>
 										</tr>
 									</thead>
 									<tbody></tbody>
@@ -298,22 +300,30 @@ class Creceivedcars extends MY_Controller {
 				,CONVERT(varchar(8),a.TRANSDT,112) as TRANSDT
 				,a.TRANSFM
 				,a.TRANSTO
-				,a.EMPCARRY
+				,c.employeeCode+' :: '+c.USERNAME as EMPCARRY
 				,a.APPROVED
-				,b.USERNAME+' ('+a.APPROVED+')' as APPNAME
+				,b.employeeCode+' :: '+b.USERNAME as APPNAME
 				,a.TRANSSTAT
 				,case when a.TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ' 
 					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน' 
 					else 'รับโอนรถครบแล้ว' end as TRANSSTATDesc
 				,a.MEMO1
-				,CONVERT(varchar(8),c.MOVEDT,112) as MOVEDT
+				,CONVERT(varchar(8),d.MOVEDT,112) as MOVEDT
 			from {$this->MAuth->getdb('INVTransfers')} a 
 			left join (
-				select USERID collate Thai_CI_AS USERID
-					,USERNAME collate Thai_CI_AS USERNAME 
-				from {$this->MAuth->getdb('PASSWRD')}
-			) b on a.APPROVED = b.USERID 
-			left join {$this->MAuth->getdb('INVMOVM')} c on a.TRANSNO=c.MOVENO collate Thai_CI_AS
+				select IDNo collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,'คุณ'+firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
+			) b on a.APPROVED=b.USERID
+			left join (
+				select IDNo collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,'คุณ'+firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
+			) c on a.EMPCARRY=c.USERID
+			
+			left join {$this->MAuth->getdb('INVMOVM')} d on a.TRANSNO=d.MOVENO collate Thai_CI_AS
 			where a.TRANSNO='".$arrs['TRANSNO']."'
 		";
 		//echo $sql; exit;
@@ -345,9 +355,17 @@ class Creceivedcars extends MY_Controller {
 				,b.BAAB
 				,b.COLOR
 				,b.CC
-				,case when a.RECEIVEBY IS NULL then 'อยู่ระหว่างการโอนย้ายรถ' else 'รับโอนแล้ว' end as RECEIVED		
+				,case when a.RECEIVEBY IS NULL then 'อยู่ระหว่างการโอนย้ายรถ' else 'รับโอนแล้ว' end as RECEIVED
+				,convert(varchar(8),a.TRANSDT,112) as TRANSDT
+				,a.EMPCARRY+' :: '+c.USERNAME+'' as EMPCARRYNM				
 			from {$this->MAuth->getdb('INVTransfersDetails')} a 
 			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO collate Thai_CI_AS
+			left join (
+				select IDNo collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
+			) c on a.EMPCARRY=c.USERID
 			where a.TRANSNO='".$arrs['TRANSNO']."'
 			order by a.TRANSITEM
 		";
@@ -359,9 +377,16 @@ class Creceivedcars extends MY_Controller {
 			foreach($query->result() as $row){
 				$disabled ='';
 				if($row->RECEIVED == 'รับโอนแล้ว'){ $disabled = 'disabled'; }
+				
+				
+				$notnull = "";
+				if($row->EMPCARRYNM == "" or $row->TRANSDT == ""){ 
+					$notnull = "style='text-decoration: line-through;color:red;'";
+				}
+				
 				$html['STRNO'][$NRow][] = '
-					<tr seq="old'.$NRow.'">
-						<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="old'.$NRow.'" value="ยกเลิก" '.$disabled.'></td>
+					<tr seq="old'.$NRow.'" '.$notnull.'>
+						<td style="text-decoration: initial;"><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="old'.$NRow.'" value="ยกเลิก" '.$disabled.'></td>
 						<td>'.$row->STRNO.'</td>
 						<td>'.$row->TYPE.'</td>
 						<td>'.$row->MODEL.'</td>
@@ -369,6 +394,8 @@ class Creceivedcars extends MY_Controller {
 						<td>'.$row->COLOR.'</td>
 						<td>'.$row->CC.'</td>
 						<td>'.$row->RECEIVED.'</td>
+						<td>'.$this->Convertdate(2,$row->TRANSDT).'</td>
+						<td>'.$row->EMPCARRYNM.'</td>
 					</tr>
 				';	
 				$NRow++;
@@ -419,11 +446,21 @@ class Creceivedcars extends MY_Controller {
 			$response['msg'] = 'ไม่พบข้อมูลรถที่จะรับโอน โปรดทำรายการใหม่อีกครั้ง';
 			echo json_encode($response); exit;
 		}
-		
+		//print_r($arrs['STRNO']); exit;
 		$sql = "";
 		for($i=0;$i<sizeof($arrs['STRNO']);$i++){
 			//$arrs['STRNO'][$i][7] = 'รับโอนรถครบแล้ว'  แสดงว่ารับโอนแล้ว ให้ข้ามไปเลย
-			if($arrs['STRNO'][$i][7] == 'อยู่ระหว่างการโอนย้ายรถ'){
+			
+			$cdt = 0;
+			if($arrs['STRNO'][$i][8] == ""){
+				$cdt = 1;
+			}
+			
+			if($arrs['STRNO'][$i][9] == ""){
+				$cdt = 1;
+			}
+			
+			if($arrs['STRNO'][$i][7] == 'อยู่ระหว่างการโอนย้ายรถ' and $cdt == 0){
 				$sql .= "
 					if (1 = (select count(*) from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$arrs['STRNO'][$i][1]."' and CRLOCAT='TRANS'))
 					begin
@@ -449,7 +486,7 @@ class Creceivedcars extends MY_Controller {
 						
 						update {$this->MAuth->getdb('INVTransfersDetails')}
 						set MOVENO=TRANSNO
-							,RECEIVEBY='".$this->sess["USERID"]."'
+							,RECEIVEBY='".$this->sess["IDNo"]."'
 							,RECEIVEDT=@getdt
 						where TRANSNO='".$arrs['TRANSNO']."' and STRNO='".$arrs['STRNO'][$i][1]."'
 					end
@@ -472,7 +509,7 @@ class Creceivedcars extends MY_Controller {
 		if($sql == ""){
 			$response = array();
 			$response['status'] = false;
-			$response['msg'] = 'ไม่บันทึก เนื่องจากรถในรายการ ถูกรับโอนทุกคันแล้ว';
+			$response['msg'] = 'ไม่บันทึก เนื่องจากรถในรายการ ยังไม่ได้ระบุวันที่โอนย้ายหรือพขร.  หรือถูกรับโอนทุกคันแล้วครับ';
 			echo json_encode($response); exit;
 		}
 		
@@ -543,6 +580,7 @@ class Creceivedcars extends MY_Controller {
 		
 		$sql = "
 			select a.STRNO,b.TYPE,b.MODEL,b.BAAB,b.COLOR,b.CC
+				,isnull(a.EMPCARRY,'') EMPCARRY,isnull(a.TRANSDT,'') TRANSDT
 			from {$this->MAuth->getdb('INVTransfersDetails')} a 
 			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO collate Thai_CI_AS
 			where a.TRANSNO='".$arrs['TRANSNO']."' and a.RECEIVEBY is null
@@ -554,9 +592,7 @@ class Creceivedcars extends MY_Controller {
 		$NRow = 1;
 		if($query->row()){
 			foreach($query->result() as $row){
-				$html .= "
-					<tr class='trow' seq=".$NRow.">
-						<td class='getit' seq=".$NRow++." 
+				$td = "<td class='getit' seq=".$NRow." 
 							STRNO='".$row->STRNO."' 
 							TYPE='".$row->TYPE."' 
 							MODEL='".$row->MODEL."' 
@@ -564,6 +600,12 @@ class Creceivedcars extends MY_Controller {
 							COLOR='".$row->COLOR."'
 							CC='".$row->CC."'
 							style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
+				";
+				if($row->EMPCARRY == "" or $row->TRANSDT == ""){ $td = "<td></td>"; }
+				
+				$html .= "
+					<tr class='trow' seq=".$NRow.">
+						".$td."
 						<td>".$row->STRNO."</td>
 						<td>".$row->TYPE."</td>
 						<td>".$row->MODEL."</td>
@@ -572,6 +614,8 @@ class Creceivedcars extends MY_Controller {
 						<td>".$row->CC."</td>
 					</tr>
 				";
+				
+				$NRow++;
 			}
 		}
 		
@@ -607,7 +651,7 @@ class Creceivedcars extends MY_Controller {
 		
 		$sql = "
 			select a.TRANSNO,convert(varchar(8),a.TRANSDT,112) as TRANSDT 
-				,a.TRANSFM,a.TRANSTO,a.EMPCARRY,a.APPROVED,b.USERNAME+' ('+a.APPROVED+')' as APPROVNM
+				,a.TRANSFM,a.TRANSTO,a.EMPCARRY,a.APPROVED,b.employeeCode+' :: '+b.USERNAME as APPROVNM
 				,a.TRANSSTAT
 				,case when a.TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ'
 					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
@@ -616,9 +660,10 @@ class Creceivedcars extends MY_Controller {
 				,convert(varchar(8),c.MOVEDT,112) as MOVEDT
 			from {$this->MAuth->getdb('INVTransfers')} a
 			left join (
-				select USERID collate Thai_CS_AS USERID
-					,USERNAME collate Thai_CS_AS USERNAME  
-				from {$this->MAuth->getdb('PASSWRD')}
+				select IDNo collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,'คุณ'+firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
 			) b on a.APPROVED=b.USERID
 			left join {$this->MAuth->getdb('INVMOVM')} c on a.TRANSNO=c.MOVENO collate Thai_CS_AS
 			where a.TRANSNO='".$arrs['TRANSNO']."'
@@ -646,6 +691,7 @@ class Creceivedcars extends MY_Controller {
 		$sql = "
 			select b.STRNO,c.TYPE,c.MODEL,c.BAAB,COLOR,CC
 				,case when isnull(b.RECEIVEDT,'')='' then 'อยู่ระหว่างการโอนย้ายรถ' else 'รับโอนแล้ว' end as RECEIVED
+				,isnull(a.EMPCARRY,'') EMPCARRY,isnull(a.TRANSDT,'') TRANSDT
 			from {$this->MAuth->getdb('INVTransfers')} a
 			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
 			left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate Thai_CS_AS
@@ -668,8 +714,7 @@ class Creceivedcars extends MY_Controller {
 				}else{
 					$disabled = 'disabled'; 
 				}
-				
-				
+								
 				$html['STRNO'][$NRow][] = '
 					<tr seq="old'.$NRow.'">
 						<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="old'.$NRow.'" value="ยกเลิก" '.$disabled.'></td>

@@ -1,3 +1,12 @@
+/********************************************************
+             _______________________
+            / / _ _   _ _     __ 
+           / // __ \ / __ \ / __ \
+       _ _/ // /_/ // / / // /_/ /
+     /_ _ _/ \_ _ //_/ /_/ \__  /
+                          _ _/ /
+                         /___ /
+********************************************************/
 var setwidth = $(window).width();
 var setheight = $(window).height();
 if(setwidth > 1000){
@@ -64,10 +73,29 @@ function initPage(){
 		width: '100%'
 	});
 	
+	$('#add_EMPCARRY').select2({
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2/getVUSER',
+			dataType: 'json',
+			delay: 2000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: true,
+		multiple: false,
+		//theme: 'classic',
+		width: '100%'
+	});	
+	
 	$('#add_APPROVED').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2/getUSERS',
+			url: '../Cselect2/getVUSER',
 			dataType: 'json',
 			delay: 2000,
 			processResults: function (data) {
@@ -90,7 +118,36 @@ function initPage(){
 		//theme: 'classic',
 		width: '100%'
 	});	
+	
+	
 }
+
+$('#add_EMPCARRY').change(function(){
+	data = new Object();
+	data.display = $('#add_EMPCARRY').find(':selected').text();
+	data.valued = $('#add_EMPCARRY').find(':selected').val();
+	
+	var STRNO = [];	
+	$('#table-STRNOTRANS tr').each(function() {
+		if (!this.rowIndex) return; // skip first row
+		
+		var len = this.cells.length;
+		var r = [];
+		for(var i=0;i<len;i++){
+			if(i == 1){				
+				if(this.cells[7].innerHTML == 'อยู่ระหว่างการโอนย้ายรถ' && $('#add_EMPCARRY').val() !== null){
+					if( $('.SETEMPCARRY[STRNO=\''+this.cells[1].innerHTML+'\']').val() == '' || $('.SETEMPCARRY[STRNO=\''+this.cells[1].innerHTML+'\']').val() === null ){
+						var newOption = new Option(data.display, data.valued, true, true);
+						$('.SETEMPCARRY[STRNO=\''+this.cells[1].innerHTML+'\']').append(newOption).trigger('change');
+					}
+				}else if(this.cells[7].innerHTML == 'อยู่ระหว่างการโอนย้ายรถ'){
+					$('.SETEMPCARRY[STRNO=\''+this.cells[1].innerHTML+'\']').val(null).trigger('change');
+					$('.SETEMPCARRY[STRNO=\''+this.cells[1].innerHTML+'\']').val(null).trigger('change');
+				}
+			}
+		}
+	});
+});
 
 $('#btnt2save').click(function(){ 
 	Lobibox.confirm({
@@ -129,7 +186,13 @@ $('#btnt2save').click(function(){
 					var len = this.cells.length;
 					var r = [];
 					for(var i=0;i<len;i++){
-						r.push(this.cells[i].innerHTML);
+						if(i == 8){
+							r.push($('.SETTRANSDT[STRNO='+this.cells[1].innerHTML+']').val());
+						}else if(i == 9){
+							r.push($('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').val());
+						}else{
+							r.push(this.cells[i].innerHTML);
+						}
 					}	
 					STRNO.push(r);
 				});
@@ -235,6 +298,13 @@ function search(){
 					dataType:'json',
 					success:function(data){
 						$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
+						
+						document.getElementById("table-fixed-STRNOTRANS").addEventListener("scroll", function(){
+							var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
+							this.querySelector("thead").style.transform = translate;	
+							this.querySelector("thead").style.zIndex = 999;
+						});
+						
 						var newOption;
 						$('#add_TRANSNO').val(data.html['TRANSNO']);
 						$('#add_TRANSDT').val(data.html['TRANSDT']);
@@ -244,7 +314,9 @@ function search(){
 						newOption = new Option(data.html['TRANSTO'], data.html['TRANSTO'], false, false);
 						$('#add_TRANSTO').empty();
 						$('#add_TRANSTO').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
-						$('#add_EMPCARRY').val(data.html['EMPCARRY']);
+						newOption = new Option(data.html['EMPCARRYNM'], data.html['EMPCARRY'], false, false);
+						$('#add_EMPCARRY').empty();
+						$('#add_EMPCARRY').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
 						newOption = new Option(data.html['APPROVNM'], data.html['APPROVED'], false, false);
 						$('#add_APPROVED').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
 						$('#add_TRANSSTAT').val(data.html['TRANSSTAT']).trigger('change'); //กรณี select2 มี option แล้ว
@@ -253,19 +325,21 @@ function search(){
 						$('#add_TRANSNO').attr('readonly',true);
 						$('#add_TRANSDT').attr('disabled',true);
 						$('#add_TRANSFM').attr('disabled',true);
+						//$('#add_TRANSFM').prop("disabled", true);
 						$('#add_TRANSTO').attr('disabled',true);
+						$('#add_EMPCARRY').attr('disabled',true);
 						$('#add_APPROVED').attr('disabled',true);
 						$('#add_TRANSSTAT').attr('disabled',true);
 						
 						//$('.tab1[name="home"]').attr('locat'),data.html['TRANSFM']
 						if(data.html['TRANSSTAT'] == 'Received'){ //สถานะรับครบแล้ว ปิดการบันทึก และเพิ่มข้อมูลทั้งหมด
-							$('#add_EMPCARRY').attr('disabled',true);							
+							//$('#add_EMPCARRY').attr('disabled',true);
 							$('#add_MEMO1').attr('disabled',true);
 							$('#btnt2addSTRNo').attr('disabled',true);
 							$('#btnt2del').attr('disabled',true);
 							$('#btnt2save').attr('disabled',true);
 						}else if(data.html['TRANSSTAT'] == 'Pendding'){ //สถานะรับบางส่วน ปิดการลบบิลโอน  แต่สามารถบันทึกได้หากมีสิทธิ์
-							$('#add_EMPCARRY').attr('disabled',false);
+							//$('#add_EMPCARRY').attr('disabled',false);
 							$('#add_MEMO1').attr('disabled',false);
 							//$('#btnt2addSTRNo').attr('disabled',false);
 							$('#btnt2del').attr('disabled',true);
@@ -282,7 +356,7 @@ function search(){
 								$('#btnt2save').attr('disabled',true);
 							}
 						}else{ //สถานะกำลังโอนย้ายรถ  เปิดการลบบิลโอน  และบันทึกข้อมูลได้หากมีสิทธิ์
-							$('#add_EMPCARRY').attr('disabled',false);
+							//$('#add_EMPCARRY').attr('disabled',false);
 							$('#add_MEMO1').attr('disabled',false);
 							$('#btnt2addSTRNo').attr('disabled',false);
 							$('#btnt2del').attr('disabled',false);
@@ -312,11 +386,33 @@ function search(){
 								$('#btnt2del').attr('disabled',true);	
 							}
 						}
+						
+						if(data.html['SYSTEM'] == "AT"){
+							$('#btnt2addSTRNo').attr('disabled',true);
+						}
 
 						var STRNO = data.html['STRNO'];
 						for(var i=0;i<STRNO.length;i++){
 							$('#table-STRNOTRANS tbody').append(STRNO[i]);
 						}
+						
+						$('.SETEMPCARRY').select2({
+							placeholder: 'เลือก',
+							ajax: {
+								url: '../Cselect2/getVUSER',
+								dataType: 'json',
+								delay: 1000,
+								processResults: function (data) {
+									return {
+										results: data
+									};
+								},
+								cache: true
+							},
+							allowClear: true,
+							multiple: false,
+							width: '200px'
+						});
 						
 						$('.tab1').hide();
 						$('.tab2').show();
@@ -338,7 +434,7 @@ $('#btnt1transfers').click(function(){
 	
 	$('#add_TRANSDT').val('');
 	$('#add_TRANSTO').val(null).trigger('change');
-	$('#add_EMPCARRY').val('');
+	$('#add_EMPCARRY').val(null).trigger('change');
 	$('#add_APPROVED').val(null).trigger('change');
 	$('#add_TRANSSTAT').val('Pendding');
 	$('#add_MEMO1').val('');
@@ -410,6 +506,16 @@ $('#btnt2addSTRNo').click(function(){
 				height: setheight,
 				content: data.html,
 				shown: function($this){
+					$('#fCRLOCAT').select2({
+						placeholder: 'เลือก',       
+						dropdownParent: $(".lobibox-body"),
+						minimumResultsForSearch: -1,
+						allowClear: false,
+						multiple: false,
+						//theme: 'classic',
+						width: '100%'
+					});		
+					
 					$('#STRNOSearch').click(function(){
 						//$('#fCRLOCAT option').remove();
 						//$('#fCRLOCAT').append('<option val='+$('#add_TRANSFM').val()+'>'+$('#add_TRANSFM').val()+'</option>').trigger('change');
@@ -475,6 +581,9 @@ $('#btnt2addSTRNo').click(function(){
 											msg: 'เลขตัวถัง '+STRNO+' มีอยู่ในรายการแล้ว'
 										});
 									}else{
+										var display = $('#add_EMPCARRY').find(':selected').text();
+										var valued = $('#add_EMPCARRY').find(':selected').val();	
+										
 										var row = '<tr seq="new'+generate+'">';
 										row += '<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="new'+generate+'" value="ยกเลิก"></td>';
 										row += '<td>'+STRNO+'</td>';
@@ -483,13 +592,33 @@ $('#btnt2addSTRNo').click(function(){
 										row += '<td>'+BAAB+'</td>';
 										row += '<td>'+COLOR+'</td>';
 										row += '<td>'+CC+'</td>';
-										row += '<td>อยู่ระหว่างการโอนย้ายรถ</td>';	
+										row += '<td>อยู่ระหว่างการโอนย้ายรถ</td>';
+										row += '<td><input type="text" STRNO="'+STRNO+'" class="SETTRANSDT form-control input-sm" data-provide="datepicker" data-date-language="th-th" placeholder="วันที่โอน"  style="width:100px;" value="'+($('#add_TRANSDT').val())+'"></td>';
+										row += '<td><select STRNO="'+STRNO+'" class="SETEMPCARRY select2"><option value=\''+(valued)+'\'>'+(display)+'</option></select></td>';
 										row += '</tr>';
 										  
 										$('#table-STRNOTRANS tbody').append(row);
 										generate = generate+1;
 										delSTRNO();
 									}
+									
+									$('.SETEMPCARRY').select2({
+										placeholder: 'เลือก',
+										ajax: {
+											url: '../Cselect2/getVUSER',
+											dataType: 'json',
+											delay: 1000,
+											processResults: function (data) {
+												return {
+													results: data
+												};
+											},
+											cache: true
+										},
+										allowClear: true,
+										multiple: false,
+										width: '200px'
+									});
 									
 									$this.destroy();
 								});
@@ -512,7 +641,36 @@ function delSTRNO(){
 	$('.delSTRNO').click(function(){ $(this).closest('tr').remove(); }); 
 }
 
-
+$('#btnt2bill').click(function(){
+	dataToPost = new Object();
+	dataToPost.TRANSNO = $('#add_TRANSNO').val();
+	
+	$.ajax({
+		url: '../SYS02/Ctransferscars/transcode',
+		data: dataToPost,
+		type:'POST',
+		dataType: 'json',
+		success: function(data){
+			if($('#add_TRANSNO').val() == "" || $('#add_TRANSNO').val() == ""){
+				alert('xxx');
+			}else{
+				
+				var baseUrl = $('body').attr('baseUrl');
+				var url = baseUrl+'SYS02/Ctransferscars/pdf?transno='+data[0];
+				var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
+				
+				Lobibox.window({
+					title: 'Window title',
+					content: content,
+					height: $(window).height(),
+					width: $(window).width()
+				});
+			}
+		}
+	});
+	
+	
+});
 
 
 

@@ -60,6 +60,30 @@ class Cselect2 extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getVUSER(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		
+		$sql = "
+			select top 20 IDNo,employeeCode,employeeCode+' :: '+firstName+' '+LastName as Name from YTKManagement.dbo.hp_vusers
+			where employeeCode like '%".$dataSearch."%' collate Thai_CI_AS
+				or IDNo like '%".$dataSearch."%' collate Thai_CI_AS
+				or employeeCode+' :: '+firstName+' '+LastName like '%".$dataSearch."%' collate Thai_CI_AS
+			order by employeeCode
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->IDNo, 'text'=>$row->Name];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
 	function getCUSTOMERS(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
@@ -160,30 +184,6 @@ class Cselect2 extends MY_Controller {
 		echo json_encode($json);
 	}
 	
-	function getVUSER(){
-		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_GET['q']);
-		
-		$sql = "
-			select top 20 employeeCode,employeeCode+' :: '+firstName+' '+LastName as Name from YTKManagement.dbo.hp_vusers
-			where employeeCode like '%".$dataSearch."%' collate Thai_CI_AS
-				or IDNo like '%".$dataSearch."%' collate Thai_CI_AS
-				or employeeCode+' :: '+firstName+' '+LastName like '%".$dataSearch."%' collate Thai_CI_AS
-			order by employeeCode
-		"; 
-		//echo $sql; exit;
-		$query = $this->db->query($sql);
-		
-		$html = "";
-		if($query->row()){
-			foreach($query->result() as $row){
-				$json[] = ['id'=>$row->employeeCode, 'text'=>$row->Name];
-			}
-		}
-		
-		echo json_encode($json);
-	}
-	
 	function getGroupCode(){
 		//ดึงเลขที่บิลรับ เพื่อคำนวณจัดรถให้สาขา
 		$sess = $this->session->userdata('cbjsess001');
@@ -231,6 +231,57 @@ class Cselect2 extends MY_Controller {
 		
 		echo json_encode($json);
 	}
+	
+	function getMODEL(){
+		//รุ่นรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$TYPECOD = $_REQUEST['TYPECOD'];
+		
+		$sql = "
+			select MODELCOD from {$this->MAuth->getdb('SETMODEL')}
+			where TYPECOD='".$TYPECOD."' and MODELCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by MODELCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
+				$json[] = array('id'=>$row->MODELCOD, 'text'=>$row->MODELCOD);
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCOLOR(){
+		//สีรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		
+		$sql = "
+			select COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
+			where COLORCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by COLORCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array('id'=>$row->COLORCOD, 'text'=>$row->COLORCOD);
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
 }
 
 

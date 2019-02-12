@@ -1,6 +1,14 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-
+/********************************************************
+             _______________________
+            / / _ _   _ _     __ 
+           / // __ \ / __ \ / __ \
+       _ _/ // /_/ // / / // /_/ /
+     /_ _ _/ \_ _ //_/ /_/ \__  /
+                          _ _/ /
+                         /___ /
+********************************************************/
 class Ctransferscars extends MY_Controller {
 	private $sess = array();
 	
@@ -43,7 +51,7 @@ class Ctransferscars extends MY_Controller {
 					<div class='col-xs-2 col-sm-2'>	
 						<div class='form-group'>
 							สถานะ
-							<select id='TRANSSTAT' class='form-control input-sm chosen-select' data-placeholder='สถานะ'>
+							<select id='TRANSSTAT' class='form-control selcls input-sm chosen-select' data-placeholder='สถานะ' >
 								<option value='' selected>ทุกสถานะ</option>
 								<option value='Sendding'>อยู่ระหว่างการโอนย้ายรถ</option>
 								<option value='Pendding'>รับโอนรถบางส่วน</option>
@@ -100,7 +108,8 @@ class Ctransferscars extends MY_Controller {
 						<div class='col-sm-2 col-sm-offset-2'>	
 							<div class='form-group'>
 								พขร.
-								<input type='text' id='add_EMPCARRY' class='form-control input-sm' placeholder='พขร.'>
+								<!-- input type='text' id='add_EMPCARRY' class='form-control input-sm' placeholder='พขร.' -->
+								<select id='add_EMPCARRY' class='form-control input-sm' placeholder='พขร.'></select>
 							</div>
 						</div>
 						<div class='col-sm-2'>	
@@ -156,6 +165,8 @@ class Ctransferscars extends MY_Controller {
 											<th>สี</th>
 											<th>ขนาด (CC)</th>
 											<th>สถานะ</th>
+											<th>วันที่โอนย้าย</th>
+											<th>พขร.</th>
 										</tr>
 									</thead>
 									<tbody></tbody>
@@ -171,7 +182,13 @@ class Ctransferscars extends MY_Controller {
 								<input type='button' id='btnt2home' class='btn btn-inverse btn-sm' value='หน้าแรก' style='width:100%'>
 							</div>
 						</div>
-						<div class='col-sm-1 col-sm-offset-9'>	
+						<div class='col-sm-1'>	
+							<div class='form-group'>
+								<br>
+								<input type='button' id='btnt2bill' class='btn btn-primary btn-sm' value='บิลโอน' style='width:100%'>
+							</div>
+						</div>
+						<div class='col-sm-1 col-sm-offset-8'>	
 							<div class='form-group'>
 								<br>
 								<input type='button' id='btnt2del' class='btn btn-danger btn-sm' value='ลบบิลโอน' style='width:100%'>
@@ -220,7 +237,7 @@ class Ctransferscars extends MY_Controller {
 		
 		$sql = "
 			select ".($cond == "" ? "top 20":"")." a.TRANSNO,convert(varchar(8),a.TRANSDT,112) as TRANSDT
-				,a.TRANSFM,a.TRANSTO,a.EMPCARRY,a.TRANSQTY,a.TRANSSTAT
+				,a.TRANSFM,a.TRANSTO,c.USERNAME as EMPCARRY,a.TRANSQTY,a.TRANSSTAT
 				,case when a.TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ'
 					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
 					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว' end TRANSSTATDesc
@@ -228,8 +245,20 @@ class Ctransferscars extends MY_Controller {
 				,b.USERNAME
 				,convert(varchar(8),a.INSERTDT,112) as INSERTDT
 			from {$this->MAuth->getdb('INVTransfers')} a
-			left join {$this->MAuth->getdb('PASSWRD')} b on a.INSERTBY=b.USERID collate Thai_CS_AS
+			left join (
+				select IDNo collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,titleName+firstName+' '+lastName+' ('+positionName+')' collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
+			) b on a.INSERTBY=b.USERID
+			left join (
+				select IDNo collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,titleName+firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
+			) c on a.EMPCARRY=c.USERID
 			where 1=1 ".$cond."
+			order by a.TRANSNO desc
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -291,19 +320,28 @@ class Ctransferscars extends MY_Controller {
 		
 		$sql = "
 			select TRANSNO,convert(varchar(8),TRANSDT,112) as TRANSDT 
-				,TRANSFM,TRANSTO,EMPCARRY,APPROVED,USERNAME+' ('+APPROVED+')' as APPROVNM
+				,TRANSFM,TRANSTO,EMPCARRY,c.employeeCode+' :: '+c.USERNAME as EMPCARRYNM
+				,APPROVED,b.employeeCode+' :: '+b.USERNAME as APPROVNM
 				,case when TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ'
 					when TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
 					else 'รับโอนรถครบแล้ว' end as TRANSSTATDesc
-				,TRANSSTAT,MEMO1
+				,TRANSSTAT,MEMO1,SYSTEM
 			from {$this->MAuth->getdb('INVTransfers')} a
 			left join (
-				select USERID collate Thai_CS_AS USERID
-					,USERNAME collate Thai_CS_AS USERNAME  
-				from {$this->MAuth->getdb('PASSWRD')}
+				select IDNo	collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
 			) b on a.APPROVED=b.USERID
+			left join (
+				select IDNo	collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
+			) c on a.EMPCARRY=c.USERID
 			where a.TRANSNO='".$arrs['TRANSNO']."'
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$html = array();
@@ -314,20 +352,30 @@ class Ctransferscars extends MY_Controller {
 				$html['TRANSFM'] = $row->TRANSFM;
 				$html['TRANSTO'] = $row->TRANSTO;
 				$html['EMPCARRY'] = $row->EMPCARRY;
+				$html['EMPCARRYNM'] = $row->EMPCARRYNM;
 				$html['APPROVED'] = $row->APPROVED;
 				$html['APPROVNM'] = $row->APPROVNM;
 				$html['TRANSSTAT'] = $row->TRANSSTAT;
 				$html['TRANSSTATDesc'] = $row->TRANSSTATDesc;
 				$html['MEMO1'] = $row->MEMO1;
+				$html['SYSTEM'] = $row->SYSTEM;
 			}
 		}
 		
 		$sql = "
 			select b.STRNO,c.TYPE,c.MODEL,c.BAAB,COLOR,CC
 				,case when isnull(b.RECEIVEDT,'')='' then 'อยู่ระหว่างการโอนย้ายรถ' else 'รับโอนแล้ว' end as RECEIVED
+				,b.EMPCARRY,d.employeeCode+' :: '+d.USERNAME as EMPCARRYNM
+				,convert(varchar(8),b.TRANSDT,112) as TRANSDT 
 			from {$this->MAuth->getdb('INVTransfers')} a
 			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
 			left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate Thai_CS_AS
+			left join (
+				select IDNo collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
+			) d on b.EMPCARRY=d.USERID
 			where a.TRANSNO='".$arrs['TRANSNO']."'
 		";
 		//echo $sql; exit;
@@ -337,7 +385,7 @@ class Ctransferscars extends MY_Controller {
 		$NRow = 0;
 		if($query->row()){
 			foreach($query->result() as $row){
-				$disabled;
+				$disabled = '';
 				if($row->RECEIVED == 'อยู่ระหว่างการโอนย้ายรถ'){ 
 					if($arrs['cup'] == 'T'){
 						if($html['TRANSFM'] == $this->sess['branch']){
@@ -366,6 +414,8 @@ class Ctransferscars extends MY_Controller {
 						<td>'.$row->COLOR.'</td>
 						<td>'.$row->CC.'</td>
 						<td>'.$row->RECEIVED.'</td>
+						<td><input type="text" STRNO="'.$row->STRNO.'" '.$disabled.' class="SETTRANSDT form-control input-sm" data-provide="datepicker" data-date-language="th-th" placeholder="วันที่โอน"  style="width:100px;" value="'.$this->Convertdate(2,$row->TRANSDT).'"></td>
+						<td><select STRNO="'.$row->STRNO.'" '.$disabled.' class="SETEMPCARRY select2"><option value=\''.$row->EMPCARRY.'\'>'.$row->EMPCARRYNM.'</option></select></td>
 					</tr>
 				';
 			}
@@ -578,9 +628,9 @@ class Ctransferscars extends MY_Controller {
 							where STRNO='".$arrs['STRNO'][$i][1]."'
 							
 							insert into {$this->MAuth->getdb('INVTransfersDetails')} (
-								TRANSNO,TRANSITEM,STRNO,MOVENO,RECEIVEBY,RECEIVEDT,INSERTBY,INSERTDT
+								TRANSNO,TRANSITEM,STRNO,EMPCARRY,TRANSDT,MOVENO,RECEIVEBY,RECEIVEDT,INSERTBY,INSERTDT
 							) values (
-								@TRANSNO,'".($i+1)."','".$arrs['STRNO'][$i][1]."',null,null,null,'".$this->sess["USERID"]."',getdate()
+								@TRANSNO,'".($i+1)."','".$arrs['STRNO'][$i][1]."','".$arrs['STRNO'][$i][9]."',".($this->Convertdate(1,$arrs['STRNO'][$i][8]) == "" ? "NULL" : "'".$this->Convertdate(1,$arrs['STRNO'][$i][8])."'").",null,null,null,'".$this->sess["IDNo"]."',getdate()
 							);
 						end
 					else
@@ -615,10 +665,10 @@ class Ctransferscars extends MY_Controller {
 					
 					insert into {$this->MAuth->getdb('INVTransfers')} (
 						TRANSNO,TRANSDT,TRANSFM,TRANSTO,EMPCARRY,APPROVED,
-						TRANSQTY,TRANSSTAT,MEMO1,INSERTBY,INSERTDT
+						TRANSQTY,TRANSSTAT,MEMO1,SYSTEM,INSERTBY,INSERTDT
 					) values (
 						@TRANSNO,'".$arrs['TRANSDT']."','".$arrs['TRANSFM']."','".$arrs['TRANSTO']."','".$arrs['EMPCARRY']."','".$arrs['APPROVED']."',
-						'".$TRANSQTY."','".$arrs['TRANSSTAT']."','".$arrs['MEMO1']."','".$this->sess["USERID"]."',getdate()
+						'".$TRANSQTY."','".$arrs['TRANSSTAT']."','".$arrs['MEMO1']."','MT','".$this->sess["IDNo"]."',getdate()
 					);
 					
 					".$sql."
@@ -634,7 +684,7 @@ class Ctransferscars extends MY_Controller {
 					insert into #transaction select 'n' as id,ERROR_MESSAGE() as msg;
 				end catch
 			";
-			
+			//echo $sql; exit;
 			$this->db->query($sql);
 		
 			$sql = "select * from #transaction";   
@@ -674,9 +724,9 @@ class Ctransferscars extends MY_Controller {
 								where STRNO='".$arrs['STRNO'][$i][1]."'
 								
 								insert into {$this->MAuth->getdb('INVTransfersDetails')}  (
-									TRANSNO,TRANSITEM,STRNO,MOVENO,RECEIVEBY,RECEIVEDT,INSERTBY,INSERTDT
+									TRANSNO,TRANSITEM,STRNO,EMPCARRY,TRANSDT,MOVENO,RECEIVEBY,RECEIVEDT,INSERTBY,INSERTDT
 								) values (
-									@TRANSNO,'".($i+1)."','".$arrs['STRNO'][$i][1]."',null,null,null,'".$this->sess["USERID"]."',getdate()
+									@TRANSNO,'".($i+1)."','".$arrs['STRNO'][$i][1]."','".$arrs['STRNO'][$i][9]."',".($this->Convertdate(1,$arrs['STRNO'][$i][8]) == "" ? "NULL" : "'".$this->Convertdate(1,$arrs['STRNO'][$i][8])."'").",null,null,null,'".$this->sess["IDNo"]."',getdate()
 								);
 							end
 						else
@@ -685,6 +735,13 @@ class Ctransferscars extends MY_Controller {
 								insert into #transaction select 'n' as id,'ผิดพลาด เลขตัวถัง ".$arrs['STRNO'][$i][1]." ไม่ได้อยู่ในสถานะที่จะโอนย้ายได้ โปรดตรวจสอบรายการใหม่อีกครั้ง' as msg;
 								return;
 							end
+					";
+				}else{
+					$sql .= "
+						update {$this->MAuth->getdb('INVTransfersDetails')}
+						set EMPCARRY='".$arrs['STRNO'][$i][9]."',
+							TRANSDT=".($this->Convertdate(1,$arrs['STRNO'][$i][8]) == "" ? "NULL" : "'".$this->Convertdate(1,$arrs['STRNO'][$i][8])."'")."
+						where TRANSNO=@TRANSNO and STRNO='".$arrs['STRNO'][$i][1]."'
 					";
 				}
 				
@@ -735,7 +792,7 @@ class Ctransferscars extends MY_Controller {
 						,MEMO1 = '".$arrs['MEMO1']."'
 						,TRANSQTY = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO)
 						,TRANSSTAT = (case when @item=@itemRV then 'Sendding' when @itemRV>0 then 'Pendding' else 'Received' end)
-						,INSERTBY = '".$this->sess["USERID"]."'
+						,INSERTBY = '".$this->sess["IDNo"]."'
 						,INSERTDT = getdate()
 					where TRANSNO = @TRANSNO;
 					
@@ -773,6 +830,187 @@ class Ctransferscars extends MY_Controller {
 			$response['msg'] = $msg;
 			echo json_encode($response); exit;
 		}
+	}
+	
+	function transcode(){
+		$data = array();
+		$data[] = $_REQUEST["TRANSNO"];
+		
+		echo json_encode($this->generateData($data,"encode"));
+	}
+	
+	function pdf(){
+		$data = array();
+		$data[] = $_GET["transno"];
+		
+		$arrs = $this->generateData($data,"decode");
+		
+		$sql = "select top 1 COMP_NM from {$this->MAuth->getdb('CONDPAY')}";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$arrs["pdf_COMP_NM"] = $row->COMP_NM;
+		
+		$sql = "
+			select a.TRANSFM+' '+g.LOCATNM collate Thai_CS_AS as TRANSFM,a.TRANSTO+' '+h.LOCATNM collate Thai_CS_AS as TRANSTO
+				,convert(varchar(8),a.TRANSDT,112) TRANSDT,a.TRANSNO,d.employeeCode APPROVED,d.USERNAME,a.MEMO1 
+				,b.STRNO,c.TYPE,c.MODEL,c.BAAB,c.COLOR,c.CC,case when c.STAT='N' then 'รถใหม่' else 'รถเก่า' end as STAT
+				,e.USERNAME as EMPCARRY,convert(varchar(8),b.TRANSDT,112) TRANSDTDetail
+				,f.USERNAME as EMPRC,convert(varchar(8),b.RECEIVEDT,112) RECEIVEDT
+			from {$this->MAuth->getdb('INVTransfers')} a
+			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
+			left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate Thai_CS_AS
+			left join (
+				select IDNo collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,'คุณ'+firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
+			) d on a.APPROVED=d.USERID
+			left join (
+				select IDNo collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,titleName+firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
+			) e on b.EMPCARRY=e.USERID
+			left join (
+				select IDNo collate Thai_CS_AS USERID
+					,employeeCode collate Thai_CS_AS employeeCode
+					,titleName+firstName+' '+lastName collate Thai_CS_AS USERNAME  
+				from {$this->MAuth->getdb('hp_vusers')}
+			) f on b.RECEIVEBY=f.USERID
+			left join {$this->MAuth->getdb('INVLOCAT')} g on a.TRANSFM=g.LOCATCD collate Thai_CS_AS
+			left join {$this->MAuth->getdb('INVLOCAT')} h on a.TRANSTO=h.LOCATCD collate Thai_CS_AS
+			where a.TRANSNO='".$arrs[0]."'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$cdt = 0;
+				$EMPTRANS = "";
+				if($row->EMPCARRY != "" and $row->TRANSDTDetail != ""){
+					$EMPTRANS = $row->EMPCARRY.' ('.$this->Convertdate(2,$row->TRANSDTDetail).')';
+				}else{
+					$cdt = "color:#aaa;";
+				}
+
+				$EMPRC = "";
+				if($row->EMPRC != "" and $row->RECEIVEDT != ""){
+					$EMPRC = $row->EMPRC.' ('.$this->Convertdate(2,$row->RECEIVEDT).')';
+					$cdt = "color:#aaa;";
+				}	
+								
+				$html .= "
+					<tr>
+						<td class='bor2' align='center' style='".$cdt."max-width:29px;width:29px;background-color:white;'>".$NRow."</td>
+						<td class='bor2' style='".$cdt."max-width:150px;width:150px;background-color:white;'>".$row->STRNO."</td>
+						<td class='bor2' style='".$cdt."max-width:150px;width:150px;background-color:white;'>".$row->TYPE."<br/>".$row->MODEL."<br/>".$row->BAAB."</td>
+						<td class='bor2' style='".$cdt."max-width:150px;width:150px;background-color:white;'>".$row->COLOR."<br/>".$row->CC."<br/>".$row->STAT."</td>
+						<td class='bor2' style='".$cdt."max-width:250px;width:250px;background-color:white;'>".$EMPTRANS."<br/>".$EMPRC."<br/></td>
+					</tr>
+				";
+				
+				
+				$arrs["pdf_TRANSFM"] = $row->TRANSFM;
+				$arrs["pdf_TRANSTO"] = $row->TRANSTO;
+				$arrs["pdf_TRANSDT"] = $this->Convertdate(2,$row->TRANSDT);
+				$arrs["pdf_TRANSNO"] = $row->TRANSNO;
+				$arrs["pdf_APPROVED"] = $row->USERNAME." (".$row->APPROVED.")";
+				$arrs["pdf_APPROVEDNM"] = $row->USERNAME;
+				$arrs["pdf_MEMO1"] = $row->MEMO1;
+				$NRow++;
+			}			
+		}
+		
+		
+		
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8', 
+			'format' => 'A4',
+			'margin_top' => 80, 	//default = 16
+			'margin_left' => 15, 	//default = 15
+			'margin_right' => 15, 	//default = 15
+			'margin_bottom' => 40, 	//default = 16
+			'margin_header' => 9, 	//default = 9
+			'margin_footer' => 40, 	//default = 9
+		]);
+		
+		$content = "
+			<table class='wf' style='font-size:9pt;height:500px;border-collapse:collapse;background-color:red;line-height:23px;overflow:wrap;vertical-align:text-top;'>
+				<tbody>
+					{$html}
+				</tbody>
+			</table>
+		";
+		
+		$stylesheet = "
+			<style>
+				body { font-family: garuda;font-size:10pt; }
+				.wf { width:100%; }
+				.h10 { height:10px; }
+				.tc { text-align:center; }
+				.pf { position:fixed; }
+				.bor { border:0.1px solid black; }
+				.bor2 { border:0.1px dotted black; }
+			</style>
+		";
+		$content = $content.$stylesheet;
+		
+		$head = "
+			<div class='wf pf tc' style='font-size:13pt;'><b>{$arrs["pdf_COMP_NM"]}</b></div>
+			
+			<div class='wf pf' style='top:35;'>โอนย้ายรถจากสาขา</div>
+			<div class='pf' style='top:35;left:120;width:560px;height:20px;background-color:white;'>{$arrs["pdf_TRANSFM"]}</div>
+			
+			<div class='wf pf' style='top:60;'>ไปยังสาขา</div>
+			<div class='pf' style='top:60;left:120;width:560px;height:20px;background-color:white;'>{$arrs["pdf_TRANSTO"]}</div>
+			
+			<div class='wf pf' style='top:85;'>วันที่โอนย้าย</div>
+			<!-- div class='pf' style='top:85;left:320;'>เลขที่ใบโอนย้าย</div -->
+			<div class='pf' style='top:85;left:120;width:200px;height:20px;background-color:white;'>{$arrs["pdf_TRANSDT"]}</div>
+			<!-- div class='pf' style='top:85;left:430;width:250px;height:20px;background-color:white;'>{$arrs["pdf_TRANSNO"]}</div -->
+			
+			<div class='pf' style='top:110;left:0;'>เลขที่ใบโอนย้าย</div>
+			<div class='pf' style='top:110;left:120;width:250px;height:20px;background-color:white;'>{$arrs["pdf_TRANSNO"]}</div>
+			
+			<div class='wf pf' style='top:135;'>ผู้อนุมัติการโอนย้าย</div>
+			<div class='pf' style='top:135;left:120;width:300px;height:20px;background-color:white;'>{$arrs["pdf_APPROVED"]}</div>
+			
+			<div class='wf pf' style='top:160;max-height:70px;height:70px;background-color:white;text-indent:70px;'>{$arrs["pdf_MEMO1"]}</div>
+			<div class='wf pf' style='top:160;'>หมายเหตุ</div>
+			
+			<div class='wf pf' style='top:201;'>
+				<table class='wf' style='font-size:10pt;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:middle;'>
+					<thead>
+						<tr>
+							<th class='bor' align='center' style='max-width:29px;width:29px;background-color:white;'>No.</th>
+							<th class='bor' style='max-width:150px;width:150px;background-color:white;'>หมายเลขตัวถัง</th>
+							<th class='bor' style='max-width:150px;width:150px;background-color:white;'>ยี่ห้อ<br/>รุ่น<br/>แบบ</th>
+							<th class='bor' style='max-width:150px;width:150px;background-color:white;'>สี<br/>ขนาด<br/>สถานะรถ</th>
+							<th class='bor' style='max-width:250px;width:250px;background-color:white;'>พขร (วันที่โอนย้าย)<br/>ผู้รับสินค้า (วันที่รับ)</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+			<div class='wf pf' style='top:1060;left:600;font-size:6pt;'>".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
+		";
+		//<div class='wf pf' style='top:1050;left:580;'>{DATE j-m-Y H:s}  {PAGENO} / {nbpg}</div>
+		$mpdf->SetHTMLHeader($head);		
+		$mpdf->WriteHTML($content);
+		$mpdf->SetHTMLFooter("
+			<div class='pf' style='top:930;'><hr></div>
+			<div class='pf' style='top:955;left:40;'>.........................................................</div>
+			<div class='pf' style='top:955;left:450;'>.........................................................</div>
+			
+			<div class='pf' style='top:980;left:40;'>ส่วนกลาง ".$arrs["pdf_APPROVEDNM"]."</div>
+			<div class='pf' style='top:980;left:450;'>(&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;)</div>
+			
+			<div class='pf' style='top:1005;left:100;'>ผู้อนุมัติ</div>
+			<div class='pf' style='top:1005;left:520;'>ผู้รับสินค้า</div>
+		");		
+		$mpdf->Output();
 	}
 }
 

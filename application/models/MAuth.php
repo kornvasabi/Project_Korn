@@ -10,9 +10,19 @@ class MAuth extends CI_Model {
 		************************************************************************************************/
 		$sess = $this->session->userdata('cbjsess001');
 		$sql = "
-			select case when COUNT(*) > 0 then '{$sess['db']}' else 'YTKManagement' end as db				
-			from {$sess['db']}.INFORMATION_SCHEMA.TABLES 
-			where TABLE_NAME='".$table."'
+			select case when sum(r) > 0 then '{$sess['db']}' else 'YTKManagement' end as db				
+			from (
+				-- table && view
+				SELECT COUNT(*) as r from {$sess['db']}.INFORMATION_SCHEMA.TABLES 
+				where TABLE_NAME='".$table."'
+				
+				union all 
+				--function ต่างๆ
+				SELECT COUNT(*) as r FROM {$sess['db']}.sys.sql_modules m 
+				INNER JOIN {$sess['db']}.sys.objects o ON m.object_id=o.object_id
+				WHERE type_desc like '%function%' and name ='".$table."'
+			) as data
+			
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);

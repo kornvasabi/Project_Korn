@@ -1,3 +1,8 @@
+var _insert = $('.tab1[name="home"]').attr('cin');
+var _update = $('.tab1[name="home"]').attr('cup');
+var _delete = $('.tab1[name="home"]').attr('cdel');
+var _level  = $('.tab1[name="home"]').attr('clev');
+
 $(function(){
 	if($('.tab1[name="home"]').attr('cin') == 'T'){
 		$('#add_group').attr('disabled',false);	
@@ -292,4 +297,37 @@ function afterSelect(){
 		});
 	});
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
