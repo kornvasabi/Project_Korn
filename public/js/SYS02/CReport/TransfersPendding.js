@@ -1,5 +1,5 @@
 /********************************************************
-             _______________________
+             ______@--/02/2019______
             / / _ _   _ _     __ 
            / // __ \ / __ \ / __ \
        _ _/ // /_/ // / / // /_/ /
@@ -8,32 +8,23 @@
                          /___ /
 ********************************************************/
 
-$('#btnt1transfer').click(function(){
-	/*
-	var content = "hi";
-	Lobibox.window({
-		title: 'Window title',
-		content: content,
-		height: $(window).height(),
-		width: $(window).width()
-	});
-	*/
-	search();
-});
+var _insert = $('.tab1[name="home"]').attr('cin');
+var _update = $('.tab1[name="home"]').attr('cup');
+var _delete = $('.tab1[name="home"]').attr('cdel');
+var _level  = $('.tab1[name="home"]').attr('clev');
 
-function search(){
+$('#btnt1transferPendding').click(function(){
 	dataToPost = new Object();
-	dataToPost.TRANSNO   = $('#TRANSNO').val();
 	dataToPost.TRANSDTs  = $('#TRANSDTs').val();
 	dataToPost.TRANSDTe  = $('#TRANSDTe').val();
 	dataToPost.TRANSFM   = $('#TRANSFM').val();
+	dataToPost.TRANSTO	 = $('#TRANSTO').val();
 	dataToPost.TRANSSTAT = $('#TRANSSTAT').val();
-	dataToPost.TRANSSYS	 = $('#TRANSSYS').val();
 	
 	$('#loadding').show();
 
 	$.ajax({
-		url: '../SYS02/CReport/TransfersSearch',
+		url: '../SYS02/CReport/TransfersPenddingSearch',
 		data: dataToPost,
 		Type: 'POST',
 		dataType:'json',
@@ -45,14 +36,14 @@ function search(){
 				content: data.html,
 				height: $(window).height(),
 				width: $(window).width(),
-				closeOnEsc: false,
+				closeOnEsc: true,
 				draggable: false
 			});
 			
-			document.getElementById("table-fixed-TransfersSearch").addEventListener("scroll", function(){
+			document.getElementById("table-fixed-TransfersPenddingSearch").addEventListener("scroll", function(){
 				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 				this.querySelector("thead").style.transform = translate;						
 			});
 		}
 	});
-}
+});

@@ -1,3 +1,8 @@
+var _insert = $('.tab1[name="home"]').attr('cin');
+var _update = $('.tab1[name="home"]').attr('cup');
+var _delete = $('.tab1[name="home"]').attr('cdel');
+var _level  = $('.tab1[name="home"]').attr('clev');
+
 $('.tab1').hide();
 
 var setwidth = $(window).width();

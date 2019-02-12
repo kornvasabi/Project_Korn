@@ -1,5 +1,5 @@
 /********************************************************
-             _______________________
+             ______@--/02/2019______
             / / _ _   _ _     __ 
            / // __ \ / __ \ / __ \
        _ _/ // /_/ // / / // /_/ /
@@ -7,6 +7,11 @@
                           _ _/ /
                          /___ /
 ********************************************************/
+
+var _insert = $('.tab1[name="home"]').attr('cin');
+var _update = $('.tab1[name="home"]').attr('cup');
+var _delete = $('.tab1[name="home"]').attr('cdel');
+var _level  = $('.tab1[name="home"]').attr('clev');
 
 $('#btnt1transfer').click(function(){
 	/*
@@ -45,7 +50,7 @@ function search(){
 				content: data.html,
 				height: $(window).height(),
 				width: $(window).width(),
-				closeOnEsc: false,
+				closeOnEsc: true,
 				draggable: false
 			});
 			

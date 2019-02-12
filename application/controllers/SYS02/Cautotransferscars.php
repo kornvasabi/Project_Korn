@@ -1,6 +1,14 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-
+/********************************************************
+             _______________________
+            / / _ _   _ _     __ 
+           / // __ \ / __ \ / __ \
+       _ _/ // /_/ // / / // /_/ /
+     /_ _ _/ \_ _ //_/ /_/ \__  /
+                          _ _/ /
+                         /___ /
+********************************************************/
 class Cautotransferscars extends MY_Controller {
 	private $sess = array();
 	
@@ -79,7 +87,7 @@ class Cautotransferscars extends MY_Controller {
 														<td>
 															<div class='col-sm-12'>
 																<div class='col-sm-6'>
-																	<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='tab11prov1' value='ตรัง' >
+																	<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='tab11prov1' value='ตรัง'  >
 																	<label class='form-check-label' style='cursor:pointer;' for='tab11prov1'>ตรัง</label>
 																</div>
 																<div class='col-sm-6'>
@@ -124,15 +132,15 @@ class Cautotransferscars extends MY_Controller {
 														<th class='col-sm-3' style='text-align:center;'>พท.ว่าง <br>ที่จะจัดรถ</th>
 														<td>
 															<div class='col-sm-6'>
-																<input type='number' class='input input-sm' min='-10' max='20' value='0'>
+																<input type='number' id='condStockEmpty' class='input input-sm' min='-20' max='20' value='0'>
 															</div>
 														</td>
 													</tr>
 													<tr>
-														<th class='col-sm-3' style='text-align:center;'>limit</th>
+														<th class='col-sm-3' style='text-align:center;' title='จำนวนรถสูงสุดที่จะสต๊อกสำหรับสาขา ตามรุ่น สี'>limit</th>
 														<td>
 															<div class='col-sm-6'>
-																<input type='number' class='input input-sm' min='1' max='20' value='0'>
+																<input type='number' id='condMaxLimit' class='input input-sm' min='1' max='20' value='1'>
 															</div>
 														</td>
 													</tr>
@@ -155,7 +163,7 @@ class Cautotransferscars extends MY_Controller {
 								</div>
 								<div class='tab-pane' name='tab22' style='height:calc(100vh - 260px);overflow:auto;'>
 									<fieldset>
-										<div class='col-sm-12' id='tab22Body' style='height:calc(100vh - 320px);background-color:#ddd;'></div>
+										<div class='col-sm-12' id='tab22Body' style='height:calc(100vh - 320px);background-color:#fff;'></div>
 										<div class='col-sm-12'>
 											<div class='row'>
 												<div class='col-sm-2'>
@@ -170,14 +178,14 @@ class Cautotransferscars extends MY_Controller {
 								</div>
 								<div class='tab-pane' name='tab33' style='height:calc(100vh - 260px);overflow:auto;'>
 									<fieldset>
-										<div class='col-sm-12' id='tab33Body' style='height:calc(100vh - 320px);background-color:#aaa;'></div>
+										<div class='col-sm-12' id='tab33Body' style='height:calc(100vh - 320px);background-color:#fff;'></div>
 										<div class='col-sm-12'>
 											<div class='row'>
 												<div class='col-sm-2'>
-													<button id='tab33Back' name='tab33' class='btn btn-sm btn-danger btn-block'>ย้อนกลับ</button>
+													<!-- button id='tab33Back' name='tab33' class='btn btn-sm btn-danger btn-block'>ย้อนกลับ</button -->
 												</div>
 												<div class='col-sm-2 col-sm-offset-8'>
-													<button id='tab33processCar' name='tab33' class='btn btn-sm btn-primary btn-block'>ถัดไป</button>
+													<button id='tab33processCar' name='tab33' class='btn btn-sm btn-primary btn-block'>ทำรายการเพิ่มเติม</button>
 												</div>
 											</div>
 										</div>
@@ -817,6 +825,52 @@ class Cautotransferscars extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function getSearchSTRNO_line(){
+		//$this->load->library('line/LineNotify');
+		require_once './vendor/autoload.php';
+		$token = 'ty2KVy9r71JadnSp154CbpFqY7ARjw38VBiTqoekRjV';
+		
+		$arrs = array();
+		$arrs["LOCAT"]  = $_REQUEST["LOCAT"];
+		$arrs["RECVNO"] = $_REQUEST["RECVNO"];
+		$arrs["STRNO"]  = $_REQUEST["STRNO"];
+		$arrs["MODEL"]  = $_REQUEST["MODEL"];
+		$arrs["COLOR"]  = $_REQUEST["COLOR"];
+		$arrs["STAT"]   = $_REQUEST["STAT"];
+		
+		$token = 'ty2KVy9r71JadnSp154CbpFqY7ARjw38VBiTqoekRjV';
+		//$token = 'lgNu4brRfcULq36GyhyGiCUeBamrzQSqiK1X4Ic1xxs';
+		$token = '5j6NbypUuW679JrS4bsi6DD8DrpR8xaITXdZXTMlgZg';
+		$lineapi = $token; // ใส่ token key ที่ได้มา
+		$mms =  "พร้อมเที่ยวกันยัง".trim($arrs["STRNO"])." "; // ข้อความที่ต้องการส่ง
+		date_default_timezone_set("Asia/Bangkok");
+		$chOne = curl_init(); 
+		curl_setopt( $chOne, CURLOPT_URL, "https://notify-api.line.me/api/notify"); 
+		// SSL USE 
+		curl_setopt( $chOne, CURLOPT_SSL_VERIFYHOST, 0); 
+		curl_setopt( $chOne, CURLOPT_SSL_VERIFYPEER, 0); 
+		//POST 
+		curl_setopt( $chOne, CURLOPT_POST, 1);
+		curl_setopt( $chOne, CURLOPT_POSTFIELDS, "message=$mms");
+		curl_setopt( $chOne, CURLOPT_FOLLOWLOCATION, 1);
+		
+		$headers = array( 'Content-type: application/x-www-form-urlencoded', 'Authorization: Bearer '.$lineapi.'', ); 
+		
+		curl_setopt($chOne, CURLOPT_HTTPHEADER, $headers); 
+		
+		curl_setopt( $chOne, CURLOPT_RETURNTRANSFER, 1); 
+		$result = curl_exec( $chOne ); 
+		//Check error 
+		if(curl_error($chOne)) { 
+			echo 'error:' . curl_error($chOne); 
+		} else { 
+			$result_ = json_decode($result, true); 
+			echo "status : ".$result_['status']; 
+			echo "message : ". $result_['message'];
+		}
+		curl_close( $chOne ); 
+	}	
+	
 	function getSearchSTRNO(){
 		$arrs = array();
 		$arrs["LOCAT"]  = $_REQUEST["LOCAT"];
@@ -1095,7 +1149,7 @@ class Cautotransferscars extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	function confirmResultt1AT(){
+	function confirmResultt1AT_old2(){
 		$LOCAT 		= $_REQUEST["LOCAT"];
 		$RECVNO 	= $_REQUEST["RECVNO"];
 		$DATATABLE  = $_REQUEST["DATATABLE"];
@@ -1254,14 +1308,269 @@ class Cautotransferscars extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function confirmResultt1AT(){
+		$arrs = array(
+			"LOCAT" => $_REQUEST["LOCAT"],
+			"STRNOChoose" => $_REQUEST["STRNOChoose"],
+			"STRNO" => $_REQUEST["STRNO"]
+		);
+		
+		$size = sizeof($arrs["STRNO"]);
+		
+		$tempAuto = "insert into #tempAuto ";
+		for($i=0;$i<$size;$i++){
+			$dsize = sizeof($arrs["STRNO"][$i]);
+			
+			$tempAuto .= ($tempAuto == "insert into #tempAuto " ? "select " : " union all select ");
+			
+			for($j=0;$j<$dsize;$j++){
+				if($j!=0){ $tempAuto .= ","; }
+				$tempAuto .= "'".$arrs["STRNO"][$i][$j]."'";
+			}
+		}
+		
+		
+		$size = sizeof($arrs["STRNOChoose"]);
+		
+		$tempChoose = "insert into #tempChoose ";
+		for($i=0;$i<$size;$i++){
+			$dsize = sizeof($arrs["STRNOChoose"][$i]);
+			
+			$tempChoose .= ($tempChoose == "insert into #tempChoose " ? "select " : " union all select ");
+			
+			for($j=0;$j<$dsize;$j++){
+				if($j!=0){ $tempChoose .= ","; }
+				if($j==3){ 
+					$tempChoose .= "'".($arrs["STRNOChoose"][$i][$j] == "รถใหม่" ? "N" : "O")."'";
+				}else{
+					$tempChoose .= "'".$arrs["STRNOChoose"][$i][$j]."'";
+				}
+			}
+		}
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#tempChoose') is not null drop table #tempChoose;
+			create table #tempChoose (STRNO varchar(20),MODEL varchar(30),COLOR varchar(30),STAT varchar(5),FRM varchar(20));
+			".$tempChoose."
+		";
+		//echo $sql; exit;
+		$this->db->query($sql);
+		$sql = "		
+			if OBJECT_ID('tempdb..#tempAuto') is not null drop table #tempAuto;
+			create table #tempAuto (LOCAT varchar(20),MODEL varchar(30),COLOR varchar(30),CN int,FRM varchar(20));
+			
+			".$tempAuto."
+		";
+		//echo $sql; exit;
+		$this->db->query($sql);
+		$sql = "			
+			if OBJECT_ID('tempdb..#temptran') is not null drop table #temptran;
+			create table #temptran (id varchar(20),msg varchar(max));
+
+			begin tran transaction1
+			begin try
+				declare @LOCAT varchar(20);
+				declare @LOCATOLD varchar(20) = '';
+				declare @MODEL varchar(30);
+				declare @COLOR varchar(30);
+				declare @CN int; --จำนวนรถใหม้ จำแนกตามรุ่น สี
+				declare @TRANSNO varchar(12); --เลขที่ใบโอนย้าย
+				declare @CRLOCAT varchar(20) = 'Fกป';
+				declare @STRNO varchar(30);
+				declare @TRANSLOG varchar(max);
+				
+				declare cs_stock cursor for 
+					select LOCAT,MODEL,COLOR,sum(CN) from #tempAuto 
+					group by LOCAT,MODEL,COLOR 
+					order by LOCAT,MODEL,COLOR;
+					
+				open cs_stock 
+				fetch next from cs_stock into @LOCAT,@MODEL,@COLOR,@CN
+
+				while @@FETCH_STATUS = 0  
+				begin 
+					IF @LOCATOLD <> @LOCAT
+					BEGIN
+						/* @symbol = สัญลักษณ์แทนประเภทของเลขที่ นั้นๆ */
+						declare @symbol varchar(10) = (select H_TFCAR from {$this->MAuth->getdb('CONDPAY')});
+						/* @rec = รหัสพื้นฐาน */
+						declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD=@CRLOCAT);
+						/* @TRANSNO = รหัสที่จะใช้ */		
+						set @TRANSNO = (select isnull(MAX(TRANSNO),@rec+'0000') from ( 
+							select TRANSNO collate Thai_CS_AS as TRANSNO from {$this->MAuth->getdb('INVTransfers')} where TRANSNO like ''+@rec+'%' 
+							union select moveno collate Thai_CS_AS as moveno from {$this->MAuth->getdb('INVMOVM')} where MOVENO like ''+@rec+'%'
+						) as a);
+						set @TRANSNO = left(@TRANSNO ,8)+right(right(@TRANSNO ,4)+10001,4);
+						
+						
+						insert into {$this->MAuth->getdb('INVTransfers')} (
+							TRANSNO,TRANSDT,TRANSFM,TRANSTO,EMPCARRY,APPROVED,
+							TRANSQTY,TRANSSTAT,MEMO1,SYSTEM,INSERTBY,INSERTDT
+						) values (
+							@TRANSNO,CONVERT(varchar(8),getdate(),112),@CRLOCAT,@LOCAT,'','".$this->sess["IDNo"]."'
+							,0,'Sendding','auto','AT','".$this->sess["IDNo"]."',getdate()
+						);
+						
+						select @TRANSLOG = replace(isnull(@TRANSLOG,'')+QUOTENAME(@TRANSNO),'][',',');
+					END
+					
+					while (@CN > 0)
+					begin
+						declare @getSTRNO varchar(30) = isnull((
+							select top 1 b.STRNO from {$this->MAuth->getdb('INVTRAN')} a
+							left join #tempChoose b on a.STRNO=b.STRNO collate Thai_CS_AS and a.MODEL=b.MODEL collate Thai_CS_AS and a.COLOR=b.COLOR collate Thai_CS_AS and a.CRLOCAT=b.FRM collate Thai_CS_AS 
+							where b.STRNO is not null and a.FLAG='D' and a.RESVDT is null and a.SDATE is null
+								and a.CRLOCAT=@CRLOCAT and a.MODEL=@MODEL and a.COLOR=@COLOR
+						),'');
+						
+						if (@getSTRNO <> '')
+						begin
+							insert into {$this->MAuth->getdb('INVTransfersDetails')}
+							select @TRANSNO
+								,isnull((select max(TRANSITEM)+1 from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO=@TRANSNO),1)
+								,@getSTRNO,NULL,NULL,NULL,NULL,NULL,'".$this->sess["IDNo"]."',GETDATE()
+											
+							update {$this->MAuth->getdb('INVTransfers')}
+							set TRANSQTY=TRANSQTY+1
+							where TRANSNO=@TRANSNO
+							
+							update {$this->MAuth->getdb('INVTRAN')}
+							set CRLOCAT='TRANS'
+							where STRNO = @getSTRNO
+							
+							--ลบรายการรถที่จัดให้แล้วออก
+							delete from #tempChoose
+							where STRNO = @getSTRNO;
+							
+							set @CN = @CN - 1;	
+						end	
+					end		
+					
+					set @LOCATOLD = @LOCAT;
+					fetch next from cs_stock into @LOCAT,@MODEL,@COLOR,@CN
+				end
+				
+				close cs_stock;
+				deallocate cs_stock;	
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS02::บันทึก โอนย้ายรถ AT ',@TRANSLOG+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
+				insert into #temptran select 'Y',@TRANSLOG;
+				commit tran transaction1;
+			end try
+			begin catch
+				rollback tran transaction1;
+				insert into #temptran select 'N',ERROR_MESSAGE();
+			end catch
+		";
+		//echo $sql; exit;
+		$this->db->query($sql);		
+		$sql = "select * from #temptran";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				if($row->id == "Y"){
+					$TRANSNO = str_replace(",","','",(str_replace(array("[","]"),"'",$row->msg)));
+					
+					$sql = "
+						if OBJECT_ID('tempdb..#tempChoose') is not null drop table #tempChoose;
+						create table #tempChoose (STRNO varchar(20),MODEL varchar(30),COLOR varchar(30),STAT varchar(5),FRM varchar(20));
+						".$tempChoose."
+					";
+					//echo $sql; exit;
+					$this->db->query($sql);		
+					
+					$sql = "
+						select b.STRNO,b.MODEL,b.COLOR,b.STAT,a.TRANSNO,a.TRANSFM,a.TRANSTO from (
+							select b.*,a.TRANSFM,a.TRANSTO
+							from {$this->MAuth->getdb('INVTransfers')} a
+							left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
+							where a.TRANSNO in (".$TRANSNO.")
+						) as a
+						right join #tempChoose b on a.STRNO=b.STRNO collate thai_cs_as 
+						order by a.TRANSNO
+					";
+					
+					//echo $sql; exit;
+					//$sql = "select * from #tempChoose";
+					$q = $this->db->query($sql);
+					$NRow = 1;
+					if($q->row()){
+						foreach($q->result() as $row_tran){
+							/*
+							$html .= "
+								<tr>
+									<td>".$row_tran->TRANSNO."</td>
+									<td>".$row_tran->TRANSITEM."</td>
+									<td>".$row_tran->STRNO."</td>
+									<td>".$row_tran->EMPCARRY."</td>
+									<td>".$row_tran->TRANSDT."</td>
+									<td>".$row_tran->MOVENO."</td>
+									<td>".$row_tran->RECEIVEBY."</td>
+									<td>".$row_tran->RECEIVEDT."</td>
+									<td>".$row_tran->INSERTBY."</td>
+									<td>".$row_tran->INSERTDT."</td>
+								</tr>
+							";
+							*/
+							$css="color:black;";
+							if($row_tran->TRANSNO == ""){
+								$css="color:Red;";
+							}
+							$html .= "
+								<tr style='".$css."'>
+									<td>".$NRow++."</td>
+									<td>".$row_tran->STRNO."</td>
+									<td>".$row_tran->MODEL."</td>
+									<td>".$row_tran->COLOR."</td>
+									<td>".$row_tran->STAT."</td>
+									<td>".$row_tran->TRANSNO."</td>
+									<td>".$row_tran->TRANSFM."</td>
+									<td>".$row_tran->TRANSTO."</td>
+								</tr>
+							";
+						}
+					}
+				}
+			}
+		}
+		
+		$html = "
+			<div id='table-fixed-tab33' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+				<table id='table-tab33' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>เลขตัวถัง</th>
+							<th>รุ่น</th>
+							<th>สี</th>
+							<th>สถานะรถ</th>
+							<th>เลขที่บิลโอน</th>
+							<th>ต้นทาง</th>
+							<th>ปลายทาง</th>
+						</tr>
+					</thead>
+					".$html."
+				</table>
+			</div>
+		";
+		
+		echo json_encode(array("html"=>$html));
+	}
+	
 	function calcurate(){
 		$arrs = array();
-		$arrs['STRNO'] = $_REQUEST['STRNO'];
-		$arrs['tab11prov1'] = $_REQUEST['tab11prov1'];
-		$arrs['tab11prov2'] = $_REQUEST['tab11prov2'];
-		$arrs['tab11prov3'] = $_REQUEST['tab11prov3'];
-		$arrs['tab11prov4'] = $_REQUEST['tab11prov4'];
-		$arrs['tab11prov5'] = $_REQUEST['tab11prov5'];
+		$arrs['STRNO'] 			= $_REQUEST['STRNO'];
+		$arrs['tab11prov1'] 	= $_REQUEST['tab11prov1'];
+		$arrs['tab11prov2'] 	= $_REQUEST['tab11prov2'];
+		$arrs['tab11prov3'] 	= $_REQUEST['tab11prov3'];
+		$arrs['tab11prov4'] 	= $_REQUEST['tab11prov4'];
+		$arrs['tab11prov5'] 	= $_REQUEST['tab11prov5'];
+		$arrs['condStockEmpty'] = $_REQUEST['condStockEmpty'];
+		$arrs['condMaxLimit'] 	= $_REQUEST['condMaxLimit'];
 		
 		
 		$strsize = sizeof($arrs['STRNO']);
@@ -1317,6 +1626,16 @@ class Cautotransferscars extends MY_Controller {
 			echo json_encode($response); exit;
 		}
 		
+		if(!is_numeric($arrs['condStockEmpty'])  or !is_numeric($arrs['condMaxLimit'])){
+			$response = array('html'=>"ผิดพลาด พท.ว่าง ที่จะจัดรถหรือ limit ต้องเป็นตัวเลขเท่านั้น",'status'=>false);
+			echo json_encode($response); exit;
+		}
+		
+		if($arrs['condMaxLimit'] < 1){
+			$response = array('html'=>"ผิดพลาด limit ต้องมากกว่า 0 ",'status'=>false);
+			echo json_encode($response); exit;
+		}
+		
 		$sql = "		
 			declare @str listSTRNo;
 			insert into @str ".$str."
@@ -1324,19 +1643,44 @@ class Cautotransferscars extends MY_Controller {
 			declare @lc listLOCAT;
 			insert into @lc ".$locat."	
 						
-			select * into #temp from [dbo].[fn_autocars_beta](@str,@lc,-5,2);
+			select * into #temp from [dbo].[fn_autocars_beta](@str,@lc,".$arrs['condStockEmpty'].",".$arrs['condMaxLimit'].");
 		";
 		//echo $sql; exit;
 		$this->db->query($sql);
-		$sql = "select * from #temp ";		
+				
+		$sql = "
+			declare @str listSTRNo;
+			insert into @str ".$str."
+			
+			select * from #temp
+			union all
+			select a.LOCAT,a.MODEL,a.COLOR,a.STAT,a.s-isnull(b.STORDER,0) r,a.MEMO1 from (
+				select '' LOCAT,MODEL,COLOR,STAT,COUNT(MODEL) s,'ไม่สามารถจัดรถได้' MEMO1 from @str
+				group by MODEL,COLOR,STAT
+			) as a
+			left join (
+				select MODEL,COLOR,STAT,sum(STORDER) STORDER from #temp 
+				group by MODEL,COLOR,STAT
+			) as b on a.MODEL=b.MODEL  and a.COLOR=b.COLOR and a.STAT=b.STAT
+			where a.s-isnull(b.STORDER,0) > 0
+		";
+		//echo $sql; exit;
+		$sql = "select * from #temp";
 		$query = $this->db->query($sql);
 		
 		$html = "";
 		if($query->row()){
+			$NRow = 1;
 			foreach($query->result() as $row){
 				$html .= "
-					<tr>
-						<td>xxx</td>
+					<tr class='trow' seq=".$NRow.">
+						<td class='getit' seq=".$NRow++." 
+							MODEL='".$row->MODEL."' 
+							COLOR='".$row->COLOR."' 
+							style='width:50px;cursor:pointer;text-align:center;color:red;'
+						>
+							<b><i class='glyphicon glyphicon-trash' style='z-index:20;'></i></b>
+						</td>
 						<td>".$row->LOCAT."</td>
 						<td>".$row->MODEL."</td>
 						<td>".$row->COLOR."</td>
@@ -1345,6 +1689,8 @@ class Cautotransferscars extends MY_Controller {
 					</tr>
 				";
 			}
+		}else{
+			$html = "<tr><td colspan='5'>ไม่พบข้อมูล</td></tr>";
 		}
 		
 		if ($html != ""){
@@ -1361,7 +1707,7 @@ class Cautotransferscars extends MY_Controller {
 								<th>จัดแบบ</th>
 							</tr>
 						</thead>
-						<tbody>
+						<tbody style='background-color:white;'>
 							".$html."
 						</tbody>
 					</table>
@@ -1372,9 +1718,26 @@ class Cautotransferscars extends MY_Controller {
 		
 		$response = array('html'=>$html,'status'=>true);
 		echo json_encode($response); exit;
+	}
+	
+	function checkprov(){
+		$locat = $_REQUEST["locat"];
 		
+		$sql = "
+			select * from {$this->MAuth->getdb('std_locatStock')} 
+			where LOCAT='".$locat."'
+		";
+		$query = $this->db->query($sql);
 		
+		$html = "";
+		$locatLine = array("ตรัง"=>1,"สุราษฎร์ธานี"=>1,"ชุมพร"=>1,"กระบี่"=>2,"พังงา"=>2);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html = $locatLine[$row->Prov];
+			}
+		}
 		
+		echo json_encode(array("html"=>$html));
 	}
 }
 

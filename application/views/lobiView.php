@@ -185,11 +185,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	</div>
 	
 	
-	
-	
-	
-	
-	
 	<div id="main">
 		<div id="ribbon" class="hidden-print">
 			<a href="#welcome/dashboard" class="btn-ribbon" data-container="#main" data-toggle="tooltip" data-title="Show dashboard"><i class="fa fa-home"></i></a>
@@ -202,19 +197,22 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		
 		</div>
 	</div>
-	
-	
-	
-	
-	
-	
+		
 	<!--Loading indicator for ajax page loading-->
 	<div class="spinner spinner-horizontal hide">
 		<span class="spinner-text">Loading...</span>
 		<div class="bounce1"></div>
 		<div class="bounce2"></div>
 		<div class="bounce3"></div>
-		
+	</div>
+	
+	<div id="loadding" hidden style="width:100vw;height:100vh;color:white;background-color:hsla(40, 14%, 21%, 0.59);position:fixed;top:0;left:0;z-index:99999;">
+		<div class="spinner spinner-horizontal">
+			<span class="spinner-text">Loading...</span>
+			<div class="bounce1"></div>
+			<div class="bounce2"></div>
+			<div class="bounce3"></div>
+		</div>
 	</div>
 
 	<script type="text/javascript" src="../public/lobiadmin-master/version/1.0/ajax/js/lib/jquery.min.js"></script>
@@ -343,6 +341,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	function ChangeLOCAT(){
 		
 	}
+	
+	$('#loadding').click(function(e){
+		if ( e.keyCode === 13 ) { // ESC
+			$('#loadding').hide();
+		}
+	});
 	
 	var tableToExcel = (function() {
 		var uri = 'data:application/vnd.ms-excel;base64,'

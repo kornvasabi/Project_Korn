@@ -1,6 +1,14 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-
+/********************************************************
+             _______________________
+            / / _ _   _ _     __ 
+           / // __ \ / __ \ / __ \
+       _ _/ // /_/ // / / // /_/ /
+     /_ _ _/ \_ _ //_/ /_/ \__  /
+                          _ _/ /
+                         /___ /
+********************************************************/
 class Ctransferscars extends MY_Controller {
 	private $sess = array();
 	
@@ -317,7 +325,7 @@ class Ctransferscars extends MY_Controller {
 				,case when TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ'
 					when TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
 					else 'รับโอนรถครบแล้ว' end as TRANSSTATDesc
-				,TRANSSTAT,MEMO1
+				,TRANSSTAT,MEMO1,SYSTEM
 			from {$this->MAuth->getdb('INVTransfers')} a
 			left join (
 				select IDNo	collate Thai_CS_AS USERID
@@ -350,6 +358,7 @@ class Ctransferscars extends MY_Controller {
 				$html['TRANSSTAT'] = $row->TRANSSTAT;
 				$html['TRANSSTATDesc'] = $row->TRANSSTATDesc;
 				$html['MEMO1'] = $row->MEMO1;
+				$html['SYSTEM'] = $row->SYSTEM;
 			}
 		}
 		

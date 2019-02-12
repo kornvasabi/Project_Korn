@@ -1,3 +1,12 @@
+/********************************************************
+             _______________________
+            / / _ _   _ _     __ 
+           / // __ \ / __ \ / __ \
+       _ _/ // /_/ // / / // /_/ /
+     /_ _ _/ \_ _ //_/ /_/ \__  /
+                          _ _/ /
+                         /___ /
+********************************************************/
 var setwidth = $(window).width();
 var setheight = $(window).height();
 if(setwidth > 1000){
@@ -24,7 +33,6 @@ $(function(){
 		
 	initPage();
 });
-
 
 function initPage(){
 	$('#add_TRANSFM').select2({
@@ -317,6 +325,7 @@ function search(){
 						$('#add_TRANSNO').attr('readonly',true);
 						$('#add_TRANSDT').attr('disabled',true);
 						$('#add_TRANSFM').attr('disabled',true);
+						//$('#add_TRANSFM').prop("disabled", true);
 						$('#add_TRANSTO').attr('disabled',true);
 						$('#add_EMPCARRY').attr('disabled',true);
 						$('#add_APPROVED').attr('disabled',true);
@@ -376,6 +385,10 @@ function search(){
 							}else{
 								$('#btnt2del').attr('disabled',true);	
 							}
+						}
+						
+						if(data.html['SYSTEM'] == "AT"){
+							$('#btnt2addSTRNo').attr('disabled',true);
 						}
 
 						var STRNO = data.html['STRNO'];
