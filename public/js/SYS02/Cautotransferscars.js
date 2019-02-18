@@ -97,7 +97,7 @@ function search(){
 					delay: 5000,
 					pauseDelayOnHover: true,
 					continueDelayOnInactiveTab: false,
-					icon: false,
+					icon: true,
 					messageHeight: '90vh',
 					msg: data.html
 				});

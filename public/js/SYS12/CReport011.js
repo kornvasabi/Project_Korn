@@ -141,11 +141,12 @@ $('#btnt1search').click(function(){
 			}else{
 				Lobibox.notify('error', {
 					title: 'ผิดพลาด',
+					size: 'mini',
 					closeOnClick: false,
 					delay: 5000,
 					pauseDelayOnHover: true,
 					continueDelayOnInactiveTab: true,
-					icon: false,
+					icon: true,
 					messageHeight: '90vh',
 					msg: data.html
 				});

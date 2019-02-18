@@ -1,6 +1,14 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-
+/********************************************************
+             _______________________
+            / / _ _   _ _     __ 
+           / // __ \ / __ \ / __ \
+       _ _/ // /_/ // / / // /_/ /
+     /_ _ _/ \_ _ //_/ /_/ \__  /
+                          _ _/ /
+                         /___ /
+********************************************************/
 class CUsers extends MY_Controller {
 	private $sess = array(); 
 	
@@ -393,7 +401,7 @@ class CUsers extends MY_Controller {
 			begin tran ins
 			begin try
 				if((select count(*) from YTKManagement.dbo.hp_mapusers
-				where employeeCode='".$arrs['employeeCode']."' and dblocat='".$arrs['dblocat']."') > 0)
+				where IDNo='".$arrs['employeeCode']."' and dblocat='".$arrs['dblocat']."') > 0)
 				begin 
 					rollback tran ins;
 					insert into #transaction select 'n' as id,'ผิดพลาด รหัสพนักงาน ".$arrs['employeeCode']." ได้ mapusers ไปแล้ว' as msg;
@@ -405,7 +413,7 @@ class CUsers extends MY_Controller {
 					select '".$arrs['USERID']."','".$arrs['dblocat']."',IDNo,employeeCode
 						,'".$arrs['groupCode']."','".$this->sess['IDNo']."',getdate() 
 					from YTKManagement.dbo.hp_vusers 
-					where employeeCode='".$arrs['employeeCode']."'
+					where IDNo='".$arrs['employeeCode']."'
 					
 					update YTKManagement.dbo.hp_maplocat
 					set action='F'
@@ -427,7 +435,7 @@ class CUsers extends MY_Controller {
 				insert into #transaction select 'n' as id,ERROR_MESSAGE() as msg;
 			end catch
 		";
-		
+		//echo $sql; exit;
 		$this->db->query($sql);
 	
 		$sql = "select * from #transaction";   

@@ -1,3 +1,13 @@
+/********************************************************
+             ______@--/02/2018______
+            / / _ _   _ _     __ 
+           / // __ \ / __ \ / __ \
+       _ _/ // /_/ // / / // /_/ /
+     /_ _ _/ \_ _ //_/ /_/ \__  /
+                          _ _/ /
+                         /___ /
+********************************************************/
+
 var _insert = $('.tab1[name="home"]').attr('cin');
 var _update = $('.tab1[name="home"]').attr('cup');
 var _delete = $('.tab1[name="home"]').attr('cdel');
@@ -162,11 +172,12 @@ function afterSelect(){
 							if(data.stat){
 								Lobibox.notify('success', {
 									title: 'สำเร็จ',
+									size: 'mini',
 									closeOnClick: false,
 									delay: 8000,
 									pauseDelayOnHover: true,
 									continueDelayOnInactiveTab: false,
-									icon: false,
+									icon: true,
 									messageHeight: '90vh',
 									soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 									soundExt: '.ogg',
@@ -181,11 +192,12 @@ function afterSelect(){
 							}else{
 								Lobibox.notify('error', {
 									title: 'แจ้งเตือน',
+									size: 'mini',
 									closeOnClick: true,
 									delay: 5000,
 									pauseDelayOnHover: true,
 									continueDelayOnInactiveTab: false,
-									icon: false,
+									icon: true,
 									messageHeight: '90vh',
 									soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 									soundExt: '.ogg',
@@ -197,11 +209,12 @@ function afterSelect(){
 				}else{
 					Lobibox.notify('error', {
 						title: 'แจ้งเตือน',
+						size: 'mini',
 						closeOnClick: true,
 						delay: 5000,
 						pauseDelayOnHover: true,
 						continueDelayOnInactiveTab: false,
-						icon: false,
+						icon: true,
 						messageHeight: '90vh',
 						soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 						soundExt: '.ogg',
@@ -248,11 +261,12 @@ function afterSelect(){
 							if(data.stat){
 								Lobibox.notify('success', {
 									title: 'สำเร็จ',
+									size: 'mini',
 									closeOnClick: false,
 									delay: 8000,
 									pauseDelayOnHover: true,
 									continueDelayOnInactiveTab: false,
-									icon: false,
+									icon: true,
 									messageHeight: '90vh',
 									soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 									soundExt: '.ogg',
@@ -270,7 +284,7 @@ function afterSelect(){
 									delay: 5000,
 									pauseDelayOnHover: true,
 									continueDelayOnInactiveTab: false,
-									icon: false,
+									icon: true,
 									messageHeight: '90vh',
 									soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 									soundExt: '.ogg',
@@ -286,7 +300,7 @@ function afterSelect(){
 						delay: 5000,
 						pauseDelayOnHover: true,
 						continueDelayOnInactiveTab: false,
-						icon: false,
+						icon: true,
 						messageHeight: '90vh',
 						soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 						soundExt: '.ogg',

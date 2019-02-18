@@ -1,3 +1,13 @@
+/********************************************************
+             ______@--/02/2018______
+            / / _ _   _ _     __ 
+           / // __ \ / __ \ / __ \
+       _ _/ // /_/ // / / // /_/ /
+     /_ _ _/ \_ _ //_/ /_/ \__  /
+                          _ _/ /
+                         /___ /
+********************************************************/
+
 $(function(){
 	$('.tab1').show();
 	$('.tab2').hide();	 
@@ -127,11 +137,12 @@ function getDetailsFN($this){
 										
 										Lobibox.notify('success', {
 											title: 'สำเร็จ',
+											size: 'mini',
 											closeOnClick: false,
 											delay: 8000,
 											pauseDelayOnHover: true,
 											continueDelayOnInactiveTab: false,
-											icon: false,
+											icon: true,
 											messageHeight: '90vh',
 											soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 											soundExt: '.ogg',
@@ -140,11 +151,12 @@ function getDetailsFN($this){
 									}else{
 										Lobibox.notify('error', {
 											title: 'สำเร็จ',
+											size: 'mini',
 											closeOnClick: false,
 											delay: 8000,
 											pauseDelayOnHover: true,
 											continueDelayOnInactiveTab: false,
-											icon: false,
+											icon: true,
 											messageHeight: '90vh',
 											soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 											soundExt: '.ogg',
@@ -198,11 +210,12 @@ function getDetailsFN($this){
 										
 										Lobibox.notify('success', {
 											title: 'สำเร็จ',
+											size: 'mini',
 											closeOnClick: false,
 											delay: 8000,
 											pauseDelayOnHover: true,
 											continueDelayOnInactiveTab: false,
-											icon: false,
+											icon: true,
 											messageHeight: '90vh',
 											soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 											soundExt: '.ogg',
@@ -258,11 +271,12 @@ function getDetailsFN($this){
 										
 										Lobibox.notify('success', {
 											title: 'สำเร็จ',
+											size: 'mini',
 											closeOnClick: false,
 											delay: 8000,
 											pauseDelayOnHover: true,
 											continueDelayOnInactiveTab: false,
-											icon: false,
+											icon: true,
 											messageHeight: '90vh',
 											soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 											soundExt: '.ogg',
@@ -271,11 +285,12 @@ function getDetailsFN($this){
 									}else{
 										Lobibox.notify('error', {
 											title: 'สำเร็จ',
+											size: 'mini',
 											closeOnClick: false,
 											delay: 8000,
 											pauseDelayOnHover: true,
 											continueDelayOnInactiveTab: false,
-											icon: false,
+											icon: true,
 											messageHeight: '90vh',
 											soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 											soundExt: '.ogg',
@@ -329,11 +344,12 @@ function getDetailsFN($this){
 										
 										Lobibox.notify('success', {
 											title: 'สำเร็จ',
+											size: 'mini',
 											closeOnClick: false,
 											delay: 8000,
 											pauseDelayOnHover: true,
 											continueDelayOnInactiveTab: false,
-											icon: false,
+											icon: true,
 											messageHeight: '90vh',
 											soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 											soundExt: '.ogg',
@@ -342,11 +358,12 @@ function getDetailsFN($this){
 									}else{
 										Lobibox.notify('error', {
 											title: 'สำเร็จ',
+											size: 'mini',
 											closeOnClick: false,
 											delay: 8000,
 											pauseDelayOnHover: true,
 											continueDelayOnInactiveTab: false,
-											icon: false,
+											icon: true,
 											messageHeight: '90vh',
 											soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 											soundExt: '.ogg',

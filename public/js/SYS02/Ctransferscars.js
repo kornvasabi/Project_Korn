@@ -7,25 +7,18 @@
                           _ _/ /
                          /___ /
 ********************************************************/
-var setwidth = $(window).width();
-var setheight = $(window).height();
-if(setwidth > 1000){
-	setwidth = 1000;
-}else{
-	setwidth = setwidth - 50;
-}
 
-if(setheight > 800){
-	setheight = 800;
-}else{
-	setheight = setheight - 50;
-}
+var _insert = $('.tab1[name="home"]').attr('cin');
+var _update = $('.tab1[name="home"]').attr('cup');
+var _delete = $('.tab1[name="home"]').attr('cdel');
+var _level  = $('.tab1[name="home"]').attr('clev');
+var _locat  = $('.tab1[name="home"]').attr('locat');
 
 $(function(){
 	$('.tab1').show();
 	$('.tab2').hide();	 
 	
-	if($('.tab1[name="home"]').attr('cin') == 'T'){
+	if(_insert == 'T'){
 		$('#btnt1transfers').attr('disabled',false);
 	}else{
 		$('#btnt1transfers').attr('disabled',true);
@@ -118,9 +111,26 @@ function initPage(){
 		//theme: 'classic',
 		width: '100%'
 	});	
-	
-	
 }
+
+$('#add_TRANSTO').change(function(){
+	if($('#add_TRANSFM').find(':selected').val() == $(this).find(':selected').val()){
+		var msg = "สถานที่ต้นทาง และสถานที่ปลายทางต้องไม่เป็นสาขาเดียวกันครับ";
+		Lobibox.notify('error', {
+			title: 'ผิดพลาด',
+			size: 'mini',
+			pauseDelayOnHover: true,
+			closeOnClick: false,
+			continueDelayOnInactiveTab: false,
+			delay: 5000,
+			icon: true,
+			messageHeight: '90vh',
+			msg: msg
+		});
+		
+		$(this).empty().trigger('change');
+	}
+});
 
 $('#add_EMPCARRY').change(function(){
 	data = new Object();
@@ -170,14 +180,14 @@ $('#btnt2save').click(function(){
 			var btnType;
 			if (type === 'ok'){
 				dataToPost = new Object();
-				dataToPost.TRANSNO = $('#add_TRANSNO').val();
-				dataToPost.TRANSDT = $('#add_TRANSDT').val();
-				dataToPost.TRANSFM = $('#add_TRANSFM').val();
-				dataToPost.TRANSTO = $('#add_TRANSTO').val();
-				dataToPost.EMPCARRY = $('#add_EMPCARRY').val();
-				dataToPost.APPROVED = $('#add_APPROVED').val();
+				dataToPost.TRANSNO 	 = $('#add_TRANSNO').val();
+				dataToPost.TRANSDT 	 = $('#add_TRANSDT').val();
+				dataToPost.TRANSFM 	 = $('#add_TRANSFM').val();
+				dataToPost.TRANSTO 	 = $('#add_TRANSTO').val();
+				dataToPost.EMPCARRY	 = $('#add_EMPCARRY').val();
+				dataToPost.APPROVED  = $('#add_APPROVED').val();
 				dataToPost.TRANSSTAT = $('#add_TRANSSTAT').val();
-				dataToPost.MEMO1 = $('#add_MEMO1').val();
+				dataToPost.MEMO1 	 = $('#add_MEMO1').val();
 				
 				var STRNO = [];	
 				$('#table-STRNOTRANS tr').each(function() {
@@ -186,10 +196,11 @@ $('#btnt2save').click(function(){
 					var len = this.cells.length;
 					var r = [];
 					for(var i=0;i<len;i++){
-						if(i == 8){
+						if(i == 7){ // วันที่โอนย้าย
 							r.push($('.SETTRANSDT[STRNO='+this.cells[1].innerHTML+']').val());
-						}else if(i == 9){
-							r.push($('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').val());
+						}else if(i == 8){ // พขร.
+							var emp = $('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').find(':selected').val();
+							r.push((typeof emp === 'undefined'?'':emp));
 						}else{
 							r.push(this.cells[i].innerHTML);
 						}
@@ -198,6 +209,7 @@ $('#btnt2save').click(function(){
 				});
 				
 				dataToPost.STRNO = STRNO;
+				$('#loadding').show();
 				
 				$.ajax({
 					url:'../SYS02/Ctransferscars/saveTransferCAR',
@@ -208,41 +220,37 @@ $('#btnt2save').click(function(){
 						if(data.status){
 							Lobibox.notify('success', {
 								title: 'สำเร็จ',
+								size: 'mini',
 								closeOnClick: false,
 								delay: 5000,
 								pauseDelayOnHover: true,
 								continueDelayOnInactiveTab: false,
-								icon: false,
+								icon: true,
 								messageHeight: '90vh',
 								msg: data.msg
 							});
-							$('.tab1').show();
-							$('.tab2').hide();
-							search();
+							
+							dataToPost = new Object();
+							dataToPost.TRANSNO 	= data.transno;
+							dataToPost.cup  	= _update;
+							dataToPost.clev 	= _level;
+							
+							loadData(dataToPost); //โหลดข้อมูลที่บันทึก
+							$('#btnt2bill').attr('disabled',false); //ให้พิมพ์บิลโอนได้
 						}else{
 							Lobibox.notify('error', {
 								title: 'ผิดพลาด',
+								size: 'mini',
 								closeOnClick: false,
 								delay: false,
 								pauseDelayOnHover: true,
 								continueDelayOnInactiveTab: false,
-								icon: false,
+								icon: true,
 								messageHeight: '90vh',
 								msg: data.msg
 							});
 						}
 					}
-				});
-			}else{
-				Lobibox.notify('error', {
-					title: 'แจ้งเตือน',
-					closeOnClick: true,
-					delay: 5000,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					icon: false,
-					messageHeight: '90vh',
-					msg: 'ยกเลิกการบันทึกรายการโอนย้ายรถแล้ว'
 				});
 			}
 		}
@@ -250,7 +258,9 @@ $('#btnt2save').click(function(){
 });
 
 
-$('#btnt1search').click(function(){ search(); });
+$('#btnt1search').click(function(){ 
+	search();
+});
 
 function search(){
 	dataToPost = new Object();
@@ -288,139 +298,163 @@ function search(){
 			$('.getit').click(function(){
 				dataToPost = new Object();
 				dataToPost.TRANSNO = $(this).attr('TRANSNO');
-				dataToPost.cup = $('.tab1[name="home"]').attr('cup');
-				dataToPost.clev = $('.tab1[name="home"]').attr('clev');
+				dataToPost.cup  = _update;
+				dataToPost.clev = _level;
 				
-				$.ajax({
-					url:'../SYS02/Ctransferscars/getDetails',
-					data:dataToPost,
-					type:'POST',
-					dataType:'json',
-					success:function(data){
-						$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
-						
-						document.getElementById("table-fixed-STRNOTRANS").addEventListener("scroll", function(){
-							var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
-							this.querySelector("thead").style.transform = translate;	
-							this.querySelector("thead").style.zIndex = 999;
-						});
-						
-						var newOption;
-						$('#add_TRANSNO').val(data.html['TRANSNO']);
-						$('#add_TRANSDT').val(data.html['TRANSDT']);
-						newOption = new Option(data.html['TRANSFM'], data.html['TRANSFM'], false, false);
-						$('#add_TRANSFM').empty();
-						$('#add_TRANSFM').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
-						newOption = new Option(data.html['TRANSTO'], data.html['TRANSTO'], false, false);
-						$('#add_TRANSTO').empty();
-						$('#add_TRANSTO').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
-						newOption = new Option(data.html['EMPCARRYNM'], data.html['EMPCARRY'], false, false);
-						$('#add_EMPCARRY').empty();
-						$('#add_EMPCARRY').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
-						newOption = new Option(data.html['APPROVNM'], data.html['APPROVED'], false, false);
-						$('#add_APPROVED').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
-						$('#add_TRANSSTAT').val(data.html['TRANSSTAT']).trigger('change'); //กรณี select2 มี option แล้ว
-						$('#add_MEMO1').val(data.html['MEMO1']);
-						
-						$('#add_TRANSNO').attr('readonly',true);
-						$('#add_TRANSDT').attr('disabled',true);
-						$('#add_TRANSFM').attr('disabled',true);
-						//$('#add_TRANSFM').prop("disabled", true);
-						$('#add_TRANSTO').attr('disabled',true);
-						$('#add_EMPCARRY').attr('disabled',true);
-						$('#add_APPROVED').attr('disabled',true);
-						$('#add_TRANSSTAT').attr('disabled',true);
-						
-						//$('.tab1[name="home"]').attr('locat'),data.html['TRANSFM']
-						if(data.html['TRANSSTAT'] == 'Received'){ //สถานะรับครบแล้ว ปิดการบันทึก และเพิ่มข้อมูลทั้งหมด
-							//$('#add_EMPCARRY').attr('disabled',true);
-							$('#add_MEMO1').attr('disabled',true);
-							$('#btnt2addSTRNo').attr('disabled',true);
-							$('#btnt2del').attr('disabled',true);
-							$('#btnt2save').attr('disabled',true);
-						}else if(data.html['TRANSSTAT'] == 'Pendding'){ //สถานะรับบางส่วน ปิดการลบบิลโอน  แต่สามารถบันทึกได้หากมีสิทธิ์
-							//$('#add_EMPCARRY').attr('disabled',false);
-							$('#add_MEMO1').attr('disabled',false);
-							//$('#btnt2addSTRNo').attr('disabled',false);
-							$('#btnt2del').attr('disabled',true);
-							
-							$('#btnt2addSTRNo').attr('disabled',true);
-							
-							if($('.tab1[name="home"]').attr('cup') == 'T'){ //มีสิทธิ์แก้ไขไหม
-								if($('.tab1[name="home"]').attr('locat') == data.html['TRANSFM']){ //เป็นสาขาตัวเองหรือไม่ ถ้าไม่ใช่ ห้ามแก้ไข
-									$('#btnt2save').attr('disabled',false);
-								}else{
-									$('#btnt2save').attr('disabled',true);
-								}
-							}else{
-								$('#btnt2save').attr('disabled',true);
-							}
-						}else{ //สถานะกำลังโอนย้ายรถ  เปิดการลบบิลโอน  และบันทึกข้อมูลได้หากมีสิทธิ์
-							//$('#add_EMPCARRY').attr('disabled',false);
-							$('#add_MEMO1').attr('disabled',false);
-							$('#btnt2addSTRNo').attr('disabled',false);
-							$('#btnt2del').attr('disabled',false);
-							$('#btnt2save').attr('disabled',false);
-							
-							if($('.tab1[name="home"]').attr('cup') == 'T'){ //มีสิทธิ์แก้ไขไหม
-								if($('.tab1[name="home"]').attr('locat') == data.html['TRANSFM']){ //เป็นสาขาตัวเองหรือไม่ ถ้าไม่ใช่ ห้ามแก้ไข
-									$('#btnt2save').attr('disabled',false);	
-									$('#btnt2addSTRNo').attr('disabled',false);
-								}else{
-									$('#btnt2save').attr('disabled',true);
-									$('#btnt2addSTRNo').attr('disabled',true);
-								}
-							}else{								
-								$('#btnt2save').attr('disabled',true);
-								$('#btnt2addSTRNo').attr('disabled',true);
-							}
-							
-							$('#btnt2del').show();
-							if($('.tab1[name="home"]').attr('cdel') == 'T'){
-								if($('.tab1[name="home"]').attr('locat') == data.html['TRANSFM']){ //เป็นสาขาตัวเองหรือไม่ ถ้าไม่ใช่ ห้ามแก้ไข
-									$('#btnt2del').attr('disabled',false);
-								}else{
-									$('#btnt2del').attr('disabled',true);
-								}
-							}else{
-								$('#btnt2del').attr('disabled',true);	
-							}
-						}
-						
-						if(data.html['SYSTEM'] == "AT"){
-							$('#btnt2addSTRNo').attr('disabled',true);
-						}
-
-						var STRNO = data.html['STRNO'];
-						for(var i=0;i<STRNO.length;i++){
-							$('#table-STRNOTRANS tbody').append(STRNO[i]);
-						}
-						
-						$('.SETEMPCARRY').select2({
-							placeholder: 'เลือก',
-							ajax: {
-								url: '../Cselect2/getVUSER',
-								dataType: 'json',
-								delay: 1000,
-								processResults: function (data) {
-									return {
-										results: data
-									};
-								},
-								cache: true
-							},
-							allowClear: true,
-							multiple: false,
-							width: '200px'
-						});
-						
-						$('.tab1').hide();
-						$('.tab2').show();
-						//afterSelect();
-						delSTRNO();
-					}
-				});
+				loadData(dataToPost);
 			});
+		}
+	});
+}
+
+function loadData(dataToPost){
+	$('#loadding').show();
+	$.ajax({
+		url:'../SYS02/Ctransferscars/getDetails',
+		data:dataToPost,
+		type:'POST',
+		dataType:'json',
+		success:function(data){
+			$('#loadding').hide();
+			
+			$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
+			
+			document.getElementById("table-fixed-STRNOTRANS").addEventListener("scroll", function(){
+				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
+				this.querySelector("thead").style.transform = translate;	
+				this.querySelector("thead").style.zIndex = 999;
+			});
+			
+			var newOption;
+			$('#add_TRANSNO').val(data.html['TRANSNO']);
+			$('#add_TRANSDT').val(data.html['TRANSDT']);
+			newOption = new Option(data.html['TRANSFM'], data.html['TRANSFM'], false, false);
+			$('#add_TRANSFM').empty();
+			$('#add_TRANSFM').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
+			newOption = new Option(data.html['TRANSTO'], data.html['TRANSTO'], false, false);
+			$('#add_TRANSTO').empty();
+			$('#add_TRANSTO').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
+			newOption = new Option(data.html['EMPCARRYNM'], data.html['EMPCARRY'], false, false);
+			$('#add_EMPCARRY').empty();
+			$('#add_EMPCARRY').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
+			newOption = new Option(data.html['APPROVNM'], data.html['APPROVED'], false, false);
+			$('#add_APPROVED').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
+			$('#add_TRANSSTAT').val(data.html['TRANSSTAT']).trigger('change'); //กรณี select2 มี option แล้ว
+			$('#add_MEMO1').val(data.html['MEMO1']);
+			
+			$('#add_TRANSNO').attr('readonly',true);
+			$('#add_TRANSDT').attr('disabled',true);
+			$('#add_TRANSFM').attr('disabled',true);
+			$('#add_TRANSTO').attr('disabled',true);
+			$('#add_EMPCARRY').attr('disabled',true);
+			$('#add_APPROVED').attr('disabled',true);
+			$('#add_TRANSSTAT').attr('disabled',true);
+			
+			if(data.html['TRANSSTAT'] == 'Received'){ //สถานะรับครบแล้ว ปิดการบันทึก และเพิ่มข้อมูลทั้งหมด
+				//$('#add_EMPCARRY').attr('disabled',true);
+				$('#add_MEMO1').attr('disabled',true);
+				$('#btnt2addSTRNo').attr('disabled',true);
+				$('#btnt2del').attr('disabled',true);
+				$('#btnt2save').attr('disabled',true);
+				$('#btnt2bill').attr('disabled',true);
+				$('.tab2').css({'background-color':'#fff'});
+			}else if(data.html['TRANSSTAT'] == 'Pendding'){ //สถานะรับบางส่วน ปิดการลบบิลโอน  แต่สามารถบันทึกได้หากมีสิทธิ์
+				//$('#add_EMPCARRY').attr('disabled',false);
+				$('#add_MEMO1').attr('disabled',false);
+				//$('#btnt2addSTRNo').attr('disabled',false);
+				$('#btnt2del').attr('disabled',true);
+				
+				$('#btnt2addSTRNo').attr('disabled',true);
+				
+				if(_update == 'T'){ //มีสิทธิ์แก้ไขไหม
+					if(_locat == data.html['TRANSFM']){ //เป็นสาขาตัวเองหรือไม่ ถ้าไม่ใช่ ห้ามแก้ไข
+						$('#btnt2save').attr('disabled',false);
+					}else{
+						$('#btnt2save').attr('disabled',true);
+					}
+				}else{
+					$('#btnt2save').attr('disabled',true);
+				}
+				$('#btnt2bill').attr('disabled',false);
+				$('.tab2').css({'background-color':'#fff'});
+			}else if(data.html['TRANSSTAT'] == 'Cancel'){ //สถานะยกเลิกบิลโอน
+				$('#add_MEMO1').attr('disabled',true);
+				$('#btnt2addSTRNo').attr('disabled',true);
+				$('#btnt2del').attr('disabled',true);
+				$('#btnt2save').attr('disabled',true);
+				$('#btnt2bill').attr('disabled',true);
+				
+				$('.tab2').css({'background-color':'#ffd6d6'});
+			}else{ //สถานะกำลังโอนย้ายรถ  เปิดการลบบิลโอน  และบันทึกข้อมูลได้หากมีสิทธิ์
+				//$('#add_EMPCARRY').attr('disabled',false);
+				$('#add_MEMO1').attr('disabled',false);
+				$('#btnt2addSTRNo').attr('disabled',false);
+				$('#btnt2del').attr('disabled',false);
+				$('#btnt2save').attr('disabled',false);
+				
+				if(_update == 'T'){ //มีสิทธิ์แก้ไขไหม
+					if(_locat == data.html['TRANSFM']){ //เป็นสาขาตัวเองหรือไม่ ถ้าไม่ใช่ ห้ามแก้ไข
+						$('#btnt2save').attr('disabled',false);	
+						$('#btnt2addSTRNo').attr('disabled',false);
+					}else{
+						$('#btnt2save').attr('disabled',true);
+						$('#btnt2addSTRNo').attr('disabled',true);
+					}
+				}else{								
+					$('#btnt2save').attr('disabled',true);
+					$('#btnt2addSTRNo').attr('disabled',true);
+				}
+				
+				$('#btnt2del').show();
+				if(_delete == 'T'){
+					if(_locat == data.html['TRANSFM']){ //เป็นสาขาตัวเองหรือไม่ ถ้าไม่ใช่ ห้ามแก้ไข
+						$('#btnt2del').attr('disabled',false);
+					}else{
+						$('#btnt2del').attr('disabled',true);
+					}
+				}else{
+					$('#btnt2del').attr('disabled',true);	
+				}
+				
+				$('#btnt2bill').attr('disabled',false);
+				$('.tab2').css({'background-color':'#fff'});
+			}
+			
+			if(data.html['SYSTEM'] == "AT"){
+				$('#btnt2addSTRNo').attr('disabled',true);
+			}
+
+			var STRNO = data.html['STRNO'];
+			for(var i=0;i<STRNO.length;i++){
+				$('#table-STRNOTRANS tbody').append(STRNO[i]);
+			}
+			
+			$('.SETEMPCARRY').select2({
+				placeholder: 'เลือก',
+				ajax: {
+					url: '../Cselect2/getVUSER',
+					dataType: 'json',
+					delay: 1000,
+					processResults: function (data) {
+						return {
+							results: data
+						};
+					},
+					cache: true
+				},
+				allowClear: true,
+				multiple: false,
+				width: '200px'
+			});
+			
+			if(_level!=1){
+				$('#btnt2addSTRNo').attr('disabled',true);
+			}
+			
+			$('.tab1').hide();
+			$('.tab2').show();
+			//afterSelect();
+			delSTRNO();
 		}
 	});
 }
@@ -440,7 +474,7 @@ $('#btnt1transfers').click(function(){
 	$('#add_MEMO1').val('');
 	
 	var newOption;
-	newOption = new Option($('.tab1[name="home"]').attr('locat'), $('.tab1[name="home"]').attr('locat'), false, false);
+	newOption = new Option(_locat, _locat, false, false);
 	$('#add_TRANSFM').empty();
 	$('#add_TRANSFM').append(newOption).trigger('change'); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
 	$('#add_TRANSTO').empty();
@@ -456,19 +490,21 @@ $('#btnt1transfers').click(function(){
 	$('#add_EMPCARRY').attr('disabled',false);
 	$('#add_MEMO1').attr('disabled',false);
 	
-	if($('.tab1[name="home"]').attr('clev') == '1'){
+	if(_level == '1'){
 		$('#add_TRANSFM').attr('disabled',false);	
 	}else{
 		$('#add_TRANSFM').attr('disabled',true);
 	}
 	
-	if($('.tab1[name="home"]').attr('cin') == 'T'){
+	if(_insert == 'T'){
 		$('#btnt2save').attr('disabled',false);	
 		$('#btnt2addSTRNo').attr('disabled',false);	
 	}else{
 		$('#btnt2save').attr('disabled',true);	
 		$('#btnt2addSTRNo').attr('disabled',true);								
 	}
+	
+	$('#btnt2bill').attr('disabled',true);	
 	
 	$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
 	
@@ -506,6 +542,7 @@ $('#btnt2addSTRNo').click(function(){
 				height: setheight,
 				content: data.html,
 				shown: function($this){
+					/*
 					$('#fCRLOCAT').select2({
 						placeholder: 'เลือก',       
 						dropdownParent: $(".lobibox-body"),
@@ -515,6 +552,7 @@ $('#btnt2addSTRNo').click(function(){
 						//theme: 'classic',
 						width: '100%'
 					});		
+					*/
 					
 					$('#STRNOSearch').click(function(){
 						//$('#fCRLOCAT option').remove();
@@ -523,7 +561,9 @@ $('#btnt2addSTRNo').click(function(){
 						dataToPost = new Object();
 						dataToPost.fSTRNO = $('#fSTRNO').val();
 						dataToPost.fMODEL = $('#fMODEL').val();
-						dataToPost.fCRLOCAT = $('#fCRLOCAT').val();
+						//dataToPost.fCRLOCAT = $('#fCRLOCAT').val();
+						dataToPost.fCRLOCAT = $('#add_TRANSFM').val();
+						dataToPost.fGCODE	= $('#fGCODE').val();
 						
 						var spinner = $('body>.spinner').clone().removeClass('hide');
 						$('#resultSTRNO').html('');
@@ -553,12 +593,13 @@ $('#btnt2addSTRNo').click(function(){
 								
 								$('.getit').click(function(){
 									var STRNO = $(this).attr('STRNO');
-									var TYPE = $(this).attr('TYPE');
+									//var TYPE = $(this).attr('TYPE');
 									var MODEL = $(this).attr('MODEL');
 									var BAAB = $(this).attr('BAAB');
 									var COLOR = $(this).attr('COLOR');
-									var CC = $(this).attr('CC');
+									//var CC = $(this).attr('CC');
 									var CRLOCAT = $(this).attr('CRLOCAT');
+									var GCODE = $(this).attr('GCODE');
 									
 									var stat = false; //ตรวจสอบว่ามีอยู่ในรายการแล้วหรือยัง
 									$('#table-STRNOTRANS tr').each(function() {
@@ -572,11 +613,12 @@ $('#btnt2addSTRNo').click(function(){
 									if(stat){
 										Lobibox.notify('error', {
 											title: 'ผิดพลาด',
+											size: 'mini',
 											closeOnClick: false,
 											delay: 5000,
 											pauseDelayOnHover: true,
 											continueDelayOnInactiveTab: false,
-											icon: false,
+											icon: true,
 											messageHeight: '90vh',
 											msg: 'เลขตัวถัง '+STRNO+' มีอยู่ในรายการแล้ว'
 										});
@@ -587,11 +629,12 @@ $('#btnt2addSTRNo').click(function(){
 										var row = '<tr seq="new'+generate+'">';
 										row += '<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="new'+generate+'" value="ยกเลิก"></td>';
 										row += '<td>'+STRNO+'</td>';
-										row += '<td>'+TYPE+'</td>';
+										//row += '<td>'+TYPE+'</td>';
 										row += '<td>'+MODEL+'</td>';
 										row += '<td>'+BAAB+'</td>';
 										row += '<td>'+COLOR+'</td>';
-										row += '<td>'+CC+'</td>';
+										//row += '<td>'+CC+'</td>';
+										row += '<td>'+GCODE+'</td>';
 										row += '<td>อยู่ระหว่างการโอนย้ายรถ</td>';
 										row += '<td><input type="text" STRNO="'+STRNO+'" class="SETTRANSDT form-control input-sm" data-provide="datepicker" data-date-language="th-th" placeholder="วันที่โอน"  style="width:100px;" value="'+($('#add_TRANSDT').val())+'"></td>';
 										row += '<td><select STRNO="'+STRNO+'" class="SETEMPCARRY select2"><option value=\''+(valued)+'\'>'+(display)+'</option></select></td>';
@@ -631,14 +674,48 @@ $('#btnt2addSTRNo').click(function(){
 	});
 });
 
-
 function delSTRNO(){
-	/*
-	$('.delSTRNO').click(function(){
-		$('#table-STRNOTRANS tr[seq="'+($(this).attr('seq'))+'"]').remove();
-	});  
-	*/
 	$('.delSTRNO').click(function(){ $(this).closest('tr').remove(); }); 
+	
+	$('.SETTRANSDT').change(function(){
+		//วันที่โอนต้องไม่มากกว่าวันปัจจุบัน
+		checkdt($(this));
+	});
+}
+
+$('#add_TRANSDT').change(function(){
+	//วันที่โอนต้องไม่มากกว่าวันปัจจุบัน
+	checkdt($(this));
+});
+
+function checkdt($this){
+	dataToPost = new Object();
+	dataToPost.dt = $this.val();
+	
+	$.ajax({
+		url: '../SYS02/Ctransferscars/checkdt',
+		data: dataToPost,
+		type:'POST',
+		dataType: 'json',
+		success: function(data){
+			if(data.html == 'T'){
+				$this.val('');
+				
+				Lobibox.notify('error', {
+					title: 'ผิดพลาด',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					rounded: true,
+					messageHeight: '90vh',
+					msg: 'วันที่โอนย้าย ต้องไม่มากกว่าวันปัจจุบัน'
+				});
+			}
+		}
+	});
 }
 
 $('#btnt2bill').click(function(){
@@ -668,10 +745,78 @@ $('#btnt2bill').click(function(){
 			}
 		}
 	});
-	
-	
 });
 
+
+$('#btnt2del').click(function(){
+	Lobibox.confirm({
+		title: 'ยืนยันการทำรายการ',
+		iconClass: false,
+		msg: "คุณต้องการยกเลิกการโอนย้ายรถ เลขที่บิล "+$('#add_TRANSNO').val()+" ?",
+		buttons: {
+			ok : {
+				'class': 'btn btn-primary',
+				text: 'ยืนยัน',
+				closeOnClick: true,
+			},
+			cancel : {
+				'class': 'btn btn-danger',
+				text: 'ยกเลิก',
+				closeOnClick: true
+			},
+		},
+		callback: function(lobibox, type){
+			if (type === 'ok'){
+				dataToPost = new Object();
+				dataToPost.TRANSNO = $('#add_TRANSNO').val();
+				
+				$('#loadding').show();
+				
+				$.ajax({
+					url: '../SYS02/Ctransferscars/cancelBill',
+					data: dataToPost,
+					type:'POST',
+					dataType: 'json',
+					success: function(data){	
+						if(data.status){
+							Lobibox.notify('success', {
+								title: 'สำเร็จ',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 5000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+							
+							dataToPost = new Object();
+							dataToPost.TRANSNO = data.transno;
+							dataToPost.cup  = _update;
+							dataToPost.clev = _level;
+							
+							loadData(dataToPost);
+							$('#btnt2bill').attr('disabled',true); //ให้พิมพ์บิลโอนได้
+						}else{
+							Lobibox.notify('error', {
+								title: 'ผิดพลาด',
+								size: 'mini',
+								closeOnClick: false,
+								delay: false,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+						}
+					}
+				});
+			}
+		}
+	});
+});
 
 
 

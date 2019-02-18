@@ -206,7 +206,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		<div class="bounce3"></div>
 	</div>
 	
-	<div id="loadding" hidden style="width:100vw;height:100vh;color:white;background-color:hsla(40, 14%, 21%, 0.59);position:fixed;top:0;left:0;z-index:99999;">
+	<div id="loadding" hidden style="width:100vw;height:100vh;color:white;background-color:hsla(40, 14%, 21%, 0.59);position:fixed;top:0;left:0;z-index:1000;">
 		<div class="spinner spinner-horizontal">
 			<span class="spinner-text">Loading...</span>
 			<div class="bounce1"></div>

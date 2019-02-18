@@ -1,3 +1,13 @@
+/********************************************************
+             ______@--/02/2018______
+            / / _ _   _ _     __ 
+           / // __ \ / __ \ / __ \
+       _ _/ // /_/ // / / // /_/ /
+     /_ _ _/ \_ _ //_/ /_/ \__  /
+                          _ _/ /
+                         /___ /
+********************************************************/
+
 var _insert = $('.tab1[name="home"]').attr('cin');
 var _update = $('.tab1[name="home"]').attr('cup');
 var _delete = $('.tab1[name="home"]').attr('cdel');
@@ -101,11 +111,12 @@ function search(){
 															if(data.status){
 																Lobibox.notify('success', {
 																	title: 'ข้อมูล',
+																	size: 'mini',
 																	closeOnClick: true,
 																	delay: 10000,
 																	pauseDelayOnHover: true,
 																	continueDelayOnInactiveTab: false,
-																	icon: false,
+																	icon: true,
 																	messageHeight: '90vh',
 																	soundPath: $("body").attr("baseUrl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 																	soundExt: '.ogg',
@@ -117,11 +128,12 @@ function search(){
 															}else{
 																Lobibox.notify('error', {
 																	title: 'ข้อมูล',
+																	size: 'mini',
 																	closeOnClick: true,
 																	delay: 10000,
 																	pauseDelayOnHover: true,
 																	continueDelayOnInactiveTab: false,
-																	icon: false,
+																	icon: true,
 																	messageHeight: '90vh',
 																	soundPath: $("body").attr("baseUrl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 																	soundExt: '.ogg',
@@ -141,11 +153,12 @@ function search(){
 				}else{
 					Lobibox.notify('error', {
 						title: 'ข้อมูล',
+						size: 'mini',
 						closeOnClick: true,
 						delay: 10000,
 						pauseDelayOnHover: true,
 						continueDelayOnInactiveTab: false,
-						icon: false,
+						icon: true,
 						messageHeight: '90vh',
 						soundPath: $("body").attr("baseUrl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 						soundExt: '.ogg',
@@ -213,11 +226,12 @@ $('#add_group').click(function(){
 									$('#fa_save').attr('disabled',true);
 									Lobibox.notify('error', {
 										title: 'ข้อมูล',
+										size: 'mini',
 										closeOnClick: true,
 										delay: 10000,
 										pauseDelayOnHover: true,
 										continueDelayOnInactiveTab: false,
-										icon: false,
+										icon: true,
 										messageHeight: '90vh',
 										soundPath: $("body").attr("baseUrl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 										soundExt: '.ogg',
@@ -274,11 +288,12 @@ $('#add_group').click(function(){
 											if(data.status){
 												Lobibox.notify('success', {
 													title: 'ข้อมูล',
+													size: 'mini',
 													closeOnClick: true,
 													delay: 10000,
 													pauseDelayOnHover: true,
 													continueDelayOnInactiveTab: false,
-													icon: false,
+													icon: true,
 													messageHeight: '90vh',
 													soundPath: $("body").attr("baseUrl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 													soundExt: '.ogg',
@@ -289,11 +304,12 @@ $('#add_group').click(function(){
 											}else{
 												Lobibox.notify('error', {
 													title: 'ข้อมูล',
+													size: 'mini',
 													closeOnClick: true,
 													delay: 10000,
 													pauseDelayOnHover: true,
 													continueDelayOnInactiveTab: false,
-													icon: false,
+													icon: true,
 													messageHeight: '90vh',
 													soundPath: $("body").attr("baseUrl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 													soundExt: '.ogg',

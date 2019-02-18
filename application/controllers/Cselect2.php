@@ -1,6 +1,14 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-
+/********************************************************
+             _______________________
+            / / _ _   _ _     __ 
+           / // __ \ / __ \ / __ \
+       _ _/ // /_/ // / / // /_/ /
+     /_ _ _/ \_ _ //_/ /_/ \__  /
+                          _ _/ /
+                         /___ /
+********************************************************/
 class Cselect2 extends MY_Controller {
 	private $sess = array();
 	
@@ -110,11 +118,12 @@ class Cselect2 extends MY_Controller {
 	function getTransfercars(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
+		$TRANSTO = $_REQUEST["TRANSTO"];
 		
 		$sql = "
 			select top 20 TRANSNO from {$this->MAuth->getdb('INVTransfers')}
 			where TRANSNO like '%".$dataSearch."%' collate Thai_CI_AS
-				and TRANSTO='".$sess['branch']."'
+				and TRANSTO='".$TRANSTO."'
 			order by TRANSNO
 		";
 		$query = $this->db->query($sql);

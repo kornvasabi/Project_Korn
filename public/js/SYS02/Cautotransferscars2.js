@@ -227,11 +227,12 @@ $('#addSTRNO').click(function(){
 											if(STATUS){
 												Lobibox.notify('error', {
 													title: 'ผิดพลาด',
+													size: 'mini',
 													closeOnClick: false,
 													delay: 5000,
 													pauseDelayOnHover: true,
 													continueDelayOnInactiveTab: false,
-													icon: false,
+													icon: true,
 													messageHeight: '90vh',
 													msg: 'เลขตัวถัง '+STRNO+' มีอยู่ในรายการแล้ว'
 												});
@@ -280,11 +281,12 @@ $('#addSTRNO').click(function(){
 										if(STATUS){
 											Lobibox.notify('error', {
 												title: 'ผิดพลาด',
+												size: 'mini',
 												closeOnClick: false,
 												delay: 5000,
 												pauseDelayOnHover: true,
 												continueDelayOnInactiveTab: false,
-												icon: false,
+												icon: true,
 												messageHeight: '90vh',
 												msg: 'เลขตัวถัง '+STRNO+' มีอยู่ในรายการแล้ว'
 											});
@@ -345,11 +347,12 @@ $('#addSTRNO').click(function(){
 								}else{
 									Lobibox.notify('error', {
 										title: 'ผิดพลาด',
+										size: 'mini',
 										closeOnClick: false,
 										delay: 5000,
 										pauseDelayOnHover: true,
 										continueDelayOnInactiveTab: false,
-										icon: false,
+										icon: true,
 										messageHeight: '90vh',
 										msg: data.html
 									});
@@ -513,7 +516,7 @@ function initPage(){
 			
 			function calculate(){
 				$('#tab22Body').html('');				
-				//$('#loadding').show();
+				$('#loadding').show();
 				
 				$.ajax({
 					url:'../SYS02/Cautotransferscars/calcurate',
@@ -562,11 +565,12 @@ function initPage(){
 						}else{
 							Lobibox.notify('error', {
 								title: 'ผิดพลาด',
+								size: 'mini',
 								closeOnClick: false,
 								delay: 5000,
 								pauseDelayOnHover: true,
 								continueDelayOnInactiveTab: false,
-								icon: false,
+								icon: true,
 								messageHeight: '90vh',
 								msg: data.html
 							});
@@ -578,11 +582,12 @@ function initPage(){
 		}else{
 			Lobibox.notify('error', {
 				title: 'ผิดพลาด',
+				size: 'mini',
 				closeOnClick: false,
 				delay: 5000,
 				pauseDelayOnHover: true,
 				continueDelayOnInactiveTab: false,
-				icon: false,
+				icon: true,
 				messageHeight: '90vh',
 				msg: 'ไม่พบรายการรถที่ต้องการจัดลงสาขา'
 			});
@@ -693,11 +698,12 @@ function initPage(){
 					}else{
 						Lobibox.notify('info', {
 							title: 'ข้อมูล',
+							size: 'mini',
 							closeOnClick: true,
 							delay: 10000,
 							pauseDelayOnHover: true,
 							continueDelayOnInactiveTab: false,
-							icon: false,
+							icon: true,
 							messageHeight: '90vh',
 							soundPath: $("body").attr("baseUrl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
 							soundExt: '.ogg',

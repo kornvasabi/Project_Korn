@@ -840,7 +840,8 @@ class Cautotransferscars extends MY_Controller {
 		
 		$token = 'ty2KVy9r71JadnSp154CbpFqY7ARjw38VBiTqoekRjV';
 		//$token = 'lgNu4brRfcULq36GyhyGiCUeBamrzQSqiK1X4Ic1xxs';
-		$token = '5j6NbypUuW679JrS4bsi6DD8DrpR8xaITXdZXTMlgZg';
+		//$token = '5j6NbypUuW679JrS4bsi6DD8DrpR8xaITXdZXTMlgZg';
+		$token = 'PbLZuNDLa6cEWM9kgsxBUDWVcZsj2Ed7V4wDz7S37nU';
 		$lineapi = $token; // ใส่ token key ที่ได้มา
 		$mms =  "พร้อมเที่ยวกันยัง".trim($arrs["STRNO"])." "; // ข้อความที่ต้องการส่ง
 		date_default_timezone_set("Asia/Bangkok");

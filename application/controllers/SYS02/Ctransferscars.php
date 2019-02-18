@@ -44,8 +44,8 @@ class Ctransferscars extends MY_Controller {
 					</div>
 					<div class='col-xs-2 col-sm-1'>	
 						<div class='form-group'>
-							โอนจากสาขา
-							<input type='text' id='TRANSFM' class='form-control input-sm' placeholder='โอนจากสาขา' value='".$this->sess['branch']."'>
+							สาขาต้นทาง
+							<input type='text' id='TRANSFM' class='form-control input-sm' placeholder='สาขาต้นทาง' value='".$this->sess['branch']."'>
 						</div>
 					</div>
 					<div class='col-xs-2 col-sm-2'>	
@@ -56,6 +56,7 @@ class Ctransferscars extends MY_Controller {
 								<option value='Sendding'>อยู่ระหว่างการโอนย้ายรถ</option>
 								<option value='Pendding'>รับโอนรถบางส่วน</option>
 								<option value='Received'>รับโอนรถครบแล้ว</option>
+								<option value='Cancel'>ยกเลิกบิลโอน</option>
 							</select>
 						</div>
 					</div>
@@ -85,20 +86,20 @@ class Ctransferscars extends MY_Controller {
 						</div>
 						<div class='col-sm-2'>	
 							<div class='form-group'>
-								วันที่โอน
-								<input type='text' id='add_TRANSDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน'>
+								วันที่บิลโอน
+								<input type='text' id='add_TRANSDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน' >
 							</div>
 						</div>
 						<div class='col-sm-2'>	
 							<div class='form-group'>
-								โอนจากสาขา
+								สาขาต้นทาง
 								<select id='add_TRANSFM' class='form-control input-sm'><option value='".$this->sess['branch']."'>".$this->sess['branch']."</option></select>
 							</div>
 						</div>
 
 						<div class='col-sm-2'>	
 							<div class='form-group'>
-								ย้ายไปสาขา
+								สาขาปลายทาง
 								<select id='add_TRANSTO' class='form-control input-sm'></select>
 							</div>
 						</div>
@@ -125,6 +126,7 @@ class Ctransferscars extends MY_Controller {
 									<option value='Sendding' selected>อยู่ระหว่างการโอนย้ายรถ</option>
 									<option value='Pendding'>รับโอนรถบางส่วน</option>
 									<option value='Received'>รับโอนรถครบแล้ว</option>
+									<option value='Cancel'>ยกเลิกบิลโอน</option>
 								</select>
 							</div>
 						</div>
@@ -159,11 +161,10 @@ class Ctransferscars extends MY_Controller {
 										<tr>
 											<th>#</th>
 											<th>เลขตัวถัง</th>
-											<th>ยี่ห้อ</th>
 											<th>รุ่น</th>
 											<th>แบบ</th>
 											<th>สี</th>
-											<th>ขนาด (CC)</th>
+											<th>กลุ่มรถ</th>
 											<th>สถานะ</th>
 											<th>วันที่โอนย้าย</th>
 											<th>พขร.</th>
@@ -188,10 +189,11 @@ class Ctransferscars extends MY_Controller {
 								<input type='button' id='btnt2bill' class='btn btn-primary btn-sm' value='บิลโอน' style='width:100%'>
 							</div>
 						</div>
+						
 						<div class='col-sm-1 col-sm-offset-8'>	
 							<div class='form-group'>
 								<br>
-								<input type='button' id='btnt2del' class='btn btn-danger btn-sm' value='ลบบิลโอน' style='width:100%'>
+								<input type='button' id='btnt2del' class='btn btn-danger btn-sm' value='ยกเลิกบิลโอน' style='width:100%'>
 							</div>
 						</div>
 						
@@ -240,7 +242,8 @@ class Ctransferscars extends MY_Controller {
 				,a.TRANSFM,a.TRANSTO,c.USERNAME as EMPCARRY,a.TRANSQTY,a.TRANSSTAT
 				,case when a.TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ'
 					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
-					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว' end TRANSSTATDesc
+					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว'
+					when a.TRANSSTAT='Cancel' then 'ยกเลิกบิลโอน' end as TRANSSTATDesc
 				,a.MEMO1
 				,b.USERNAME
 				,convert(varchar(8),a.INSERTDT,112) as INSERTDT
@@ -267,8 +270,13 @@ class Ctransferscars extends MY_Controller {
 		$NRow = 1;
 		if($query->row()){
 			foreach($query->result() as $row){
+				$bgcolor="";
+				if($row->TRANSSTAT == "Cancel"){
+					$bgcolor = "color:red";
+				}
+				
 				$html .= "
-					<tr class='trow' seq=".$NRow.">
+					<tr class='trow' seq=".$NRow." style='".$bgcolor."'>
 						<td class='getit' seq=".$NRow++." TRANSNO='".$row->TRANSNO."' style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
 						<td>".$row->TRANSNO."</td>
 						<td>".$this->Convertdate(2,$row->TRANSDT)."</td>
@@ -279,7 +287,7 @@ class Ctransferscars extends MY_Controller {
 						<td>".$row->EMPCARRY."</td>
 						<td align='center'>".$row->TRANSQTY."</td>			
 						<td>".$row->MEMO1."</td>			
-						<td>".$row->USERNAME."<br/>".$this->Convertdate(2,$row->INSERTDT)."<br/><span style='color:".($row->TRANSSTAT == 'Sendding' ? 'black' : ($row->TRANSSTAT == 'Pendding' ? 'blue' : 'green')).";'>".$row->TRANSSTATDesc."</span></td>
+						<td>".$row->USERNAME."<br/>".$this->Convertdate(2,$row->INSERTDT)."<br/><span style='color:".($row->TRANSSTAT == 'Sendding' ? 'black' : ($row->TRANSSTAT == 'Pendding' ? 'blue' : ($row->TRANSSTAT == 'Cancel' ? 'red' : 'green'))).";'>".$row->TRANSSTATDesc."</span></td>
 					</tr>
 				";
 			}
@@ -324,7 +332,8 @@ class Ctransferscars extends MY_Controller {
 				,APPROVED,b.employeeCode+' :: '+b.USERNAME as APPROVNM
 				,case when TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ'
 					when TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
-					else 'รับโอนรถครบแล้ว' end as TRANSSTATDesc
+					when TRANSSTAT='Received' then 'รับโอนรถครบแล้ว'
+					when TRANSSTAT='Cancel' then 'ยกเลิกบิลโอน' end as TRANSSTATDesc
 				,TRANSSTAT,MEMO1,SYSTEM
 			from {$this->MAuth->getdb('INVTransfers')} a
 			left join (
@@ -363,8 +372,8 @@ class Ctransferscars extends MY_Controller {
 		}
 		
 		$sql = "
-			select b.STRNO,c.TYPE,c.MODEL,c.BAAB,COLOR,CC
-				,case when isnull(b.RECEIVEDT,'')='' then 'อยู่ระหว่างการโอนย้ายรถ' else 'รับโอนแล้ว' end as RECEIVED
+			select b.TRANSITEM,b.STRNO,c.TYPE,c.MODEL,c.BAAB,COLOR,CC,c.GCODE
+				,case when  a.TRANSSTAT='Cancel' then 'ยกเลิกบิลโอน' when isnull(b.RECEIVEDT,'')='' then 'อยู่ระหว่างการโอนย้ายรถ' else 'รับโอนแล้ว' end as RECEIVED
 				,b.EMPCARRY,d.employeeCode+' :: '+d.USERNAME as EMPCARRYNM
 				,convert(varchar(8),b.TRANSDT,112) as TRANSDT 
 			from {$this->MAuth->getdb('INVTransfers')} a
@@ -377,6 +386,7 @@ class Ctransferscars extends MY_Controller {
 				from {$this->MAuth->getdb('hp_vusers')}
 			) d on b.EMPCARRY=d.USERID
 			where a.TRANSNO='".$arrs['TRANSNO']."'
+			order by b.TRANSITEM
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -405,14 +415,13 @@ class Ctransferscars extends MY_Controller {
 				}
 				
 				$html['STRNO'][$NRow][] = '
-					<tr seq="old'.$NRow.'">
-						<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="old'.$NRow.'" value="ยกเลิก" '.$disabled.'></td>
+					<tr seq="old'.$NRow.'" style="'.($row->RECEIVED=="ยกเลิกบิลโอน" ? "color:red":"").'">
+						<td>'.$row->TRANSITEM.'</td>
 						<td>'.$row->STRNO.'</td>
-						<td>'.$row->TYPE.'</td>
 						<td>'.$row->MODEL.'</td>
 						<td>'.$row->BAAB.'</td>
 						<td>'.$row->COLOR.'</td>
-						<td>'.$row->CC.'</td>
+						<td>'.$row->GCODE.'</td>
 						<td>'.$row->RECEIVED.'</td>
 						<td><input type="text" STRNO="'.$row->STRNO.'" '.$disabled.' class="SETTRANSDT form-control input-sm" data-provide="datepicker" data-date-language="th-th" placeholder="วันที่โอน"  style="width:100px;" value="'.$this->Convertdate(2,$row->TRANSDT).'"></td>
 						<td><select STRNO="'.$row->STRNO.'" '.$disabled.' class="SETEMPCARRY select2"><option value=\''.$row->EMPCARRY.'\'>'.$row->EMPCARRYNM.'</option></select></td>
@@ -441,10 +450,16 @@ class Ctransferscars extends MY_Controller {
 							<input type='text' id='fMODEL' class='form-control input-sm' placeholder='รุ่น'>
 						</div>
 					</div>
-					<div class='col-sm-2'>	
+					<!-- div class='col-sm-2'>	
 						<div class='form-group'>
 							ที่อยู่รถ
 							<select id='fCRLOCAT' class='form-control input-sm'><option value='".$_REQUEST['locat']."'>".$_REQUEST['locat']."</option></select>
+						</div>
+					</div -->
+					<div class='col-sm-2'>
+						<div class='form-group'>
+							กลุ่มรถ
+							<input type='text' id='fGCODE' class='form-control input-sm' placeholder='กลุ่มรถ'>
 						</div>
 					</div>
 					<div class='col-sm-2'>
@@ -467,6 +482,7 @@ class Ctransferscars extends MY_Controller {
 		$arrs['fSTRNO'] = $_REQUEST['fSTRNO'];
 		$arrs['fMODEL'] = $_REQUEST['fMODEL'];
 		$arrs['fCRLOCAT'] = $_REQUEST['fCRLOCAT'];
+		$arrs['fGCODE'] = $_REQUEST['fGCODE'];
 		
 		$cond = "";
 		if($arrs['fSTRNO'] != ''){
@@ -481,8 +497,12 @@ class Ctransferscars extends MY_Controller {
 			$cond .= " and CRLOCAT like '".$arrs['fCRLOCAT']."'";
 		}
 		
+		if($arrs['fGCODE'] != ''){
+			$cond .= " and GCODE like '".$arrs['fGCODE']."'";
+		}
+		
 		$sql = "
-			select STRNO,TYPE,MODEL,BAAB,COLOR,CC,CRLOCAT
+			select STRNO,TYPE,MODEL,BAAB,COLOR,CC,CRLOCAT,GCODE
 			from {$this->MAuth->getdb('INVTRAN')}
 			where isnull(SDATE,'')='' and isnull(TSALE,'') = '' and isnull(RESVNO,'') = ''
 				and isnull(RESVDT,'') = '' and FLAG='D' ".$cond."
@@ -503,17 +523,24 @@ class Ctransferscars extends MY_Controller {
 							BAAB='".$row->BAAB."' 
 							COLOR='".$row->COLOR."'
 							CC='".$row->CC."'
+							GCODE='".$row->GCODE."'
 							CRLOCAT='".$row->CRLOCAT."'	style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
 						<td>".$row->STRNO."</td>
-						<td>".$row->TYPE."</td>
 						<td>".$row->MODEL."</td>
 						<td>".$row->BAAB."</td>
 						<td>".$row->COLOR."</td>
-						<td>".$row->CC."</td>
+						<td>".$row->GCODE."</td>
+						<!-- td>".$row->CC."</td -->
 						<td>".$row->CRLOCAT."</td>
 					</tr>
 				";
 			}
+		}else{
+			$html .= "
+				<tr>
+					<td colspan='7'>ไม่พบข้อมูลตามเงื่อนไข</td>
+				</tr>
+			";
 		}
 		
 		$html = "
@@ -523,11 +550,10 @@ class Ctransferscars extends MY_Controller {
 						<tr>
 							<th>#</th>
 							<th>เลขตัวถัง</th>
-							<th>ยี่ห้อ</th>
 							<th>รุ่น</th>
 							<th>แบบ</th>
 							<th>สี</th>
-							<th>CC</th>
+							<th>กลุ่มรถ</th>
 							<th>ที่อยู่รถ</th>
 						</tr>
 					</thead>	
@@ -553,6 +579,7 @@ class Ctransferscars extends MY_Controller {
 		$arrs['TRANSSTAT'] = $_REQUEST['TRANSSTAT'];
 		$arrs['MEMO1'] = $_REQUEST['MEMO1'];
 		$arrs['STRNO'] = (!isset($_REQUEST['STRNO']) ? '':$_REQUEST['STRNO']);
+		//print_r($arrs); exit;
 		
 		if($arrs['TRANSNO'] == ''){
 			$response = array();
@@ -609,9 +636,9 @@ class Ctransferscars extends MY_Controller {
 			$response['msg'] = 'ไม่พบข้อมูลรถที่จะโอน โปรดทำรายการใหม่อีกครั้ง';
 			echo json_encode($response); exit;
 		}
-				
+			//print_r($arrs['STRNO'])	; exit;
+		$sql = "";
 		if($arrs['TRANSNO'] == 'Auto Generate'){
-			$sql = "";
 			$TRANSQTY = 0;
 			for($i=0;$i<sizeof($arrs['STRNO']);$i++){
 				$sql .= "
@@ -630,7 +657,7 @@ class Ctransferscars extends MY_Controller {
 							insert into {$this->MAuth->getdb('INVTransfersDetails')} (
 								TRANSNO,TRANSITEM,STRNO,EMPCARRY,TRANSDT,MOVENO,RECEIVEBY,RECEIVEDT,INSERTBY,INSERTDT
 							) values (
-								@TRANSNO,'".($i+1)."','".$arrs['STRNO'][$i][1]."','".$arrs['STRNO'][$i][9]."',".($this->Convertdate(1,$arrs['STRNO'][$i][8]) == "" ? "NULL" : "'".$this->Convertdate(1,$arrs['STRNO'][$i][8])."'").",null,null,null,'".$this->sess["IDNo"]."',getdate()
+								@TRANSNO,'".($i+1)."','".$arrs['STRNO'][$i][1]."','".$arrs['STRNO'][$i][8]."',".($this->Convertdate(1,$arrs['STRNO'][$i][7]) == "" ? "NULL" : "'".$this->Convertdate(1,$arrs['STRNO'][$i][7])."'").",null,null,null,'".$this->sess["IDNo"]."',getdate()
 							);
 						end
 					else
@@ -642,7 +669,7 @@ class Ctransferscars extends MY_Controller {
 				";
 				$TRANSQTY++;
 			}
-			
+			//echo $sql; exit;
 			$sql = "
 				if object_id('tempdb..#transaction') is not null drop table #transaction;
 				create table #transaction (id varchar(20),msg varchar(max));
@@ -695,58 +722,33 @@ class Ctransferscars extends MY_Controller {
 				foreach ($query->result() as $row) {
 					$stat = ($row->id == "y" ? true : false);
 					$msg = $row->msg;
+					$transno = str_replace("บันทึกการโอนรถแล้ว เลขที่บิลโอน ","",$row->msg);
 				}
 			}else{
 				$stat = false;
 				$msg = "ผิดพลาด :: ไม่สามารถทำรายการได้ในขณะนี้ โปรดลองทำรายการใหม่ภายหลัง";
+				$transno = "";
 			}
 			
 			$response = array();
 			$response['status'] = $stat;
 			$response['msg'] = $msg;
+			$response['transno'] = $transno;
 			echo json_encode($response); exit;
 		}else{
 			$STRNO = "";
 			$sql = "";
 			for($i=0;$i<sizeof($arrs['STRNO']);$i++){
-				if(strpos($arrs['STRNO'][$i][0],"new") > 0){
-					$sql .= "
-						set @stat = (
-							select count(*) from {$this->MAuth->getdb('INVTRAN')} 
-							where isnull(SDATE,'')='' and isnull(TSALE,'') = '' and isnull(RESVNO,'') = ''
-								and isnull(RESVDT,'') = '' and FLAG='D' and STRNO='".$arrs['STRNO'][$i][1]."' and CRLOCAT='".$arrs['TRANSFM']."'
-						);
-						
-						if (@stat = 1)
-							begin
-								update {$this->MAuth->getdb('INVTRAN')} 
-								set CRLOCAT='TRANS'
-								where STRNO='".$arrs['STRNO'][$i][1]."'
-								
-								insert into {$this->MAuth->getdb('INVTransfersDetails')}  (
-									TRANSNO,TRANSITEM,STRNO,EMPCARRY,TRANSDT,MOVENO,RECEIVEBY,RECEIVEDT,INSERTBY,INSERTDT
-								) values (
-									@TRANSNO,'".($i+1)."','".$arrs['STRNO'][$i][1]."','".$arrs['STRNO'][$i][9]."',".($this->Convertdate(1,$arrs['STRNO'][$i][8]) == "" ? "NULL" : "'".$this->Convertdate(1,$arrs['STRNO'][$i][8])."'").",null,null,null,'".$this->sess["IDNo"]."',getdate()
-								);
-							end
-						else
-							begin 
-								rollback tran ins;
-								insert into #transaction select 'n' as id,'ผิดพลาด เลขตัวถัง ".$arrs['STRNO'][$i][1]." ไม่ได้อยู่ในสถานะที่จะโอนย้ายได้ โปรดตรวจสอบรายการใหม่อีกครั้ง' as msg;
-								return;
-							end
-					";
-				}else{
-					$sql .= "
+				$sql .= "
+					if ((select count(*) from {$this->MAuth->getdb('INVTransfersDetails')}
+					where TRANSNO=@TRANSNO and STRNO='".$arrs['STRNO'][$i][1]."' and RECEIVEDT is null) > 0)
+					begin
 						update {$this->MAuth->getdb('INVTransfersDetails')}
-						set EMPCARRY='".$arrs['STRNO'][$i][9]."',
-							TRANSDT=".($this->Convertdate(1,$arrs['STRNO'][$i][8]) == "" ? "NULL" : "'".$this->Convertdate(1,$arrs['STRNO'][$i][8])."'")."
+						set EMPCARRY='".$arrs['STRNO'][$i][8]."',
+							TRANSDT=".($this->Convertdate(1,$arrs['STRNO'][$i][7]) == "" ? "NULL" : "'".$this->Convertdate(1,$arrs['STRNO'][$i][7])."'")."
 						where TRANSNO=@TRANSNO and STRNO='".$arrs['STRNO'][$i][1]."'
-					";
-				}
-				
-				if($STRNO != ""){ $STRNO .= ","; }
-				$STRNO .= "'".$arrs['STRNO'][$i][1]."'";
+					end
+				";				
 			}
 			
 			$sql = "
@@ -756,33 +758,8 @@ class Ctransferscars extends MY_Controller {
 				declare @TRANSNO varchar(12) = '".$arrs['TRANSNO']."';
 				
 				begin tran ins
-				begin try
-					declare @stat int; 
-					
+				begin try					
 					".$sql."
-					
-					if( /*ตรวจสอบว่ามีบางคันรับโอนแล้วหรือยัง*/
-						(select sum(case when RECEIVEDT is null then 0 else 1 end) from {$this->MAuth->getdb('INVTransfersDetails')} 
-						where TRANSNO = @TRANSNO and STRNO in (".$STRNO.")) = 0
-					)
-					begin
-						
-						update {$this->MAuth->getdb('INVTRAN')} 
-						set CRLOCAT=(select TRANSFM from {$this->MAuth->getdb('INVTransfers')}  where TRANSNO=@TRANSNO)
-						where STRNO in (
-							select STRNO collate Thai_CS_AS from {$this->MAuth->getdb('INVTransfersDetails')}
-							where TRANSNO = @TRANSNO and STRNO not in (".$STRNO.")
-						);
-						
-						delete from {$this->MAuth->getdb('INVTransfersDetails')}
-						where TRANSNO = @TRANSNO and STRNO not in (".$STRNO.");	
-					end
-					else
-					begin
-						rollback tran ins;
-						insert into #transaction select 'n' as id,'ผิดพลาด ไม่สามารถบันทึกรายการได้ เนื่องจากรถบางคัน มีการรับโอนแล้ว' as msg;
-						return;
-					end
 					
 					declare @item int = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO);
 					declare @itemRV int = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO and RECEIVEDT is null);
@@ -828,6 +805,7 @@ class Ctransferscars extends MY_Controller {
 			$response = array();
 			$response['status'] = $stat;
 			$response['msg'] = $msg;
+			$response['transno'] = $arrs['TRANSNO'];
 			echo json_encode($response); exit;
 		}
 	}
@@ -837,6 +815,102 @@ class Ctransferscars extends MY_Controller {
 		$data[] = $_REQUEST["TRANSNO"];
 		
 		echo json_encode($this->generateData($data,"encode"));
+	}
+	
+	function checkdt(){
+		$dt = $this->Convertdate(1,$_REQUEST['dt']);
+		
+		$sql = "select case when '".$dt."' > convert(varchar(8),getdate(),112) then 'T' else 'F' end as data";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html = $row->data;
+			}
+		}else{
+			$html = 'F';
+		}
+		
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	
+	function cancelBill(){
+		$TRANSNO = $_REQUEST["TRANSNO"];
+		
+		if($TRANSNO == ""){
+			$response = array();
+			$response['status'] = false;
+			$response['msg'] = 'ไม่พบข้อมูลเลขที่บิลโอน โปรดตรวจสอบรายการใหม่อีกครั้ง';
+			$response['transno'] = $TRANSNO;
+			echo json_encode($response); exit;
+		}
+		
+		$sql = "
+			if object_id('tempdb..#cancelBill') is not null drop table #cancelBill;
+			create table #cancelBill (id varchar(20),msg varchar(max));
+
+			begin tran ins
+			begin try
+				declare @rec int = (
+					select count(*) from {$this->MAuth->getdb('INVTransfersDetails')}
+					where TRANSNO='".$TRANSNO."' and RECEIVEDT is not null 
+				)
+				
+				if(@rec = 0)
+				begin
+					update {$this->MAuth->getdb('INVTransfers')}
+					set TRANSSTAT='Cancel'
+					where TRANSNO='".$TRANSNO."'
+					
+					update c 
+					set c.CRLOCAT=a.TRANSFM
+					from {$this->MAuth->getdb('INVTransfers')} a
+					left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
+					left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate thai_cs_as
+					where a.TRANSNO='".$TRANSNO."' and c.STRNO is not null
+				end
+				else 
+				begin
+					rollback tran ins;
+					insert into #cancelBill select 'n' as id,'ผิดพลาด ไม่สามารถยกเลิกบิลโอนรถได้ เนื่องจากมีรถบางคันถูกรับโอนแล้วครับ' as msg;	
+					return;
+				end
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS02::ยกเลิก บิลโอนย้ายรถ',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+					
+				insert into #cancelBill select 'y' as id,'ยกเลิกบิลโอน ".$TRANSNO." แล้ว' as msg;
+				commit tran ins;
+			end try
+			begin catch
+				rollback tran ins;
+				insert into #cancelBill select 'n' as id,ERROR_MESSAGE() as msg;
+			end catch
+		";
+		$this->db->query($sql);
+
+		$sql = "select * from #cancelBill";   
+		$query = $this->db->query($sql);
+		$stat = true;
+		$msg  = '';
+
+		if($query->row()) {
+			foreach ($query->result() as $row) {
+				$stat = ($row->id == "y" ? true : false);
+				$msg = $row->msg;
+			}
+		}else{
+			$stat = false;
+			$msg = "ผิดพลาด :: ไม่สามารถทำรายการได้ในขณะนี้ โปรดลองทำรายการใหม่ภายหลัง";
+		}
+
+		$response = array();
+		$response['status'] = $stat;
+		$response['msg'] = $msg;
+		$response['transno'] = $TRANSNO;
+		echo json_encode($response); exit;
 	}
 	
 	function pdf(){
