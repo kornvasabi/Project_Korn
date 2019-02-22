@@ -32,13 +32,13 @@ class Ctransferscars extends MY_Controller {
 				<div style='height:65px;overflow:auto;'>					
 					<div class='col-xs-2 col-sm-2'>	
 						<div class='form-group'>
-							เลขที่โอน
+							เลขที่บิลโอน
 							<input type='text' id='TRANSNO' class='form-control input-sm' placeholder='เลขที่โอน'>
 						</div>
 					</div>
 					<div class='col-xs-2 col-sm-2'>	
 						<div class='form-group'>
-							วันที่โอน
+							วันที่บิลโอน
 							<input type='text' id='TRANSDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน'>
 						</div>
 					</div>
@@ -80,7 +80,7 @@ class Ctransferscars extends MY_Controller {
 					<div class='row'>
 						<div class='col-sm-2 col-sm-offset-2'>	
 							<div class='form-group'>
-								เลขที่โอน
+								เลขที่บิลโอน
 								<input type='text' id='add_TRANSNO' class='form-control input-sm' placeholder='เลขที่โอน'>
 							</div>
 						</div>
@@ -121,7 +121,7 @@ class Ctransferscars extends MY_Controller {
 						</div>
 						<div class='col-sm-2'>	
 							<div class='form-group'>
-								สถานะ
+								สถานะบิล
 								<select id='add_TRANSSTAT' class='form-control input-sm chosen-select' data-placeholder='สถานะ'>
 									<option value='Sendding' selected>อยู่ระหว่างการโอนย้ายรถ</option>
 									<option value='Pendding'>รับโอนรถบางส่วน</option>
@@ -165,7 +165,7 @@ class Ctransferscars extends MY_Controller {
 											<th>แบบ</th>
 											<th>สี</th>
 											<th>กลุ่มรถ</th>
-											<th>สถานะ</th>
+											<th>สถานะการโอน</th>
 											<th>วันที่โอนย้าย</th>
 											<th>พขร.</th>
 										</tr>
@@ -413,6 +413,8 @@ class Ctransferscars extends MY_Controller {
 				}else{
 					$disabled = 'disabled'; 
 				}
+				
+				//if($row->RECEIVED == 'อยู่ระหว่างการโอนย้ายรถ' and $arrs['clev'] == 1){ }
 				
 				$html['STRNO'][$NRow][] = '
 					<tr seq="old'.$NRow.'" style="'.($row->RECEIVED=="ยกเลิกบิลโอน" ? "color:red":"").'">

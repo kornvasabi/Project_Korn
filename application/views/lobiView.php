@@ -284,6 +284,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 							$('.ChangeLOCAT').click(function(){
 								dataToPost = new Object();
 								dataToPost.LOCAT = $(this).attr('LOCAT');
+								$('#loadding').show();
 								
 								$.ajax({
 									url: '../CHomenew/LocatChange',
@@ -359,5 +360,32 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		  window.location.href = uri + base64(format(template, ctx))
 		}
 	})()
+	
+	
+	$('body').keyup(function(e){
+		if(e.keyCode === 112){
+			dataToPost = new Object();
+			dataToPost.url = document.URL;
+			
+			$.ajax({
+				url: '../CHomenew/Help',
+				data: dataToPost,
+				type: 'POST',
+				dataType: 'json',
+				success: function(data){
+					var content = "<iframe src='"+data.url+"' style='width:100%;height:100%;'></iframe>";
+					window.open(data.url,'_blank');
+					/*
+					Lobibox.window({
+						title: 'Help',
+						content: content,
+						height: $(window).height(),
+						width: $(window).width()
+					});
+					*/
+				}
+			});
+		}
+	});
 </script>
 </html>

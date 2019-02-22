@@ -211,9 +211,10 @@ $('#addSTRNO').click(function(){
 										$('#table-SearchSTRNO tbody tr').each(function() {
 											var STRNO = this.cells[1].innerHTML;											
 											var MODEL = this.cells[2].innerHTML;
-											var COLOR = this.cells[3].innerHTML;
-											var STAT  = this.cells[4].innerHTML;
-											var LOCAT = this.cells[5].innerHTML;
+											var BAAB = this.cells[3].innerHTML;
+											var COLOR = this.cells[4].innerHTML;
+											var STAT  = this.cells[5].innerHTML;
+											var LOCAT = this.cells[6].innerHTML;
 											checkprov = LOCAT;
 											
 											var STATUS = false; //ตรวจสอบว่ามีอยู่ในรายการแล้วหรือยัง
@@ -245,6 +246,7 @@ $('#addSTRNO').click(function(){
 												row += '<td class="delSTRNO" seq="new'+generate+'" align="center" style="cursor:pointer;color:red;"><b><i class=\'glyphicon glyphicon-trash\' style=\'z-index:20;\'></i></b></td>';
 												row += '<td>'+STRNO+'</td>';
 												row += '<td>'+MODEL+'</td>';
+												row += '<td>'+BAAB+'</td>';
 												row += '<td>'+COLOR+'</td>';
 												row += '<td>'+STAT+'</td>';
 												row += '<td>'+LOCAT+'</td>';
@@ -265,6 +267,7 @@ $('#addSTRNO').click(function(){
 									$('.getit').click(function(){
 										var STRNO = $(this).attr('STRNO');
 										var MODEL = $(this).attr('MODEL');
+										var BAAB  = $(this).attr('BAAB');
 										var COLOR = $(this).attr('COLOR');
 										var STAT  = $(this).attr('STAT');
 										var LOCAT = $(this).attr('LOCAT');
@@ -299,6 +302,7 @@ $('#addSTRNO').click(function(){
 											row += '<td class="delSTRNO" seq="new'+generate+'" align="center" style="cursor:pointer;color:red;"><b><i class=\'glyphicon glyphicon-trash\' style=\'z-index:20;\'></i></b></td>';
 											row += '<td>'+STRNO+'</td>';
 											row += '<td>'+MODEL+'</td>';
+											row += '<td>'+BAAB+'</td>';
 											row += '<td>'+COLOR+'</td>';
 											row += '<td>'+STAT+'</td>';
 											row += '<td>'+LOCAT+'</td>';

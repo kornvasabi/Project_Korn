@@ -64,6 +64,7 @@ class Cautotransferscars extends MY_Controller {
 																<th style='width:100px;'><button id='addSTRNO' LOCAT='' class='btn btn-sm btn-primary btn-block'>เพิ่มรถ</button></th>
 																<th>เลขตัวถัง</th>
 																<th>รุ่น</th>
+																<th>แบบ</th>
 																<th>สี</th>
 																<th>สถานะ</th>
 																<th>สาขา</th>
@@ -921,12 +922,14 @@ class Cautotransferscars extends MY_Controller {
 						<td class='getit' seq=".$NRow++." 
 							STRNO='".$row->STRNO."' 
 							MODEL='".$row->MODEL."' 
+							BAAB='".$row->BAAB."' 
 							COLOR='".$row->COLOR."' 
 							STAT=".($row->STAT == "N" ? "รถใหม่" : "รถเก่า")."
 							LOCAT='".$row->CRLOCAT."' 
 							style='width:50px;cursor:pointer;text-align:center;'><b><i class='glyphicon glyphicon-check' style='z-index:20;'></i></b></td>
 						<td>".$row->STRNO."</td>
 						<td>".$row->MODEL."</td>
+						<td>".$row->BAAB."</td>
 						<td>".$row->COLOR."</td>
 						<td>".($row->STAT == "N" ? "รถใหม่" : "รถเก่า")."</td>
 						<td>".$row->CRLOCAT."</td>
@@ -952,6 +955,7 @@ class Cautotransferscars extends MY_Controller {
 							</th>
 							<th>เลขตัวถัง</th>
 							<th>รุ่น</th>
+							<th>แบบ</th>
 							<th>สี</th>
 							<th>สถานะรถ</th>
 							<th>ที่อยู่สาขา</th>
@@ -1322,7 +1326,7 @@ class Cautotransferscars extends MY_Controller {
 		for($i=0;$i<$size;$i++){
 			$dsize = sizeof($arrs["STRNO"][$i]);
 			
-			$tempAuto .= ($tempAuto == "insert into #tempAuto " ? "select " : " union all select ");
+			$tempAuto .= ($tempAuto == "insert into #tempAuto " ? " select " : " union all select ");
 			
 			for($j=0;$j<$dsize;$j++){
 				if($j!=0){ $tempAuto .= ","; }
@@ -1341,7 +1345,7 @@ class Cautotransferscars extends MY_Controller {
 			
 			for($j=0;$j<$dsize;$j++){
 				if($j!=0){ $tempChoose .= ","; }
-				if($j==3){ 
+				if($j==4){ 
 					$tempChoose .= "'".($arrs["STRNOChoose"][$i][$j] == "รถใหม่" ? "N" : "O")."'";
 				}else{
 					$tempChoose .= "'".$arrs["STRNOChoose"][$i][$j]."'";
@@ -1350,46 +1354,52 @@ class Cautotransferscars extends MY_Controller {
 		}
 		
 		$sql = "
+			
 			if OBJECT_ID('tempdb..#tempChoose') is not null drop table #tempChoose;
-			create table #tempChoose (STRNO varchar(20),MODEL varchar(30),COLOR varchar(30),STAT varchar(5),FRM varchar(20));
+			create table #tempChoose (STRNO varchar(20),MODEL varchar(30),BAAB varchar(20),COLOR varchar(30),STAT varchar(5),FRM varchar(20));
 			".$tempChoose."
 		";
-		//echo $sql; exit;
+		//echo $sql; //exit;
 		$this->db->query($sql);
+		
 		$sql = "		
-			if OBJECT_ID('tempdb..#tempAuto') is not null drop table #tempAuto;
-			create table #tempAuto (LOCAT varchar(20),MODEL varchar(30),COLOR varchar(30),CN int,FRM varchar(20));
 			
+			if OBJECT_ID('tempdb..#tempAuto') is not null drop table #tempAuto;
+			create table #tempAuto (LOCAT varchar(20),MODEL varchar(30),BAAB varchar(20),COLOR varchar(30),CN int,FRM varchar(20));
 			".$tempAuto."
 		";
-		//echo $sql; exit;
+		//echo $sql; //exit;
 		$this->db->query($sql);
-		$sql = "			
+		
+		$sql = "		
+			
 			if OBJECT_ID('tempdb..#temptran') is not null drop table #temptran;
 			create table #temptran (id varchar(20),msg varchar(max));
-
+			
 			begin tran transaction1
 			begin try
 				declare @LOCAT varchar(20);
 				declare @LOCATOLD varchar(20) = '';
 				declare @MODEL varchar(30);
+				declare @BAAB varchar(20);
 				declare @COLOR varchar(30);
 				declare @CN int; --จำนวนรถใหม้ จำแนกตามรุ่น สี
 				declare @TRANSNO varchar(12); --เลขที่ใบโอนย้าย
-				declare @CRLOCAT varchar(20) = 'Fกป';
+				declare @CRLOCAT varchar(20) = '".$arrs["LOCAT"]."';
 				declare @STRNO varchar(30);
 				declare @TRANSLOG varchar(max);
 				
 				declare cs_stock cursor for 
-					select LOCAT,MODEL,COLOR,sum(CN) from #tempAuto 
-					group by LOCAT,MODEL,COLOR 
-					order by LOCAT,MODEL,COLOR;
+					select LOCAT,MODEL,BAAB,COLOR,sum(CN) as CN from #tempAuto 
+					group by LOCAT,MODEL,BAAB,COLOR 
+					order by LOCAT,MODEL,BAAB,COLOR;
 					
 				open cs_stock 
-				fetch next from cs_stock into @LOCAT,@MODEL,@COLOR,@CN
+				fetch next from cs_stock into @LOCAT,@MODEL,@BAAB,@COLOR,@CN
 
 				while @@FETCH_STATUS = 0  
 				begin 
+					
 					IF @LOCATOLD <> @LOCAT
 					BEGIN
 						/* @symbol = สัญลักษณ์แทนประเภทของเลขที่ นั้นๆ */
@@ -1402,15 +1412,14 @@ class Cautotransferscars extends MY_Controller {
 							union select moveno collate Thai_CS_AS as moveno from {$this->MAuth->getdb('INVMOVM')} where MOVENO like ''+@rec+'%'
 						) as a);
 						set @TRANSNO = left(@TRANSNO ,8)+right(right(@TRANSNO ,4)+10001,4);
-						
-						
+											
 						insert into {$this->MAuth->getdb('INVTransfers')} (
 							TRANSNO,TRANSDT,TRANSFM,TRANSTO,EMPCARRY,APPROVED,
 							TRANSQTY,TRANSSTAT,MEMO1,SYSTEM,INSERTBY,INSERTDT
 						) values (
 							@TRANSNO,CONVERT(varchar(8),getdate(),112),@CRLOCAT,@LOCAT,'','".$this->sess["IDNo"]."'
 							,0,'Sendding','auto','AT','".$this->sess["IDNo"]."',getdate()
-						);
+						);					
 						
 						select @TRANSLOG = replace(isnull(@TRANSLOG,'')+QUOTENAME(@TRANSNO),'][',',');
 					END
@@ -1445,18 +1454,18 @@ class Cautotransferscars extends MY_Controller {
 							
 							set @CN = @CN - 1;	
 						end	
-					end		
-					
+					end	
+				
 					set @LOCATOLD = @LOCAT;
-					fetch next from cs_stock into @LOCAT,@MODEL,@COLOR,@CN
+					fetch next from cs_stock into @LOCAT,@MODEL,@BAAB,@COLOR,@CN
 				end
 				
 				close cs_stock;
 				deallocate cs_stock;	
-				
+					
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','SYS02::บันทึก โอนย้ายรถ AT ',@TRANSLOG+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
-				
+
 				insert into #temptran select 'Y',@TRANSLOG;
 				commit tran transaction1;
 			end try
@@ -1467,8 +1476,14 @@ class Cautotransferscars extends MY_Controller {
 		";
 		//echo $sql; exit;
 		$this->db->query($sql);		
+				
 		$sql = "select * from #temptran";
 		$query = $this->db->query($sql);
+		
+		/*
+		$query = $query->row();
+		print_r($query); exit;
+		*/
 		
 		$html = "";
 		if($query->row()){
@@ -1478,7 +1493,7 @@ class Cautotransferscars extends MY_Controller {
 					
 					$sql = "
 						if OBJECT_ID('tempdb..#tempChoose') is not null drop table #tempChoose;
-						create table #tempChoose (STRNO varchar(20),MODEL varchar(30),COLOR varchar(30),STAT varchar(5),FRM varchar(20));
+						create table #tempChoose (STRNO varchar(20),MODEL varchar(30),BAAB varchar(20),COLOR varchar(30),STAT varchar(5),FRM varchar(20));
 						".$tempChoose."
 					";
 					//echo $sql; exit;
@@ -1501,22 +1516,6 @@ class Cautotransferscars extends MY_Controller {
 					$NRow = 1;
 					if($q->row()){
 						foreach($q->result() as $row_tran){
-							/*
-							$html .= "
-								<tr>
-									<td>".$row_tran->TRANSNO."</td>
-									<td>".$row_tran->TRANSITEM."</td>
-									<td>".$row_tran->STRNO."</td>
-									<td>".$row_tran->EMPCARRY."</td>
-									<td>".$row_tran->TRANSDT."</td>
-									<td>".$row_tran->MOVENO."</td>
-									<td>".$row_tran->RECEIVEBY."</td>
-									<td>".$row_tran->RECEIVEDT."</td>
-									<td>".$row_tran->INSERTBY."</td>
-									<td>".$row_tran->INSERTDT."</td>
-								</tr>
-							";
-							*/
 							$css="color:black;";
 							if($row_tran->TRANSNO == ""){
 								$css="color:Red;";
@@ -1535,8 +1534,20 @@ class Cautotransferscars extends MY_Controller {
 							";
 						}
 					}
+				}else{
+					$html .= "
+						<tr>
+							<td colspan='8'>{$row->msg}</td>
+						</tr>
+					";
 				}
 			}
+		}else{
+			$html .= "
+				<tr>
+					<td colspan='8'>ไม่พบข้อมูล</td>
+				</tr>
+			";
 		}
 		
 		$html = "
@@ -1590,7 +1601,7 @@ class Cautotransferscars extends MY_Controller {
 					$str .= ",";
 				}
 				
-				if($j == 3){
+				if($j == 4){
 					$str .= ($arrs['STRNO'][$i][$j] == "รถใหม่" ? "'N'" : "'O'");
 				}else{
 					$str .= "'".$arrs['STRNO'][$i][$j]."'";					
@@ -1637,30 +1648,34 @@ class Cautotransferscars extends MY_Controller {
 			echo json_encode($response); exit;
 		}
 		
-		$sql = "		
+		$sql = "
+			use YTKManagement;
+			
 			declare @str listSTRNo;
 			insert into @str ".$str."
 			
 			declare @lc listLOCAT;
 			insert into @lc ".$locat."	
 						
-			select * into #temp from [dbo].[fn_autocars_beta](@str,@lc,".$arrs['condStockEmpty'].",".$arrs['condMaxLimit'].");
+			select * into #temp from YTKManagement.dbo.fn_autocars_beta2(@str,@lc,".$arrs['condStockEmpty'].",".$arrs['condMaxLimit'].");
 		";
 		//echo $sql; exit;
 		$this->db->query($sql);
 				
 		$sql = "
+			use YTKManagement;
+			
 			declare @str listSTRNo;
 			insert into @str ".$str."
 			
 			select * from #temp
 			union all
-			select a.LOCAT,a.MODEL,a.COLOR,a.STAT,a.s-isnull(b.STORDER,0) r,a.MEMO1 from (
+			select a.LOCAT,a.BAAB,a.MODEL,a.COLOR,a.STAT,a.s-isnull(b.STORDER,0) r,a.MEMO1 from (
 				select '' LOCAT,MODEL,COLOR,STAT,COUNT(MODEL) s,'ไม่สามารถจัดรถได้' MEMO1 from @str
 				group by MODEL,COLOR,STAT
 			) as a
 			left join (
-				select MODEL,COLOR,STAT,sum(STORDER) STORDER from #temp 
+				select MODEL,BAAB,COLOR,STAT,sum(STORDER) STORDER from #temp 
 				group by MODEL,COLOR,STAT
 			) as b on a.MODEL=b.MODEL  and a.COLOR=b.COLOR and a.STAT=b.STAT
 			where a.s-isnull(b.STORDER,0) > 0
@@ -1677,6 +1692,7 @@ class Cautotransferscars extends MY_Controller {
 					<tr class='trow' seq=".$NRow.">
 						<td class='getit' seq=".$NRow++." 
 							MODEL='".$row->MODEL."' 
+							BAAB='".$row->BAAB."' 
 							COLOR='".$row->COLOR."' 
 							style='width:50px;cursor:pointer;text-align:center;color:red;'
 						>
@@ -1684,6 +1700,7 @@ class Cautotransferscars extends MY_Controller {
 						</td>
 						<td>".$row->LOCAT."</td>
 						<td>".$row->MODEL."</td>
+						<td>".$row->BAAB."</td>
 						<td>".$row->COLOR."</td>
 						<td>".$row->STORDER."</td>
 						<td>".$row->MEMO1."</td>
@@ -1703,6 +1720,7 @@ class Cautotransferscars extends MY_Controller {
 								<th>#</th>
 								<th>สาขา</th>
 								<th>รุ่น</th>
+								<th>แบบ</th>
 								<th>สี</th>
 								<th>จำนวน</th>
 								<th>จัดแบบ</th>

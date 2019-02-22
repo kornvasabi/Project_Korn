@@ -573,6 +573,31 @@ class CHomenew extends MY_Controller {
 		$response['msg'] = $msg;
 		echo json_encode($response);
 	}
+	
+	function Help(){
+		$url = explode('#',$_REQUEST["url"]);
+		
+		$sql = "
+			select * from YTKManagement.dbo.hp_menu
+			where menulink='".$url[1]."'
+		";
+		$query = $this->db->query($sql);
+		
+		$data = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$list = glob("public/help/".base64_encode($row->menuid).".pdf"); //ไปหาว่ามีไฟล์หรือไม่
+				if(sizeof($list) > 0){
+					$url = base_url("public/help/".base64_encode($row->menuid).".pdf?Help");
+				}else{
+					$url = base_url("public/help/none.pdf?".base64_encode($row->menuid));
+				}
+			}
+		}
+		
+		$response=array("url"=>$url);
+		echo json_encode($response);
+	}
 }
 
 

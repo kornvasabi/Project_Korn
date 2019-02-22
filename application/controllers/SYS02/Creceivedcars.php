@@ -98,15 +98,15 @@ class Creceivedcars extends MY_Controller {
 						</div>
 						<div class='col-sm-2'>	
 							<div class='form-group'>
-								โอนจากสาขา
-								<input type='text' id='add_TRANSFM' class='form-control input-sm' placeholder='โอนจากสาขา'>
+								สาขาต้นทาง
+								<input type='text' id='add_TRANSFM' class='form-control input-sm' placeholder='สาขาต้นทาง'>
 							</div>
 						</div>
 
 						<div class='col-sm-2'>	
 							<div class='form-group'>
-								ย้ายไปสาขา
-								<input type='text' id='add_TRANSTO' class='form-control input-sm' placeholder='ย้ายไปสาขา'>
+								สาขาปลายทาง
+								<input type='text' id='add_TRANSTO' class='form-control input-sm' placeholder='สาขาปลายทาง'>
 							</div>
 						</div>
 					</div>
@@ -126,8 +126,8 @@ class Creceivedcars extends MY_Controller {
 						</div>
 						<div class='col-sm-2'>	
 							<div class='form-group'>
-								สถานะ
-								<input type='text' id='add_TRANSSTAT' class='form-control input-sm' placeholder='สถานะ'>
+								สถานะบิล
+								<input type='text' id='add_TRANSSTAT' class='form-control input-sm' placeholder='สถานะบิล'>
 							</div>
 						</div>
 
@@ -174,7 +174,7 @@ class Creceivedcars extends MY_Controller {
 											<th>แบบ</th>
 											<th>สี</th>
 											<th>กลุ่มรถ</th>
-											<th>สถานะ</th>
+											<th>สถานะการโอน</th>
 											<th>วันที่โอนย้าย<br>วันที่รับ</th>
 											<th>พขร.<br>ผู้รับโอน</th>
 										</tr>
@@ -355,7 +355,8 @@ class Creceivedcars extends MY_Controller {
 		}
 		
 		$sql = "
-			select a.TRANSNO
+			select  a.TRANSITEM
+				,a.TRANSNO
 				,a.STRNO
 				,b.TYPE
 				,b.MODEL
@@ -391,18 +392,21 @@ class Creceivedcars extends MY_Controller {
 		$NRow = 0;
 		if($query->row()){
 			foreach($query->result() as $row){
-				$disabled ='';
-				$receipt = "";
-				
+				$disabled = '';
+				$receipt  = '';
+				$button   = '';
 				if($row->RECEIVED == 'รับโอนแล้ว'){ 
 					$disabled = 'disabled'; 
 					//$receipt = "style='text-decoration: line-through;color:blue;'";				
 					$receipt = "style='color:blue;'";				
+					$button = $row->TRANSITEM;
+				}else{
+					$button = '<input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="old'.$NRow.'" value="ยกเลิก" >';
 				}
 				
 				$html['STRNO'][$NRow][] = '
 					<tr seq="old'.$NRow.'" '.$receipt.'>
-						<td style="text-decoration: initial;"><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="old'.$NRow.'" value="ยกเลิก" '.$disabled.'></td>
+						<td style="text-decoration: initial;">'.$button.'</td>
 						<td>'.$row->STRNO.'</td>
 						<td>'.$row->MODEL.'</td>
 						<td>'.$row->BAAB.'</td>
@@ -431,7 +435,6 @@ class Creceivedcars extends MY_Controller {
 		$arrs['APPROVED'] = $_REQUEST['APPROVED'];
 		$arrs['TRANSSTAT'] = $_REQUEST['TRANSSTAT'];
 		$arrs['MEMO1'] = $_REQUEST['MEMO1'];
-		//$arrs['MOVEDT'] = $this->Convertdate(1,$_REQUEST['MOVEDT']);
 		$arrs['STRNO'] = (!isset($_REQUEST['STRNO']) ? '':$_REQUEST['STRNO']);
 		
 		if($arrs['TRANSNO'] == ''){
@@ -440,23 +443,7 @@ class Creceivedcars extends MY_Controller {
 			$response['msg'] = 'ไม่พบข้อมูลเลขที่โอน โปรดทำรายการใหม่อีกครั้ง';
 			echo json_encode($response); exit;
 		}
-		
-		/*
-		if($arrs['MOVEDT'] == ''){
-			$response = array();
-			$response['status'] = false;
-			$response['msg'] = 'ไม่พบข้อมูลวันที่รับ โปรดทำรายการใหม่อีกครั้ง';
-			echo json_encode($response); exit;
-		}
-		
-		if((int)str_replace('/','',$arrs['TRANSDT']) > (int)str_replace('/','',$arrs['MOVEDT'])){
-			$response = array();
-			$response['status'] = false;
-			$response['msg'] = 'ไม่บันทึก เนื่องจากวันที่รับโอนน้อยกว่าวันที่โอน';
-			echo json_encode($response); exit;
-		}
-		*/
-		
+				
 		if($arrs['STRNO'] == ''){
 			$response = array();
 			$response['status'] = false;
@@ -517,7 +504,7 @@ class Creceivedcars extends MY_Controller {
 		if($sql == ""){
 			$response = array();
 			$response['status'] = false;
-			$response['msg'] = 'ไม่บันทึก เนื่องจากรถในรายการ ยังไม่ได้ระบุวันที่โอนย้ายหรือพขร.  หรือถูกรับโอนทุกคันแล้วครับ';
+			$response['msg'] = 'ไม่บันทึก เนื่องจากรถในรายการถูกรับโอนทุกคันแล้วครับ';
 			echo json_encode($response); exit;
 		}
 		
