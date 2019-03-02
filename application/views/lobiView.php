@@ -360,12 +360,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		  window.location.href = uri + base64(format(template, ctx))
 		}
 	})()
-	
-	
+		
 	$('body').keyup(function(e){
-		if(e.keyCode === 112){
+		if ( e.keyCode === 114 ) { // ESC
+			$('#loadding').hide();
+		}else if(e.keyCode === 112){ //F1
 			dataToPost = new Object();
 			dataToPost.url = document.URL;
+			
+			$('#loadding').show();
 			
 			$.ajax({
 				url: '../CHomenew/Help',
@@ -373,6 +376,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 				type: 'POST',
 				dataType: 'json',
 				success: function(data){
+					$('#loadding').hide();
+					
 					var content = "<iframe src='"+data.url+"' style='width:100%;height:100%;'></iframe>";
 					window.open(data.url,'_blank');
 					/*
@@ -383,6 +388,109 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 						width: $(window).width()
 					});
 					*/
+				}
+			});
+		}else if(e.keyCode === 113){ //F2
+			dataToPost = new Object();
+			dataToPost.url = document.URL;
+			
+			$('#loadding').show();
+			
+			$.ajax({
+				url: '../CHomenew/Rating',
+				data: dataToPost,
+				type: 'POST',
+				dataType: 'json',
+				success: function(data){
+					$('#loadding').hide();
+					if(data.status){
+						Lobibox.window({
+							title: 'Rating',
+							content: data.html,
+							height: 500,
+							shown: function($this){
+								$('.checkstar').click(function(){
+									var level = $(this).attr('level');
+									var dataname = $(this).attr('dataname');
+									
+									$('.starinput'+level+'[name='+dataname+']').prop("checked", true);
+								});
+								
+								
+								$('#sendRating').click(function(){
+									dataToPost = new Object();
+									dataToPost.menuid   = $('.thismenu').attr('menuid');
+									dataToPost.comments = $('#comments').val();
+									
+									for(var i=1;i<6;i++){
+										if($('.starinput'+i+'[name=correct]').is(':checked')){
+											dataToPost.correct = $('.starinput'+i+'[name=correct]:checked').val();
+										}
+									}
+									for(var i=1;i<6;i++){
+										if($('.starinput'+i+'[name=easy]').is(':checked')){
+											dataToPost.easy = $('.starinput'+i+'[name=easy]:checked').val();
+										}
+									}
+									for(var i=1;i<6;i++){
+										if($('.starinput'+i+'[name=fast]').is(':checked')){
+											dataToPost.fast = $('.starinput'+i+'[name=fast]:checked').val();
+										}
+									}
+									
+									$.ajax({
+										url: '../CHomenew/saveRating',
+										data: dataToPost,
+										type: 'POST',
+										dataType: 'json',
+										success: function(data){
+											if(data.status){
+												Lobibox.notify('success', {
+													title: 'สำเร็จ',
+													size: 'mini',
+													closeOnClick: false,
+													delay: 5000,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data.msg
+												});
+												
+												$this.destroy();
+											}else{
+												Lobibox.notify('error', {
+													title: 'ผิดพลาด',
+													size: 'mini',
+													closeOnClick: false,
+													delay: 5000,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data.msg
+												});
+											}
+										}
+									});
+									
+								});
+							}
+						});
+					}else{
+						Lobibox.notify('error', {
+							title: 'ผิดพลาด',
+							size: 'mini',
+							closeOnClick: false,
+							delay: 5000,
+							pauseDelayOnHover: true,
+							continueDelayOnInactiveTab: false,
+							icon: true,
+							messageHeight: '90vh',
+							msg: data.html
+						});
+					}
+					
 				}
 			});
 		}

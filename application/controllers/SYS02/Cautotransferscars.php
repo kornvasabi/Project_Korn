@@ -926,7 +926,10 @@ class Cautotransferscars extends MY_Controller {
 							COLOR='".$row->COLOR."' 
 							STAT=".($row->STAT == "N" ? "รถใหม่" : "รถเก่า")."
 							LOCAT='".$row->CRLOCAT."' 
-							style='width:50px;cursor:pointer;text-align:center;'><b><i class='glyphicon glyphicon-check' style='z-index:20;'></i></b></td>
+							style='width:50px;cursor:pointer;text-align:center;'>
+							<b><i class='glyphicon glyphicon-check' style='z-index:20;'></i></b>
+							
+						</td>
 						<td>".$row->STRNO."</td>
 						<td>".$row->MODEL."</td>
 						<td>".$row->BAAB."</td>
@@ -1708,7 +1711,7 @@ class Cautotransferscars extends MY_Controller {
 				";
 			}
 		}else{
-			$html = "<tr><td colspan='5'>ไม่พบข้อมูล</td></tr>";
+			$html = "<tr><td colspan='7' class='text-center'>ไม่สามารถจัดรถ ตามเงื่อนไขได้ครับ</td></tr>";
 		}
 		
 		if ($html != ""){

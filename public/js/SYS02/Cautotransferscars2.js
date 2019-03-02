@@ -223,7 +223,7 @@ $('#addSTRNO').click(function(){
 											});
 											
 											//check
-											fn_checkprov(checkprov);
+											//fn_checkprov(checkprov);
 											
 											if(STATUS){
 												Lobibox.notify('error', {
@@ -241,9 +241,11 @@ $('#addSTRNO').click(function(){
 												var display = $('#add_EMPCARRY').find(':selected').text();
 												var valued = $('#add_EMPCARRY').find(':selected').val();	
 												
+												
+												
 												var row = '<tr seq="new'+generate+'">';
 												//row += '<td><button class="delSTRNO btn btn-xs btn-danger btn-block" seq="new'+generate+'">ยกเลิก</button></td>';
-												row += '<td class="delSTRNO" seq="new'+generate+'" align="center" style="cursor:pointer;color:red;"><b><i class=\'glyphicon glyphicon-trash\' style=\'z-index:20;\'></i></b></td>';
+												row += '<td class="delSTRNO" seq="new'+generate+'" align="center" style="cursor:pointer;color:red;"><!-- b><i class=\'glyphicon glyphicon-trash\' style=\'z-index:20;\'></i></b-->   <button type="button" class="btn btn-labeled btn-danger btn-block btn-xs"><span class="btn-label"><i class="glyphicon glyphicon-trash"></i></span>ลบ</button></td>';
 												row += '<td>'+STRNO+'</td>';
 												row += '<td>'+MODEL+'</td>';
 												row += '<td>'+BAAB+'</td>';
@@ -279,7 +281,7 @@ $('#addSTRNO').click(function(){
 										});
 										
 										//check
-										fn_checkprov(checkprov);
+										//fn_checkprov(checkprov);
 										
 										if(STATUS){
 											Lobibox.notify('error', {
@@ -299,7 +301,7 @@ $('#addSTRNO').click(function(){
 											
 											var row = '<tr seq="new'+generate+'">';
 											//row += '<td><button class="delSTRNO btn btn-xs btn-danger btn-block" seq="new'+generate+'">ยกเลิก</button></td>';
-											row += '<td class="delSTRNO" seq="new'+generate+'" align="center" style="cursor:pointer;color:red;"><b><i class=\'glyphicon glyphicon-trash\' style=\'z-index:20;\'></i></b></td>';
+											row += '<td class="delSTRNO" seq="new'+generate+'" align="center" style="cursor:pointer;color:red;"><!-- b><i class=\'glyphicon glyphicon-trash\' style=\'z-index:20;\'></i></b-->   <button type="button" class="btn btn-labeled btn-danger btn-block btn-xs"><span class="btn-label"><i class="glyphicon glyphicon-trash"></i></span>ลบ</button></td>';
 											row += '<td>'+STRNO+'</td>';
 											row += '<td>'+MODEL+'</td>';
 											row += '<td>'+BAAB+'</td>';
@@ -318,6 +320,7 @@ $('#addSTRNO').click(function(){
 										}
 									});
 									
+									//เลือกรถสาขาไหน ให้ไปเลือกจังหวัดในสายนั้นด้วย
 									function fn_checkprov(param){
 										$.ajax({
 											url:'../SYS02/Cautotransferscars/checkprov',

@@ -32,7 +32,9 @@ function search(){
 	dataToPost.TRANSDTs  = $('#TRANSDTs').val();
 	dataToPost.TRANSDTe  = $('#TRANSDTe').val();
 	dataToPost.TRANSFM   = $('#TRANSFM').val();
+	dataToPost.TRANSTO   = $('#TRANSTO').val();
 	dataToPost.TRANSSTAT = $('#TRANSSTAT').val();
+	dataToPost.TRANSSTAT2 = $('#TRANSSTAT2').val();
 	dataToPost.TRANSSYS	 = $('#TRANSSYS').val();
 	
 	$('#loadding').show();

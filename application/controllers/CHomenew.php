@@ -598,6 +598,318 @@ class CHomenew extends MY_Controller {
 		$response=array("url"=>$url);
 		echo json_encode($response);
 	}
+	
+	function Rating(){
+		$url = explode('#',$_REQUEST["url"]);
+				
+		$sql = "
+			select menuid,menuname from YTKManagement.dbo.hp_menu
+			where menulink='".$url[1]."'
+		";
+		$menu = $this->db->query($sql);		
+		
+		if($menu->row()){
+			$menu = $menu->row();
+		}else{
+			$response = array("html"=>"หน้านี้ไม่สามารถประเมินได้ครับ","status"=>false);
+			echo json_encode($response); exit;
+		}
+		
+		$sql = "
+			select IDNo,menuid,isnull(correct,0) as correct
+				,isnull(easy,0) as easy,isnull(fast,0) as fast,comments 
+			from YTKManagement.dbo.hp_rating
+			where menuid = '".$menu->menuid."' and IDNo='".$this->sess["IDNo"]."'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .= "
+					<tr>
+						<td>เนื้อหา ความถูกต้อง</td>
+						<td>
+							<div class='lobi-rating lobi-rating-warning'>
+								<input class='starinput5' type='radio' value='5' name='correct' ".($row->correct == 5 ? "checked":"")."> 
+								<label class='checkstar' level='5' dataname='correct'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput4' type='radio' value='4' name='correct' ".($row->correct == 4 ? "checked":"")."> 
+								<label class='checkstar' level='4' dataname='correct'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput3' type='radio' value='3' name='correct' ".($row->correct == 3 ? "checked":"")."> 
+								<label class='checkstar' level='3' dataname='correct'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput2' type='radio' value='2' name='correct' ".($row->correct == 2 ? "checked":"")."> 
+								<label class='checkstar' level='2' dataname='correct'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput1' type='radio' value='1' name='correct' ".($row->correct == 1 ? "checked":"")."> 
+								<label class='checkstar' level='1' dataname='correct'>
+									<i class='fa fa-star'></i>
+								</label>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>ง่ายต่อการใช้งาน</td>
+						<td>
+							<div class='lobi-rating lobi-rating-warning'>
+								<input class='starinput5' type='radio' value='5' name='easy' ".($row->easy == 5 ? "checked":"")."> 
+								<label class='checkstar' level='5' dataname='easy'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput4' type='radio' value='4' name='easy' ".($row->easy == 4 ? "checked":"").">
+								<label class='checkstar' level='4' dataname='easy'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput3' type='radio' value='3' name='easy' ".($row->easy == 3 ? "checked":"").">
+								<label class='checkstar' level='3' dataname='easy'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput2' type='radio' value='2' name='easy' ".($row->easy == 2 ? "checked":"").">
+								<label class='checkstar' level='2' dataname='easy'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput1' type='radio' value='1' name='easy' ".($row->easy == 1 ? "checked":"").">
+								<label class='checkstar' level='1' dataname='easy'>
+									<i class='fa fa-star'></i>
+								</label>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>ความรวดเร็วในการทำงาน</td>
+						<td>
+							<div class='lobi-rating lobi-rating-warning'>
+								<input class='starinput5' type='radio' value='5' name='fast' ".($row->fast == 5 ? "checked":"")."> 
+								<label class='checkstar' level='5' dataname='fast'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput4' type='radio' value='4' name='fast' ".($row->fast == 4 ? "checked":"").">
+								<label class='checkstar' level='4' dataname='fast'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput3' type='radio' value='3' name='fast' ".($row->fast == 3 ? "checked":"").">
+								<label class='checkstar' level='3' dataname='fast'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput2' type='radio' value='2' name='fast' ".($row->fast == 2 ? "checked":"").">
+								<label class='checkstar' level='2' dataname='fast'>
+									<i class='fa fa-star'></i>
+								</label>
+								<input class='starinput1' type='radio' value='1' name='fast' ".($row->fast == 1 ? "checked":"").">
+								<label class='checkstar' level='1' dataname='fast'>
+									<i class='fa fa-star'></i>
+								</label>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td colspan='2'>
+							<div class='col-sm-12'>
+								<div class='form-group'>
+									ความเห็น 
+									<textarea id='comments' class='form-control' row=3>".$row->comments."</textarea>
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td colspan='2'>
+							<input type='button' id='sendRating' class='btn btn-cyan btn-sm btn-block' value='ส่ง' >
+						</td>
+					</tr>
+				";
+			}
+		}else{
+			$html .= "
+				<tr>
+					<td>เนื้อหา ความถูกต้อง</td>
+					<td>
+						<div class='lobi-rating lobi-rating-warning'>
+							<input class='starinput5' type='radio' value='5' name='correct'> 
+							<label class='checkstar' level='5' dataname='correct'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput4' type='radio' value='4' name='correct'>
+							<label class='checkstar' level='4' dataname='correct'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput3' type='radio' value='3' name='correct'>
+							<label class='checkstar' level='3' dataname='correct'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput2' type='radio' value='2' name='correct'>
+							<label class='checkstar' level='2' dataname='correct'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput1' type='radio' value='1' name='correct'>
+							<label class='checkstar' level='1' dataname='correct'>
+								<i class='fa fa-star'></i>
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>ง่ายต่อการใช้งาน</td>
+					<td>
+						<div class='lobi-rating lobi-rating-warning'>
+							<input class='starinput5' type='radio' value='5' name='easy'> 
+							<label class='checkstar' level='5' dataname='easy'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput4' type='radio' value='4' name='easy'>
+							<label class='checkstar' level='4' dataname='easy'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput3' type='radio' value='3' name='easy'>
+							<label class='checkstar' level='3' dataname='easy'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput2' type='radio' value='2' name='easy'>
+							<label class='checkstar' level='2' dataname='easy'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput1' type='radio' value='1' name='easy'>
+							<label class='checkstar' level='1' dataname='easy'>
+								<i class='fa fa-star'></i>
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>ความรวดเร็วในการทำงาน</td>
+					<td>
+						<div class='lobi-rating lobi-rating-warning'>
+							<input class='starinput5' type='radio' value='5' name='fast'> 
+							<label class='checkstar' level='5' dataname='fast'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput4' type='radio' value='4' name='fast'>
+							<label class='checkstar' level='4' dataname='fast'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput3' type='radio' value='3' name='fast'>
+							<label class='checkstar' level='3' dataname='fast'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput2' type='radio' value='2' name='fast'>
+							<label class='checkstar' level='2' dataname='fast'>
+								<i class='fa fa-star'></i>
+							</label>
+							<input class='starinput1' type='radio' value='1' name='fast'>
+							<label class='checkstar' level='1' dataname='fast'>
+								<i class='fa fa-star'></i>
+							</label>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td colspan='2'>
+						<div class='col-sm-12'>
+							<div class='form-group'>
+								ความเห็น 
+								<textarea id='comments' class='form-control' row=3></textarea>
+							</div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td colspan='2'>
+						<input type='button' id='sendRating' class='btn btn-cyan btn-sm btn-block' value='ส่ง' >
+					</td>
+				</tr>
+			";
+		}
+		
+		$html = "
+			<div id='table-fixed-CGroup' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+				<table id='table-CGroup' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th colspan='2' class='thismenu text-center' style='color:blue;font-size:16pt;' menuid='".$menu->menuid."'>เมนู ".$menu->menuname."</th>
+						</tr>
+						<tr>
+							<th style='vertical-align:middle;text-align:center;'>หัวข้อ</th>
+							<th style='vertical-align:middle;text-align:center;'>คะแนน</th>
+						</tr>
+					</thead>	
+					<tbody>						
+						".$html."
+					</tbody>
+				</table>
+			</div>
+		";
+		
+		$response = array("html"=>$html,"status"=>true);
+		echo json_encode($response);
+	}
+	
+	function saveRating(){
+		$arrs = array();
+		$arrs["IDNo"]  	  = $this->sess["IDNo"];
+		$arrs["menuid"]   = $_REQUEST["menuid"];
+		$arrs["correct"]  = (!isset($_REQUEST["correct"]) ? 0 : $_REQUEST["correct"]);
+		$arrs["easy"] 	  = (!isset($_REQUEST["easy"]) ? 0 : $_REQUEST["easy"]);
+		$arrs["fast"] 	  = (!isset($_REQUEST["fast"]) ? 0 : $_REQUEST["fast"]);
+		$arrs["comments"] = $_REQUEST["comments"];
+		
+		$sql = "
+			if object_id('tempdb..#tempSave') is not null drop table #tempSave;
+			create table #tempSave (id varchar(5),msg varchar(max));
+			
+			begin tran ins
+			begin try
+				declare @idno varchar(20) = '".$arrs["IDNo"]."';
+				declare @menuid varchar(30) = '".$arrs["menuid"]."';
+				declare @has int = (select count(*) from YTKManagement.dbo.hp_rating where IDNo=@idno and menuid=@menuid);
+				
+				if @has > 0
+				begin 
+					update YTKManagement.dbo.hp_rating
+					set correct=".$arrs["correct"]."
+						,easy=".$arrs["easy"]."
+						,fast=".$arrs["fast"]."
+						,comments='".$arrs["comments"]."'
+					where IDNo=@idno and menuid=@menuid						
+				end
+				else 
+				begin
+					insert into YTKManagement.dbo.hp_rating
+					select @idno,@menuid,".$arrs["correct"].",".$arrs["easy"].",".$arrs["fast"].",'".$arrs["comments"]."';
+				end
+				
+				insert into #tempSave select 'Y','ขอบคุณ สำหรับการประเมินครับ';
+				commit tran ins;
+			end try
+			begin catch
+				rollback tran ins;
+				insert into #tempSave select 'N',ERROR_MESSAGE();
+			end catch
+		";
+		//echo $sql; exit;
+		$this->db->query($sql);
+		$sql = "select * from #tempSave";
+		$query = $this->db->query($sql);
+		
+		$response = array();		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["status"] = ($row->id == "Y" ? true : false);
+				$response["msg"] = $row->msg;				
+			}
+		}else{
+			$response["status"] = false;
+			$response["msg"] = "ผิดพลาด ไม่ทราบสาเหตุ";
+		}
+		
+		echo json_encode($response);
+	}
 }
 
 

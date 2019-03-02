@@ -144,7 +144,7 @@ function getDetailsFN($this){
 											continueDelayOnInactiveTab: false,
 											icon: true,
 											messageHeight: '90vh',
-											soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+											soundPath: $(".menu-fixed").attr("baseUrl")+'/public/lobibox-master/sounds/',   // The folder path where sounds are located
 											soundExt: '.ogg',
 											msg: data.msg
 										});
@@ -158,7 +158,7 @@ function getDetailsFN($this){
 											continueDelayOnInactiveTab: false,
 											icon: true,
 											messageHeight: '90vh',
-											soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+											soundPath: $(".menu-fixed").attr("baseUrl")+'/public/lobibox-master/sounds/',   // The folder path where sounds are located
 											soundExt: '.ogg',
 											msg: data.msg
 										});

@@ -199,9 +199,10 @@ class Cselect2 extends MY_Controller {
 		$dataSearch = trim($_GET['q']);
 		
 		$sql = "
-			select top 20 groupCode,groupName from YTKManagement.dbo.hp_groupuser
-			where groupCode like '%".$dataSearch."%' collate Thai_CI_AS
-				or groupName like '%".$dataSearch."%' collate Thai_CI_AS
+			select top 20 groupCode,groupCode+' ('+groupName+')' as groupName from YTKManagement.dbo.hp_groupuser
+			where (groupCode like '%".$dataSearch."%' collate Thai_CI_AS
+				or groupName like '%".$dataSearch."%' collate Thai_CI_AS)
+				and groupCode <> 'MOD'
 			order by groupCode
 		"; 
 		//echo $sql; exit;
@@ -210,7 +211,7 @@ class Cselect2 extends MY_Controller {
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
-				$json[] = ['id'=>$row->groupCode, 'text'=>$row->groupCode];
+				$json[] = ['id'=>$row->groupCode, 'text'=>$row->groupName];
 			}
 		}
 		
@@ -261,6 +262,33 @@ class Cselect2 extends MY_Controller {
 			foreach($query->result() as $row){
 				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
 				$json[] = array('id'=>$row->MODELCOD, 'text'=>$row->MODELCOD);
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getBAAB(){
+		//แบบรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$TYPECOD = $_REQUEST['TYPECOD'];
+		$MODEL = $_REQUEST['MODEL'];
+		
+		$sql = "
+			select BAABCOD from {$this->MAuth->getdb('SETBAAB')}
+			where TYPECOD='".$TYPECOD."' and MODELCOD='".$MODEL."' and BAABCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by BAABCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
+				$json[] = array('id'=>$row->BAABCOD, 'text'=>$row->BAABCOD);
 			}
 		}
 		
