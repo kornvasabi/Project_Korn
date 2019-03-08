@@ -26,7 +26,7 @@ class CReport002 extends MY_Controller {
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
-				
+		
 		$html = "
 			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
 				<div class='col-sm-12' style='overflow:auto;'>					
@@ -62,7 +62,7 @@ class CReport002 extends MY_Controller {
 						<div class='col-xs-2 col-sm-3'>	
 							<div class='form-group'>
 								ลูกหนี้ ณ สิ้นเดือน
-								<input type='text' id='TPAYDT' class='form-control input-sm' placeholder='ถึงวันที่ชำระ' data-provide='datepicker' data-date-language='th-th'>
+								<input type='text' id='TPAYDT' class='form-control input-sm' placeholder='ถึงวันที่ชำระ' data-provide='datepicker' data-date-language='th-th' value='".$this->today('endofmonth')."'>
 							</div>
 						</div>
 						<div class='col-xs-2 col-sm-3'>	
@@ -91,281 +91,487 @@ class CReport002 extends MY_Controller {
 	
 	function search(){
 		$arrs = array();
-		$arrs['LOCAT'] 	= $_REQUEST['LOCAT'];
-		$arrs['CONTNO'] = $_REQUEST['CONTNO'];
-		$arrs['FPAYDT'] = $this->Convertdate(1,$_REQUEST['FPAYDT']);
-		$arrs['TPAYDT'] = $this->Convertdate(1,$_REQUEST['TPAYDT']);
+		$arrs['LOCAT'] 	  = $_REQUEST['LOCAT'];
+		$arrs['GCODE'] 	  = $_REQUEST['GCODE'];
 		$arrs['BILLCOLL'] = $_REQUEST['BILLCOLL'];
-		$arrs['GCODE'] 	 = $_REQUEST['GCODE'];
-		$arrs['ORDERBY'] = $_REQUEST['ORDERBY'];
-		$arrs['WAY'] 	 = $_REQUEST['WAY'];
-		
-		$cond = "";
-		if($arrs['LOCAT'] != ""){
-			$cond .= " and A.LOCAT like '".$arrs['LOCAT']."%'";
-		}
-		
-		if($arrs['CONTNO'] != ""){
-			$cond .= " and A.CONTNO like '%".$arrs['CONTNO']."%'";
-		}
-		
-		if($arrs['FPAYDT'] == ""){
-			$response = array("html"=>"โปรดระบุ วันที่ชำระให้ถูกต้อง","status"=>false);
-			echo json_encode($response); exit;
-		}
-		
-		if($arrs['TPAYDT'] == ""){
-			$response = array("html"=>"โปรดระบุ วันที่ชำระให้ถูกต้อง","status"=>false);
-			echo json_encode($response); exit;
-		}
-		$cond .= " and convert(varchar(8),D.PAYDT,112) between '".$arrs['FPAYDT']."' and '".$arrs['TPAYDT']."'";
-		
-		if($arrs['WAY'] == 1){
-			$cond .= " 
-			and A.PROF_METHOD = 'SYD' and A.SDATE < '2008-1-1' AND (A.TOTPRC > 0) AND (A.NPROFIT > 0) ";
-		}else if($arrs['WAY'] == 2){
-			$cond .= " 
-			and A.PROF_METHOD = 'EFF' and A.SDATE < '2008-1-1' AND (A.TOTPRC > 0) AND (A.NPROFIT > 0) ";
-		}else if($arrs['WAY'] == 3){
-			$cond .= " 
-			and A.PROF_METHOD = 'EFF' and A.SDATE >= '2008-1-1' AND (A.TOTPRC > 0) AND (A.NPROFIT > 0) ";
-		}else{
-			$cond .= " 
-			and A.PROF_METHOD = 'EFF' and A.SDATE >= '2018-10-01' AND (A.TOTPRC > 0) AND (A.NPROFIT > 0) ";
-		}
-		
-		if($arrs['BILLCOLL'] != ""){
-			$cond .= " and 
-			A.BILLCOLL like '%".$arrs['Name']."%'";
-		}
-		
-		$cond .= " and ((convert(varchar(8),A.YDATE,112) > '".$arrs['FPAYDT']."') OR (A.YDATE IS NULL))";
-		
-		if($arrs['GCODE'] != ""){
-			$cond .= " and C.GCODE = '".$arrs['GCODE']."'";
-		}
+		$arrs['CONTNO']   = $_REQUEST['CONTNO'];
+		$arrs['TPAYDT']   = $this->Convertdate(1,$_REQUEST['TPAYDT']);		
+		$arrs['ORDERBY']  = $_REQUEST['ORDERBY'];
 		
 		$sql = "
-			if OBJECT_ID('tempdb..#tempREPORT11') is not null drop table #tempREPORT11
-			select A.LOCAT,A.CONTNO,A.EFFRT_AFADJ,A.TOTPRC,A.TOTPRES
-				,A.CUSCOD,convert(varchar(8),A.SDATE,112) SDATE,A.NDAWN
-				,RTRIM(B.SNAM)+' '+RTRIM(B.NAME1)+'  '+RTRIM(B.NAME2) AS CNAME
-				,A.TOTDWN,A.NPAYRES,A.NKANG,convert(varchar(8),A.LPAYD,112) LPAYD
-				,A.BILLCOLL,A.TOT_UPAY,A.EXP_AMT,A.VATDWN,A.SMPAY,A.EXP_FRM,A.EXP_TO,A.PAYDWN
-				,convert(varchar(8),A.LDATE,112) LDATE,C.CRCOST,convert(varchar(8),A.FDATE,112) FDATE
-				,C.PRICE,A.T_NOPAY,A.OPTCST,A.NCARCST,A.NCSHPRC,A.NPRICE,A.NPROFIT
-				,A.VKANG,A.TKANG,A.VATPRC,A.PROF_METHOD 
-				into #tempREPORT11
-			from {$this->MAuth->getdb('ARMAST')} A  
-			LEFT OUTER JOIN {$this->MAuth->getdb('CUSTMAST')} B ON A.CUSCOD =B.CUSCOD  
-			LEFT OUTER JOIN {$this->MAuth->getdb('INVTRAN')} C ON A.STRNO=C.STRNO AND A.CONTNO=C.CONTNO AND (A.TSALE = C.TSALE)  
-			LEFT OUTER JOIN {$this->MAuth->getdb('CHQTRAN')} D ON A.CONTNO=D.CONTNO AND D.LOCATPAY=A.LOCAT AND D.FLAG <> 'C' 
-			where 1=1 ".$cond."
-			Group By  A.LOCAT,A.CONTNO,A.EFFRT_AFADJ,A.TOTPRC,A.TOTPRES,A.CUSCOD,A.SDATE,A.NDAWN,B.SNAM,B.NAME1,B.NAME2
-				,A.TOTDWN,A.NPAYRES,A.NKANG,A.LPAYD,A.BILLCOLL,A.TOT_UPAY,A.EXP_AMT,A.VATDWN,A.SMPAY,A.EXP_FRM,A.EXP_TO
-				,A.PAYDWN ,A.LDATE,C.CRCOST,A.FDATE,  C.PRICE,A.T_NOPAY,A.OPTCST,A.NCARCST,A.NCSHPRC,A.NPRICE,A.NPROFIT
-				,A.VKANG,A.TKANG,A.VATPRC,A.PROF_METHOD  
-			union
-			select A.LOCAT,A.CONTNO,A.EFFRT_AFADJ,A.TOTPRC,A.TOTPRES
-				,A.CUSCOD,convert(varchar(8),A.SDATE,112) SDATE,A.NDAWN,RTRIM(B.SNAM)+' '+RTRIM(B.NAME1)+'  '+RTRIM(B.NAME2) AS CNAME
-				,A.TOTDWN,A.NPAYRES,A.NKANG,convert(varchar(8),A.LPAYD,112) LPAYD,A.BILLCOLL,A.TOT_UPAY,A.EXP_AMT,A.VATDWN
-				,A.SMPAY,A.EXP_FRM,A.EXP_TO,A.PAYDWN ,convert(varchar(8),A.LDATE,112) LDATE,C.CRCOST,convert(varchar(8),A.FDATE,112) FDATE
-				,C.PRICE,A.T_NOPAY,A.OPTCST,A.NCARCST,A.NCSHPRC,A.NPRICE,A.NPROFIT,A.VKANG,A.TKANG,A.VATPRC,A.PROF_METHOD  
-			from {$this->MAuth->getdb('HARMAST')} A  
-			LEFT OUTER JOIN {$this->MAuth->getdb('CHGAR_VIEW')} B ON (A.CONTNO = B.CONTNO) AND (A.LOCAT = B.LOCAT)  
-			LEFT OUTER JOIN {$this->MAuth->getdb('HINVTRAN')} C ON (A.STRNO = C.STRNO) AND (A.CONTNO = C.CONTNO)  
-			LEFT OUTER JOIN {$this->MAuth->getdb('CHQTRAN')} D ON A.CONTNO=D.CONTNO AND D.LOCATPAY=A.LOCAT AND D.FLAG <> 'C' 
-			where 1=1 ".$cond."
-			Group By  A.LOCAT,A.CONTNO,A.EFFRT_AFADJ,A.TOTPRC,A.TOTPRES,A.CUSCOD,A.SDATE,A.NDAWN,B.SNAM,B.NAME1,B.NAME2
-				,A.TOTDWN,A.NPAYRES,A.NKANG,A.LPAYD,A.BILLCOLL,A.TOT_UPAY,A.EXP_AMT,A.VATDWN,A.SMPAY,A.EXP_FRM,A.EXP_TO
-				,A.PAYDWN ,A.LDATE,C.CRCOST,A.FDATE,  C.PRICE,A.T_NOPAY,A.OPTCST,A.NCARCST,A.NCSHPRC,A.NPRICE,A.NPROFIT
-				,A.VKANG,A.TKANG,A.VATPRC,A.PROF_METHOD
+			declare @date varchar(8) = '".$arrs['TPAYDT']."';
+			if OBJECT_ID('tempdb..#tempdata01') is not null drop table #tempdata01;
+			select CONTNO,LOCAT,MAX(NOPAY) as NOPAY
+				,SUM(N_DAMT - EFFPROF) as DAMT
+				,SUM(EFFPROF) as NINSTAL
+				,SUM(V_DAMT) as V_DAMT
+				,SUM(DAMT) as NPROF
+				,SUM(DAMT+V_DAMT) as NPROF2
+				into #tempdata01
+			from (
+				select 	CONTNO,LOCAT,DDATE,NOPAY,N_DAMT,EFFPROF,V_DAMT,DAMT from {$this->MAuth->getdb('ARPAY')}
+				union
+				select 	CONTNO,LOCAT,DDATE,NOPAY,N_DAMT,EFFPROF,V_DAMT,DAMT from {$this->MAuth->getdb('HARPAY')}
+			) as data
+			where CONTNO like '".$arrs['CONTNO']."%' and LOCAT like '".$arrs['LOCAT']."%'
+			group by CONTNO,LOCAT
 		";
-		//echo $sql; 
+		//echo $sql; exit;
 		$this->db->query($sql);
-		$sql = "		
-			if OBJECT_ID('tempdb..#tempREPORT11_2') is not null drop table #tempREPORT11_2
-			select a.*
-				,b.LPAYAMT_N,b.LPAYAMT_V,b.LPROFEFF,b.LPAYAMT
-				,c.CPAYAMT_N,c.CPAYAMT_V,c.CPROFEFF,c.CPAYAMT,c.NOFROM,c.NOTO
-				into #tempREPORT11_2
-			from #tempREPORT11 a
-			left join (
-				select CONTNO,sum(CASE WHEN ((convert(varchar(8),A.PAYDT,112) < '".$arrs['FPAYDT']."' AND A.PAYDT IS NOT NULL) AND ((A.PAYFOR = '006') OR (A.PAYFOR = '007')))  THEN  ROUND(A.PAYAMT_N,2) ELSE 0 END) AS LPAYAMT_N 
-					,  sum(CASE WHEN ((convert(varchar(8),A.PAYDT,112) < '".$arrs['FPAYDT']."' AND A.PAYDT IS NOT NULL) AND ((A.PAYFOR = '006') OR (A.PAYFOR = '007')))  THEN  ROUND(A.PAYAMT_V,2) ELSE 0 END) AS LPAYAMT_V
-					,  sum(CASE WHEN ((convert(varchar(8),A.PAYDT,112) < '".$arrs['FPAYDT']."' AND A.PAYDT IS NOT NULL) AND ((A.PAYFOR = '006') OR (A.PAYFOR = '007')))  THEN  ROUND(A.PROFEFF,2) ELSE 0 END) AS LPROFEFF
-					,  sum(CASE WHEN ((convert(varchar(8),A.PAYDT,112) < '".$arrs['FPAYDT']."' AND A.PAYDT IS NOT NULL) AND ((A.PAYFOR = '006') OR (A.PAYFOR = '007')))  THEN  ROUND(A.PAYAMT,2) ELSE 0 END) AS LPAYAMT  
-				FROM {$this->MAuth->getdb('CHQTRAN')} A 
-				WHERE (A.FLAG <>'C') and A.CONTNO in (select CONTNO from #tempREPORT11)
-				group by CONTNO
-			) b on a.CONTNO=b.CONTNO
-			left join (
-				select CONTNO,sum(CASE WHEN (((convert(varchar(8),A.PAYDT,112) BETWEEN '".$arrs['FPAYDT']."' AND '".$arrs['TPAYDT']."' ) AND A.PAYDT IS NOT NULL)  AND ((A.PAYFOR = '006') OR (A.PAYFOR = '007'))) 
-					THEN  ROUND(A.PAYAMT_N,2) ELSE 0 END) AS CPAYAMT_N 
-					,  sum(CASE WHEN (((convert(varchar(8),A.PAYDT,112) BETWEEN '".$arrs['FPAYDT']."' AND '".$arrs['TPAYDT']."') AND A.PAYDT IS NOT NULL)  AND ((A.PAYFOR = '006') OR (A.PAYFOR = '007'))) 
-					THEN  ROUND(A.PAYAMT_V,2) ELSE 0 END) AS CPAYAMT_V
-					,  sum(CASE WHEN (((convert(varchar(8),A.PAYDT,112) BETWEEN '".$arrs['FPAYDT']."' AND '".$arrs['TPAYDT']."') AND A.PAYDT IS NOT NULL)  AND ((A.PAYFOR = '006') OR (A.PAYFOR = '007'))) 
-					THEN  ROUND(A.PROFEFF,2) ELSE 0 END) AS CPROFEFF
-					,  sum(CASE WHEN (((convert(varchar(8),A.PAYDT,112) BETWEEN '".$arrs['FPAYDT']."' AND '".$arrs['TPAYDT']."') AND A.PAYDT IS NOT NULL)  AND ((A.PAYFOR = '006') OR (A.PAYFOR = '007'))) 
-					THEN  ROUND(A.PAYAMT,2) ELSE 0 END) AS CPAYAMT
-					, MIN(F_PAY) AS NOFROM
-					, MAX(L_PAY) AS NOTO  
-				FROM {$this->MAuth->getdb('CHQTRAN')} A 
-				WHERE (A.FLAG <>'C') and A.CONTNO in (select CONTNO from #tempREPORT11)
-				group by CONTNO
-			) c on a.CONTNO=c.CONTNO
-		";	
-		//echo $sql; 
-		$this->db->query($sql);
-		
-		$sql = "
-			if OBJECT_ID('tempdb..#tempREPORT11_3') is not null drop table #tempREPORT11_3
-			select LOCAT,CONTNO,CUSCOD,CNAME,T_NOPAY,NOFROM,NOTO
-				,SDATE,FDATE,EFFRT_AFADJ
-				,TKANG - (NPROFIT + VKANG) as c1i,NPROFIT as c1ii,VKANG as c1iii
-				,TKANG - VKANG as c2ii,TKANG as c2iii
-				,LPAYAMT - (LPROFEFF + LPAYAMT_V) as c3i,LPROFEFF as c3ii,LPAYAMT_V as c3iii
-				,LPAYAMT_N as c4ii,LPAYAMT as c4iii
-				,CPAYAMT - (CPROFEFF + CPAYAMT_V) as c5i,CPROFEFF as c5ii,CPAYAMT_V as c5iii
-				,CPAYAMT_N as c6ii,CPAYAMT as c6iii
-				,case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else (TKANG - (NPROFIT + VKANG)) - (LPAYAMT - (LPROFEFF + LPAYAMT_V)) - (CPAYAMT - (CPROFEFF + CPAYAMT_V)) end as c7i
-				,case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else NPROFIT - LPROFEFF - CPROFEFF end as c7ii
-				,case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else VKANG - LPAYAMT_V - CPAYAMT_V end as c7iii
-				,case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else (TKANG - VKANG) - LPAYAMT_N - CPAYAMT_N end as c8ii
-				,case when EXP_FRM=0 and EXP_TO=0 and LDATE <= '".$arrs['TPAYDT']."' then 0 else TKANG - LPAYAMT - CPAYAMT end as c8iii
-				into #tempREPORT11_3
-			from #tempREPORT11_2
-		";
-		$this->db->query($sql);
-		
-		$sql = "
-			select LOCAT,CONTNO,CUSCOD,CNAME,T_NOPAY,NOFROM,NOTO,SDATE,FDATE,EFFRT_AFADJ
-				,c1i,c1ii,c1iii,c2ii,c2iii,c3i,c3ii,c3iii,c4ii,c4iii
-				,c5i,c5ii,c5iii,c6ii,c6iii
-				,case when c7i < 0 then 0 else c7i end c7i
-				,case when c7i < 0 then 0 else c7ii end c7ii
-				,case when c7i < 0 then 0 else c7iii end c7iii
-				,case when c7i < 0 then 0 else c8ii end c8ii
-				,case when c7i < 0 then 0 else c8iii end c8iii
-			from #tempREPORT11_3
-			union all 
 			
-			select 'ฮZZZ' LOCAT,'ฮZZZ' CONTNO,'ฮZZZ' CUSCOD,NULL CNAME,NULL T_NOPAY,NULL NOFROM,NULL NOTO,NULL SDATE,NULL FDATE,NULL EFFRT_AFADJ
-				,sum(c1i) c1i,sum(c1ii) c1ii,sum(c1iii) c1iii,sum(c2ii) c2ii,sum(c2iii) c2iii,sum(c3i) c3i,sum(c3ii) c3ii,sum(c3iii) c3iii,sum(c4ii) c4ii,sum(c4iii) c4iii
-				,sum(c5i) c5i,sum(c5ii) c5ii,sum(c5iii) c5iii,sum(c6ii) c6ii,sum(c6iii) c6iii
-				,sum(case when c7i < 0 then 0 else c7i end) c7i
-				,sum(case when c7i < 0 then 0 else c7ii end) c7ii
-				,sum(case when c7i < 0 then 0 else c7iii end) c7iii
-				,sum(case when c7i < 0 then 0 else c8ii end) c8ii
-				,sum(case when c7i < 0 then 0 else c8iii end) c8iii
-			from #tempREPORT11_3
-			order by ".$arrs['ORDERBY']."
+			/*
+				select CONTNO,LOCAT,MAX(NOPAY) as NOPAY
+					,SUM(DAMT - EFFPROF) as DAMT
+					,SUM(EFFPROF) as NINSTAL
+					,SUM(V_DAMT) as V_DAMT
+					,SUM(DAMT) as NPROF
+					,SUM(N_DAMT) as NPROF2
+					into #tempdata02
+				from (
+					select 	CONTNO,LOCAT,DDATE,NOPAY,N_DAMT,EFFPROF,V_DAMT,DAMT from {$this->MAuth->getdb('ARPAY')}
+					union
+					select 	CONTNO,LOCAT,DDATE,NOPAY,N_DAMT,EFFPROF,V_DAMT,DAMT from {$this->MAuth->getdb('HARPAY')}
+				) as data
+				where CONTNO like '".$arrs['CONTNO']."%' and LOCAT like '".$arrs['LOCAT']."%'
+					and convert(varchar(6),DDATE,112) < left(@date,6)
+				group by CONTNO,LOCAT
+				
+				
+				if OBJECT_ID('tempdb..#tempdata02') is not null drop table #tempdata02;
+				select CONTNO,LOCATRECV as LOCAT,sum(PAYAMT - PROFEFF) as DAMT
+					,sum(PROFEFF)					as NINSTAL
+					,sum(PAYAMT_V)					as V_DAMT
+					,sum(PAYAMT)					as NPROF
+					,sum(PAYAMT_N)					as NPROF2
+					into #tempdata02
+				from {$this->MAuth->getdb('CHQTRAN')}
+				where CONTNO like '".$arrs['CONTNO']."%' and PAYFOR in ('006','007') and FLAG <>'C' 
+					and convert(varchar(6),TMBILDT,112) < left(@date,6)
+				group by CONTNO,LOCATRECV
+				
+				
+				select  a.CONTNO
+					,sum(b.PAYAMT-b.PROFEFF) as PAYAMTEFF
+					,sum(b.PROFEFF)
+					,sum(b.PAYAMT)
+					,sum(b.PAYAMT_V)
+					,sum(b.PAYAMT_N)
+				from (
+					select CONTNO,MAX(DATE1) as DATE1 from {$this->MAuth->getdb('ARPAY')}
+					where CONTNO like 'นHP-1306001%' and convert(varchar(6),DDATE,112) < left(@date,6)
+						and convert(varchar(6),DATE1,112) <= left(@date,6)
+					group by CONTNO
+					union 
+					select CONTNO,MAX(DATE1) as DATE1 from {$this->MAuth->getdb('HARPAY')}
+					where CONTNO like 'นHP-1306001%' and convert(varchar(6),DDATE,112) < left(@date,6)
+						and convert(varchar(6),DATE1,112) <= left(@date,6)
+					group by CONTNO
+				) as a
+				left join {$this->MAuth->getdb('CHQTRAN')} b on a.CONTNO=b.CONTNO and a.DATE1>=b.TMBILDT
+				where b.FLAG <> 'C'
+				group by a.CONTNO
+
+			if OBJECT_ID('tempdb..#tempdata02') is not null drop table #tempdata02;
+			select  a.CONTNO,a.LOCAT
+				,sum(b.PAYAMT-b.PROFEFF) as DAMT
+				,sum(b.PROFEFF)				as NINSTAL
+				,sum(b.PAYAMT_V)			as V_DAMT
+				,sum(b.PAYAMT)				as NPROF
+				,sum(b.PAYAMT_N)			as NPROF2
+				into #tempdata02
+			from (
+				select CONTNO,LOCAT,MAX(DATE1) as DATE1 from {$this->MAuth->getdb('ARPAY')}
+				where CONTNO like '".$arrs['CONTNO']."%' and convert(varchar(6),DDATE,112) < left(@date,6)
+					and convert(varchar(6),DATE1,112) <= left(@date,6)
+				group by CONTNO,LOCAT
+				union 
+				select CONTNO,LOCAT,MAX(DATE1) as DATE1 from {$this->MAuth->getdb('HARPAY')}
+				where CONTNO like '".$arrs['CONTNO']."%' and convert(varchar(6),DDATE,112) < left(@date,6)
+					and convert(varchar(6),DATE1,112) <= left(@date,6)
+				group by CONTNO,LOCAT
+			) as a
+			left join {$this->MAuth->getdb('CHQTRAN')} b on a.CONTNO=b.CONTNO and a.DATE1>=b.TMBILDT
+			where b.FLAG <> 'C' and b.PAYFOR in ('006','007')
+			group by a.CONTNO,a.LOCAT
+			*/
+		
+		$sql = "
+			declare @date varchar(8) = '".$arrs['TPAYDT']."';
+			if OBJECT_ID('tempdb..#tempdata02') is not null drop table #tempdata02;
+			select CONTNO,LOCAT,sum(DAMT-EFFPROF) as DAMT
+				,sum(EFFPROF) 	as NINSTAL
+				,sum(V_DAMT) 	as V_DAMT
+				,sum(DAMT) 	as NPROF
+				,sum(N_DAMT) 	as NPROF2	
+				into #tempdata02
+			from (
+				select 	CONTNO,LOCAT,DDATE,DATE1,NOPAY,N_DAMT,EFFPROF,V_DAMT,DAMT,PAYMENT,V_PAYMENT,N_PAYMENT 
+				from {$this->MAuth->getdb('ARPAY')}
+				union
+				select 	CONTNO,LOCAT,DDATE,DATE1,NOPAY,N_DAMT,EFFPROF,V_DAMT,DAMT,PAYMENT,V_PAYMENT,N_PAYMENT 
+				from {$this->MAuth->getdb('HARPAY')}
+			) as data
+			where CONTNO like '".$arrs['CONTNO']."%' and LOCAT like '".$arrs['LOCAT']."%' 
+				and convert(varchar(6),DDATE,112) < left(@date,6)
+				and convert(varchar(8),DATE1,112) <= @date
+			group by CONTNO,LOCAT
 		";
-		//echo $sql;  exit;
+		//echo $sql; exit;
+		$this->db->query($sql);
+		
+		$sql = "
+			declare @date varchar(8) = '".$arrs['TPAYDT']."';
+			if OBJECT_ID('tempdb..#tempdata03') is not null drop table #tempdata03;
+			select CONTNO,LOCAT,(DAMT-EFFPROF) as DAMT
+				,(EFFPROF) 	as NINSTAL
+				,(V_DAMT) 	as V_DAMT
+				,(DAMT) 	as NPROF
+				,(N_DAMT) 	as NPROF2	
+				into #tempdata03
+			from (
+				select 	CONTNO,LOCAT,DDATE,DATE1,NOPAY,N_DAMT,EFFPROF,V_DAMT,DAMT,PAYMENT,V_PAYMENT,N_PAYMENT 
+				from {$this->MAuth->getdb('ARPAY')}
+				union
+				select 	CONTNO,LOCAT,DDATE,DATE1,NOPAY,N_DAMT,EFFPROF,V_DAMT,DAMT,PAYMENT,V_PAYMENT,N_PAYMENT 
+				from {$this->MAuth->getdb('HARPAY')}
+			) as data
+			where CONTNO like '".$arrs['CONTNO']."%' and LOCAT like '".$arrs['LOCAT']."%' 
+				and convert(varchar(6),DDATE,112) = left(@date,6)
+				and convert(varchar(8),DATE1,112) <= @date
+		";
+		//echo $sql; exit;
+		$this->db->query($sql);
+		
+		/*
+		$sql = "
+			declare @date varchar(8) = '".$arrs['TPAYDT']."';
+			if OBJECT_ID('tempdb..#tempdata04') is not null drop table #tempdata04;
+			select CONTNO,LOCAT,MAX(NOPAY) as NOPAY
+				,SUM(DAMT - EFFPROF) as DAMT
+				,SUM(EFFPROF) 	as NINSTAL
+				,SUM(V_DAMT) 	as V_DAMT
+				,SUM(DAMT) 		as NPROF
+				,SUM(N_DAMT) 	as NPROF2
+				into #tempdata04
+			from (
+				select 	CONTNO,LOCAT,DDATE,NOPAY,N_DAMT,EFFPROF,V_DAMT,DAMT from {$this->MAuth->getdb('ARPAY')}
+				union
+				select 	CONTNO,LOCAT,DDATE,NOPAY,N_DAMT,EFFPROF,V_DAMT,DAMT from {$this->MAuth->getdb('HARPAY')}
+			) as data
+			where CONTNO like '".$arrs['CONTNO']."%' and LOCAT like '".$arrs['LOCAT']."%' 
+				and convert(varchar(8),DDATE,112) > @date
+			group by CONTNO,LOCAT
+		";		
+		//echo $sql;
+		$this->db->query($sql);
+		*/
+		
+		$sql = "
+			declare @date varchar(8) = '".$arrs['TPAYDT']."';			
+			if OBJECT_ID('tempdb..#tempdata05') is not null drop table #tempdata05;
+			select CONTNO,LOCATPAY
+				,sum(PAYAMT-PROFEFF) as DAMT
+				,sum(PROFEFF) 		 as NINSTAL
+				,sum(PAYAMT_V) 		 as PAYAMT_V				
+				,sum(PAYAMT_N) 		 as PAYAMT_N
+				into #tempdata05
+			from {$this->MAuth->getdb('CHQTRAN')}
+			where (FLAG <>'C') AND LOCATPAY like '".$arrs['LOCAT']."%' AND CONTNO like '".$arrs['CONTNO']."%'
+				and PAYFOR in ('006','007') and convert(varchar(8),PAYDT,112) <= @date
+			group by CONTNO,LOCATPAY
+		";		
+		//echo $sql;
+		$this->db->query($sql);	
+		
+		$sql = "
+			declare @date varchar(8) = '".$arrs['TPAYDT']."';
+			
+			if OBJECT_ID('tempdb..#tempResults') is not null drop table #tempResults;
+			select a.LOCAT,a.CONTNO,a.CUSCOD,c.CUSNAME,d.NOPAY
+				,(
+					select MAX(NOPAY) from (
+						select (NOPAY) from {$this->MAuth->getdb('ARPAY')} 
+						where LOCAT=a.LOCAT and CONTNO=a.CONTNO and left(@date,6) >= convert(varchar(6),DDATE,112)
+						union 
+						select (NOPAY) from {$this->MAuth->getdb('HARPAY')} 
+						where LOCAT=a.LOCAT and CONTNO=a.CONTNO and left(@date,6) >= convert(varchar(6),DDATE,112)
+					) data
+				)  as NOPAY2
+				,convert(varchar(8),a.SDATE,112) 			as SDATE
+				,(
+					select DDATE from (
+						select convert(varchar(8),DDATE,112) DDATE from {$this->MAuth->getdb('ARPAY')} 
+						where LOCAT=a.LOCAT and CONTNO=a.CONTNO and NOPAY=1
+						union 
+						select convert(varchar(8),DDATE,112) DDATE from {$this->MAuth->getdb('HARPAY')} 
+						where LOCAT=a.LOCAT and CONTNO=a.CONTNO and NOPAY=1
+					) data
+				) as DDATE
+				,a.EFFRT_AFADJ
+				,isnull(d.DAMT,0) 							as temp1AMT
+				,isnull(d.NINSTAL,0)						as temp1NINSTAL	
+				,isnull(d.V_DAMT,0)							as temp1VAMT
+				,isnull(d.NPROF,0)							as temp1NPROF
+				,isnull(d.NPROF2,0)							as temp1total
+			/*
+				,isnull(e.DAMT,0)-isnull(f.DAMT,0) 			as temp2AMT
+				,isnull(e.NINSTAL,0)-isnull(f.NINSTAL,0)	as temp2NINSTAL
+				,isnull(e.V_DAMT,0)-isnull(f.V_DAMT,0)		as temp2VAMT
+				,isnull(e.NPROF,0)-isnull(f.NPROF,0)		as temp2NPROF
+				,isnull(e.NPROF2,0)-isnull(f.NPROF2,0)		as temp2total
+			*/
+				,isnull(e.DAMT,0)							as temp2AMT
+				,isnull(e.NINSTAL,0)						as temp2NINSTAL
+				,isnull(e.V_DAMT,0)							as temp2VAMT
+				,isnull(e.NPROF,0)							as temp2NPROF
+				,isnull(e.NPROF2,0)							as temp2total
+				
+				,isnull(f.DAMT,0) 							as temp3AMT
+				,isnull(f.NINSTAL,0)						as temp3NINSTAL
+				,isnull(f.V_DAMT,0)							as temp3VAMT
+				,isnull(f.NPROF,0)							as temp3NPROF
+				,isnull(f.NPROF2,0)							as temp3total
+			/*
+				,isnull(g.DAMT,0) 							as temp4AMT
+				,isnull(g.NINSTAL,0)						as temp4NINSTAL
+				,isnull(g.V_DAMT,0)							as temp4VAMT	
+				,isnull(g.NPROF,0)							as temp4NPROF
+				,isnull(g.NPROF2,0)							as temp4total
+			*/
+				,isnull(d.DAMT,0) - isnull(e.DAMT,0) - isnull(f.DAMT,0) 			as temp4AMT
+				,isnull(d.NINSTAL,0) - isnull(e.NINSTAL,0) - isnull(f.NINSTAL,0) 	as temp4NINSTAL		
+				,isnull(d.V_DAMT,0) - isnull(e.V_DAMT,0) - isnull(f.V_DAMT,0) 		as temp4VAMT	
+				,isnull(d.NPROF,0) - isnull(e.NPROF,0) - isnull(f.NPROF,0) 			as temp4NPROF
+				,isnull(d.NPROF2,0) - isnull(e.NPROF2,0) - isnull(f.NPROF2,0) 		as temp4total	
+				
+				
+				,isnull(d.DAMT,0)-isnull(h.DAMT,0) 			as temp5AMT
+				,isnull(d.NINSTAL,0)-isnull(h.NINSTAL,0)	as temp5NINSTAL
+				,isnull(d.V_DAMT,0)-isnull(h.PAYAMT_V,0)	as temp5VAMT
+				,isnull(d.NPROF,0)-isnull(h.PAYAMT_N,0)		as temp5NPROF
+				,isnull(d.NPROF2,0)-isnull(h.PAYAMT_N,0)	as temp5total
+				
+				into #tempResults
+			from (
+				select LOCAT,CONTNO,EFFRT_AFADJ,TOTPRC,TOTPRES,CUSCOD,SDATE,TOTDWN,NPAYRES,NKANG,LPAYD,BILLCOLL
+						,TOT_UPAY,EXP_AMT,SMPAY,EXP_FRM,EXP_TO,NDAWN,PAYDWN,LDATE ,FDATE,T_NOPAY,VATDWN,NPROFIT,VKANG
+						,TKANG,VATPRC, OPTCST,NCARCST,NCSHPRC,NPRICE,STRNO,TSALE,YDATE,STOPPROF_DT,PROF_METHOD,CLOSDT 
+				from {$this->MAuth->getdb('ARMAST')} a
+				union 
+				select LOCAT,CONTNO,EFFRT_AFADJ,TOTPRC,TOTPRES,CUSCOD,SDATE,TOTDWN,NPAYRES,NKANG,LPAYD,BILLCOLL
+						,TOT_UPAY,EXP_AMT,SMPAY,EXP_FRM,EXP_TO,NDAWN,PAYDWN,LDATE ,FDATE,T_NOPAY,VATDWN,NPROFIT,VKANG
+						,TKANG,VATPRC, OPTCST,NCARCST,NCSHPRC,NPRICE,STRNO,TSALE,YDATE,STOPPROF_DT,PROF_METHOD,CLOSDT 
+				from {$this->MAuth->getdb('HARMAST')} a
+				where convert(varchar(8),CLOSDT,112) >= @date
+			) as a
+			left join (
+				SELECT CONTNO,STRNO,TSALE,GCODE,CRCOST,PRICE FROM {$this->MAuth->getdb('INVTRAN')} 
+				UNION  
+				SELECT CONTNO,STRNO,TSALE,GCODE,CRCOST,PRICE FROM {$this->MAuth->getdb('HINVTRAN')} 
+			) as b on a.STRNO=b.STRNO and a.CONTNO=b.CONTNO and a.TSALE=b.TSALE
+			left join (
+				select CUSCOD,SNAM+NAME1+' '+NAME2 as CUSNAME from {$this->MAuth->getdb('CUSTMAST')} 
+			) as c on a.CUSCOD=c.CUSCOD
+			left join #tempdata01 as d on a.LOCAT=d.LOCAT and a.CONTNO=d.CONTNO
+			left join #tempdata02 as e on a.LOCAT=e.LOCAT and a.CONTNO=e.CONTNO
+			left join #tempdata03 as f on a.LOCAT=f.LOCAT and a.CONTNO=f.CONTNO
+			--left join #tempdata04 as g on a.LOCAT=g.LOCAT and a.CONTNO=g.CONTNO
+			left join #tempdata05 as h on a.LOCAT=h.LOCATPAY and a.CONTNO=h.CONTNO
+			where a.LOCAT LIKE '".$arrs['LOCAT']."%' 
+				and a.CONTNO LIKE '".$arrs['CONTNO']."%' 
+				and (b.GCODE like '".$arrs['GCODE']."%' or b.GCODE is null)
+				and a.PROF_METHOD='EFF' 
+				and convert(varchar(8),a.SDATE,112) >= (select top 1 convert(varchar(8),STARTDT,112) from {$this->MAuth->getdb('SET_EFFSTART')} order by STARTDT desc)
+				and convert(varchar(8),a.SDATE,112) <= @date
+				and ((a.TOTPRC > a.SMPAY AND (a.CLOSDT IS NULL OR a.CLOSDT>=(
+							SELECT DDATE FROM {$this->MAuth->getdb('HARPAY')}  WHERE CONTNO=a.CONTNO AND LOCAT=a.LOCAT AND convert(varchar(6),DDATE,112) = LEFT(@date,6)
+						) or convert(varchar(6),a.sdate,112) = LEFT(@date,6) and a.CLOSDT>=sdate  
+					)) OR (a.TOTPRC = a.SMPAY AND (
+							SELECT MAX(convert(varchar(8),ct.PAYDT,112)) FROM {$this->MAuth->getdb('CHQTRAN')} ct
+							WHERE a.CONTNO=ct.CONTNO AND ct.LOCATPAY=a.LOCAT AND ct.FLAG <> 'C' AND ct.PAYFOR IN ('006','007')  AND ct.PAYAMT>0 
+						) >= @date)) 
+				and a.TOTPRC > 0
+				and a.BILLCOLL LIKE '".$arrs['BILLCOLL']."%' 
+				and (a.STOPPROF_DT IS NULL OR convert(varchar(8),a.STOPPROF_DT,112) > @date OR (
+						EXISTS(
+							SELECT 1 FROM {$this->MAuth->getdb('ARPAY')} 
+							WHERE CONTNO=a.CONTNO AND LOCAT=a.LOCAT AND convert(varchar(6),DDATE,112) = LEFT(@date,6) AND a.STOPPROF_DT>DDATE
+						) 
+					))  
+				and ((a.CLOSDT IS NULL)  OR (
+						EXISTS(
+							SELECT 1 FROM {$this->MAuth->getdb('HARPAY')}  
+							WHERE CONTNO=A.CONTNO AND LOCAT=A.LOCAT AND convert(varchar(6),DDATE,112) = LEFT(@date,6) AND a.CLOSDT>=DDATE
+						)
+					) or convert(varchar(6),a.sdate,112) = LEFT(@date,6) and a.CLOSDT >= sdate)  
+			order by a.CONTNO
+		";
+		//echo $sql;
+		$this->db->query($sql);
+		
+		$sql = "
+			select * from (
+				select * from #tempResults
+				union all
+				select 'ZZZZ' as LOCAT,'ZZZZ' as CONTNO,'' as CUSCOD,'' as CUSNAME
+					,null as NOPAY,null as NOPAY2,'' as SDATE,'' as DATE,null as EFFRT_AFADJ
+					,sum(temp1AMT)		temp1AMT
+					,sum(temp1NINSTAL) 	temp1NINSTAL
+					,sum(temp1VAMT) 	temp1VAMT
+					,sum(temp1NPROF) 	temp1NPROF
+					,sum(temp1total) 	temp1total
+					,sum(temp2AMT) 		temp2AMT
+					,sum(temp2NINSTAL) 	temp2NINSTAL
+					,sum(temp2VAMT) 	temp2VAMT
+					,sum(temp2NPROF) 	temp2NPROF
+					,sum(temp2total) 	temp2total
+					,sum(temp3AMT) 		temp3AMT
+					,sum(temp3NINSTAL)	temp3NINSTAL
+					,sum(temp3VAMT) 	temp3VAMT
+					,sum(temp3NPROF) 	temp3NPROF
+					,sum(temp3total)	temp3total
+					,sum(temp4AMT) 		temp4AMT
+					,sum(temp4NINSTAL) 	temp4NINSTAL
+					,sum(temp4VAMT)	 	temp4VAMT
+					,sum(temp4NPROF) 	temp4NPROF
+					,sum(temp4total) 	temp4total
+					,sum(temp5AMT) 		temp5AMT
+					,sum(temp5NINSTAL) 	temp5NINSTAL
+					,sum(temp5VAMT)	 	temp5VAMT
+					,sum(temp5NPROF) 	temp5NPROF
+					,sum(temp5total) 	temp5total
+				from #tempResults
+			) as data
+			order by LOCAT asc
+		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$html = "";
 		$NRow = 1;
 		if($query->row()){
 			foreach($query->result() as $row){
-				if($row->LOCAT == "ฮZZZ"){
-					$html .= "
-					<tr class='trow' seq=".$NRow.">						
-						<th class='getit' seq=".$NRow." colspan='5' style='width:50px;cursor:pointer;text-align:center;vertical-align:middle;'>
-							รวม
-						</th>
-					";
+				if($row->CONTNO == "ZZZZ" and $row->LOCAT == "ZZZZ"){
+					$html .= "<tr><th colspan='5'>รวม</th>";
 				}else{
 					$html .= "
-					<tr class='trow' seq=".$NRow.">						
-						<td class='getit' seq=".$NRow." style='width:50px;cursor:pointer;text-align:center;vertical-align:middle;'>
-							".$NRow."
-						</td>
-						<td style='vertical-align:middle;'>".$row->LOCAT."</td>
-						<td style='vertical-align:middle;'>".$row->CONTNO."</td>
-						<td style='vertical-align:middle;'>
-							".$row->CUSCOD."<br/>
-							".$row->CNAME."<br/>
-							จน.งวด ".$row->T_NOPAY."  งวดที่  ".($row->NOFROM == "" ? 0 : $row->NOFROM)."-".($row->NOTO == "" ? 0 : $row->NOTO)."
-						</td>
-						<td style='vertical-align:middle;'>
-							".$this->Convertdate(2,$row->SDATE)."<br/>
-							".$this->Convertdate(2,$row->FDATE)."<br/>
-							".number_format($row->EFFRT_AFADJ,6)."<br/>
-						</td>
+						<tr>
+							<td>".$NRow."</td>
+							<td>".$row->LOCAT."</td>
+							<td>".$row->CONTNO."</td>
+							<td>
+								".$row->CUSCOD."<br>
+								".$row->CUSNAME."<br>
+								จน.งวด ".$row->NOPAY." งวดที่ ".$row->NOPAY2."
+							</td>
+							<td>
+								".$this->Convertdate(2,$row->SDATE)."<br>
+								".$this->Convertdate(2,$row->DDATE)."<br>
+								".$row->EFFRT_AFADJ."
+								
+							</td>
 					";
 				}
 				$html .= "
 						<td align='right'>
-							".number_format($row->c1i,2)."<br/>
-							".number_format($row->c1ii,2)."<br/>
-							".number_format($row->c1iii,2)."
+							".number_format($row->temp1AMT,2)."<br>
+							".number_format($row->temp1NINSTAL,2)."<br>
+							".number_format($row->temp1VAMT,2)."
 						</td>
 						<td align='right'>
-							<br/>
-							".number_format($row->c2ii,2)."<br/>
-							".number_format($row->c2iii,2)."
+							<br>
+							".number_format($row->temp1NPROF,2)."<br>
+							".number_format($row->temp1total,2)."
 						</td>
 						<td align='right'>
-							".number_format($row->c3i,2)."<br/>
-							".number_format($row->c3ii,2)."<br/>
-							".number_format($row->c3iii,2)."
+							".number_format($row->temp2AMT,2)."<br>
+							".number_format($row->temp2NINSTAL,2)."<br>
+							".number_format($row->temp2VAMT,2)."
 						</td>
 						<td align='right'>
-							<br/>
-							".number_format($row->c4ii,2)."<br/>
-							".number_format($row->c4iii,2)."
+							<br>
+							".number_format($row->temp2NPROF,2)."<br>
+							".number_format($row->temp2total,2)."
 						</td>
 						<td align='right'>
-							".number_format($row->c5i,2)."<br/>
-							".number_format($row->c5ii,2)."<br/>
-							".number_format($row->c5iii,2)."
+							".number_format($row->temp3AMT,2)."<br>
+							".number_format($row->temp3NINSTAL,2)."<br>
+							".number_format($row->temp3VAMT,2)."
 						</td>
 						<td align='right'>
-							<br/>
-							".number_format($row->c6ii,2)."<br/>
-							".number_format($row->c6iii,2)."
+							<br>
+							".number_format($row->temp3NPROF,2)."<br>
+							".number_format($row->temp3total,2)."
 						</td>
 						<td align='right'>
-							".number_format($row->c7i,2)."<br/>
-							".number_format($row->c7ii,2)."<br/>
-							".number_format($row->c7iii,2)."
+							".number_format($row->temp4AMT,2)."<br>
+							".number_format($row->temp4NINSTAL,2)."<br>
+							".number_format($row->temp4VAMT,2)."
 						</td>
 						<td align='right'>
-							<br/>
-							".number_format($row->c8ii,2)."<br/>
-							".number_format($row->c8iii,2)."
+							<br>
+							".number_format($row->temp4NPROF,2)."<br>
+							".number_format($row->temp4total,2)."
 						</td>
-					</tr>
+						<td align='right'>
+							".number_format($row->temp5AMT,2)."<br>
+							".number_format($row->temp5NINSTAL,2)."<br>
+							".number_format($row->temp5VAMT,2)."
+						</td>
+						<td align='right'>
+							<br>
+							".number_format($row->temp5NPROF,2)."<br>
+							".number_format($row->temp5total,2)."
+						</td>
+					</tr>				
 				";
 				
 				$NRow++;
 			}
 		}
 		
+		$sql = "select * from {$this->MAuth->getdb('CONDPAY')}";
+		$condpay = $this->db->query($sql);
+		$condpay = $condpay->row();
+		
 		$html = "
-			<div id='table-fixed-CReport011' class='col-sm-12' style='height:calc(100% - 30px);width:100%;overflow:auto;'>
-				<table id='table-CReport011' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%' border=1>
+			<div id='table-fixed-CReport002' class='col-sm-12' style='height:calc(100% - 30px);width:100%;overflow:auto;font-size:8pt;'>
+				<table id='table-CReport002' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%' border=1>
 					<thead>
+						<tr style='line-height:20px;'>
+							<th style='vertical-align:middle;background-color:#ccc;text-align:center;font-size:14pt;' colspan='15'>
+								{$condpay->COMP_NM}
+							</th>
+						</tr>
+						<tr style='line-height:20px;'>
+							<th style='vertical-align:middle;background-color:#ccc;text-align:center;font-size:12pt;' colspan='15'>
+								รายงานการรับรู้รายได้เกณฑ์สิทธิ์ประจำเดือน ปี แบบ Effective
+							</th>
+						</tr>
+						<tr style='line-height:20px;'>
+							<td style='vertical-align:middle;background-color:#ccc;text-align:center;font-size:8pt;' colspan='15'>
+								สาขา ".$arrs["LOCAT"]." กลุ่มสินค้า  ".$arrs["GCODE"]." รหัส Billcolector ".$arrs["BILLCOLL"]." เลขที่สัญญา  ".$arrs["CONTNO"]." 
+							</td>
+						</tr>
 						<tr>
 							<th style='vertical-align:middle;background-color:#ccc;' rowspan='2'>NO.</th>
 							<th style='vertical-align:middle;background-color:#ccc;' rowspan='2'>สาขา</th>
 							<th style='vertical-align:middle;background-color:#ccc;' rowspan='2'>เลขที่สัญญา</th>
 							<th style='vertical-align:middle;background-color:#ccc;' rowspan='2'>ชื่อ-สกุล</th>
-							<th style='vertical-align:middle;background-color:#ccc;max-width:120px;' rowspan='2'>
-								<table>
-									<tr><th>วันที่ทำสัญญา</th></tr>
-									<tr><th>วันดิวงวดแรก</th></tr>
-									<tr><th>EFFECTIVE_RATE</th></tr>
-								</table>
-								
+							<th style='vertical-align:middle;background-color:#ccc;max-width:120px;' rowspan='2'>								
+								วันที่ทำสัญญา<br>
+								วันดิวงวดแรก<br>
+								EFFECTIVE_RATE
 							</th>
 							<th style='vertical-align:middle;background-color:#ccc;text-align:center;' colspan='2'>ทั้งสัญญา</th>
-							<th style='vertical-align:middle;background-color:#ccc;text-align:center;' colspan='2'>รับชำระเงินถึงงวดก่อน</th>
-							<th style='vertical-align:middle;background-color:#ccc;text-align:center;' colspan='2'>รับชำระเงินงวดนี้</th>
-							<th style='vertical-align:middle;background-color:#ccc;text-align:center;' colspan='2'>ยอดลูกหนี้คงเหลือ</th>
+							<th style='vertical-align:middle;background-color:#ccc;text-align:center;' colspan='2'>บันทึกบัญชีถึงงวดก่อน</th>
+							<th style='vertical-align:middle;background-color:#ccc;text-align:center;' colspan='2'>บันทึกบัญชีงวดนี้</th>
+							<th style='vertical-align:middle;background-color:#ccc;text-align:center;' colspan='2'>ยอดคงเหลือทางบัญชี</th>
+							<th style='vertical-align:middle;background-color:#ccc;text-align:center;' colspan='2'>ลูกหนี้คงเหลือจริง</th>
 						</tr>
 						<tr>
+							<th style='vertical-align:middle;background-color:#ccc;text-align:center;'>เงินต้น<br>ดอกผล<br>ภาษี</th>
+							<th style='vertical-align:middle;background-color:#ccc;text-align:center;'>รวม</th>
 							<th style='vertical-align:middle;background-color:#ccc;text-align:center;'>เงินต้น<br>ดอกผล<br>ภาษี</th>
 							<th style='vertical-align:middle;background-color:#ccc;text-align:center;'>รวม</th>
 							<th style='vertical-align:middle;background-color:#ccc;text-align:center;'>เงินต้น<br>ดอกผล<br>ภาษี</th>

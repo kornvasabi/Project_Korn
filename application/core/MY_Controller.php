@@ -182,4 +182,25 @@ class MY_Controller extends CI_Controller {
 		};
 		return $c.''.$s;
 	}
+	
+	public function today($param){
+		$sql = "
+			select convert(varchar(8),(convert(varchar(6),getdate(),112)+'01'),112) as startofmonth
+				,convert(varchar(8),getdate(),112) as today
+				,convert(varchar(8),(dateadd(day,-1,convert(varchar(6),dateadd(month,1,getdate()),112)+'01')),112) as endofmonth
+		";
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				switch($param){
+					case 'startofmonth': return $this->Convertdate(2,$row->startofmonth); break;
+					case 'today': return $this->Convertdate(2,$row->today); break;
+					case 'endofmonth': return $this->Convertdate(2,$row->endofmonth); break;
+				}
+			}
+		}
+		
+		return "";
+	}
 }
