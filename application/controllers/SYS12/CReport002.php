@@ -98,6 +98,12 @@ class CReport002 extends MY_Controller {
 		$arrs['TPAYDT']   = $this->Convertdate(1,$_REQUEST['TPAYDT']);		
 		$arrs['ORDERBY']  = $_REQUEST['ORDERBY'];
 		
+		if($arrs['TPAYDT'] == ""){
+			$html = "ผิดพลาด โปรดระบุ ลูกหนี้ ณ สิ้นเดือน ด้วยครับ";
+			$response = array("html"=>$html,"status"=>false);
+			echo json_encode($response); exit;
+		}
+		
 		$sql = "
 			declare @date varchar(8) = '".$arrs['TPAYDT']."';
 			if OBJECT_ID('tempdb..#tempdata01') is not null drop table #tempdata01;
@@ -545,7 +551,7 @@ class CReport002 extends MY_Controller {
 						</tr>
 						<tr style='line-height:20px;'>
 							<th style='vertical-align:middle;background-color:#ccc;text-align:center;font-size:12pt;' colspan='15'>
-								รายงานการรับรู้รายได้เกณฑ์สิทธิ์ประจำเดือน ปี แบบ Effective
+								รายงานการรับรู้รายได้เกณฑ์สิทธิ์ประจำเดือน {$this->thaiLongMonthArray[(int)substr($arrs['TPAYDT'],4,2)]}  ปี ".((int)substr($arrs['TPAYDT'],0,4) + 543)." แบบ Effective
 							</th>
 						</tr>
 						<tr style='line-height:20px;'>

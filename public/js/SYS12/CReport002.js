@@ -115,27 +115,41 @@ $('#btnt1search').click(function(){
 		success:function(data){
 			$('#loadding').hide();
 			
-			Lobibox.window({
-				title: 'รายงานการโอนย้ายรถ',
-				content: data.html,
-				height: $(window).height(),
-				width: $(window).width(),
-				closeOnEsc: true,
-				draggable: false
-			});
-			
-			document.getElementById("table-fixed-CReport002").addEventListener("scroll", function(){
-				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
-				this.querySelector("thead").style.transform = translate;						
-			});
-			
-			$('#table-fixed-CReport002 tbody tr').hover(function(){
-				$(this).css({'background-color':'yellow'});
-				$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#f9f9a9'});
-			},function(){
-				$(this).css({'background-color':'white'});
-				$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
-			});
+			if(data.status){
+				Lobibox.window({
+					title: 'รายงานการโอนย้ายรถ',
+					content: data.html,
+					height: $(window).height(),
+					width: $(window).width(),
+					closeOnEsc: true,
+					draggable: false
+				});
+				
+				document.getElementById("table-fixed-CReport002").addEventListener("scroll", function(){
+					var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
+					this.querySelector("thead").style.transform = translate;						
+				});
+				
+				$('#table-fixed-CReport002 tbody tr').hover(function(){
+					$(this).css({'background-color':'yellow'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#f9f9a9'});
+				},function(){
+					$(this).css({'background-color':'white'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
+				});				
+			}else{
+				Lobibox.notify('error', {
+					title: 'ผิดพลาด',
+					size: 'mini',
+					pauseDelayOnHover: true,
+					closeOnClick: false,
+					continueDelayOnInactiveTab: false,
+					delay: 5000,
+					icon: true,
+					messageHeight: '90vh',
+					msg: data.html
+				});
+			}
 		}
 	});
 });
