@@ -105,7 +105,7 @@ $('#btnt1search').click(function(){
 	dataToPost.TPAYDT 	= $('#TPAYDT').val();
 	dataToPost.ORDERBY  = $('#ORDERBY').val();
 	
-	//$('#loadding').show();	
+	$('#loadding').show();	
 	
 	$.ajax({
 		url:'../SYS12/CReport002/search',
