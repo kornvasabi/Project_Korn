@@ -594,7 +594,7 @@ class CReport002 extends MY_Controller {
 				</table>
 			</div>
 			<div>
-				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-CReport011', 'exporttoexcell');\" style='width:25px;height:25px;cursor:pointer;'/>
+				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-CReport002', 'exporttoexcell');\" style='width:25px;height:25px;cursor:pointer;'/>
 			</div>
 		";
 		
