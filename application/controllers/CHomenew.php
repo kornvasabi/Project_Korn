@@ -39,7 +39,8 @@ class CHomenew extends MY_Controller {
 		
 		$sql = "
 			select GCODE,GDESC from {$this->MAuth->getdb('SETGROUP')}
-			where GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F')
+			--where GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F')
+			where GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F')
 			order by GCODE
 		";
 		$query = $this->db->query($sql);
@@ -157,12 +158,14 @@ class CHomenew extends MY_Controller {
 		
 		if(isset($_REQUEST["inpGCODE"])){
 			if($_REQUEST["inpGCODE"] == ''){
-				$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
+				//$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
+				$cond .= " and a.GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F') ";
 			}else{
 				$cond .= " and a.GCODE = '".$_REQUEST["inpGCODE"]."' ";				
 			}
 		}else{
-			$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
+			//$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
+			$cond .= " and a.GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F') ";
 		}
 		
 		$sql = "
@@ -259,7 +262,7 @@ class CHomenew extends MY_Controller {
 				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARFINC')}
 			) c on a.CONTNO=c.CONTNO
 			left join {$this->MAuth->getdb('CUSTMAST')} d on c.CUSCOD=d.CUSCOD
-			where a.STRNO='".$STRNO."' and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F')
+			where a.STRNO='".$STRNO."' and a.GCODE in ('','15','16','022','023','024','29','30','','15F','16F','22F','23F','24F','29F','30F')
 		";
 		$query = $this->db->query($sql);
 		
@@ -279,7 +282,7 @@ class CHomenew extends MY_Controller {
 		//select menu
 		$sql = "
 			select GCODE,GDESC from {$this->MAuth->getdb('SETGROUP')}
-			where GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F')
+			where GCODE in ('','15','16','022','023','024','29','30','','15F','16F','22F','23F','24F','29F','30F')
 			order by GCODE
 		";
 		$query = $this->db->query($sql);
