@@ -71,6 +71,7 @@ function search(){
 								width: setwidth,
 								height: setheight,
 								content: edata.html,
+								closeOnEsc: false,
 								shown: function($this){
 									$('#fa_edit').click(function(){
 										Lobibox.confirm({
@@ -185,6 +186,7 @@ $('#add_group').click(function(){
 				width: setwidth,
 				height: setheight,
 				content: data.html,
+				closeOnEsc: false,
 				shown: function($this){
 					$('#fa_save').attr('disabled',true);
 					$('#fa_locat').select2({

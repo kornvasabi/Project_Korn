@@ -167,7 +167,102 @@ class ReserveCar extends MY_Controller {
 			</div>
 		";
 		
+		/*
+		$html = "
+			<div class='panel panel-default'>
+				<div class='panel-heading'>
+					<div class='panel-title'>
+						<h4>Panel title</h4>
+					</div>
+				</div>
+				<div class='panel-body'>
+					".$html."
+				</div>
+			</div>
+		";
+		*/
+		
 		$response = array("html"=>$html,"status"=>true);
+		echo json_encode($response);
+	}
+	
+	function getfromReserve(){
+		$html = "
+			<div style='background-color:#ccc;height:calc(100vh - 120px);'>
+				<div style='height:150px;overflow:auto;'>
+					<div class='row col-sm-12'>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								สาขา
+								<select id='t1LOCAT' class='form-control input-sm'></select>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								เลขที่บิลรับรถ
+								<select id='t1RECVNO' class='form-control input-sm'></select>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								รุ่นรถ
+								<select id='t1MODEL' class='form-control input-sm'></select>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								สี
+								<select id='t1COLOR' class='form-control input-sm'></select>
+							</div>
+						</div>
+					</div>
+					
+					<div class='row col-sm-12'>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								เลขตัวถัง
+								<input type='text' id='t1STRNO' class='form-control input-sm' placeholder='เลขตัวถัง'>
+							</div>
+						</div>
+						<div class='col-sm-2' style='display:none;'>	
+							<div class='form-group'>
+								สถานะรถ
+								<select id='t1STAT' class='form-control input-sm'>
+									<option value=''>ทั้งหมด</option>
+									<option value='N'>รถใหม่</option>
+									<option value='O'>รถเก่า</option>
+								</select>
+							</div>
+						</div>
+						<div class='col-sm-1 col-sm-offset-0'>	
+							<div class='form-group'>
+								<br>
+								<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'>แสดง</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div id='resultSearcht1' style='height:calc(100% - 150px);overflow:auto;background-color:white;'></div>
+			</div>
+		";
+		
+		/*
+		$html = '
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<div class="panel-title">
+						<h4>Panel title</h4>
+					</div>
+				</div>
+				<div class="panel-body">
+					Lorem ipsum...
+				</div>
+			</div>
+		';
+		*/
+		
+		$response = array('html'=>$html,'status'=>true);
 		echo json_encode($response);
 	}
 }

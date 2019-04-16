@@ -59,6 +59,7 @@ $('#addSTRNO').click(function(){
 				width: setwidth,
 				height: setheight,
 				content: data.html,
+				closeOnEsc: false,
 				shown: function($this){
 					
 					if(_level != 1){

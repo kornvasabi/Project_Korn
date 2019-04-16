@@ -55,10 +55,12 @@ function initPage(){
         ajax: {
 			url: '../Cselect2/getTransfercars',
 			data: function (params) {
-				return {
-					q: params.term, // search term
-					TRANSTO : $('#add_TRANSTO').val()
-				};
+				dataToPost = new Object();
+				dataToPost.now = $('#CUSCOD').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				dataToPost.TRANSTO = $('#add_TRANSTO').val()
+				
+				return dataToPost;				
 			},
 			dataType: 'json',
 			delay: 1000,
@@ -169,6 +171,7 @@ $('#btnt2addSTRNO').click(function(){
 				width: setwidth,
 				height: setheight,
 				content: data.html,
+				closeOnEsc: false,
 				shown: function($this){
 					document.getElementById("table-fixed-addSTRNO").addEventListener("scroll", function(){
 						var translate = "translate(0,"+(this.scrollTop - 1)+"px)";

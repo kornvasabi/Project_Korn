@@ -121,7 +121,7 @@ $('#btnt1search').click(function(){
 					content: data.html,
 					height: $(window).height(),
 					width: $(window).width(),
-					closeOnEsc: true,
+					closeOnEsc: false,
 					draggable: false
 				});
 				

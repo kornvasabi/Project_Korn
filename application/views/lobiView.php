@@ -206,7 +206,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		<div class="bounce3"></div>
 	</div>
 	
-	<div id="loadding" hidden style="width:100vw;height:100vh;color:white;background-color:hsla(40, 14%, 21%, 0.59);position:fixed;top:0;left:0;z-index:1000;">
+	<div id="loadding" hidden style="width:100vw;height:100vh;color:white;background-color:hsla(40, 14%, 21%, 0.59);position:fixed;top:0;left:0;z-index:10000;">
 		<div class="spinner spinner-horizontal">
 			<span class="spinner-text">Loading...</span>
 			<div class="bounce1"></div>
@@ -248,6 +248,22 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			alert('x');
 		},60000);
 	*/
+	setInterval(function(){
+		__decss();
+	},250);
+	
+	function __decss(){
+		$("input[type='text']:enabled").css({'background-color':'white','color':'black','cursor':'default'});
+		$("input[type='text']:disabled").css({'background-color':'#ccc','color':'black','cursor':'not-allowed'});
+		$(".select2-hidden-accessible:enabled").each(function(){
+			$("#select2-"+this.id+"-container").css({'background-color':'white','color':'black','cursor':'pointer','height':'28px'});
+		});
+		$(".select2-hidden-accessible:disabled").each(function(){
+			$("#select2-"+this.id+"-container").css({'background-color':'#ccc','color':'black','cursor':'not-allowed','height':'28px'});
+		});
+		$(".select2-selection--single").css({'height':'30px'});
+	}
+	
 	var setwidth = $(window).width();
 	var setheight = $(window).height();
 	if(setwidth > 1000){

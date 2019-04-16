@@ -334,6 +334,7 @@ function getMenuSearch(dataToPost){
 							width: setwidth,
 							height: setheight,
 							content: data.html,
+							closeOnEsc: false,
 							shown: function($this){
 								$('#btnw1search').click(function(){
 									dataToPost = new Object();

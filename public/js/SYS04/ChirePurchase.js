@@ -46,6 +46,7 @@ $('#tab21_CUSCODSearch').click(function(){
 				width: setwidth,
 				height: setheight,
 				content: data.html,
+				closeOnEsc: false,
 				shown: function($this){
 					$('#customerSearch').click(function(){
 						dataToPost = new Object();

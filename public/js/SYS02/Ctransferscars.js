@@ -32,6 +32,13 @@ function initPage(){
 		placeholder: 'เลือก',
         ajax: {
 			url: '../Cselect2/getLOCAT',
+			data: function (params) {
+				dataToPost = new Object();
+				dataToPost.now = $('#CUSCOD').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
 			dataType: 'json',
 			delay: 1000,
 			processResults: function (data) {
@@ -43,6 +50,7 @@ function initPage(){
         },
 		allowClear: true,
 		multiple: false,
+		disabled: false,
 		//theme: 'classic',
 		width: '100%'
 	});
@@ -51,6 +59,13 @@ function initPage(){
 		placeholder: 'เลือก',
         ajax: {
 			url: '../Cselect2/getLOCAT',
+			data: function (params) {
+				dataToPost = new Object();
+				dataToPost.now = $('#CUSCOD').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
 			dataType: 'json',
 			delay: 1000,
 			processResults: function (data) {
@@ -62,6 +77,7 @@ function initPage(){
         },
 		allowClear: true,
 		multiple: false,
+		disabled: false,
 		//theme: 'classic',
 		width: '100%'
 	});
@@ -70,6 +86,13 @@ function initPage(){
 		placeholder: 'เลือก',
         ajax: {
 			url: '../Cselect2/getVUSER',
+			data: function (params) {
+				dataToPost = new Object();
+				dataToPost.now = $('#CUSCOD').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
 			dataType: 'json',
 			delay: 2000,
 			processResults: function (data) {
@@ -81,6 +104,7 @@ function initPage(){
         },
 		allowClear: true,
 		multiple: false,
+		disabled: false,
 		//theme: 'classic',
 		width: '100%'
 	});	
@@ -89,6 +113,13 @@ function initPage(){
 		placeholder: 'เลือก',
         ajax: {
 			url: '../Cselect2/getVUSER',
+			data: function (params) {
+				dataToPost = new Object();
+				dataToPost.now = $('#CUSCOD').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
 			dataType: 'json',
 			delay: 2000,
 			processResults: function (data) {
@@ -100,6 +131,7 @@ function initPage(){
         },
 		allowClear: true,
 		multiple: false,
+		disabled: false,
 		//theme: 'classic',
 		width: '100%'
 	});	
@@ -108,6 +140,8 @@ function initPage(){
 		placeholder: 'เลือก',       
 		allowClear: true,
 		multiple: false,
+		disabled: true,
+		dropdownParent: $(document.body).offset(),
 		//theme: 'classic',
 		width: '100%'
 	});	
@@ -245,11 +279,16 @@ function loadData(dataToPost){
 			
 			$('#add_TRANSNO').attr('readonly',true);
 			$('#add_TRANSDT').attr('disabled',true);
-			$('#add_TRANSFM').attr('disabled',true);
-			$('#add_TRANSTO').attr('disabled',true);
-			$('#add_EMPCARRY').attr('disabled',true);
-			$('#add_APPROVED').attr('disabled',true);
-			$('#add_TRANSSTAT').attr('disabled',true);
+			//$('#add_TRANSFM').attr('disabled',true);
+			//$('#add_TRANSTO').attr('disabled',true);
+			//$('#add_EMPCARRY').attr('disabled',true);
+			//$('#add_APPROVED').attr('disabled',true);
+			//$('#add_TRANSSTAT').attr('disabled',true);
+			$('#add_TRANSFM').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
+			$('#add_TRANSTO').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
+			$('#add_EMPCARRY').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
+			$('#add_APPROVED').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
+			$('#add_TRANSSTAT').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
 			
 			if(data.html['TRANSSTAT'] == 'Sendding'){ //สถานะกำลังโอนย้ายรถ  เปิดการลบบิลโอน  และบันทึกข้อมูลได้หากมีสิทธิ์
 				$('#add_MEMO1').attr('disabled',false);
@@ -379,6 +418,8 @@ function loadData(dataToPost){
 }
 
 $('#btnt1transfers').click(function(){
+	initPage();
+	
 	$('.tab1').hide();
 	$('.tab2').show();
 	
@@ -460,6 +501,7 @@ $('#btnt2addSTRNo').click(function(){
 				width: setwidth,
 				height: setheight,
 				content: data.html,
+				closeOnEsc: false,
 				shown: function($this){
 					$('#STRNOSearch').click(function(){
 						dataToPost = new Object();
@@ -640,6 +682,7 @@ $('#btnt2bill').click(function(){
 				Lobibox.window({
 					title: 'Window title',
 					content: content,
+					closeOnEsc: false,
 					height: $(window).height(),
 					width: $(window).width()
 				});

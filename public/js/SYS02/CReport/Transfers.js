@@ -52,7 +52,7 @@ function search(){
 				content: data.html,
 				height: $(window).height(),
 				width: $(window).width(),
-				closeOnEsc: true,
+				closeOnEsc: false,
 				draggable: false
 			});
 			

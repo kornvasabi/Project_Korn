@@ -25,9 +25,14 @@ class Cselect2 extends MY_Controller {
 	
 	function getLOCAT(){
 		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_GET['q']);
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		
 		$sql = "
+			select LOCATCD from {$this->MAuth->getdb('INVLOCAT')}
+			where LOCATCD = '".$dataNow."' collate Thai_CI_AS
+			
+			union
 			select top 20 LOCATCD from {$this->MAuth->getdb('INVLOCAT')}
 			where LOCATCD like '%".$dataSearch."%' collate Thai_CI_AS or LOCATNM like '%".$dataSearch."%' collate Thai_CI_AS
 			order by LOCATCD
@@ -46,9 +51,14 @@ class Cselect2 extends MY_Controller {
 	
 	function getUSERS(){
 		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_GET['q']);
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		
 		$sql = "
+			select USERID,USERNAME+' ('+USERID+')' as USERNAME from {$this->MAuth->getdb('PASSWRD')}
+			where 1=1 and USERID='".$dataNow."' collate Thai_CI_AS 
+			
+			union
 			select top 20 USERID,USERNAME+' ('+USERID+')' as USERNAME from {$this->MAuth->getdb('PASSWRD')}
 			where EXPDATE is null and (
 				USERID like '%".$dataSearch."%' collate Thai_CI_AS 
@@ -94,21 +104,55 @@ class Cselect2 extends MY_Controller {
 	
 	function getCUSTOMERS(){
 		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_GET['q']);
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		
 		$sql = "
-			select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')' as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
+			select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+'-'+GRADE as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
+			where CUSCOD = '".$dataNow."' collate Thai_CI_AS 			
+			
+			union
+			select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+'-'+GRADE as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
 			where CUSCOD like '%".$dataSearch."%' collate Thai_CI_AS 
 				or NAME1+' '+NAME2 like '%".$dataSearch."%' collate Thai_CI_AS
 				or IDNO like '%".$dataSearch."%' collate Thai_CI_AS
 			order by CUSCOD
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>$row->CUSCOD, 'text'=>$row->CUSNAME];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCUSTOMERSADDRNo(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$cuscod = $_REQUEST["cuscod"];
+		
+		$sql = "
+			select ADDRNO,'('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB as ADDRNODetails from {$this->MAuth->getdb('CUSTADDR')}
+			where CUSCOD = '".$cuscod."' collate Thai_CI_AS and ADDRNO = '".$dataNow."' collate Thai_CI_AS
+			
+			union
+			select ADDRNO,'('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB as ADDRNODetails from {$this->MAuth->getdb('CUSTADDR')}
+			where CUSCOD = '".$cuscod."' collate Thai_CI_AS and '('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB like '%".$dataSearch."%' collate Thai_CI_AS
+			order by ADDRNO
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->ADDRNO, 'text'=>$row->ADDRNODetails];
 			}
 		}
 		
@@ -313,6 +357,195 @@ class Cselect2 extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = array('id'=>$row->COLORCOD, 'text'=>$row->COLORCOD);
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getRESVNO(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$locat = $_REQUEST['locat'];
+		
+		$sql = "
+			select RESVNO from {$this->MAuth->getdb('ARRESV')}
+			where LOCAT = '".$locat."' collate Thai_CI_AS and RESVNO='".$dataNow."' collate Thai_CI_AS 
+				and isnull(STRNO,'') <> '' and SDATE is null
+			union
+			select top 10 RESVNO from {$this->MAuth->getdb('ARRESV')}
+			where LOCAT = '".$locat."' collate Thai_CI_AS and RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
+				and isnull(STRNO,'') <> '' and SDATE is null
+			
+			union
+			--บิลจองจากสาขาอื่น แต่ลูกค้ามาออกรถกับอีกสาขา
+			select top 10 RESVNO from {$this->MAuth->getdb('ARRESV')}
+			where 1=1 and RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
+				and isnull(STRNO,'') <> '' and SDATE is null
+			--order by RESVNO desc
+		";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->RESVNO), 'text'=>str_replace(chr(0),'',$row->RESVNO)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getSTRNO(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$locat = $_REQUEST['locat'];
+		
+		$sql = "
+			select STRNO from {$this->MAuth->getdb('INVTRAN')}
+			where CRLOCAT = '".$locat."' collate Thai_CI_AS 
+				and STRNO='".$dataNow."' collate Thai_CI_AS
+				and FLAG='D' and isnull(CONTNO,'')='' and SDATE is null 
+				and isnull(RESVNO,'')=''
+			union
+			select top 20 STRNO from {$this->MAuth->getdb('INVTRAN')}
+			where CRLOCAT = '".$locat."' collate Thai_CI_AS 
+				and STRNO like '".$dataSearch."%' collate Thai_CI_AS 
+				and FLAG='D' and isnull(CONTNO,'')='' and SDATE is null 
+				and isnull(RESVNO,'')=''
+			order by STRNO desc
+		";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->STRNO), 'text'=>str_replace(chr(0),'',$row->STRNO)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getPAYDUE(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select PAYCODE,'('+PAYCODE+') '+PAYDESC PAYDESC from {$this->MAuth->getdb('PAYDUE')}
+			where 1=1 and PAYCODE='".$dataNow."' collate Thai_CI_AS
+				
+			union
+			select top 20 PAYCODE,'('+PAYCODE+') '+PAYDESC PAYDESC from {$this->MAuth->getdb('PAYDUE')}
+			where 1=1 and '('+PAYCODE+') '+PAYDESC like '".$dataSearch."%' collate Thai_CI_AS 
+			order by PAYCODE
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->PAYCODE), 'text'=>str_replace(chr(0),'',$row->PAYDESC)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getOPTMAST(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$locat = $_REQUEST["locat"];
+		$sql = "
+			select OPTCODE,case when OPTCODE = '' then '(ว่าง)' else '('+OPTCODE+') '+OPTNAME end as OPTNAME
+			from {$this->MAuth->getdb('OPTMAST')}
+			where 1=1 and OPTCODE='".$dataNow."' collate Thai_CI_AS and LOCAT='".$locat."'
+				
+			union
+			select top 20 OPTCODE,case when OPTCODE = '' then '(ว่าง)' else '('+OPTCODE+') '+OPTNAME end as OPTNAME 
+			from {$this->MAuth->getdb('OPTMAST')}
+			where 1=1 and '('+OPTCODE+') '+OPTNAME like '".$dataSearch."%' collate Thai_CI_AS  and LOCAT='".$locat."'
+			order by OPTCODE
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->OPTCODE), 'text'=>str_replace(chr(0),'',$row->OPTNAME)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getACTI(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select ACTICOD,'('+ACTICOD+') '+ACTIDES as ACTIDES
+			from {$this->MAuth->getdb('SETACTI')}
+			where 1=1 and ACTICOD='".$dataNow."' collate Thai_CI_AS 
+				
+			union
+			select ACTICOD,'('+ACTICOD+') '+ACTIDES as ACTIDES
+			from {$this->MAuth->getdb('SETACTI')}
+			where 1=1 and '('+ACTICOD+') '+ACTIDES like '%".$dataSearch."%' collate Thai_CI_AS
+			order by ACTICOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->ACTICOD), 'text'=>str_replace(chr(0),'',$row->ACTIDES)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getBILLDAS(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$locat = $_REQUEST['locat'];
+		$sdate = $this->Convertdate(1,$_REQUEST['sdate']);
+		
+		$sql = "
+			select free from serviceweb.dbo.fn_branchMaps
+			where senior='".$locat."'
+		";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		
+		$sql = "
+			select SaleNo from DBFREE.dbo.SPSale 
+			where cast(left(SaleDate,4)-543 as varchar(4))+CAST(replace(right(SaleDate,5),'/','') as varchar(4))='".$sdate."'
+				and BranchNo='".$row->free."' and SaleNo = '".$dataNow."'
+			union 
+			select SaleNo from DBFREE.dbo.SPSale 
+			where cast(left(SaleDate,4)-543 as varchar(4))+CAST(replace(right(SaleDate,5),'/','') as varchar(4))='".$sdate."'
+				and BranchNo='".$row->free."' and SaleNo like '%".$dataSearch."%'
+		";
+		//echo $sql; exit;
+		$DAS = $this->load->database('DAS',true);
+		$query = $DAS->query($sql);
+		$row = $query->row();
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->SaleNo), 'text'=>str_replace(chr(0),'',$row->SaleNo)];
 			}
 		}
 		
