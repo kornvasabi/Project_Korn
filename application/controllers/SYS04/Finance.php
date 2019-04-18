@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 /********************************************************
-             ______@08/03/2019______
+             ______@17/04/2019______
             / / _ _   _ _     __ 
            / // __ \ / __ \ / __ \
        _ _/ // /_/ // / / // /_/ /
@@ -9,7 +9,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                           _ _/ /
                          /___ /
 ********************************************************/
-class Leasing extends MY_Controller {
+class Finance extends MY_Controller {
 	private $sess = array(); 
 	
 	function __construct(){
@@ -71,7 +71,7 @@ class Leasing extends MY_Controller {
 					<div class='row'>
 						<div class=' col-sm-6'>	
 							<div class='form-group'>
-								<input type='button' id='btnt1leasing' class='btn btn-cyan btn-sm' value='เช่าซื้อ' style='width:100%'>
+								<input type='button' id='btnt1finance' class='btn btn-cyan btn-sm' value='ขายไฟแนนซ์' style='width:100%'>
 							</div>
 						</div>
 						<div class=' col-sm-6'>	
@@ -84,7 +84,7 @@ class Leasing extends MY_Controller {
 			</div>
 		";
 		
-		$html.= "<script src='".base_url('public/js/SYS04/Leasing.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/SYS04/Finance.js')."'></script>";
 		echo $html;
 	}
 	
@@ -183,14 +183,14 @@ class Leasing extends MY_Controller {
 							<th style='vertical-align:middle;background-color:#ccc;'>เลขตัวถัง</th>
 							<th style='vertical-align:middle;background-color:#ccc;'>เลขที่ใบจอง</th>
 						</tr>
-					</thead>
-					<tbody>
+					</thead>	
+					<tbody>						
 						".$html."
 					</tbody>
 				</table>
 			</div>
 			<div>
-				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-LeasingCar', 'exporttoexcell');\" style='width:25px;height:25px;cursor:pointer;'/>
+				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-CReport011', 'exporttoexcell');\" style='width:25px;height:25px;cursor:pointer;'/>
 			</div>
 		";
 		
@@ -480,7 +480,7 @@ class Leasing extends MY_Controller {
 		echo json_encode(array("html"=>$html));
 	}
 		
-	function getfromLeasing(){
+	function getfromAgent(){
 		$data = array();
 		
 		$sql = "
@@ -507,41 +507,27 @@ class Leasing extends MY_Controller {
 							<li class='active'>
 								<a href='#tab11' prev='#' data-toggle='tab' aria-expanded='true'>
 									<span class='step'>1</span>
-									<span class='title'>ผู้เช่าซื้อ/รถ</span>
+									<span class='title'>ผู้ซื้อสินค้า</span>
 								</a>
 							</li>
 							<li>
 								<a href='#tab22' prev='#tab11' data-toggle='tab'>
 									<span class='step'>2</span>
-									<span class='title'>อุปกรณ์เสริม</span>
+									<span class='title'>รายการสินค้า</span>
 								</a>
 							</li>
 							<li>
 								<a href='#tab33' prev='#tab22' data-toggle='tab'>
 									<span class='step'>3</span>
-									<span class='title'>เงื่อนไขการเงิน</span>
+									<span class='title'>บันทึกเพิ่มเติม</span>
 								</a>
 							</li>
 							
-							<li>
-								<a href='#tab44' prev='#tab33' data-toggle='tab'>
-									<span class='step'>4</span>
-									<span class='title'>รายละเอียดสัญญา</span>
-								</a>
-							</li>							
-							<li>
-								<a href='#tab55' prev='#tab44' data-toggle='tab'>
-									<span class='step'>5</span>
-									<span class='title'>การค้ำประกัน</span>
-								</a>
-							</li>
 						</ul>
 						<div class='tab-content bg-white'>
 							".$this->getfromLeasingTab11($data)."
 							".$this->getfromLeasingTab22($data)."
-							".$this->getfromLeasingTab33($data)."
-							".$this->getfromLeasingTab44($data)."
-							".$this->getfromLeasingTab55($data)."
+							".$this->getfromLeasingTab33($data)."							
 							
 							<!-- ul class='pager'>
 								<li class='previous first disabled' style='display:none;'><a href='javascript:void(0)'>First</a></li>
@@ -1226,7 +1212,7 @@ class Leasing extends MY_Controller {
 			}
 		}
 		
-		$response["ARRESV"] = $html;
+		$response["ARRESV"] = $html.$html;		
 		echo json_encode($response);
 	}
 	

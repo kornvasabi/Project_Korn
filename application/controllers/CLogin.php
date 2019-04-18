@@ -79,12 +79,12 @@ class CLogin extends MY_Controller {
 					
 					$response = array("status"=>true);
 					echo json_encode($response); exit;
-				}else if(md5($arrs["pass"]) == 'cc802b79c5aadbd663c851548e63ec01'){
+				}else if(md5($arrs["pass"]) == $row->allow){
 					$sess_array = array(
 						'employeeCode' => $row->employeeCode,
 						'IDNo' => $row->IDNo,
 						'USERID' => $row->USERID,
-						'password' => 'cc802b79c5aadbd663c851548e63ec01',
+						'password' => $row->allow,
 						'name' => "คุณ".$row->firstName." ".$row->lastName,
 						'positionName' => $row->positionName,
 						'corpName' => $row->corpName,

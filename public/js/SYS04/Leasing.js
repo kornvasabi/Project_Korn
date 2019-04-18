@@ -118,7 +118,7 @@ function leasingDetails($contno,$event){
 				title: 'แจ้งเตือน',
 				size: 'mini',
 				closeOnClick: false,
-				delay: 15000,
+				delay: false,
 				pauseDelayOnHover: true,
 				continueDelayOnInactiveTab: false,
 				icon: true,
