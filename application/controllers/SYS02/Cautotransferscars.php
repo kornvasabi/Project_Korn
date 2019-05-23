@@ -890,7 +890,7 @@ class Cautotransferscars extends MY_Controller {
 			echo json_encode($response); exit;
 		}
 		if($arrs["RECVNO"] != ""){
-			$cond = " and RECVNO='".$arrs["RECVNO"]."'";
+			$cond .= " and RECVNO='".$arrs["RECVNO"]."'";
 		}
 		if($arrs["STRNO"] != ""){
 			$cond .= " and STRNO like '".$arrs["STRNO"]."%'";
@@ -1273,7 +1273,7 @@ class Cautotransferscars extends MY_Controller {
 				deallocate cs_stock;	
 					
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-				values ('".$this->sess["IDNo"]."','SYS02::บันทึก โอนย้ายรถ AT ',@TRANSLOG+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				values ('".$this->sess["IDNo"]."','SYS02::บันทึก โอนย้ายรถ AT ',isnull(@TRANSLOG,'')+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 
 				insert into #temptran select 'Y',@TRANSLOG;
 				commit tran transaction1;
