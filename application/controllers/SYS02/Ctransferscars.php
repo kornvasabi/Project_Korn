@@ -696,7 +696,7 @@ class Ctransferscars extends MY_Controller {
 						TRANSNO,TRANSDT,TRANSFM,TRANSTO,EMPCARRY,APPROVED,
 						TRANSQTY,TRANSSTAT,MEMO1,SYSTEM,INSERTBY,INSERTDT
 					) values (
-						@TRANSNO,'".$arrs['TRANSDT']."','".$arrs['TRANSFM']."','".$arrs['TRANSTO']."','".$arrs['EMPCARRY']."','".$arrs['APPROVED']."',
+						@TRANSNO,'".$arrs['TRANSDT']."','".$arrs['TRANSFM']."','".$arrs['TRANSTO']."',".($arrs['EMPCARRY'] == '' ? "NULL" : "'".$arrs['EMPCARRY']."'").",'".$arrs['APPROVED']."',
 						'".$TRANSQTY."','".$arrs['TRANSSTAT']."','".$arrs['MEMO1']."','MT','".$this->sess["IDNo"]."',getdate()
 					);
 					

@@ -786,6 +786,8 @@ $('#btnt2save').click(function(){
 								msg: data.msg
 							});
 						}
+						
+						$('#loadding').hide();
 					}
 				});
 			}

@@ -1226,7 +1226,7 @@ class Cautotransferscars extends MY_Controller {
 							TRANSNO,TRANSDT,TRANSFM,TRANSTO,EMPCARRY,APPROVED,
 							TRANSQTY,TRANSSTAT,MEMO1,SYSTEM,INSERTBY,INSERTDT
 						) values (
-							@TRANSNO,CONVERT(varchar(8),getdate(),112),@CRLOCAT,@LOCAT,'','".$this->sess["IDNo"]."'
+							@TRANSNO,CONVERT(varchar(8),getdate(),112),@CRLOCAT,@LOCAT,NULL,'".$this->sess["IDNo"]."'
 							,0,'Sendding','auto','AT','".$this->sess["IDNo"]."',getdate()
 						);					
 						
