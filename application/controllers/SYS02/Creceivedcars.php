@@ -507,7 +507,7 @@ class Creceivedcars extends MY_Controller {
 			$response['msg'] = 'ไม่บันทึก เนื่องจากรถในรายการถูกรับโอนทุกคันแล้วครับ';
 			echo json_encode($response); exit;
 		}
-		
+		//print_R($this->sess); exit;
 		$sql = "
 			if object_id('tempdb..#transaction') is not null drop table #transaction;
 			create table #transaction (id varchar(20),msg varchar(max));
@@ -523,7 +523,10 @@ class Creceivedcars extends MY_Controller {
 				else 
 				begin 
 					insert into {$this->MAuth->getdb('INVMOVM')}
-					select TRANSNO,convert(varchar(8),getdate(),112),INSERTBY,APPROVED,TRANSFM,TRANSTO,MEMO1,getdate() 
+					select TRANSNO,convert(varchar(8),getdate(),112)
+						,(select USERID from YTKManagement.dbo.hp_mapusers where IDNo=INSERTBY and dblocat='".$this->sess["db"]."')
+						,(select USERID from YTKManagement.dbo.hp_mapusers where IDNo=APPROVED and dblocat='".$this->sess["db"]."')
+						,TRANSFM,TRANSTO,MEMO1,getdate() 
 					from {$this->MAuth->getdb('INVTransfers')}
 					where TRANSNO='".$arrs['TRANSNO']."'
 					
@@ -553,7 +556,7 @@ class Creceivedcars extends MY_Controller {
 				insert into #transaction select 'n' as id,ERROR_MESSAGE() as msg;
 			end catch
 		";
-		//echo $sql; exit;
+		echo $sql; exit;
 		$this->db->query($sql);		
 		$sql = "select * from #transaction";
 		$query = $this->db->query($sql);
