@@ -735,8 +735,12 @@ $('#btnt2save').click(function(){
 						if(i == 7){ // วันที่โอนย้าย
 							r.push($('.SETTRANSDT[STRNO='+this.cells[1].innerHTML+']').val());
 						}else if(i == 8){ // พขร.
-							var emp = $('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').find(':selected').val();
-							r.push((typeof emp === 'undefined'?'':emp));
+							var emp = '';
+							if($('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').find(':selected').val() !== 'undefined'){
+								emp = $('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').find(':selected').val();
+							}
+							
+							r.push(emp);
 						}else{
 							r.push(this.cells[i].innerHTML);
 						}
