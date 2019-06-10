@@ -571,7 +571,7 @@ class Ctransferscars extends MY_Controller {
 	}
 	
 	function saveTransferCAR(){
-		print_r($_REQUEST); exit;
+		//print_r($_REQUEST); exit;
 		$arrs = array();
 		$arrs['TRANSNO'] = $_REQUEST['TRANSNO'];
 		$arrs['TRANSDT'] = $this->Convertdate(1,$_REQUEST['TRANSDT']);
