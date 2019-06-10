@@ -213,7 +213,7 @@ class CReport extends MY_Controller {
 			left join {$this->MAuth->getdb('hp_vusers')} c on c.IDNo=b.EMPCARRY collate thai_cs_as
 			left join {$this->MAuth->getdb('hp_vusers')} d on d.IDNo=b.INSERTBY collate thai_cs_as
 			left join {$this->MAuth->getdb('hp_vusers')} e on e.IDNo=b.RECEIVEBY collate thai_cs_as
-			where 1=1 ".$cond."
+			where 1=1 ".$cond." and a.TRANSSTAT <> 'Cancel'
 			order by a.TRANSNO,b.TRANSITEM
 		";
 		//echo $sql; exit;
