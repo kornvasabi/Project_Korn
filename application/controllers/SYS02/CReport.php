@@ -100,6 +100,13 @@ class CReport extends MY_Controller {
 							</select>
 						</div>
 					</div>
+					<div class='col-xs-6 col-sm-4'>	
+						<div class='form-group'>
+							เลขตัวถัง
+							<input type='text' id='STRNO' class='form-control input-sm' placeholder='เลขตัวถัง' value=''>
+						</div>
+					</div>
+					
 					<div class='col-xs-12 col-sm-12'>	
 						<div class='form-group'>
 							<br>
@@ -117,14 +124,15 @@ class CReport extends MY_Controller {
 	
 	public function TransfersSearch(){
 		$arrs = array();
-		$arrs["TRANSNO"] = $_REQUEST["TRANSNO"];
-		$arrs["TRANSDTs"] = $this->Convertdate(1,$_REQUEST["TRANSDTs"]);
-		$arrs["TRANSDTe"] = $this->Convertdate(1,$_REQUEST["TRANSDTe"]);
-		$arrs["TRANSFM"] = $_REQUEST["TRANSFM"];
-		$arrs["TRANSTO"] = $_REQUEST["TRANSTO"];
-		$arrs["TRANSSTAT"] = $_REQUEST["TRANSSTAT"];
+		$arrs["TRANSNO"] 	= $_REQUEST["TRANSNO"];
+		$arrs["TRANSDTs"] 	= $this->Convertdate(1,$_REQUEST["TRANSDTs"]);
+		$arrs["TRANSDTe"] 	= $this->Convertdate(1,$_REQUEST["TRANSDTe"]);
+		$arrs["TRANSFM"] 	= $_REQUEST["TRANSFM"];
+		$arrs["TRANSTO"] 	= $_REQUEST["TRANSTO"];
+		$arrs["TRANSSTAT"]	= $_REQUEST["TRANSSTAT"];
 		$arrs["TRANSSTAT2"] = $_REQUEST["TRANSSTAT2"];
-		$arrs["TRANSSYS"] = $_REQUEST["TRANSSYS"];
+		$arrs["TRANSSYS"] 	= $_REQUEST["TRANSSYS"];
+		$arrs["STRNO"] 		= $_REQUEST["STRNO"];
 		
 		$cond = "";
 		$condDesc = "";
@@ -197,6 +205,11 @@ class CReport extends MY_Controller {
 			$condDesc .= " ระบบ ทั้งหมด";
 		}
 		
+		if($arrs["STRNO"] != ""){
+			$data = $arrs["STRNO"];
+			$condDesc .= " เลขตัวถัง {$data}";
+			$cond .= " and b.STRNO like '".$arrs["STRNO"]."' ";
+		}
 		
 		$sql = "
 			select a.TRANSNO,a.TRANSFM,a.TRANSTO,b.TRANSITEM,b.STRNO

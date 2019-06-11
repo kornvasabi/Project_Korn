@@ -36,7 +36,8 @@ function search(){
 	dataToPost.TRANSSTAT = $('#TRANSSTAT').val();
 	dataToPost.TRANSSTAT2 = $('#TRANSSTAT2').val();
 	dataToPost.TRANSSYS	 = $('#TRANSSYS').val();
-	
+	dataToPost.STRNO	 = $('#STRNO').val();
+		
 	$('#loadding').show();
 
 	$.ajax({
