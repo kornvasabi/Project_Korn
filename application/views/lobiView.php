@@ -511,5 +511,25 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			});
 		}
 	});
+	
+	var LobiboxNotify = null;
+	$('.notifyMenu').hover(function(event){
+		LobiboxNotify = Lobibox.notify('warning', {
+			size: 'mini',
+			delay: false,
+			icon: false, 
+			width: 200,
+			position: {
+				top:(event.pageY - 50),
+				left: 220//(event.pageX + 30)
+			},
+			messageHeight: '90vh',
+			msg: $(this).attr('menuname')
+		});
+		$('.lobibox-notify').css({'z-index':'99999','border-radius':'50px'});
+		$('.lobibox-close').fadeout();
+	},function(){
+		LobiboxNotify.remove();
+	});
 </script>
 </html>

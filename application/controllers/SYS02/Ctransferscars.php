@@ -11,6 +11,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 ********************************************************/
 class Ctransferscars extends MY_Controller {
 	private $sess = array();
+	private $menu = "";
 	
 	function __construct(){
 		parent::__construct();
@@ -26,9 +27,10 @@ class Ctransferscars extends MY_Controller {
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
+		$diunem = $this->generateData(array($claim["menuid"]),"encode");
 		
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' diunem='{$diunem[0]}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
 				<div style='height:65px;overflow:auto;'>					
 					<div class='col-xs-2 col-sm-2'>	
 						<div class='form-group'>
@@ -183,14 +185,31 @@ class Ctransferscars extends MY_Controller {
 								<input type='button' id='btnt2home' class='btn btn-inverse btn-sm' value='หน้าแรก' style='width:100%'>
 							</div>
 						</div>
-						<div class='col-sm-1'>	
+						
+						<!--div class='col-sm-1'>	
 							<div class='form-group'>
 								<br>
 								<input type='button' id='btnt2bill' class='btn btn-primary btn-sm' value='บิลโอน' style='width:100%'>
 							</div>
+						</div-->
+						
+						<div class='col-sm-2'>	
+							<br/>
+							<div class='btn-group btn-group-sm dropup'>
+								<button type='button' id='btnt2bill' class='btn btn-primary'>
+									พิมพ์บิลโอน
+								</button>
+								<button type='button' id='btnt2billOption' class='btn btn-primary dropdown-toggle' data-toggle='dropdown' aria-expanded='false'>
+									<span class='caret'></span>
+									<span class='sr-only'>Toggle Dropdown</span>
+								</button>
+								<ul class='dropdown-menu' role='menu'>
+									<span id='btnt2billUnlock' class='btn btn-primary btn-sm'>ปลดล็อคบิลโอน</span>
+								</ul>
+							</div>
 						</div>
 						
-						<div class='col-sm-1 col-sm-offset-8'>	
+						<div class='col-sm-1 col-sm-offset-7'>	
 							<div class='form-group'>
 								<br>
 								<input type='button' id='btnt2del' class='btn btn-danger btn-sm' value='ยกเลิกบิลโอน' style='width:100%'>
@@ -914,6 +933,46 @@ class Ctransferscars extends MY_Controller {
 		$response['msg'] = $msg;
 		$response['transno'] = $TRANSNO;
 		echo json_encode($response); exit;
+	}
+	
+	function billunlock(){
+		$arrs["user"]	 = $_REQUEST["user"];
+		$arrs["pass"] 	 = $_REQUEST["pass"];
+		$arrs["comments"]= $_REQUEST["comments"];
+		$arrs["TRANSNO"] = $_REQUEST["TRANSNO"];
+		$arrs["diunem"]	 = $this->generateData(array($_REQUEST["diunem"]),"decode");
+		
+		$query = $this->MLogin->vertifylogin($arrs["user"],$this->sess["db"]);
+		if($query->row()){
+			foreach($query->result() as $row){
+				if($row->passwords == md5($arrs["pass"])){
+					$sql = "
+						begin tran tunlock
+						begin try
+							insert into {$this->MAuth->getdb('UNLOCKS')}
+							select '".$arrs["diunem"][0]."','ขอปลดล็อคบิลโอน','".$this->sess["db"]."','".$arrs["TRANSNO"]."','".$arrs["comments"]."','".$this->sess["USERID"]."',getdate();
+							
+							commit tran tunlock;
+						end try
+						begin catch
+							rollback tran tunlock;
+						end catch
+					";
+					//echo $sql; exit;
+					if($this->db->query($sql)){
+						$response = array("error"=>false,"msg"=>"ปลดล็อคบิลโอนแล้ว");
+					}else{
+						$response = array("error"=>true,"msg"=>"ผิดพลาด ไม่สามารถปลดล็อครายการโอนนี้ได้");
+					}
+				}else{
+					$response = array("error"=>true,"msg"=>"(1)รหัสผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง โปรดลองใหม่อีกครั้ง");
+				}
+			}
+		}else{
+			$response = array("error"=>true,"msg"=>"(2)รหัสผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง โปรดลองใหม่อีกครั้ง");
+		}
+		
+		echo json_encode($response); 
 	}
 	
 	function pdf(){

@@ -13,6 +13,7 @@ var _update = $('.tab1[name="home"]').attr('cup');
 var _delete = $('.tab1[name="home"]').attr('cdel');
 var _level  = $('.tab1[name="home"]').attr('clev');
 var _locat  = $('.tab1[name="home"]').attr('locat');
+var _diunem = $('.tab1[name="home"]').attr('diunem');
 
 $(function(){
 	$('.tab1').show();
@@ -337,6 +338,8 @@ function loadData(dataToPost){
 				}
 				
 				$('#btnt2bill').attr('disabled',false);
+				$('#btnt2billOption').attr('disabled',true);
+				$('#btnt2billUnlock').attr('disabled',true);				
 				$('.tab2').css({'background-color':'#fff'});
 			}else if(data.html['TRANSSTAT'] == 'Pendding'){ //สถานะรับบางส่วน ปิดการลบบิลโอน  แต่สามารถบันทึกได้หากมีสิทธิ์
 				$('#add_MEMO1').attr('disabled',false);
@@ -369,6 +372,8 @@ function loadData(dataToPost){
 				
 				$('#btnt2del').attr('disabled',true);	
 				$('#btnt2bill').attr('disabled',false);
+				$('#btnt2billOption').attr('disabled',true);
+				$('#btnt2billUnlock').attr('disabled',true);
 				$('.tab2').css({'background-color':'#fff'});
 			}else if(data.html['TRANSSTAT'] == 'Received'){ //สถานะรับครบแล้ว ปิดการบันทึก และเพิ่มข้อมูลทั้งหมด
 				$('#add_MEMO1').attr('disabled',true);
@@ -376,6 +381,8 @@ function loadData(dataToPost){
 				$('#btnt2del').attr('disabled',true);
 				$('#btnt2save').attr('disabled',true);
 				$('#btnt2bill').attr('disabled',true);
+				$('#btnt2billOption').attr('disabled',false);
+				$('#btnt2billUnlock').attr('disabled',false);
 				$('.tab2').css({'background-color':'#fff'});
 			}else if(data.html['TRANSSTAT'] == 'Cancel'){ //สถานะยกเลิกบิลโอน
 				$('#add_MEMO1').attr('disabled',true);
@@ -383,6 +390,8 @@ function loadData(dataToPost){
 				$('#btnt2del').attr('disabled',true);
 				$('#btnt2save').attr('disabled',true);
 				$('#btnt2bill').attr('disabled',true);
+				$('#btnt2billOption').attr('disabled',true);
+				$('#btnt2billUnlock').attr('disabled',true);
 				$('.tab2').css({'background-color':'#ffd6d6'});
 			}
 			
@@ -465,6 +474,9 @@ $('#btnt1transfers').click(function(){
 	}
 	
 	$('#btnt2bill').attr('disabled',true);	
+	$('#btnt2billOption').attr('disabled',true);
+	$('#btnt2billOption').attr('disabled',true);
+	$('#btnt2billUnlock').attr('disabled',true);
 	
 	$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
 	
@@ -777,6 +789,8 @@ $('#btnt2save').click(function(){
 							
 							loadData(dataToPost); //โหลดข้อมูลที่บันทึก
 							$('#btnt2bill').attr('disabled',false); //ให้พิมพ์บิลโอนได้
+							$('#btnt2billOption').attr('disabled',true);
+							$('#btnt2billUnlock').attr('disabled',true);
 						}else{
 							Lobibox.notify('error', {
 								title: 'ผิดพลาด',
@@ -849,6 +863,8 @@ $('#btnt2del').click(function(){
 							
 							loadData(dataToPost);
 							$('#btnt2bill').attr('disabled',true); //ให้พิมพ์บิลโอนได้
+							$('#btnt2billOption').attr('disabled',false);
+							$('#btnt2billUnlock').attr('disabled',false);
 						}else{
 							Lobibox.notify('error', {
 								title: 'ผิดพลาด',
@@ -869,7 +885,67 @@ $('#btnt2del').click(function(){
 	});
 });
 
-
+// ปลดล็อค
+$('#btnt2billUnlock').click(function(){
+	var html = "";
+	//tobul = transferout unlock
+	html += "<div class='col-xs-12 col-sm-12'><div class='form-group'>รหัสพนง./รหัส ปชช.<input type='text' id='tobul_username' class='form-control input-sm' placeholder='USERID'></div></div>";
+	html += "<div class='col-xs-12 col-sm-12'><div class='form-group'>รหัสผ่าน<input type='password' id='tobul_password' class='form-control input-sm' placeholder='Password'></div></div>";
+	html += "<div class='col-xs-12 col-sm-12'><div class='form-group'>หมายเหตุ<textarea id='tobul_comments' class='form-control' placeholder='หมายเหตุ' maxlength=250 style='max-width:100%;max-height:70px;'></textarea></div></div>";
+	html += "<button id='tobul_comfirm' class='btn btn-sm btn-primary col-sm-12'>ปลดล็อค</button>";
+	Lobibox.window({
+		title: 'ฟอร์มข้อปลดล็อคบิลโอน',
+		height: 350,
+		content: html,
+		closeOnEsc: false,
+		shown: function($this){
+			var JASOBJbillUnlock = null;
+			$("#tobul_comfirm").click(function(){
+				dataToPost = new Object();
+				dataToPost.user 	= $("#tobul_username").val();
+				dataToPost.pass 	= $("#tobul_password").val();
+				dataToPost.comments = $("#tobul_comments").val();
+				dataToPost.TRANSNO  = $("#add_TRANSNO").val();
+				
+				dataToPost.diunem 	= _diunem;
+				
+				JASOBJbillUnlock = $.ajax({
+					url: '../SYS02/Ctransferscars/billunlock',
+					data: dataToPost,
+					type:'POST',
+					dataType: 'json',
+					success: function(data){
+						Lobibox.notify((data.error?"waning":"success"), {
+							//title: 'ผิดพลาด',
+							size: 'mini',
+							closeOnClick: false,
+							delay: 5000,
+							pauseDelayOnHover: true,
+							continueDelayOnInactiveTab: false,
+							icon: true,
+							messageHeight: '90vh',
+							msg: data.msg
+						});
+						
+						if(!data.error){  
+							$('#btnt2bill').attr('disabled',false);
+							$('#btnt2billOption').attr('disabled',true);
+							$('#btnt2billUnlock').attr('disabled',true);
+							$this.destroy();
+						}
+						
+						JASOBJbillUnlock = null;
+					},
+					beforeSend: function(){
+						if(JASOBJbillUnlock !== null){
+							JASOBJbillUnlock.abort();
+						}
+					}
+				});
+			});
+		}
+	});
+});
 
 
 
