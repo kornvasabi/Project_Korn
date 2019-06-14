@@ -1174,7 +1174,7 @@ class Cautotransferscars extends MY_Controller {
 		$sql = "		
 			
 			if OBJECT_ID('tempdb..#tempAuto') is not null drop table #tempAuto;
-			create table #tempAuto (LOCAT varchar(20),MODEL varchar(30),BAAB varchar(20),COLOR varchar(30),CN int,FRM varchar(20));
+			create table #tempAuto (LOCAT varchar(20),MODEL varchar(30),BAAB varchar(20),COLOR varchar(30),CN int,FRM varchar(100));
 			".$tempAuto."
 		";
 		//echo $sql; //exit;

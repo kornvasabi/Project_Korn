@@ -519,6 +519,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			delay: false,
 			icon: false, 
 			width: 200,
+			sound: false, 
 			position: {
 				top:(event.pageY - 50),
 				left: 220//(event.pageX + 30)
