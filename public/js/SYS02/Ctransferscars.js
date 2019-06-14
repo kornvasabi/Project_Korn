@@ -894,7 +894,7 @@ $('#btnt2billUnlock').click(function(){
 	html += "<div class='col-xs-12 col-sm-12'><div class='form-group'>หมายเหตุ<textarea id='tobul_comments' class='form-control' placeholder='หมายเหตุ' maxlength=250 style='max-width:100%;max-height:70px;'></textarea></div></div>";
 	html += "<button id='tobul_comfirm' class='btn btn-sm btn-primary col-sm-12'>ปลดล็อค</button>";
 	Lobibox.window({
-		title: 'ฟอร์มข้อปลดล็อคบิลโอน',
+		title: 'ฟอร์มขอปลดล็อคบิลโอน',
 		height: 350,
 		content: html,
 		closeOnEsc: false,
