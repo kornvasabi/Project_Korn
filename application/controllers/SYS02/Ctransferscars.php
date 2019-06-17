@@ -200,7 +200,8 @@ class Ctransferscars extends MY_Controller {
 									พิมพ์บิลโอน
 								</button>
 								<button type='button' id='btnt2billOption' class='btn btn-primary dropdown-toggle' data-toggle='dropdown' aria-expanded='false'>
-									<span class='caret'></span>
+									<i class='fa fa-cog'></i>
+									<!-- span class='caret'></span -->
 									<span class='sr-only'>Toggle Dropdown</span>
 								</button>
 								<ul class='dropdown-menu' role='menu'>

@@ -523,12 +523,12 @@ class Creceivedcars extends MY_Controller {
 				else 
 				begin 
 					insert into {$this->MAuth->getdb('INVMOVM')}
-					select TRANSNO,convert(varchar(8),getdate(),112)
-						,(select USERID from YTKManagement.dbo.hp_mapusers where IDNo=INSERTBY and dblocat='".$this->sess["db"]."')
-						,(select USERID from YTKManagement.dbo.hp_mapusers where IDNo=APPROVED and dblocat='".$this->sess["db"]."')
-						,TRANSFM,TRANSTO,MEMO1,getdate() 
-					from {$this->MAuth->getdb('INVTransfers')}
-					where TRANSNO='".$arrs['TRANSNO']."'
+					select a.TRANSNO,convert(varchar(8),getdate(),112)
+						,(select USERID from YTKManagement.dbo.hp_mapusers where IDNo=a.INSERTBY and dblocat='".$this->sess["db"]."')
+						,(select USERID from YTKManagement.dbo.hp_mapusers where IDNo=a.APPROVED and dblocat='".$this->sess["db"]."')
+						,a.TRANSFM,a.TRANSTO,a.MEMO1,getdate() 
+					from {$this->MAuth->getdb('INVTransfers')} a
+					where a.TRANSNO='".$arrs['TRANSNO']."'
 					
 					".$sql."
 				end 
