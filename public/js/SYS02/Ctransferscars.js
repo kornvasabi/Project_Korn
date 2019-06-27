@@ -656,7 +656,7 @@ function checkdt($this){
 			if(data.html == 'T'){
 				$this.val('');
 				
-				Lobibox.notify('error', {
+				Lobibox.notify('warning', {
 					title: 'ผิดพลาด',
 					size: 'mini',
 					closeOnClick: false,
@@ -666,7 +666,7 @@ function checkdt($this){
 					icon: true,
 					rounded: true,
 					messageHeight: '90vh',
-					msg: 'วันที่โอนย้าย ต้องไม่มากกว่าวันปัจจุบัน'
+					msg: 'วันที่โอนย้าย จะต้องไม่เกิน 4 วันนับจากวันปัจจุบันครับ'
 				});
 			}
 		}
