@@ -1217,8 +1217,8 @@ class Cautotransferscars extends MY_Controller {
 						declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD=@CRLOCAT);
 						/* @TRANSNO = รหัสที่จะใช้ */		
 						set @TRANSNO = (select isnull(MAX(TRANSNO),@rec+'0000') from ( 
-							select TRANSNO collate Thai_CS_AS as TRANSNO from {$this->MAuth->getdb('INVTransfers')} where TRANSNO like ''+@rec+'%' 
-							union select moveno collate Thai_CS_AS as moveno from {$this->MAuth->getdb('INVMOVM')} where MOVENO like ''+@rec+'%'
+							select TRANSNO collate Thai_CS_AS as TRANSNO from {$this->MAuth->getdb('INVTransfers')} where TRANSNO like ''+@rec+'%' collate thai_cs_as
+							union select moveno collate Thai_CS_AS as moveno from {$this->MAuth->getdb('INVMOVM')} where MOVENO like ''+@rec+'%' collate thai_cs_as
 						) as a);
 						set @TRANSNO = left(@TRANSNO ,8)+right(right(@TRANSNO ,4)+10001,4);
 											
