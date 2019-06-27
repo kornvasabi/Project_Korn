@@ -843,7 +843,7 @@ class Ctransferscars extends MY_Controller {
 	function checkdt(){
 		$dt = $this->Convertdate(1,$_REQUEST['dt']);
 		
-		$sql = "select case when '".$dt."' > convert(varchar(8),getdate(),112) then 'T' else 'F' end as data";
+		$sql = "select case when '".$dt."' > convert(varchar(8),dateadd(day,3,getdate()),112) then 'T' else 'F' end as data";
 		$query = $this->db->query($sql);
 		
 		$html = "";
