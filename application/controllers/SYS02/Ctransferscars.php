@@ -835,8 +835,8 @@ class Ctransferscars extends MY_Controller {
 	
 	function transcode(){
 		$data = array();
-		$data[] = $_REQUEST["TRANSNO"];
-		
+		$data[] = urlencode($_REQUEST["TRANSNO"]);
+		//echo urlencode($_REQUEST["TRANSNO"]); exit;
 		echo json_encode($this->generateData($data,"encode"));
 	}
 	
@@ -981,7 +981,8 @@ class Ctransferscars extends MY_Controller {
 		$data[] = $_GET["transno"];
 		
 		$arrs = $this->generateData($data,"decode");
-		
+		$arrs[0] = urldecode($arrs[0]);
+				
 		$sql = "select top 1 COMP_NM from {$this->MAuth->getdb('CONDPAY')}";
 		$query = $this->db->query($sql);
 		$row = $query->row();
