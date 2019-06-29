@@ -331,7 +331,7 @@ class Creceivedcars extends MY_Controller {
 			) c on a.EMPCARRY=c.USERID
 			
 			left join {$this->MAuth->getdb('INVMOVM')} d on a.TRANSNO=d.MOVENO collate Thai_CI_AS
-			where a.TRANSNO='".$arrs['TRANSNO']."'
+			where a.TRANSNO='".$arrs['TRANSNO']."'  collate thai_cs_as
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -383,7 +383,7 @@ class Creceivedcars extends MY_Controller {
 					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
 				from {$this->MAuth->getdb('hp_vusers')}
 			) d on a.RECEIVEBY=d.USERID
-			where a.TRANSNO='".$arrs['TRANSNO']."' and a.RECEIVEDT is not null
+			where a.TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as and a.RECEIVEDT is not null
 			order by a.TRANSITEM
 		";
 		//echo $sql; exit;
