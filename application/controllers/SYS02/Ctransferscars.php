@@ -368,7 +368,7 @@ class Ctransferscars extends MY_Controller {
 					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
 				from {$this->MAuth->getdb('hp_vusers')}
 			) c on a.EMPCARRY=c.USERID
-			where a.TRANSNO='".$arrs['TRANSNO']."'
+			where a.TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -397,7 +397,7 @@ class Ctransferscars extends MY_Controller {
 				,b.EMPCARRY,d.employeeCode+' :: '+d.USERNAME as EMPCARRYNM
 				,convert(varchar(8),b.TRANSDT,112) as TRANSDT 
 			from {$this->MAuth->getdb('INVTransfers')} a
-			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
+			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO  collate thai_cs_as
 			left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate Thai_CS_AS
 			left join (
 				select IDNo collate Thai_CS_AS USERID
@@ -405,7 +405,7 @@ class Ctransferscars extends MY_Controller {
 					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
 				from {$this->MAuth->getdb('hp_vusers')}
 			) d on b.EMPCARRY=d.USERID
-			where a.TRANSNO='".$arrs['TRANSNO']."'
+			where a.TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as
 			order by b.TRANSITEM
 		";
 		//echo $sql; exit;
