@@ -138,7 +138,7 @@ class CReport extends MY_Controller {
 		$condDesc = "";
 		if($arrs["TRANSNO"] != ""){
 			$condDesc .= " เลขที่บิลโอน ".$arrs["TRANSNO"];
-			$cond .= " and a.TRANSNO like '".$arrs["TRANSNO"]."%' ";
+			$cond .= " and a.TRANSNO like '".$arrs["TRANSNO"]."%'  collate thai_cs_as ";
 		}else{
 			$condDesc .= " เลขที่บิลโอน ทั้งหมด";
 		}
@@ -222,7 +222,7 @@ class CReport extends MY_Controller {
 				,convert(varchar(5),b.INSERTDT,108) as INSERTDTTime 
 				,a.SYSTEM
 			from {$this->MAuth->getdb('INVTransfers')} a
-			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
+			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO collate thai_cs_as
 			left join {$this->MAuth->getdb('hp_vusers')} c on c.IDNo=b.EMPCARRY collate thai_cs_as
 			left join {$this->MAuth->getdb('hp_vusers')} d on d.IDNo=b.INSERTBY collate thai_cs_as
 			left join {$this->MAuth->getdb('hp_vusers')} e on e.IDNo=b.RECEIVEBY collate thai_cs_as
