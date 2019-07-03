@@ -378,7 +378,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	})()
 		
 	$('body').keyup(function(e){
-		if ( e.keyCode === 114 ) { // ESC
+		if ( e.keyCode === 27 ) { // ESC
 			$('#loadding').hide();
 		}else if(e.keyCode === 112){ //F1
 			dataToPost = new Object();

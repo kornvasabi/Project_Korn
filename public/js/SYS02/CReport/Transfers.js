@@ -26,6 +26,7 @@ $('#btnt1transfer').click(function(){
 	search();
 });
 
+var JASOBJsearch = null;
 function search(){
 	dataToPost = new Object();
 	dataToPost.TRANSNO   = $('#TRANSNO').val();
@@ -37,10 +38,11 @@ function search(){
 	dataToPost.TRANSSTAT2 = $('#TRANSSTAT2').val();
 	dataToPost.TRANSSYS	 = $('#TRANSSYS').val();
 	dataToPost.STRNO	 = $('#STRNO').val();
-		
+	dataToPost.CT	 	 = $('#CT').val();
+	dataToPost.TR	 	 = $('#TR').val();	
 	$('#loadding').show();
 
-	$.ajax({
+	JASOBJsearch = $.ajax({
 		url: '../SYS02/CReport/TransfersSearch',
 		data: dataToPost,
 		Type: 'POST',
@@ -61,6 +63,13 @@ function search(){
 				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 				this.querySelector("thead").style.transform = translate;						
 			});
+			
+			JASOBJsearch = null;
+		},
+		beforeSend: function(){
+			if(JASOBJsearch !== null){
+				JASOBJsearch.abort();
+			}
 		}
 	});
 }

@@ -107,6 +107,20 @@ class CReport extends MY_Controller {
 						</div>
 					</div>
 					
+					
+					<div class='col-xs-6 col-sm-4'>	
+						<div class='form-group'>
+							จำนวนวันที่สร้าง - วันที่โอน
+							<input type='number' id='CT' class='form-control input-sm' placeholder='จำนวนวันที่สร้าง - วันที่โอน' value=''>
+						</div>
+					</div>
+					<div class='col-xs-6 col-sm-4'>	
+						<div class='form-group'>
+							จำนวนวันที่โอน - รับโอน
+							<input type='number' id='TR' class='form-control input-sm' placeholder='จำนวนวันที่โอน - รับโอน' value=''>
+						</div>
+					</div>
+					
 					<div class='col-xs-12 col-sm-12'>	
 						<div class='form-group'>
 							<br>
@@ -133,6 +147,8 @@ class CReport extends MY_Controller {
 		$arrs["TRANSSTAT2"] = $_REQUEST["TRANSSTAT2"];
 		$arrs["TRANSSYS"] 	= $_REQUEST["TRANSSYS"];
 		$arrs["STRNO"] 		= $_REQUEST["STRNO"];
+		$arrs["CT"] 		= $_REQUEST["CT"];
+		$arrs["TR"] 		= $_REQUEST["TR"];
 		
 		$cond = "";
 		$condDesc = "";
@@ -211,11 +227,24 @@ class CReport extends MY_Controller {
 			$cond .= " and b.STRNO like '".$arrs["STRNO"]."' ";
 		}
 		
+		if($arrs["CT"] != "" and $arrs["TR"] != ""){
+			$condDesc .= " จน.วันที่สร้าง - วันที่โอน {$arrs["CT"]} วันขึ้นไป และวันที่โอน - วันที่รับ {$arrs["TR"]} วันขึ้นไป";
+			$cond .= " and datediff(day,a.TRANSDT,isnull(b.TRANSDT,getdate())) >= {$arrs["CT"]} and datediff(day,b.TRANSDT,isnull(b.RECEIVEDT,getdate())) >= {$arrs["TR"]} ";
+		}else if($arrs["CT"] != "" and $arrs["TR"] == ""){
+			$condDesc .= " จน.วันที่สร้าง - วันที่โอน {$arrs["CT"]} วันขึ้นไป ";
+			$cond .= " and datediff(day,a.TRANSDT,isnull(b.TRANSDT,getdate())) >= {$arrs["CT"]} ";
+		}else if($arrs["CT"] == "" and $arrs["TR"] != ""){
+			$condDesc .= " จน.วันที่โอน - วันที่รับ {$arrs["TR"]} วันขึ้นไป";
+			$cond .= " and datediff(day,isnull(b.TRANSDT,a.TRANSDT),isnull(b.RECEIVEDT,getdate())) >= {$arrs["TR"]} ";
+		}
+		
 		$sql = "
 			select a.TRANSNO,a.TRANSFM,a.TRANSTO,b.TRANSITEM,b.STRNO
 				,c.titleName+c.firstName+' '+c.lastName as EMPCARRY
 				,convert(varchar(8),a.TRANSDT,112) as TRANSDTCreate
 				,convert(varchar(8),b.TRANSDT,112) as TRANSDT
+				,datediff(day,a.TRANSDT,isnull(b.TRANSDT,getdate())) as ct
+				,datediff(day,b.TRANSDT,isnull(b.RECEIVEDT,getdate())) as tr
 				,e.titleName+e.firstName+' '+e.lastName as RECEIVEBY,convert(varchar(8),b.RECEIVEDT,112) as RECEIVEDT
 				,d.titleName+d.firstName+' '+d.lastName as INSERTBY
 				,convert(varchar(8),b.INSERTDT,112) as INSERTDT 
@@ -239,7 +268,7 @@ class CReport extends MY_Controller {
 				$css = "color:black;";
 				if($row->RECEIVEDT != ""){
 					$css = "color:blue;";
-				}else if($row->TRANSDT != "" and $row->RECEIVEDT == ""){
+				}else if($row->EMPCARRY != "" and $row->TRANSDT != "" and $row->RECEIVEDT == ""){
 					$css = "color:red;";
 				}
 				$html .= "
@@ -253,8 +282,10 @@ class CReport extends MY_Controller {
 						<td>".$row->STRNO."</td>
 						<td>".$row->EMPCARRY."</td>
 						<td>".$this->Convertdate(2,$row->TRANSDT)."</td>
+						<td>".$row->ct."</td>
 						<td>".$row->RECEIVEBY."</td>
 						<td>".$this->Convertdate(2,$row->RECEIVEDT)."</td>
+						<td>".$row->tr."</td>
 						<td>".$row->SYSTEM."</td>
 						<td>".$row->INSERTBY."</td>
 						<td>".$this->Convertdate(2,$row->INSERTDT)." ".$row->INSERTDTTime."</td>
@@ -274,17 +305,17 @@ class CReport extends MY_Controller {
 				<table id='table-TransfersSearch' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
 					<thead>
 						<tr>
-							<th colspan='14' class='text-center' style='font-size:12pt;border:0px;'> 
+							<th colspan='16' class='text-center' style='font-size:12pt;border:0px;'> 
 								รายงานการโอนย้ายรถ
 							</th>
 						</tr>
 						<tr>
-							<th colspan='14' class='text-center' style='border:0px;'>
+							<th colspan='16' class='text-center' style='border:0px;'>
 								ออกรายงานโดย ".$this->sess["name"]." &emsp; ณ วันที่ ".$this->MDATA->sysdt()."
 							</th>
 						</tr>
 						<tr>
-							<th colspan='14' class='text-center' style='border:0px;color:#666;'>
+							<th colspan='16' class='text-center' style='border:0px;color:#666;'>
 								เงื่อนไข :: ".$condDesc."
 							</th>
 						</tr>
@@ -298,8 +329,10 @@ class CReport extends MY_Controller {
 							<th style='vertical-align:middle;border:0px;'>เลขตัวถัง</th>
 							<th style='vertical-align:middle;border:0px;'>พขร.</th>
 							<th style='vertical-align:middle;border:0px;'>วันที่โอน</th>
+							<th style='vertical-align:middle;border:0px;'>จน.วัน<br/>สร้าง-โอน</th>
 							<th style='vertical-align:middle;border:0px;'>ผู้รับโอน</th>
 							<th style='vertical-align:middle;border:0px;'>วันที่รับโอน</th>
+							<th style='vertical-align:middle;border:0px;'>จน.วัน<br/>โอน-รับ</th>
 							<th style='vertical-align:middle;border:0px;'>ระบบ</th>
 							<th style='vertical-align:middle;border:0px;'>ผู้โอนย้าย</th>
 							<th style='vertical-align:middle;border:0px;'>วันที่บันทึกโอน</th>
