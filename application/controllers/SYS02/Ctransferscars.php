@@ -995,7 +995,7 @@ class Ctransferscars extends MY_Controller {
 				,e.USERNAME as EMPCARRY,convert(varchar(8),b.TRANSDT,112) TRANSDTDetail
 				,f.USERNAME as EMPRC,convert(varchar(8),b.RECEIVEDT,112) RECEIVEDT
 			from {$this->MAuth->getdb('INVTransfers')} a
-			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
+			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO collate Thai_CS_AS
 			left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate Thai_CS_AS
 			left join (
 				select IDNo collate Thai_CS_AS USERID
@@ -1017,7 +1017,7 @@ class Ctransferscars extends MY_Controller {
 			) f on b.RECEIVEBY=f.USERID
 			left join {$this->MAuth->getdb('INVLOCAT')} g on a.TRANSFM=g.LOCATCD collate Thai_CS_AS
 			left join {$this->MAuth->getdb('INVLOCAT')} h on a.TRANSTO=h.LOCATCD collate Thai_CS_AS
-			where a.TRANSNO='".$arrs[0]."'
+			where a.TRANSNO='".$arrs[0]."' collate Thai_CS_AS
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
