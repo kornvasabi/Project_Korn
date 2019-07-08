@@ -462,7 +462,7 @@ class Creceivedcars extends MY_Controller {
 						set @getdt = getdate();
 						update a
 						set a.CRLOCAT=b.TRANSTO
-							,a.MOVENO=b.TRANSNO
+							,a.MOVENO=b.TRANSNO 
 							,a.MOVEDT=@getdt
 						from {$this->MAuth->getdb('INVTRAN')} a
 						left join (
@@ -516,7 +516,7 @@ class Creceivedcars extends MY_Controller {
 			
 			begin tran ins
 			begin try
-				if((select count(*) from {$this->MAuth->getdb('INVMOVM')} where MOVENO='".$arrs['TRANSNO']."') > 0)
+				if((select count(*) from {$this->MAuth->getdb('INVMOVM')} where MOVENO='".$arrs['TRANSNO']."' collate thai_cs_as ) > 0)
 				begin 
 					".$sql."
 				end

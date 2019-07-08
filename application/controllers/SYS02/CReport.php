@@ -561,7 +561,7 @@ class CReport extends MY_Controller {
 			left join (
 				select * from (
 					select a.TRANSTO,c.STAT,c.STRNO from YTKManagement.dbo.INVTransfers a
-					left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO
+					left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO collate thai_cs_as 
 					left join HIINCOME.dbo.INVTRAN c on b.STRNO=c.STRNO collate thai_cs_as
 					where isnull(b.MOVENO,'')='' and isnull(RECEIVEBY,'')='' and RECEIVEDT is null and c.CRLOCAT='TRANS'
 				) as data
@@ -707,7 +707,7 @@ class CReport extends MY_Controller {
 				,c.titleName+c.firstName+' '+c.lastName as EMPCARRY 
 				,a.SYSTEM
 			from INVTransfers a
-			left join INVTransfersDetails b on a.TRANSNO=b.TRANSNO
+			left join INVTransfersDetails b on a.TRANSNO=b.TRANSNO collate thai_cs_as 
 			left join {$this->MAuth->getdb('hp_vusers')} c on c.IDNo=b.EMPCARRY collate thai_cs_as
 			where b.MOVENO is null and b.RECEIVEBY is null and b.RECEIVEDT is null ".$cond."
 			order by b.TRANSDT 

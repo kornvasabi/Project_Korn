@@ -559,7 +559,7 @@ class Cautotransferscars extends MY_Controller {
 				,COUNT(c.MODEL) transa
 				into #tempTRAN
 			from YTKManagement.dbo.INVTransfers a
-			left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO
+			left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO collate thai_cs_as 
 			left join HIINCOME.dbo.INVTRAN c on b.STRNO=c.STRNO collate Thai_CS_AS
 			left join #tempNEW d on c.MODEL=d.MODEL and c.COLOR=d.COLOR
 			where ISNULL(b.MOVENO,'')=''
@@ -576,7 +576,7 @@ class Cautotransferscars extends MY_Controller {
 				,COUNT(c.MODEL) transAlla
 				into #tempTRANAll
 			from YTKManagement.dbo.INVTransfers a
-			left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO
+			left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO collate thai_cs_as 
 			left join HIINCOME.dbo.INVTRAN c on b.STRNO=c.STRNO collate Thai_CS_AS
 			where ISNULL(b.MOVENO,'')=''
 			group by a.TRANSTO
@@ -1246,20 +1246,20 @@ class Cautotransferscars extends MY_Controller {
 						begin
 							insert into {$this->MAuth->getdb('INVTransfersDetails')}
 							select @TRANSNO
-								,isnull((select max(TRANSITEM)+1 from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO=@TRANSNO),1)
+								,isnull((select max(TRANSITEM)+1 from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO=@TRANSNO collate thai_cs_as ),1)
 								,@getSTRNO,NULL,NULL,NULL,NULL,NULL,'".$this->sess["IDNo"]."',GETDATE()
 											
 							update {$this->MAuth->getdb('INVTransfers')}
 							set TRANSQTY=TRANSQTY+1
-							where TRANSNO=@TRANSNO
+							where TRANSNO=@TRANSNO collate thai_cs_as 
 							
 							update {$this->MAuth->getdb('INVTRAN')}
 							set CRLOCAT='TRANS'
-							where STRNO = @getSTRNO
+							where STRNO = @getSTRNO collate thai_cs_as 
 							
 							--ลบรายการรถที่จัดให้แล้วออก
 							delete from #tempChoose
-							where STRNO = @getSTRNO;
+							where STRNO = @getSTRNO collate thai_cs_as ;
 							
 							set @CN = @CN - 1;	
 						end	
@@ -1312,8 +1312,8 @@ class Cautotransferscars extends MY_Controller {
 						select b.STRNO,b.MODEL,b.COLOR,b.STAT,a.TRANSNO,a.TRANSFM,a.TRANSTO from (
 							select b.*,a.TRANSFM,a.TRANSTO
 							from {$this->MAuth->getdb('INVTransfers')} a
-							left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
-							where a.TRANSNO in (".$TRANSNO.")
+							left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO collate thai_cs_as
+							where a.TRANSNO collate thai_cs_as in (".$TRANSNO.") 
 						) as a
 						right join #tempChoose b on a.STRNO=b.STRNO collate thai_cs_as 
 						order by a.TRANSNO
