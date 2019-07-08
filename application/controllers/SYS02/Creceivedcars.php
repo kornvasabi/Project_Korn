@@ -218,7 +218,7 @@ class Creceivedcars extends MY_Controller {
 		
 		$cond = "";
 		if($arrs['TRANSNO'] != ""){
-			$cond .= " and a.TRANSNO like '%".$arrs['TRANSNO']."%'";
+			$cond .= " and a.TRANSNO like '%".$arrs['TRANSNO']."%' collate thai_cs_as";
 		}
 		
 		if($arrs['TRANSDT'] != ""){
@@ -246,11 +246,11 @@ class Creceivedcars extends MY_Controller {
 					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
 					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว' end TRANSSTATDesc
 			from {$this->MAuth->getdb('INVTransfers')} a
-			left join {$this->MAuth->getdb('INVMOVM')} b on a.TRANSNO=b.MOVENO collate Thai_CI_AS
+			left join {$this->MAuth->getdb('INVMOVM')} b on a.TRANSNO=b.MOVENO collate thai_cs_as
 			where 1=1 ".$cond."
 			order by a.TRANSTO,a.TRANSNO desc
 		";
-		
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$html = "";

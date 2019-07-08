@@ -242,7 +242,7 @@ class Ctransferscars extends MY_Controller {
 		
 		$cond = "";
 		if($arrs['TRANSNO'] != ""){
-			$cond .= " and a.TRANSNO like '%".$arrs['TRANSNO']."%'";
+			$cond .= " and a.TRANSNO like '%".$arrs['TRANSNO']."%'  collate thai_cs_as";
 		}
 		
 		if($arrs['TRANSDT'] != ""){
@@ -764,12 +764,12 @@ class Ctransferscars extends MY_Controller {
 			for($i=0;$i<sizeof($arrs['STRNO']);$i++){
 				$sql .= "
 					if ((select count(*) from {$this->MAuth->getdb('INVTransfersDetails')}
-					where TRANSNO=@TRANSNO and STRNO='".$arrs['STRNO'][$i][1]."' and RECEIVEDT is null) > 0)
+					where TRANSNO=@TRANSNO collate thai_cs_as and STRNO='".$arrs['STRNO'][$i][1]."' and RECEIVEDT is null) > 0)
 					begin
 						update {$this->MAuth->getdb('INVTransfersDetails')}
 						set EMPCARRY='".$arrs['STRNO'][$i][8]."',
 							TRANSDT=".($this->Convertdate(1,$arrs['STRNO'][$i][7]) == "" ? "NULL" : "'".$this->Convertdate(1,$arrs['STRNO'][$i][7])."'")."
-						where TRANSNO=@TRANSNO and STRNO='".$arrs['STRNO'][$i][1]."'
+						where TRANSNO=@TRANSNO collate thai_cs_as and STRNO='".$arrs['STRNO'][$i][1]."'
 					end
 				";				
 			}
@@ -784,17 +784,17 @@ class Ctransferscars extends MY_Controller {
 				begin try					
 					".$sql."
 					
-					declare @item int = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO);
-					declare @itemRV int = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO and RECEIVEDT is null);
+					declare @item int = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO  collate thai_cs_as);
+					declare @itemRV int = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO  collate thai_cs_as and RECEIVEDT is null);
 						
 					update {$this->MAuth->getdb('INVTransfers')}
 					set EMPCARRY = '".$arrs['EMPCARRY']."'
 						,MEMO1 = '".$arrs['MEMO1']."'
-						,TRANSQTY = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO)
+						,TRANSQTY = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO  collate thai_cs_as)
 						,TRANSSTAT = (case when @item=@itemRV then 'Sendding' when @itemRV>0 then 'Pendding' else 'Received' end)
 						,INSERTBY = '".$this->sess["IDNo"]."'
 						,INSERTDT = getdate()
-					where TRANSNO = @TRANSNO;
+					where TRANSNO = @TRANSNO  collate thai_cs_as;
 					
 					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 					values ('".$this->sess["IDNo"]."','SYS02::บันทึก โอนย้ายรถ(แก้ไข)','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
@@ -878,21 +878,21 @@ class Ctransferscars extends MY_Controller {
 			begin try
 				declare @rec int = (
 					select count(*) from {$this->MAuth->getdb('INVTransfersDetails')}
-					where TRANSNO='".$TRANSNO."' and RECEIVEDT is not null 
+					where TRANSNO='".$TRANSNO."' collate thai_cs_as and RECEIVEDT is not null 
 				)
 				
 				if(@rec = 0)
 				begin
 					update {$this->MAuth->getdb('INVTransfers')}
 					set TRANSSTAT='Cancel'
-					where TRANSNO='".$TRANSNO."'
+					where TRANSNO='".$TRANSNO."' collate thai_cs_as
 					
 					update c 
 					set c.CRLOCAT=a.TRANSFM
 					from {$this->MAuth->getdb('INVTransfers')} a
-					left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
+					left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO collate thai_cs_as
 					left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate thai_cs_as
-					where a.TRANSNO='".$TRANSNO."' and c.STRNO is not null
+					where a.TRANSNO='".$TRANSNO."' collate thai_cs_as and c.STRNO is not null
 				end
 				else 
 				begin
