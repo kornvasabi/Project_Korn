@@ -392,7 +392,7 @@ class Ctransferscars extends MY_Controller {
 		}
 		
 		$sql = "
-			select b.TRANSITEM,b.STRNO,c.TYPE,c.MODEL,c.BAAB,COLOR,CC,c.GCODE
+			select b.TRANSITEM,rtrim(b.STRNO) as STRNO,c.TYPE,c.MODEL,c.BAAB,COLOR,CC,c.GCODE
 				,case when  a.TRANSSTAT='Cancel' then 'ยกเลิกบิลโอน' when isnull(b.RECEIVEDT,'')='' then 'อยู่ระหว่างการโอนย้ายรถ' else 'รับโอนแล้ว' end as RECEIVED
 				,b.EMPCARRY,d.employeeCode+' :: '+d.USERNAME as EMPCARRYNM
 				,convert(varchar(8),b.TRANSDT,112) as TRANSDT 

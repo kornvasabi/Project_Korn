@@ -549,7 +549,7 @@ $('#btnt2addSTRNo').click(function(){
 								});
 								
 								$('.getit').click(function(){
-									var STRNO = $(this).attr('STRNO');
+									var STRNO = $(this).attr('STRNO').trim();
 									//var TYPE = $(this).attr('TYPE');
 									var MODEL = $(this).attr('MODEL');
 									var BAAB = $(this).attr('BAAB');
@@ -748,7 +748,7 @@ $('#btnt2save').click(function(){
 							r.push($('.SETTRANSDT[STRNO='+this.cells[1].innerHTML+']').val());
 						}else if(i == 8){ // พขร.
 							var emp = '';
-							if($('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').find(':selected').val() !== 'undefined'){
+							if(typeof $('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').find(':selected').val() !== 'undefined'){
 								emp = $('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').find(':selected').val();
 							}
 							
