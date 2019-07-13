@@ -31,26 +31,26 @@ class Ctransferscars extends MY_Controller {
 		
 		$html = "
 			<div class='tab1' name='home' locat='{$this->sess['branch']}' diunem='{$diunem[0]}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div style='height:65px;overflow:auto;'>					
-					<div class='col-xs-2 col-sm-2'>	
+				<div style='height:65px;overflow:auto;'>
+					<div class='col-sm-2'>	
 						<div class='form-group'>
 							เลขที่บิลโอน
 							<input type='text' id='TRANSNO' class='form-control input-sm' placeholder='เลขที่โอน'>
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-2'>	
+					<div class='col-sm-2'>	
 						<div class='form-group'>
 							วันที่บิลโอน
 							<input type='text' id='TRANSDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน'>
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-1'>	
+					<div class='col-sm-2'>	
 						<div class='form-group'>
 							สาขาต้นทาง
 							<input type='text' id='TRANSFM' class='form-control input-sm' placeholder='สาขาต้นทาง' value='".$this->sess['branch']."'>
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-2'>	
+					<div class='col-sm-2'>	
 						<div class='form-group'>
 							สถานะ
 							<select id='TRANSSTAT' class='form-control selcls input-sm chosen-select' data-placeholder='สถานะ' >
@@ -62,20 +62,21 @@ class Ctransferscars extends MY_Controller {
 							</select>
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-1'>	
+					<div class='col-sm-1'>	
 						<div class='form-group'>
 							<br>
 							<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-1 col-sm-offset-3'>	
+					<div class='col-sm-1 col-sm-offset-2'>	
 						<div class='form-group'>
 							<br>
 							<input type='button' id='btnt1transfers' class='btn btn-cyan btn-sm' value='โอนย้ายรถ' style='width:100%'>
 						</div>
 					</div>
 				</div>
-				<div id='resultt1transfers' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div>
+				<!-- div id='resultt1transfers' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div -->
+				<div id='resultt1transfers' style='background-color:white;'></div>
 			</div>
 			<div class='tab2' style='height:calc(100vh - 132px);width:100%;overflow:auto;background-color:white;'>
 				<div class='col-sm-12'>

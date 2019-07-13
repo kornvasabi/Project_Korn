@@ -65,7 +65,7 @@ class Creceivedcars extends MY_Controller {
 							</select>
 						</div>
 					</div>
-					<div class='col-sm-1'>	
+					<div class='col-sm-2'>	
 						<div class='form-group'>
 							<br>
 							<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
@@ -78,7 +78,8 @@ class Creceivedcars extends MY_Controller {
 						</div>
 					</div -->
 				</div>
-				<div id='resultt1received' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div>
+				<!-- div id='resultt1received' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div -->
+				<div id='resultt1received' style='background-color:white;'></div>
 			</div>
 			
 			<div class='tab2' style='height:calc(100vh - 132px);width:100%;overflow:auto;background-color:white;'>

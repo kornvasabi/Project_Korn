@@ -218,34 +218,50 @@ function search(){
 			$('#resultt1transfers').find('.spinner, .spinner-backdrop').remove();
 			$('#resultt1transfers').html(data.html);
 			
+			/*
 			document.getElementById("table-fixed-Ctransferscars").addEventListener("scroll", function(){
 				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 				this.querySelector("thead").style.transform = translate;						
-			});
+			});			
+			*/
 			
-			$('.getit').hover(function(){
-				$(this).css({'background-color':'yellow'});
-				$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#f9f9a9'});
-			},function(){
-				$(this).css({'background-color':'white'});
-				$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
-			});
+			$('#table-Ctransferscars').on('draw.dt',function(){ redraw(); });
+			fn_datatables('table-Ctransferscars',1,360);
 			
-			$('.getit').click(function(){
-				dataToPost = new Object();
-				dataToPost.TRANSNO = $(this).attr('TRANSNO');
-				dataToPost.cup  = _update;
-				dataToPost.clev = _level;
+			/*
+			// Export data to Excel
+			$('.data-export').prepend('<img id="table-Ctransferscars-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
+			$("#table-Ctransferscars-excel").click(function(){ 	
+				tableToExcel_Export(data.html,"ข้อมูลการโอนย้าย","transfers.xlsx"); 
+			});
+			*/
+			
+			function redraw(){
+				$('.getit').hover(function(){
+					$(this).css({'background-color':'yellow'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#f9f9a9'});
+				},function(){
+					$(this).css({'background-color':'white'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
+				});
 				
-				loadData(dataToPost);
-			});
+				$('.getit').click(function(){					
+					dataToPost = new Object();
+					dataToPost.TRANSNO = $(this).attr('TRANSNO');
+					dataToPost.cup  = _update;
+					dataToPost.clev = _level;
+					
+					loadData(dataToPost);
+				});
+			}		
 		}
 	});
 }
 
+var JASOBJloadData = null;
 function loadData(dataToPost){
 	$('#loadding').show();
-	$.ajax({
+	JASOBJloadData = $.ajax({
 		url:'../SYS02/Ctransferscars/getDetails',
 		data:dataToPost,
 		type:'POST',
@@ -422,7 +438,14 @@ function loadData(dataToPost){
 			$('.tab2').show();
 			
 			delSTRNO();
-		}
+			
+			JASOBJloadData = null;
+		},
+		beforeSend: function(){
+			if(JASOBJloadData !== null){
+				JASOBJloadData.abort();
+			}
+		}		
 	});
 }
 
@@ -481,11 +504,13 @@ $('#btnt1transfers').click(function(){
 	$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
 	
 	$('#btnt2del').hide();
-	
 	document.getElementById("table-fixed-STRNOTRANS").addEventListener("scroll", function(){
 		var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 		this.querySelector("thead").style.transform = translate;						
 	});
+	
+	//$('#table-Ctransferscars').on('draw.dt',function(){ redraw(); });
+	//fn_datatables('table-STRNOTRANS',3,450);			
 });
 
 $('#btnt2home').click(function(){ 

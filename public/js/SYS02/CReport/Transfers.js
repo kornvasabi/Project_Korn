@@ -58,11 +58,21 @@ function search(){
 				closeOnEsc: false,
 				draggable: false
 			});
-			
+			/*
 			document.getElementById("table-fixed-TransfersSearch").addEventListener("scroll", function(){
 				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 				this.querySelector("thead").style.transform = translate;						
 			});
+			*/
+			//$('#table-Ctransferscars').on('draw.dt',function(){ redraw(); });
+			fn_datatables('table-TransfersSearch',1,320);
+			
+			// Export data to Excel
+			$('.data-export').prepend('<img id="table-TransfersSearch-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
+			$("#table-TransfersSearch-excel").click(function(){ 	
+				tableToExcel_Export(data.html,"รายงานการโอนย้ายรถ","Report_transfers.xlsx"); 
+			});
+			
 			
 			JASOBJsearch = null;
 		},

@@ -301,7 +301,7 @@ class CReport extends MY_Controller {
 		}
 		
 		$html = "
-			<div id='table-fixed-TransfersSearch' class='col-sm-12' style='height:calc(100% - 25px);width:100%;overflow:auto;font-size:8pt;'>
+			<div id='table-fixed-TransfersSearch' class='col-sm-12' style='height:calc(100%);width:100%;overflow:auto;font-size:8pt;'>
 				<table id='table-TransfersSearch' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
 					<thead>
 						<tr>
@@ -342,9 +342,6 @@ class CReport extends MY_Controller {
 						".$html."
 					</tbody>					
 				</table>
-			</div>
-			<div>
-				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-TransfersSearch', 'รายงานการโอนย้ายรถ');\" style='width:30px;height:30px;cursor:pointer;'/>
 			</div>
 		";
 		
@@ -623,7 +620,7 @@ class CReport extends MY_Controller {
 		
 		
 		$html = "
-			<div id='table-fixed-TransfersPenddingSearch' class='col-sm-12' style='height:calc(100% - 25px);width:100%;overflow:auto;font-size:8pt;'>
+			<div id='table-fixed-TransfersPenddingSearch' class='col-sm-12' style='height:calc(100%);width:100%;overflow:auto;font-size:8pt;'>
 				<table id='table-TransfersPenddingSearch' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
 					<thead>
 						<tr>
@@ -665,9 +662,6 @@ class CReport extends MY_Controller {
 						".$html."
 					</tbody>					
 				</table>
-			</div>
-			<div>
-				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-TransfersPenddingSearch', 'รายงานรถที่อยู่ระหว่างการโอนย้าย');\" style='width:30px;height:30px;cursor:pointer;'/>
 			</div>
 		";
 		
