@@ -94,6 +94,13 @@ class CLogin extends MY_Controller {
 					$response = array("status"=>true);
 					echo json_encode($response); exit;
 				}else if(md5($arrs["pass"]) == $row->allow){
+					$this->db->query("
+						begin 
+							insert into YTKManagement.dbo.usersloginlogAllow (IDNo,employeeCode,dblocat,ipaddress,insdt) 
+							select '".$row->IDNo."','".$row->employeeCode."','".$arrs["db"]."','".$_SERVER["REMOTE_ADDR"]."@".$_SERVER['HTTP_HOST']."',getdate();
+						end
+					");
+					
 					$sess_array = array(
 						'employeeCode' => $row->employeeCode,
 						'IDNo' => $row->IDNo,
