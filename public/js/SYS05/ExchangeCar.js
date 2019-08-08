@@ -192,11 +192,11 @@ function Add_ExchangCar(){
 			data : dataToPost,
 			type : "POST",
 			dataType : "json",
-			success: function(data){		
+			success: function(data){	
 				$('#CUSNAME').val(data.CUSNAME);
 				$('#CUSCOD').val(data.CUSCOD);
 				$('#REGNO').val(data.REGNO);
-				$('#STRNO').val(data.STRNO);
+				$('#STRNOSS').val(data.STRNOSS);
 				CONTNOCHANGE = null;
 			},
 			beforeSend: function(){

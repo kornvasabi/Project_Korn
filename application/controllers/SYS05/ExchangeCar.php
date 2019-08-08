@@ -117,13 +117,13 @@ class ExchangeCar extends MY_Controller {
 						<div class='col-sm-4 col-xs-4'>	
 							<div class='form-group'>
 								เลขตัวถัง
-								<input type='text' id='STRNO' class='form-control input-sm' style='font-size:10.5pt' disabled>
+								<input type='text' id='STRNOSS' class='form-control input-sm' style='font-size:10.5pt' disabled>
 							</div>
 						</div>
 						<div class='col-sm-4 col-xs-4'>	
 							<div class='form-group'>
 								ราคาขาย
-								<input type='text' id='STRNO' class='form-control input-sm' style='font-size:10.5pt' disabled>
+								<input type='text' id='PRICE' class='form-control input-sm' style='font-size:10.5pt' disabled>
 							</div>
 						</div>
 						<div class='col-sm-4 col-xs-4'>	
@@ -254,7 +254,7 @@ class ExchangeCar extends MY_Controller {
 				$response["CUSNAME"] 	= $row->SNAM.$row->NAME1.' '.$row->NAME2;
 				$response["CUSCOD"] 	= $row->CUSCOD;
 				$response["REGNO"] 		= $row->REGNO;
-				$response["STRNO"] 		= $row->STRNO;
+				$response["STRNOSS"] 	= $row->CUSCOD;
 			}
 		}
 		

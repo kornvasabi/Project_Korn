@@ -667,7 +667,7 @@ class Cselect2b extends MY_Controller {
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
 		$ugroup = $_REQUEST["ugroup"];
-		
+
 		$select = "";
 		if($ugroup == 'HP'){
 			$select = "";
@@ -676,19 +676,55 @@ class Cselect2b extends MY_Controller {
 		}
 		
 		$sql = "
-			select GCODE, GDESC 
+			select GCODE, GDESC
 			from(
 				select GCODE, GDESC from {$this->MAuth->getdb('SETGROUP')} ".$select."
 			)a
 			where GCODE like '%".$dataSearch."%' collate Thai_CI_AS or GDESC like '%".$dataSearch."%' collate Thai_CI_AS
 		"; 
 		//echo $sql; exit;
+		
 		$query = $this->db->query($sql);
 		
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>$row->GCODE, 'text'=>'('.$row->GCODE.') '.$row->GDESC];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getGCode_typecar2(){
+		//กลุ่มสินค้า
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$ugroup = $_REQUEST["ugroup"];
+		$GCODES = $_REQUEST["GCODES"];
+
+		$select = "";
+		if($ugroup == 'HP'){
+			$select = "";
+		}else{
+			$select = "where GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F')";
+		}
+		
+		$sql = "
+			select GCODE, GDESC, case when GCODE = '".$GCODES."' then 'disabled' else '' end as disabled
+			from(
+				select GCODE, GDESC from {$this->MAuth->getdb('SETGROUP')} ".$select."
+			)a
+			where GCODE like '%".$dataSearch."%' collate Thai_CI_AS or GDESC like '%".$dataSearch."%' collate Thai_CI_AS
+		"; 
+		//echo $sql; exit;
+		
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->GCODE, 'text'=>'('.$row->GCODE.') '.$row->GDESC, 'disabled'=>$row->disabled];
 			}
 		}
 		
