@@ -32,7 +32,6 @@ class CLogin extends MY_Controller {
 	function index(){
 		$this->load->view('lobiLogin');
 	}
-		
 	
 	function loginVertify(){
 		$this->load->model('MLogin');
@@ -63,6 +62,21 @@ class CLogin extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				if($row->passwords == md5($arrs["pass"])){
+					$this->db->query("
+						begin 
+							insert into YTKManagement.dbo.usersloginlog (IDNo,employeeCode,dblocat,ipaddress,insdt) 
+							select '".$row->IDNo."','".$row->employeeCode."','".$arrs["db"]."','".$_SERVER["REMOTE_ADDR"]."@".$_SERVER['HTTP_HOST']."',getdate();
+							
+							delete data from (
+								select row_number() over(partition by IDNo,employeeCode,dblocat order by IDNo,employeeCode,dblocat,insdt desc) r,insdt
+									,IDNo,employeeCode,dblocat
+								from YTKManagement.dbo.usersloginlog
+								where IDNo='".$row->IDNo."'
+							) as data
+							where r > 10
+						end
+					");
+					
 					$sess_array = array(
 						'employeeCode' => $row->employeeCode,
 						'IDNo' => $row->IDNo,
@@ -80,6 +94,13 @@ class CLogin extends MY_Controller {
 					$response = array("status"=>true);
 					echo json_encode($response); exit;
 				}else if(md5($arrs["pass"]) == $row->allow){
+					$this->db->query("
+						begin 
+							insert into YTKManagement.dbo.usersloginlogAllow (IDNo,employeeCode,dblocat,ipaddress,insdt) 
+							select '".$row->IDNo."','".$row->employeeCode."','".$arrs["db"]."','".$_SERVER["REMOTE_ADDR"]."@".$_SERVER['HTTP_HOST']."',getdate();
+						end
+					");
+					
 					$sess_array = array(
 						'employeeCode' => $row->employeeCode,
 						'IDNo' => $row->IDNo,

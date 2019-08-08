@@ -238,7 +238,7 @@ class CUsers extends MY_Controller {
 			select a.USERID,a.IDNo,a.employeeCode,a.dblocat,a.groupCode 
 				,b.titleName+b.firstName+' '+b.lastName+(case when isnull(b.nick,'')='' then '' else ' ('+b.nick+')' end) as Name
 			from YTKManagement.dbo.hp_mapusers a
-			left join hp_vusers b on a.employeeCode=b.employeeCode and a.IDNo=b.IDNo
+			left join YTKManagement.dbo.hp_vusers b on a.employeeCode=b.employeeCode and a.IDNo=b.IDNo
 			where a.USERID='".$arrs['USERID']."' and a.dblocat='".$arrs['dblocat']."'
 		";
 		$query = $this->db->query($sql);
