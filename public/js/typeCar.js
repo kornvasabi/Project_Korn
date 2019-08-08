@@ -7,6 +7,69 @@
                           _ _/ /
                          /___ /
 ********************************************************/
+var _locat  = $('.tab1[name="home"]').attr('locat');
+var _insert = $('.tab1[name="home"]').attr('cin');
+var _update = $('.tab1[name="home"]').attr('cup');
+var _delete = $('.tab1[name="home"]').attr('cdel');
+var _level  = $('.tab1[name="home"]').attr('clev');
+var _ugroup = $('.tab1[name="home"]').attr('usergroup');
+
+
+$('#inpGCODES').select2({
+	placeholder: 'เลือก',
+	ajax: {
+		url: '../Cselect2b/getGCode_typecar',
+		data: function (params) {
+			dataToPost = new Object();
+			dataToPost.ugroup = _ugroup;
+			dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+			
+			return dataToPost;				
+		},
+		dataType: 'json',
+		delay: 1000,
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+	allowClear: true,
+	multiple: false,
+	dropdownParent: $(".btab1"),
+	//disabled: true,
+	//theme: 'classic',
+	width: '100%'
+});
+
+$('#inpCUSCOD').select2({
+	placeholder: 'เลือก',
+	ajax: {
+		url: '../Cselect2b/getCUSTOMERS',
+		data: function (params) {
+			dataToPost = new Object();
+			//dataToPost.now = $('#add_cuscod').find(':selected').val();
+			dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+			
+			return dataToPost;				
+		},
+		dataType: 'json',
+		delay: 1000,
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+	allowClear: true,
+	multiple: false,
+	dropdownParent: $(".btab1"),
+	//disabled: true,
+	//theme: 'classic',
+	width: '100%'
+});
 
 $('#search_TypeCar').click(function(){ 
 	search_TypeCar(); 
@@ -18,8 +81,9 @@ function search_TypeCar(){
 	dataToPost.inpCONTNO = $('#inpCONTNO').val();
 	dataToPost.inpSTRNO = $('#inpSTRNO').val();
 	dataToPost.inpCUSCOD = $('#inpCUSCOD').val();
-	dataToPost.inpCUSNAME = $('#inpCUSNAME').val();
-	dataToPost.inpGCODE = $('#inpGCODE').val();
+	//dataToPost.inpCUSNAME = $('#inpCUSNAME').val();
+	dataToPost.inpGCODE = $('#inpGCODES').val();
+	dataToPost.ugroup = _ugroup;
 	
 	var spinner = $('body>.spinner').clone().removeClass('hide');
     $('#result_TypeCar').html('');
@@ -33,10 +97,13 @@ function search_TypeCar(){
 		success:function(data){
 			$('#result_TypeCar').find('.spinner, .spinner-backdrop').remove();
 			$('#result_TypeCar').html(data.html);
-			afterSearch();	
+			$('#data-table-example2').on('draw.dt',function(){ afterSearch(); });
+			fn_datatables('data-table-example2',1,360);
+			//afterSearch();	
 		}
 	});
 }
+
 
 function afterSearch(){
 	document.getElementById("test").addEventListener("scroll", function(){
@@ -56,6 +123,7 @@ function afterSearch(){
 	$('.getit').click(function(){
 		dataToPost = new Object();
 		dataToPost.STRNO = $(this).attr('STRNO');
+		dataToPost.ugroup = _ugroup;
 		
 		var spinner = $('body>.spinner').clone().removeClass('hide');
 		$('#tab2_main').html('');
@@ -72,6 +140,34 @@ function afterSearch(){
 			success:function(data){
 				$('#tab2_main').find('.spinner, .spinner-backdrop').remove();
 				$('#tab2_main').html(data.html);
+				
+				$('#t2inpGCODENEW').select2({
+					placeholder: 'เลือก',
+					ajax: {
+						url: '../Cselect2b/getGCode_typecar',
+						data: function (params) {
+							dataToPost = new Object();
+							dataToPost.ugroup = _ugroup;
+							dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+							
+							return dataToPost;				
+						},
+						dataType: 'json',
+						delay: 1000,
+						processResults: function (data) {
+							return {
+								results: data
+							};
+						},
+						cache: true
+					},
+					allowClear: true,
+					multiple: false,
+					dropdownParent: $(".tbchangetypecode"),
+					//disabled: true,
+					//theme: 'classic',
+					width: '100%'
+				});
 				
 				if($('.tab1[name="home"]').attr('cup') == 'T'){
 					$('#tab2save').attr('disabled',false);	
@@ -143,8 +239,8 @@ function afterSelect(){
 								$('#inpSTRNO').val($('#t2inpSTRNO').val());
 								$('#inpLOCAT').val('');
 								$('#inpCUSCOD').val('');
-								$('#inpCUSNAME').val('');
-								$('#inpGCODE').val('');
+								//$('#inpCUSNAME').val('');
+								$('#inpGCODES').val('');
 								
 								search_TypeCar();
 							}else{

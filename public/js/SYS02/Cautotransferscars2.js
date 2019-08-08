@@ -47,7 +47,6 @@ var generate = 1;
 $('#addSTRNO').click(function(){
 	dataToPost = new Object();
 	dataToPost.LOCAT = $(this).attr('LOCAT');
-	
 	$.ajax({
 		url:'../SYS02/Cautotransferscars/getFormSTRNO',
 		data: dataToPost,
