@@ -107,6 +107,7 @@ class CHomenew extends MY_Controller {
 	function getTypeCar(){
 		$html = "";
 		$cond = "";
+		$cond1 = "";
 		$ugroup = $_REQUEST["ugroup"];
 		//echo $ugroup; exit;
 		if(isset($_REQUEST["inpCONTNO"])){
@@ -138,7 +139,7 @@ class CHomenew extends MY_Controller {
 					$cond .= "";
 				}
 			}else{
-				$cond .= " and a.GCODE = '".$_REQUEST["inpGCODE"]."' ";				
+				$cond .= " and a.GCODE = '".str_replace(chr(0),'',$_REQUEST["inpGCODE"])."' ";				
 			}
 		}else{
 			//$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
@@ -149,10 +150,14 @@ class CHomenew extends MY_Controller {
 				$cond .= "";
 			}
 		}
+		$top = ""; 
+		if($_REQUEST["inpCONTNO"] == '' && $_REQUEST["inpCUSCOD"] == '' && $_REQUEST["inpSTRNO"] == '' && $_REQUEST["inpLOCAT"] == '' && $_REQUEST["inpGCODE"] == ''){
+			$top = "top 100";
+		}
 		
 		
 		$sql = "
-			select top 100 a.STRNO,a.CONTNO,a.CRLOCAT
+			select ".$top." a.STRNO,a.CONTNO,a.CRLOCAT
 				,a.GCODE+'.'+b.GDESC as GCODE
 				,case when isnull(c.CUSCOD,'') <> '' then c.CUSCOD else '' end as CUSCOD
 				,case when isnull(c.CUSCOD,'') <> '' then d.SNAM+d.NAME1+' '+d.NAME2 else '' end as CUSNAME
@@ -172,7 +177,7 @@ class CHomenew extends MY_Controller {
 				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARFINC')}
 			) c on a.CONTNO=c.CONTNO
 			left join {$this->MAuth->getdb('CUSTMAST')} d on c.CUSCOD=d.CUSCOD
-			where 1=1 ".$cond."
+			where 1=1 ".$cond." 
 			order by a.CRLOCAT,a.CONTNO
 		";
 		//echo $sql; exit;
