@@ -427,7 +427,8 @@ class ARother extends MY_Controller {
 			
 				declare @CONTNO varchar(max) = '".$ARCONT."';
 				delete {$this->MAuth->getdb('AROTHR')}
-				where ARCONT = '".$ARCONT."' and CONTNO = '".$CONTNO."' and CUSCOD = '".$CUSCOD."' and LOCAT = '".$LOCAT."'
+				where ARCONT = '".$ARCONT."' collate thai_cs_as and CONTNO = '".$CONTNO."' collate thai_cs_as 
+				and CUSCOD = '".$CUSCOD."' collate thai_cs_as and LOCAT = '".$LOCAT."'
 				
 				insert into #DelAROYHTemp select 'S',@CONTNO,'ลบลูกหนี้อื่น เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 				commit tran DelAROYHTemp;

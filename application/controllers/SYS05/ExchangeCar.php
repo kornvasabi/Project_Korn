@@ -117,7 +117,7 @@ class ExchangeCar extends MY_Controller {
 						<div class='col-sm-4 col-xs-4'>	
 							<div class='form-group'>
 								เลขตัวถัง
-								<input type='text' id='STRNOSS' class='form-control input-sm' style='font-size:10.5pt' disabled>
+								<input type='text' id='STRNO' class='form-control input-sm' style='font-size:10.5pt' disabled>
 							</div>
 						</div>
 						<div class='col-sm-4 col-xs-4'>	
@@ -236,7 +236,7 @@ class ExchangeCar extends MY_Controller {
 		$contno	= $_REQUEST["contno"];
 
 		$sql = "
-				select a.CONTNO, a.CRLOCAT, isnull(a.REGNO,'') as REGNO, a.STRNO, a.GCODE, c.SNAM, c.NAME1, c.NAME2, b.CUSCOD, b.TOTPRC, b.SMPAY, 
+				select a.CONTNO, a.CRLOCAT, isnull(a.REGNO,'') as REGNO, a.STRNO , a.GCODE, c.SNAM, c.NAME1, c.NAME2, b.CUSCOD, b.TOTPRC, b.SMPAY, 
 				b.TOTPRC - b.SMPAY as BALANCE, 0 as CR
 				from {$this->MAuth->getdb('INVTRAN')} a
 				left join {$this->MAuth->getdb('ARMAST')} b on a.CONTNO = b.CONTNO
@@ -254,7 +254,8 @@ class ExchangeCar extends MY_Controller {
 				$response["CUSNAME"] 	= $row->SNAM.$row->NAME1.' '.$row->NAME2;
 				$response["CUSCOD"] 	= $row->CUSCOD;
 				$response["REGNO"] 		= $row->REGNO;
-				$response["STRNOSS"] 	= $row->CUSCOD;
+				$response["STRNO"] 		= $row->STRNO;
+				$response["STRNO"] 		= $row->STRNO;
 			}
 		}
 		

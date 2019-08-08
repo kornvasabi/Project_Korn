@@ -711,7 +711,10 @@ class Cselect2b extends MY_Controller {
 		}
 		
 		$sql = "
-			select GCODE, GDESC, case when GCODE = '".$GCODES."' then 'disabled' else '' end as disabled
+			select GCODE, GDESC, 
+			case 	when GCODE = '".$GCODES."' then 'disabled' 
+					when GCODE = '04' then 'disabled'
+					else '' end as disabled
 			from(
 				select GCODE, GDESC from {$this->MAuth->getdb('SETGROUP')} ".$select."
 			)a
