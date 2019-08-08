@@ -124,6 +124,8 @@ function afterSearch(){
 		dataToPost = new Object();
 		dataToPost.STRNO = $(this).attr('STRNO');
 		dataToPost.ugroup = _ugroup;
+		var GCODES = $(this).attr('GCODES');	
+		dataToPost.GCODES = GCODES
 		
 		var spinner = $('body>.spinner').clone().removeClass('hide');
 		$('#tab2_main').html('');
@@ -131,7 +133,7 @@ function afterSearch(){
 		
 		$('.tab1').hide();
 		$('.tab2').show();
-		
+
 		$.ajax({
 			url:'../CHomenew/getFormChangeTypeCar',
 			data:dataToPost,
@@ -144,10 +146,11 @@ function afterSearch(){
 				$('#t2inpGCODENEW').select2({
 					placeholder: 'เลือก',
 					ajax: {
-						url: '../Cselect2b/getGCode_typecar',
+						url: '../Cselect2b/getGCode_typecar2',
 						data: function (params) {
 							dataToPost = new Object();
 							dataToPost.ugroup = _ugroup;
+							dataToPost.GCODES = GCODES;
 							dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 							
 							return dataToPost;				

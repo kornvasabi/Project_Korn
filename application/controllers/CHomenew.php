@@ -158,7 +158,7 @@ class CHomenew extends MY_Controller {
 		
 		$sql = "
 			select ".$top." a.STRNO,a.CONTNO,a.CRLOCAT
-				,a.GCODE+'.'+b.GDESC as GCODE
+				,a.GCODE+'.'+b.GDESC as GCODE, a.GCODE as GCODES
 				,case when isnull(c.CUSCOD,'') <> '' then c.CUSCOD else '' end as CUSCOD
 				,case when isnull(c.CUSCOD,'') <> '' then d.SNAM+d.NAME1+' '+d.NAME2 else '' end as CUSNAME
 			from {$this->MAuth->getdb('INVTRAN')} a 
@@ -188,7 +188,7 @@ class CHomenew extends MY_Controller {
 			foreach($query->result() as $row){
 				$html .= "
 					<tr class='trow' seq='".$NRow."'>
-						<td class='getit' seq='".$NRow++."' STRNO='".$row->STRNO."' style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
+						<td class='getit' seq='".$NRow++."' STRNO='".$row->STRNO."' GCODES='".$row->GCODES."' style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
 						<td>".$row->STRNO."</td>
 						<td>".$row->CONTNO."</td>
 						<td>".$row->CUSCOD."</td>
