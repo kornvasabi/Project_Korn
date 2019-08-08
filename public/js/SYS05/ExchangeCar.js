@@ -183,7 +183,6 @@ function Add_ExchangCar(){
 	
 	CONTNOCHANGE = null
 	$('#CONTNO').change(function(){ 
-		//alert('เปลั่ยน');
 		var contno =  (typeof $('#CONTNO').find(":selected").val() === 'undefined' ? '' : $('#CONTNO').find(":selected").val());
 		dataToPost = new Object();
 		dataToPost.contno = contno;
@@ -193,10 +192,17 @@ function Add_ExchangCar(){
 			type : "POST",
 			dataType : "json",
 			success: function(data){	
-				$('#CUSNAME').val(data.CUSNAME);
-				$('#CUSCOD').val(data.CUSCOD);
-				$('#REGNO').val(data.REGNO);
-				$('#STRNOSS').val(data.STRNOSS);
+				if(contno != ''){
+					$('#CUSNAME').val(data.CUSNAME);
+					$('#CUSCOD').val(data.CUSCOD);
+					$('#REGNO').val(data.REGNO);
+					$('#STRNO').val(data.STRNO);
+				}else{
+					$('#CUSNAME').val('');
+					$('#CUSCOD').val('');
+					$('#REGNO').val('');
+					$('#STRNO').val('');
+				}
 				CONTNOCHANGE = null;
 			},
 			beforeSend: function(){

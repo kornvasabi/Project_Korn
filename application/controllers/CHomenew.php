@@ -49,7 +49,7 @@ class CHomenew extends MY_Controller {
 			foreach($query->result() as $row){
 				$usergroup .= $row->groupCode;
 			}
-		}
+		} 
 		
 		$html = "
 			<div class='tab1 btab1' name='home' usergroup='".$usergroup."' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:65px;overflow:auto;background-color:white;'>
