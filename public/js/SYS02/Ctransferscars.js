@@ -250,7 +250,6 @@ function search(){
 					dataToPost.TRANSNO = $(this).attr('TRANSNO');
 					dataToPost.cup  = _update;
 					dataToPost.clev = _level;
-					
 					loadData(dataToPost);
 				});
 			}		
@@ -268,7 +267,7 @@ function loadData(dataToPost){
 		dataType:'json',
 		success:function(data){
 			$('#loadding').hide();
-			
+
 			$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
 			
 			document.getElementById("table-fixed-STRNOTRANS").addEventListener("scroll", function(){
@@ -303,7 +302,7 @@ function loadData(dataToPost){
 			//$('#add_TRANSSTAT').attr('disabled',true);
 			$('#add_TRANSFM').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
 			$('#add_TRANSTO').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
-			$('#add_EMPCARRY').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
+			$('#add_EMPCARRY').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });	
 			$('#add_APPROVED').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
 			$('#add_TRANSSTAT').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
 			
