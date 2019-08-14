@@ -41,7 +41,7 @@ class Ctransferscars extends MY_Controller {
 					<div class='col-sm-2'>	
 						<div class='form-group'>
 							วันที่บิลโอน
-							<input type='text' id='TRANSDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน'>
+							<input type='text' id='TRANSDT' value='".$this->today("today")."' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน' >
 						</div>
 					</div>
 					<div class='col-sm-2'>	
@@ -90,7 +90,7 @@ class Ctransferscars extends MY_Controller {
 						<div class='col-sm-2'>	
 							<div class='form-group'>
 								วันที่บิลโอน
-								<input type='text' id='add_TRANSDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน' >
+								<input type='text' id='add_TRANSDT' thisvalue='".$this->today("today")."' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน'  >
 							</div>
 						</div>
 						<div class='col-sm-2'>	

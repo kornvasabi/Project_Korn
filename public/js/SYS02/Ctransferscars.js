@@ -457,7 +457,7 @@ $('#btnt1transfers').click(function(){
 	$('#add_TRANSNO').val('Auto Generate');
 	$('#add_TRANSNO').attr('readonly',true);
 	
-	$('#add_TRANSDT').val('');
+	$('#add_TRANSDT').val($('#add_TRANSDT').attr('thisvalue'));
 	$('#add_TRANSTO').val(null).trigger('change');
 	$('#add_EMPCARRY').val(null).trigger('change');
 	$('#add_APPROVED').val(null).trigger('change');
