@@ -1132,13 +1132,13 @@ class Sell extends MY_Controller {
 				/* @rec = รหัสพื้นฐาน */
 				declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs['locat']."');
 				/* @RESVNO = รหัสที่จะใช้ */
-				declare @CONTNO varchar(12) = isnull((select MAX(CONTNO) from {$this->MAuth->getdb('ARCRED')} where CONTNO like ''+@rec+'%'),@rec+'0000');
+				declare @CONTNO varchar(12) = isnull((select MAX(CONTNO) from {$this->MAuth->getdb('ARCRED')} where CONTNO like ''+@rec+'%' collate thai_cs_as),@rec+'0000');
 				set @CONTNO = left(@CONTNO,8)+right(right(@CONTNO,4)+10001,4);
 				
 				set @symbol = (select H_TXMAST from {$this->MAuth->getdb('CONDPAY')});
 				set @rec = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs["locat"]."');
 				
-				declare @TAXNO varchar(12) = isnull((select MAX(TAXNO) from {$this->MAuth->getdb('TAXTRAN')} where TAXNO like ''+@rec+'%'),@rec+'0000');
+				declare @TAXNO varchar(12) = isnull((select MAX(TAXNO) from {$this->MAuth->getdb('TAXTRAN')} where TAXNO like ''+@rec+'%' collate thai_cs_as),@rec+'0000');
 				declare @TAXDT datetime = (select convert(varchar(8),getdate(),112));
 				set @TAXNO = left(@TAXNO ,8)+right(right(@TAXNO ,4)+10001,4);
 				

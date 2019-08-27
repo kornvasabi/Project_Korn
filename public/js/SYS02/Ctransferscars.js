@@ -13,6 +13,7 @@ var _update = $('.tab1[name="home"]').attr('cup');
 var _delete = $('.tab1[name="home"]').attr('cdel');
 var _level  = $('.tab1[name="home"]').attr('clev');
 var _locat  = $('.tab1[name="home"]').attr('locat');
+var _diunem = $('.tab1[name="home"]').attr('diunem');
 
 $(function(){
 	$('.tab1').show();
@@ -217,41 +218,56 @@ function search(){
 			$('#resultt1transfers').find('.spinner, .spinner-backdrop').remove();
 			$('#resultt1transfers').html(data.html);
 			
+			/*
 			document.getElementById("table-fixed-Ctransferscars").addEventListener("scroll", function(){
 				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 				this.querySelector("thead").style.transform = translate;						
-			});
+			});			
+			*/
 			
-			$('.getit').hover(function(){
-				$(this).css({'background-color':'yellow'});
-				$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#f9f9a9'});
-			},function(){
-				$(this).css({'background-color':'white'});
-				$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
-			});
+			$('#table-Ctransferscars').on('draw.dt',function(){ redraw(); });
+			fn_datatables('table-Ctransferscars',1,360);
 			
-			$('.getit').click(function(){
-				dataToPost = new Object();
-				dataToPost.TRANSNO = $(this).attr('TRANSNO');
-				dataToPost.cup  = _update;
-				dataToPost.clev = _level;
+			/*
+			// Export data to Excel
+			$('.data-export').prepend('<img id="table-Ctransferscars-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
+			$("#table-Ctransferscars-excel").click(function(){ 	
+				tableToExcel_Export(data.html,"ข้อมูลการโอนย้าย","transfers.xlsx"); 
+			});
+			*/
+			
+			function redraw(){
+				$('.getit').hover(function(){
+					$(this).css({'background-color':'yellow'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#f9f9a9'});
+				},function(){
+					$(this).css({'background-color':'white'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
+				});
 				
-				loadData(dataToPost);
-			});
+				$('.getit').click(function(){					
+					dataToPost = new Object();
+					dataToPost.TRANSNO = $(this).attr('TRANSNO');
+					dataToPost.cup  = _update;
+					dataToPost.clev = _level;
+					loadData(dataToPost);
+				});
+			}		
 		}
 	});
 }
 
+var JASOBJloadData = null;
 function loadData(dataToPost){
 	$('#loadding').show();
-	$.ajax({
+	JASOBJloadData = $.ajax({
 		url:'../SYS02/Ctransferscars/getDetails',
 		data:dataToPost,
 		type:'POST',
 		dataType:'json',
 		success:function(data){
 			$('#loadding').hide();
-			
+
 			$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
 			
 			document.getElementById("table-fixed-STRNOTRANS").addEventListener("scroll", function(){
@@ -286,7 +302,7 @@ function loadData(dataToPost){
 			//$('#add_TRANSSTAT').attr('disabled',true);
 			$('#add_TRANSFM').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
 			$('#add_TRANSTO').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
-			$('#add_EMPCARRY').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
+			$('#add_EMPCARRY').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });	
 			$('#add_APPROVED').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
 			$('#add_TRANSSTAT').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
 			
@@ -337,6 +353,8 @@ function loadData(dataToPost){
 				}
 				
 				$('#btnt2bill').attr('disabled',false);
+				$('#btnt2billOption').attr('disabled',true);
+				$('#btnt2billUnlock').attr('disabled',true);				
 				$('.tab2').css({'background-color':'#fff'});
 			}else if(data.html['TRANSSTAT'] == 'Pendding'){ //สถานะรับบางส่วน ปิดการลบบิลโอน  แต่สามารถบันทึกได้หากมีสิทธิ์
 				$('#add_MEMO1').attr('disabled',false);
@@ -369,6 +387,8 @@ function loadData(dataToPost){
 				
 				$('#btnt2del').attr('disabled',true);	
 				$('#btnt2bill').attr('disabled',false);
+				$('#btnt2billOption').attr('disabled',true);
+				$('#btnt2billUnlock').attr('disabled',true);
 				$('.tab2').css({'background-color':'#fff'});
 			}else if(data.html['TRANSSTAT'] == 'Received'){ //สถานะรับครบแล้ว ปิดการบันทึก และเพิ่มข้อมูลทั้งหมด
 				$('#add_MEMO1').attr('disabled',true);
@@ -376,6 +396,8 @@ function loadData(dataToPost){
 				$('#btnt2del').attr('disabled',true);
 				$('#btnt2save').attr('disabled',true);
 				$('#btnt2bill').attr('disabled',true);
+				$('#btnt2billOption').attr('disabled',false);
+				$('#btnt2billUnlock').attr('disabled',false);
 				$('.tab2').css({'background-color':'#fff'});
 			}else if(data.html['TRANSSTAT'] == 'Cancel'){ //สถานะยกเลิกบิลโอน
 				$('#add_MEMO1').attr('disabled',true);
@@ -383,6 +405,8 @@ function loadData(dataToPost){
 				$('#btnt2del').attr('disabled',true);
 				$('#btnt2save').attr('disabled',true);
 				$('#btnt2bill').attr('disabled',true);
+				$('#btnt2billOption').attr('disabled',true);
+				$('#btnt2billUnlock').attr('disabled',true);
 				$('.tab2').css({'background-color':'#ffd6d6'});
 			}
 			
@@ -413,7 +437,14 @@ function loadData(dataToPost){
 			$('.tab2').show();
 			
 			delSTRNO();
-		}
+			
+			JASOBJloadData = null;
+		},
+		beforeSend: function(){
+			if(JASOBJloadData !== null){
+				JASOBJloadData.abort();
+			}
+		}		
 	});
 }
 
@@ -426,7 +457,7 @@ $('#btnt1transfers').click(function(){
 	$('#add_TRANSNO').val('Auto Generate');
 	$('#add_TRANSNO').attr('readonly',true);
 	
-	$('#add_TRANSDT').val('');
+	$('#add_TRANSDT').val($('#add_TRANSDT').attr('thisvalue'));
 	$('#add_TRANSTO').val(null).trigger('change');
 	$('#add_EMPCARRY').val(null).trigger('change');
 	$('#add_APPROVED').val(null).trigger('change');
@@ -465,15 +496,20 @@ $('#btnt1transfers').click(function(){
 	}
 	
 	$('#btnt2bill').attr('disabled',true);	
+	$('#btnt2billOption').attr('disabled',true);
+	$('#btnt2billOption').attr('disabled',true);
+	$('#btnt2billUnlock').attr('disabled',true);
 	
 	$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
 	
 	$('#btnt2del').hide();
-	
 	document.getElementById("table-fixed-STRNOTRANS").addEventListener("scroll", function(){
 		var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 		this.querySelector("thead").style.transform = translate;						
 	});
+	
+	//$('#table-Ctransferscars').on('draw.dt',function(){ redraw(); });
+	//fn_datatables('table-STRNOTRANS',3,450);			
 });
 
 $('#btnt2home').click(function(){ 
@@ -537,7 +573,7 @@ $('#btnt2addSTRNo').click(function(){
 								});
 								
 								$('.getit').click(function(){
-									var STRNO = $(this).attr('STRNO');
+									var STRNO = $(this).attr('STRNO').trim();
 									//var TYPE = $(this).attr('TYPE');
 									var MODEL = $(this).attr('MODEL');
 									var BAAB = $(this).attr('BAAB');
@@ -569,7 +605,7 @@ $('#btnt2addSTRNo').click(function(){
 										});
 									}else{
 										var display = $('#add_EMPCARRY').find(':selected').text();
-										var valued = $('#add_EMPCARRY').find(':selected').val();	
+										var valued = (typeof $('#add_EMPCARRY').find(':selected').val() === "undefined" ? "" : $('#add_EMPCARRY').find(':selected').val());	
 										
 										var row = '<tr seq="new'+generate+'">';
 										row += '<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="new'+generate+'" value="ยกเลิก"></td>';
@@ -579,8 +615,14 @@ $('#btnt2addSTRNo').click(function(){
 										row += '<td>'+COLOR+'</td>';
 										row += '<td>'+GCODE+'</td>';
 										row += '<td>อยู่ระหว่างการโอนย้ายรถ</td>';
-										row += '<td><input type="text" STRNO="'+STRNO+'" class="SETTRANSDT form-control input-sm" data-provide="datepicker" data-date-language="th-th" placeholder="วันที่โอน"  style="width:100px;" value="'+($('#add_TRANSDT').val())+'"></td>';
-										row += '<td><select STRNO="'+STRNO+'" class="SETEMPCARRY select2"><option value=\''+(valued)+'\'>'+(display)+'</option></select></td>';
+										row += '<td><input type="text" STRNO="'+STRNO+'" class="SETTRANSDT form-control input-sm" data-provide="datepicker" data-date-language="th-th" placeholder="วันที่โอน"  style="width:100px;" value=""></td>';
+										
+										if(valued === ""){
+											row += '<td><select STRNO="'+STRNO+'" class="SETEMPCARRY select2"></select></td>';
+										}else{
+											row += '<td><select STRNO="'+STRNO+'" class="SETEMPCARRY select2"><option value=\''+(valued)+'\'>'+(display)+'</option></select></td>';
+										}
+										
 										row += '</tr>';
 										  
 										$('#table-STRNOTRANS tbody').append(row);
@@ -644,7 +686,7 @@ function checkdt($this){
 			if(data.html == 'T'){
 				$this.val('');
 				
-				Lobibox.notify('error', {
+				Lobibox.notify('warning', {
 					title: 'ผิดพลาด',
 					size: 'mini',
 					closeOnClick: false,
@@ -654,7 +696,7 @@ function checkdt($this){
 					icon: true,
 					rounded: true,
 					messageHeight: '90vh',
-					msg: 'วันที่โอนย้าย ต้องไม่มากกว่าวันปัจจุบัน'
+					msg: 'วันที่โอนย้าย จะต้องไม่เกิน 4 วันนับจากวันปัจจุบันครับ'
 				});
 			}
 		}
@@ -735,8 +777,12 @@ $('#btnt2save').click(function(){
 						if(i == 7){ // วันที่โอนย้าย
 							r.push($('.SETTRANSDT[STRNO='+this.cells[1].innerHTML+']').val());
 						}else if(i == 8){ // พขร.
-							var emp = $('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').find(':selected').val();
-							r.push((typeof emp === 'undefined'?'':emp));
+							var emp = '';
+							if(typeof $('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').find(':selected').val() !== 'undefined'){
+								emp = $('.SETEMPCARRY[STRNO='+this.cells[1].innerHTML+']').find(':selected').val();
+							}
+							
+							r.push(emp);
 						}else{
 							r.push(this.cells[i].innerHTML);
 						}
@@ -773,6 +819,8 @@ $('#btnt2save').click(function(){
 							
 							loadData(dataToPost); //โหลดข้อมูลที่บันทึก
 							$('#btnt2bill').attr('disabled',false); //ให้พิมพ์บิลโอนได้
+							$('#btnt2billOption').attr('disabled',true);
+							$('#btnt2billUnlock').attr('disabled',true);
 						}else{
 							Lobibox.notify('error', {
 								title: 'ผิดพลาด',
@@ -845,6 +893,8 @@ $('#btnt2del').click(function(){
 							
 							loadData(dataToPost);
 							$('#btnt2bill').attr('disabled',true); //ให้พิมพ์บิลโอนได้
+							$('#btnt2billOption').attr('disabled',false);
+							$('#btnt2billUnlock').attr('disabled',false);
 						}else{
 							Lobibox.notify('error', {
 								title: 'ผิดพลาด',
@@ -865,7 +915,67 @@ $('#btnt2del').click(function(){
 	});
 });
 
-
+// ปลดล็อค
+$('#btnt2billUnlock').click(function(){
+	var html = "";
+	//tobul = transferout unlock
+	html += "<div class='col-xs-12 col-sm-12'><div class='form-group'>รหัสพนง./รหัส ปชช.<input type='text' id='tobul_username' class='form-control input-sm' placeholder='USERID'></div></div>";
+	html += "<div class='col-xs-12 col-sm-12'><div class='form-group'>รหัสผ่าน<input type='password' id='tobul_password' class='form-control input-sm' placeholder='Password'></div></div>";
+	html += "<div class='col-xs-12 col-sm-12'><div class='form-group'>หมายเหตุ<textarea id='tobul_comments' class='form-control' placeholder='หมายเหตุ' maxlength=250 style='max-width:100%;max-height:70px;'></textarea></div></div>";
+	html += "<button id='tobul_comfirm' class='btn btn-sm btn-primary col-sm-12'>ปลดล็อค</button>";
+	Lobibox.window({
+		title: 'ฟอร์มขอปลดล็อคบิลโอน',
+		height: 350,
+		content: html,
+		closeOnEsc: false,
+		shown: function($this){
+			var JASOBJbillUnlock = null;
+			$("#tobul_comfirm").click(function(){
+				dataToPost = new Object();
+				dataToPost.user 	= $("#tobul_username").val();
+				dataToPost.pass 	= $("#tobul_password").val();
+				dataToPost.comments = $("#tobul_comments").val();
+				dataToPost.TRANSNO  = $("#add_TRANSNO").val();
+				
+				dataToPost.diunem 	= _diunem;
+				
+				JASOBJbillUnlock = $.ajax({
+					url: '../SYS02/Ctransferscars/billunlock',
+					data: dataToPost,
+					type:'POST',
+					dataType: 'json',
+					success: function(data){
+						Lobibox.notify((data.error?"waning":"success"), {
+							//title: 'ผิดพลาด',
+							size: 'mini',
+							closeOnClick: false,
+							delay: 5000,
+							pauseDelayOnHover: true,
+							continueDelayOnInactiveTab: false,
+							icon: true,
+							messageHeight: '90vh',
+							msg: data.msg
+						});
+						
+						if(!data.error){  
+							$('#btnt2bill').attr('disabled',false);
+							$('#btnt2billOption').attr('disabled',true);
+							$('#btnt2billUnlock').attr('disabled',true);
+							$this.destroy();
+						}
+						
+						JASOBJbillUnlock = null;
+					},
+					beforeSend: function(){
+						if(JASOBJbillUnlock !== null){
+							JASOBJbillUnlock.abort();
+						}
+					}
+				});
+			});
+		}
+	});
+});
 
 
 

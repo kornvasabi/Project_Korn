@@ -559,7 +559,7 @@ class Cautotransferscars extends MY_Controller {
 				,COUNT(c.MODEL) transa
 				into #tempTRAN
 			from YTKManagement.dbo.INVTransfers a
-			left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO
+			left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO collate thai_cs_as 
 			left join HIINCOME.dbo.INVTRAN c on b.STRNO=c.STRNO collate Thai_CS_AS
 			left join #tempNEW d on c.MODEL=d.MODEL and c.COLOR=d.COLOR
 			where ISNULL(b.MOVENO,'')=''
@@ -576,7 +576,7 @@ class Cautotransferscars extends MY_Controller {
 				,COUNT(c.MODEL) transAlla
 				into #tempTRANAll
 			from YTKManagement.dbo.INVTransfers a
-			left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO
+			left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO collate thai_cs_as 
 			left join HIINCOME.dbo.INVTRAN c on b.STRNO=c.STRNO collate Thai_CS_AS
 			where ISNULL(b.MOVENO,'')=''
 			group by a.TRANSTO
@@ -1174,7 +1174,7 @@ class Cautotransferscars extends MY_Controller {
 		$sql = "		
 			
 			if OBJECT_ID('tempdb..#tempAuto') is not null drop table #tempAuto;
-			create table #tempAuto (LOCAT varchar(20),MODEL varchar(30),BAAB varchar(20),COLOR varchar(30),CN int,FRM varchar(20));
+			create table #tempAuto (LOCAT varchar(20),MODEL varchar(30),BAAB varchar(20),COLOR varchar(30),CN int,FRM varchar(100));
 			".$tempAuto."
 		";
 		//echo $sql; //exit;
@@ -1217,8 +1217,8 @@ class Cautotransferscars extends MY_Controller {
 						declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD=@CRLOCAT);
 						/* @TRANSNO = รหัสที่จะใช้ */		
 						set @TRANSNO = (select isnull(MAX(TRANSNO),@rec+'0000') from ( 
-							select TRANSNO collate Thai_CS_AS as TRANSNO from {$this->MAuth->getdb('INVTransfers')} where TRANSNO like ''+@rec+'%' 
-							union select moveno collate Thai_CS_AS as moveno from {$this->MAuth->getdb('INVMOVM')} where MOVENO like ''+@rec+'%'
+							select TRANSNO collate Thai_CS_AS as TRANSNO from {$this->MAuth->getdb('INVTransfers')} where TRANSNO like ''+@rec+'%' collate thai_cs_as
+							union select moveno collate Thai_CS_AS as moveno from {$this->MAuth->getdb('INVMOVM')} where MOVENO like ''+@rec+'%' collate thai_cs_as
 						) as a);
 						set @TRANSNO = left(@TRANSNO ,8)+right(right(@TRANSNO ,4)+10001,4);
 											
@@ -1246,20 +1246,20 @@ class Cautotransferscars extends MY_Controller {
 						begin
 							insert into {$this->MAuth->getdb('INVTransfersDetails')}
 							select @TRANSNO
-								,isnull((select max(TRANSITEM)+1 from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO=@TRANSNO),1)
+								,isnull((select max(TRANSITEM)+1 from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO=@TRANSNO collate thai_cs_as ),1)
 								,@getSTRNO,NULL,NULL,NULL,NULL,NULL,'".$this->sess["IDNo"]."',GETDATE()
 											
 							update {$this->MAuth->getdb('INVTransfers')}
 							set TRANSQTY=TRANSQTY+1
-							where TRANSNO=@TRANSNO
+							where TRANSNO=@TRANSNO collate thai_cs_as 
 							
 							update {$this->MAuth->getdb('INVTRAN')}
 							set CRLOCAT='TRANS'
-							where STRNO = @getSTRNO
+							where STRNO = @getSTRNO collate thai_cs_as 
 							
 							--ลบรายการรถที่จัดให้แล้วออก
 							delete from #tempChoose
-							where STRNO = @getSTRNO;
+							where STRNO = @getSTRNO collate thai_cs_as ;
 							
 							set @CN = @CN - 1;	
 						end	
@@ -1312,8 +1312,8 @@ class Cautotransferscars extends MY_Controller {
 						select b.STRNO,b.MODEL,b.COLOR,b.STAT,a.TRANSNO,a.TRANSFM,a.TRANSTO from (
 							select b.*,a.TRANSFM,a.TRANSTO
 							from {$this->MAuth->getdb('INVTransfers')} a
-							left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
-							where a.TRANSNO in (".$TRANSNO.")
+							left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO collate thai_cs_as
+							where a.TRANSNO collate thai_cs_as in (".$TRANSNO.") 
 						) as a
 						right join #tempChoose b on a.STRNO=b.STRNO collate thai_cs_as 
 						order by a.TRANSNO

@@ -38,89 +38,60 @@ class CHomenew extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$sql = "
-			select GCODE,GDESC from {$this->MAuth->getdb('SETGROUP')}
-			--where GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F')
-			where GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F')
-			order by GCODE
+			select distinct groupCode from YTKManagement.dbo.hp_mapusers
+			where dblocat='".$this->sess["db"]."' and USERID = '".$this->sess["USERID"]."'
 		";
+	
 		$query = $this->db->query($sql);
 		
-		$group = "";
+		$usergroup = "";
 		if($query->row()){
 			foreach($query->result() as $row){
-				$group .= "<option value='".$row->GCODE."'>".$row->GCODE.".".$row->GDESC."</option>";
+				$usergroup .= $row->groupCode;
 			}
-		}
-		$group = "
-			<select id='inpGCODE' class='form-control input-sm select2'>
-				<option value=''>ทั้งหมด</option>".$group."
-			</select>	
-		";
+		} 
 		
 		$html = "
-			<div class='tab1' name='home' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:65px;overflow:auto;background-color:white;'>
-				<div class='col-sm-2'>	
-					<div class='form-group'>
-						เลขที่สัญญา
-						<input type='text' id='inpCONTNO' class='form-control input-sm' placeholder='เลขที่สัญญา'>
+			<div class='tab1 btab1' name='home' usergroup='".$usergroup."' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:65px;overflow:auto;background-color:white;'>
+				<div class='col-sm-12' style='overflow:auto;'>					
+				<div class='row'>
+					<div class='col-sm-2'>
+						<div class='form-group'>
+							สาขา
+							<input type='text' id='inpLOCAT' class='form-control input-sm' value='".$this->sess['branch']."' placeholder='สาขา'>
+						</div>
+					</div>
+					<div class='col-sm-2'>	
+						<div class='form-group'>
+							เลขที่สัญญา
+							<input type='text' id='inpCONTNO' class='form-control input-sm' placeholder='เลขที่สัญญา'>
+						</div>
+					</div>
+					<div class='col-sm-2'>	
+						<div class='form-group'>
+							เลขตัวถัง
+							<input type='text' id='inpSTRNO' class='form-control input-sm' placeholder='เลขตัวถัง'>	
+						</div>
+					</div>
+					<div class='col-sm-2'>	
+						<div class='form-group'>
+							ลูกค้า
+							<select id='inpCUSCOD' class='form-control input-sm' data-placeholder='ลูกค้า'></select>
+						</div>
+					</div>
+					<div class='col-sm-3'>	
+						<div class='form-group'>
+							สถานะรถ
+							<select id='inpGCODES' class='form-control input-sm' data-placeholder='สถานะรถ'></select>
+						</div>
+					</div>
+					<div class='col-sm-1'>	
+						<div class='form-group'>
+							<br>
+							<input type='button' id='search_TypeCar' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+						</div>
 					</div>
 				</div>
-				<div class='col-sm-2'>	
-					<div class='form-group'>
-						เลขตัวถัง
-						<input type='text' id='inpSTRNO' class='form-control input-sm' placeholder='เลขตัวถัง'>	
-					</div>
-				</div>
-				<div class='col-sm-2'>
-					<div class='form-group'>
-						สาขา
-						<input type='text' id='inpLOCAT' class='form-control input-sm' value='".$this->sess['branch']."' placeholder='สาขา'>
-					</div>
-				</div>
-				<div class='col-sm-2'>	
-					<div class='form-group'>
-						รหัสลูกค้า
-						<input type='text' id='inpCUSCOD' class='form-control input-sm' placeholder='รหัสลูกค้า'>
-					</div>
-				</div>
-				<div class='col-sm-2'>	
-					<div class='form-group'>
-						ชื่อ-สกุล ลูกค้า
-						<input type='text' id='inpCUSNAME' class='form-control input-sm' placeholder='ชื่อ-สกุล ลูกค้า'>							
-					</div>
-				</div>
-				<div class='col-sm-1'>	
-					<div class='form-group'>
-						กลุ่ม
-						<!-- select id='inpGCODE' class='form-control input-sm select2'>
-							<option value=''>ทั้งหมด</option>
-							<option value='02'>02.รถจักรยานยนต์มือสอง (เกรด A)</option>
-							<option value='04'>04.มือสองเกรด A รุ่นสปอร์ต (รุ่นเล็ก)</option>
-							<option value='15'>15.รอซ่อม</option>
-							<option value='16'>16.ระหว่างการซ่อม</option>
-							<option value='022'>022.มือสองเกรด A รุ่นครอบครัว</option>
-							<option value='023'>023.มือสองเกรด A รุ่นสปอร์ต (รุ่นใหญ่)</option>
-							<option value='024'>024.มือสองเกรด A รุ่นAT</option>
-							<option value='29'>29.รถมือสองซ่อมเสร็จรอQC</option>
-							<option value='30'>30.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
-							
-							<option value='04F'>04F.มือสองเกรด A รุ่นสปอร์ต (รุ่นเล็ก)</option>
-							<option value='15F'>15F.รอซ่อม</option>
-							<option value='16F'>16F.ระหว่างการซ่อม</option>
-							<option value='22F'>22F.มือสองเกรด A รุ่นครอบครัว</option>
-							<option value='23F'>23F.มือสองเกรด A รุ่นสปอร์ต (รุ่นใหญ่)</option>
-							<option value='24F'>24F.มือสองเกรด A รุ่นAT</option>
-							<option value='29F'>29F.รถมือสองซ่อมเสร็จรอQC</option>
-							<option value='30F'>30F.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
-						</select-->
-						".$group."
-					</div>
-				</div>
-				<div class='col-sm-1'>	
-					<div class='form-group'>
-						<br>
-						<input type='button' id='search_TypeCar' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
-					</div>
 				</div>
 			</div>
 			<div id='result_TypeCar' class='col-sm-12 tab1' style='height:calc(100vh - 197px);overflow:auto;background-color:white;'></div>
@@ -132,10 +103,13 @@ class CHomenew extends MY_Controller {
 		echo $html;
 	}
 	
+	
 	function getTypeCar(){
 		$html = "";
 		$cond = "";
-		
+		$cond1 = "";
+		$ugroup = $_REQUEST["ugroup"];
+		//echo $ugroup; exit;
 		if(isset($_REQUEST["inpCONTNO"])){
 			$cond .= " and isnull(a.CONTNO,'') like '%".$_REQUEST["inpCONTNO"]."%'";
 		}
@@ -152,25 +126,39 @@ class CHomenew extends MY_Controller {
 			$cond .= " and isnull(c.CUSCOD,'') like '%".$_REQUEST["inpCUSCOD"]."%'";
 		}
 		
-		if(isset($_REQUEST["inpCUSNAME"])){
+		/*if(isset($_REQUEST["inpCUSNAME"])){
 			$cond .= " and isnull(d.SNAM,'')+isnull(d.NAME1,'')+' '+isnull(d.NAME2,'') like '%".$_REQUEST["inpCUSNAME"]."%'";
-		}
+		}*/
 		
 		if(isset($_REQUEST["inpGCODE"])){
 			if($_REQUEST["inpGCODE"] == ''){
-				//$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
-				$cond .= " and a.GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F') ";
+				if($ugroup != 'HP'){
+					$cond .= " and a.GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F') ";
+				}else{
+					//$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
+					$cond .= "";
+				}
 			}else{
-				$cond .= " and a.GCODE = '".$_REQUEST["inpGCODE"]."' ";				
+				$cond .= " and a.GCODE = '".str_replace(chr(0),'',$_REQUEST["inpGCODE"])."' ";				
 			}
 		}else{
 			//$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
-			$cond .= " and a.GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F') ";
+			if($ugroup != 'HP'){
+				$cond .= " and a.GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F') ";
+			}else{
+				//$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
+				$cond .= "";
+			}
+		}
+		$top = ""; 
+		if($_REQUEST["inpCONTNO"] == '' && $_REQUEST["inpCUSCOD"] == '' && $_REQUEST["inpSTRNO"] == '' && $_REQUEST["inpLOCAT"] == '' && $_REQUEST["inpGCODE"] == ''){
+			$top = "top 100";
 		}
 		
+		
 		$sql = "
-			select top 100 a.STRNO,a.CONTNO,a.CRLOCAT
-				,a.GCODE+'.'+b.GDESC as GCODE
+			select ".$top." a.STRNO,a.CONTNO,a.CRLOCAT
+				,a.GCODE+'.'+b.GDESC as GCODE, a.GCODE as GCODES
 				,case when isnull(c.CUSCOD,'') <> '' then c.CUSCOD else '' end as CUSCOD
 				,case when isnull(c.CUSCOD,'') <> '' then d.SNAM+d.NAME1+' '+d.NAME2 else '' end as CUSNAME
 			from {$this->MAuth->getdb('INVTRAN')} a 
@@ -189,7 +177,7 @@ class CHomenew extends MY_Controller {
 				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARFINC')}
 			) c on a.CONTNO=c.CONTNO
 			left join {$this->MAuth->getdb('CUSTMAST')} d on c.CUSCOD=d.CUSCOD
-			where 1=1 ".$cond."
+			where 1=1 ".$cond." 
 			order by a.CRLOCAT,a.CONTNO
 		";
 		//echo $sql; exit;
@@ -200,7 +188,7 @@ class CHomenew extends MY_Controller {
 			foreach($query->result() as $row){
 				$html .= "
 					<tr class='trow' seq='".$NRow."'>
-						<td class='getit' seq='".$NRow++."' STRNO='".$row->STRNO."' style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
+						<td class='getit' seq='".$NRow++."' STRNO='".$row->STRNO."' GCODES='".$row->GCODES."' style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
 						<td>".$row->STRNO."</td>
 						<td>".$row->CONTNO."</td>
 						<td>".$row->CUSCOD."</td>
@@ -240,6 +228,14 @@ class CHomenew extends MY_Controller {
 	
 	function getFormChangeTypeCar(){
 		$STRNO = $_REQUEST['STRNO'];
+		$ugroups = $_REQUEST["ugroup"];
+		
+		$gcodes = "";
+		if($ugroups != 'HP'){
+			$gcodes = " and a.GCODE in ('','15','16','022','023','024','027','29','30','','15F','16F','22F','23F','24F','27F','29F','30F')";
+		}else{
+			$gcodes = "";
+		}
 		
 		$sql = "
 			select a.STRNO,a.CONTNO,a.CRLOCAT,a.STAT
@@ -262,7 +258,7 @@ class CHomenew extends MY_Controller {
 				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARFINC')}
 			) c on a.CONTNO=c.CONTNO
 			left join {$this->MAuth->getdb('CUSTMAST')} d on c.CUSCOD=d.CUSCOD
-			where a.STRNO='".$STRNO."' and a.GCODE in ('','15','16','022','023','024','027','29','30','','15F','16F','22F','23F','24F','27F','29F','30F')
+			where a.STRNO='".$STRNO."' ".$gcodes."
 		";
 		$query = $this->db->query($sql);
 		
@@ -279,101 +275,57 @@ class CHomenew extends MY_Controller {
 			}
 		}
 		
-		//select menu
-		$sql = "
-			select GCODE,GDESC from {$this->MAuth->getdb('SETGROUP')}
-			where GCODE in ('','15','16','022','023','024','027','29','30','','15F','16F','22F','23F','24F','27F','29F','30F')
-			order by GCODE
-		";
-		$query = $this->db->query($sql);
-		
-		$group = "";
-		if($query->row()){
-			foreach($query->result() as $row){
-				$group .= "<option value='".str_replace(chr(0),'',$row->GCODE)."' ".(str_replace(chr(0),'',$row->GCODE) == $data['GCODE'] ? 'disabled':'').">".$row->GCODE.".".$row->GDESC."</option>";
-			}		
-		}
-		
-		$group = "
-			<select id='t2inpGCODENEW' class='form-control input-sm select2'>
-				<option value=''>เลือก</option>".$group."
-			</select>	
-		";
 		
 		$html = "
-			<div class='col-sm-12'>
-				<div style='height:calc(100vh - 165px);overflow:auto;'>
-					<div class='col-sm-4 col-sm-offset-4'>	
+			<div class='col-sm-12  tbchangetypecode'>
+				<div class='col-sm-6 col-sm-offset-3' style='height:calc(100vh - 260px);overflow:auto;'>
+					<div class='col-sm-6'>	
 						<div class='form-group'>
 							เลขตัวถัง
 							<input type='text' id='t2inpSTRNO' class='form-control input-sm' value='".$data['STRNO']."' readonly>
 						</div>
 					</div>
 					
-					<div class='col-sm-4 col-sm-offset-4'>	
+					<div class='col-sm-6'>	
 						<div class='form-group'>
 							เลขที่สัญญา
 							<input type='text' id='t2inpCONTNO' class='form-control input-sm' value='".$data['CONTNO']."' readonly>
 						</div>
 					</div>
 					
-					<div class='col-sm-4 col-sm-offset-4'>	
+					<div class='col-sm-6'>	
 						<div class='form-group'>
 							รหัสลูกค้า
 							<input type='text' id='t2inpCUSCOD' class='form-control input-sm' value='".$data['CUSCOD']."' readonly>
 						</div>
 					</div>
 					
-					<div class='col-sm-4 col-sm-offset-4'>	
+					<div class='col-sm-6'>	
 						<div class='form-group'>
 							ชื่อ-สกุล ลูกค้า
 							<input type='text' id='t2inpCUSNAME' class='form-control input-sm' value='".$data['CUSNAME']."' readonly>
 						</div>
 					</div>
 					
-					<div class='col-sm-4 col-sm-offset-4'>	
+					<div class='col-sm-6'>	
 						<div class='form-group'>
 							สถานะรถ
 							<input type='text' id='t2inpSTAT' class='form-control input-sm' value='".$data['STAT']."' readonly>
 						</div>
 					</div>
 					
-					<div class='col-sm-4 col-sm-offset-4'>	
+					<div class='col-sm-6'>	
 						<div class='form-group'>
 							กลุ่ม
 							<input type='text' id='t2inpGCODE' class='form-control input-sm' data-value='".$data['GCODE']."' value='".$data['GCODENAME']."' readonly>
 						</div>
 					</div>
-					
-					<div class='col-sm-4 col-sm-offset-4'>	
+					<div class='col-sm-6'>	
 						<div class='form-group'>
-							<b>เปลี่ยนเป็นกลุ่ม</b>
-							<!-- select id='t2inpGCODENEW' class='form-control input-sm select2'>
-								<option value=''>เลือก</option>
-								<option value='02' ".($data['GCODE'] == '02' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">02.รถจักรยานยนต์มือสอง (เกรด A)</option>
-								<option value='04' ".($data['GCODE'] == '04' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">04.มือสองเกรด A รุ่นสปอร์ต (รุ่นเล็ก)</option>
-								<option value='15' ".($data['GCODE'] == '15' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">15.รอซ่อม</option>
-								<option value='16' ".($data['GCODE'] == '16' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">16.ระหว่างการซ่อม</option>
-								<option value='022' ".($data['GCODE'] == '022' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">022.มือสองเกรด A รุ่นครอบครัว</option>
-								<option value='023' ".($data['GCODE'] == '023' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">023.มือสองเกรด A รุ่นสปอร์ต (รุ่นใหญ่)</option>
-								<option value='024' ".($data['GCODE'] == '024' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">024.มือสองเกรด A รุ่นAT</option>
-								<option value='29' ".($data['GCODE'] == '29' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">29.รถมือสองซ่อมเสร็จรอQC</option>
-								<option value='30' ".($data['GCODE'] == '30' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? 'disabled':'')).">30.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
-								
-								<option value='04F' ".($data['GCODE'] == '15F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">04F.มือสองเกรด A รุ่นสปอร์ต (รุ่นเล็ก)</option>
-								<option value='15F' ".($data['GCODE'] == '15F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">15F.รอซ่อม</option>
-								<option value='16F' ".($data['GCODE'] == '16F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">16F.ระหว่างการซ่อม</option>
-								<option value='22F' ".($data['GCODE'] == '22F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">22F.มือสองเกรด A รุ่นครอบครัว</option>
-								<option value='23F' ".($data['GCODE'] == '23F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">23F.มือสองเกรด A รุ่นสปอร์ต (รุ่นใหญ่)</option>
-								<option value='24F' ".($data['GCODE'] == '24F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">24F.มือสองเกรด A รุ่นAT</option>
-								<option value='29F' ".($data['GCODE'] == '29F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">29F.รถมือสองซ่อมเสร็จรอQC</option>
-								<option value='30F' ".($data['GCODE'] == '30F' ? 'disabled':(strpos($data['GCODE'],'F') > 0 ? '':'disabled')).">30F.รถมือสองซ่อมเพิ่มเติมหลังQC</option>
-							</select -->
-							".$group."
+							เปลี่ยนเป็นกลุ่ม
+							<select id='t2inpGCODENEW' class='form-control input-sm' data-placeholder='สถานะรถ'></select>
 						</div>
 					</div>
-					
-					
 				</div>				
 				
 				<div class='col-sm-2 col-sm-offset-4'>
@@ -382,6 +334,7 @@ class CHomenew extends MY_Controller {
 				<div class='col-sm-2'>
 					<input type='button' id='tab2save' class='btn btn-primary btn-sm' style='width:100%;' value='บันทึก'>
 				</div>
+				
 			</div>
 			
 		";
@@ -394,6 +347,7 @@ class CHomenew extends MY_Controller {
 	function setTypecars(){
 		$strno = (isset($_REQUEST['STRNO']) ? $_REQUEST['STRNO']:'');
 		$gcode = (isset($_REQUEST['GCODE']) ? $_REQUEST['GCODE']:'');
+		$gcode = str_replace(chr(0),'',$gcode);
 		//echo $gcode; exit;
 		$response = array();
 		if($strno == ''){

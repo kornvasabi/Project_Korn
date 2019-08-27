@@ -9,9 +9,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                           _ _/ /
                          /___ /
 ********************************************************/
-class Ctransferscars extends MY_Controller {
+class CreceiveStock extends MY_Controller {
 	private $sess = array();
-	private $menu = "";
 	
 	function __construct(){
 		parent::__construct();
@@ -27,30 +26,29 @@ class Ctransferscars extends MY_Controller {
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
-		$diunem = $this->generateData(array($claim["menuid"]),"encode");
 		
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' diunem='{$diunem[0]}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div style='height:65px;overflow:auto;'>
-					<div class='col-sm-2'>	
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
+				<div style='height:65px;overflow:auto;'>					
+					<div class='col-xs-2 col-sm-2'>	
 						<div class='form-group'>
 							เลขที่บิลโอน
 							<input type='text' id='TRANSNO' class='form-control input-sm' placeholder='เลขที่โอน'>
 						</div>
 					</div>
-					<div class='col-sm-2'>	
+					<div class='col-xs-2 col-sm-2'>	
 						<div class='form-group'>
 							วันที่บิลโอน
-							<input type='text' id='TRANSDT' value='".$this->today("today")."' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน' >
+							<input type='text' id='TRANSDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน'>
 						</div>
 					</div>
-					<div class='col-sm-2'>	
+					<div class='col-xs-2 col-sm-1'>	
 						<div class='form-group'>
 							สาขาต้นทาง
 							<input type='text' id='TRANSFM' class='form-control input-sm' placeholder='สาขาต้นทาง' value='".$this->sess['branch']."'>
 						</div>
 					</div>
-					<div class='col-sm-2'>	
+					<div class='col-xs-2 col-sm-2'>	
 						<div class='form-group'>
 							สถานะ
 							<select id='TRANSSTAT' class='form-control selcls input-sm chosen-select' data-placeholder='สถานะ' >
@@ -62,21 +60,20 @@ class Ctransferscars extends MY_Controller {
 							</select>
 						</div>
 					</div>
-					<div class='col-sm-1'>	
+					<div class='col-xs-2 col-sm-1'>	
 						<div class='form-group'>
 							<br>
 							<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
 						</div>
 					</div>
-					<div class='col-sm-1 col-sm-offset-2'>	
+					<div class='col-xs-2 col-sm-1 col-sm-offset-3'>	
 						<div class='form-group'>
 							<br>
-							<input type='button' id='btnt1transfers' class='btn btn-default btn-sm' value='โอนย้ายรถ' style='width:100%'>
+							<input type='button' id='btnt1transfers' class='btn btn-cyan btn-sm' value='โอนย้ายรถ' style='width:100%'>
 						</div>
 					</div>
 				</div>
-				<!-- div id='resultt1transfers' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div -->
-				<div id='resultt1transfers' style='background-color:white;'></div>
+				<div id='resultt1transfers' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div>
 			</div>
 			<div class='tab2' style='height:calc(100vh - 132px);width:100%;overflow:auto;background-color:white;'>
 				<div class='col-sm-12'>
@@ -90,7 +87,7 @@ class Ctransferscars extends MY_Controller {
 						<div class='col-sm-2'>	
 							<div class='form-group'>
 								วันที่บิลโอน
-								<input type='text' id='add_TRANSDT' thisvalue='".$this->today("today")."' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน'  >
+								<input type='text' id='add_TRANSDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน' >
 							</div>
 						</div>
 						<div class='col-sm-2'>	
@@ -186,32 +183,14 @@ class Ctransferscars extends MY_Controller {
 								<input type='button' id='btnt2home' class='btn btn-inverse btn-sm' value='หน้าแรก' style='width:100%'>
 							</div>
 						</div>
-						
-						<!--div class='col-sm-1'>	
+						<div class='col-sm-1'>	
 							<div class='form-group'>
 								<br>
 								<input type='button' id='btnt2bill' class='btn btn-primary btn-sm' value='บิลโอน' style='width:100%'>
 							</div>
-						</div-->
-						
-						<div class='col-sm-2'>	
-							<br/>
-							<div class='btn-group btn-group-sm dropup'>
-								<button type='button' id='btnt2bill' class='btn btn-primary'>
-									พิมพ์บิลโอน
-								</button>
-								<button type='button' id='btnt2billOption' class='btn btn-primary dropdown-toggle' data-toggle='dropdown' aria-expanded='false'>
-									<i class='fa fa-cog'></i>
-									<!-- span class='caret'></span -->
-									<span class='sr-only'>Toggle Dropdown</span>
-								</button>
-								<ul class='dropdown-menu' role='menu'>
-									<span id='btnt2billUnlock' class='btn btn-primary btn-sm'>ปลดล็อคบิลโอน</span>
-								</ul>
-							</div>
 						</div>
 						
-						<div class='col-sm-1 col-sm-offset-7'>	
+						<div class='col-sm-1 col-sm-offset-8'>	
 							<div class='form-group'>
 								<br>
 								<input type='button' id='btnt2del' class='btn btn-danger btn-sm' value='ยกเลิกบิลโอน' style='width:100%'>
@@ -229,7 +208,7 @@ class Ctransferscars extends MY_Controller {
 			</div>
 		";
 		
-		$html.= "<script src='".base_url('public/js/SYS02/Ctransferscars.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/SYS02/CreceiveStock.js')."'></script>";
 		echo $html;
 	}
 	
@@ -243,7 +222,7 @@ class Ctransferscars extends MY_Controller {
 		
 		$cond = "";
 		if($arrs['TRANSNO'] != ""){
-			$cond .= " and a.TRANSNO like '%".$arrs['TRANSNO']."%'  collate thai_cs_as";
+			$cond .= " and a.TRANSNO like '%".$arrs['TRANSNO']."%'";
 		}
 		
 		if($arrs['TRANSDT'] != ""){
@@ -369,7 +348,7 @@ class Ctransferscars extends MY_Controller {
 					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
 				from {$this->MAuth->getdb('hp_vusers')}
 			) c on a.EMPCARRY=c.USERID
-			where a.TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as
+			where a.TRANSNO='".$arrs['TRANSNO']."'
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -393,12 +372,12 @@ class Ctransferscars extends MY_Controller {
 		}
 		
 		$sql = "
-			select b.TRANSITEM,rtrim(b.STRNO) as STRNO,c.TYPE,c.MODEL,c.BAAB,COLOR,CC,c.GCODE
+			select b.TRANSITEM,b.STRNO,c.TYPE,c.MODEL,c.BAAB,COLOR,CC,c.GCODE
 				,case when  a.TRANSSTAT='Cancel' then 'ยกเลิกบิลโอน' when isnull(b.RECEIVEDT,'')='' then 'อยู่ระหว่างการโอนย้ายรถ' else 'รับโอนแล้ว' end as RECEIVED
 				,b.EMPCARRY,d.employeeCode+' :: '+d.USERNAME as EMPCARRYNM
 				,convert(varchar(8),b.TRANSDT,112) as TRANSDT 
 			from {$this->MAuth->getdb('INVTransfers')} a
-			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO  collate thai_cs_as
+			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
 			left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate Thai_CS_AS
 			left join (
 				select IDNo collate Thai_CS_AS USERID
@@ -406,7 +385,7 @@ class Ctransferscars extends MY_Controller {
 					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
 				from {$this->MAuth->getdb('hp_vusers')}
 			) d on b.EMPCARRY=d.USERID
-			where a.TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as
+			where a.TRANSNO='".$arrs['TRANSNO']."'
 			order by b.TRANSITEM
 		";
 		//echo $sql; exit;
@@ -707,8 +686,8 @@ class Ctransferscars extends MY_Controller {
 					/* @TRANSNO = รหัสที่จะใช้ */
 					
 					declare @TRANSNO varchar(12) = (select isnull(MAX(TRANSNO),@rec+'0000') from ( 
-						select TRANSNO collate Thai_CS_AS as TRANSNO from {$this->MAuth->getdb('INVTransfers')} where TRANSNO like ''+@rec+'%' collate thai_cs_as
-						union select moveno collate Thai_CS_AS as moveno from {$this->MAuth->getdb('INVMOVM')} where MOVENO like ''+@rec+'%' collate thai_cs_as
+						select TRANSNO collate Thai_CS_AS as TRANSNO from {$this->MAuth->getdb('INVTransfers')} where TRANSNO like ''+@rec+'%' 
+						union select moveno collate Thai_CS_AS as moveno from {$this->MAuth->getdb('INVMOVM')} where MOVENO like ''+@rec+'%'
 					) as a);
 					set @TRANSNO = left(@TRANSNO ,8)+right(right(@TRANSNO ,4)+10001,4);
 					
@@ -765,12 +744,12 @@ class Ctransferscars extends MY_Controller {
 			for($i=0;$i<sizeof($arrs['STRNO']);$i++){
 				$sql .= "
 					if ((select count(*) from {$this->MAuth->getdb('INVTransfersDetails')}
-					where TRANSNO=@TRANSNO collate thai_cs_as and STRNO='".$arrs['STRNO'][$i][1]."' and RECEIVEDT is null) > 0)
+					where TRANSNO=@TRANSNO and STRNO='".$arrs['STRNO'][$i][1]."' and RECEIVEDT is null) > 0)
 					begin
 						update {$this->MAuth->getdb('INVTransfersDetails')}
 						set EMPCARRY='".$arrs['STRNO'][$i][8]."',
 							TRANSDT=".($this->Convertdate(1,$arrs['STRNO'][$i][7]) == "" ? "NULL" : "'".$this->Convertdate(1,$arrs['STRNO'][$i][7])."'")."
-						where TRANSNO=@TRANSNO collate thai_cs_as and STRNO='".$arrs['STRNO'][$i][1]."'
+						where TRANSNO=@TRANSNO and STRNO='".$arrs['STRNO'][$i][1]."'
 					end
 				";				
 			}
@@ -785,17 +764,17 @@ class Ctransferscars extends MY_Controller {
 				begin try					
 					".$sql."
 					
-					declare @item int = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO  collate thai_cs_as);
-					declare @itemRV int = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO  collate thai_cs_as and RECEIVEDT is null);
+					declare @item int = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO);
+					declare @itemRV int = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO and RECEIVEDT is null);
 						
 					update {$this->MAuth->getdb('INVTransfers')}
 					set EMPCARRY = '".$arrs['EMPCARRY']."'
 						,MEMO1 = '".$arrs['MEMO1']."'
-						,TRANSQTY = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO  collate thai_cs_as)
+						,TRANSQTY = (select count(*) from {$this->MAuth->getdb('INVTransfersDetails')} where TRANSNO = @TRANSNO)
 						,TRANSSTAT = (case when @item=@itemRV then 'Sendding' when @itemRV>0 then 'Pendding' else 'Received' end)
 						,INSERTBY = '".$this->sess["IDNo"]."'
 						,INSERTDT = getdate()
-					where TRANSNO = @TRANSNO  collate thai_cs_as;
+					where TRANSNO = @TRANSNO;
 					
 					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 					values ('".$this->sess["IDNo"]."','SYS02::บันทึก โอนย้ายรถ(แก้ไข)','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
@@ -836,15 +815,15 @@ class Ctransferscars extends MY_Controller {
 	
 	function transcode(){
 		$data = array();
-		$data[] = urlencode($_REQUEST["TRANSNO"]);
-		//echo urlencode($_REQUEST["TRANSNO"]); exit;
+		$data[] = $_REQUEST["TRANSNO"];
+		
 		echo json_encode($this->generateData($data,"encode"));
 	}
 	
 	function checkdt(){
 		$dt = $this->Convertdate(1,$_REQUEST['dt']);
 		
-		$sql = "select case when '".$dt."' > convert(varchar(8),dateadd(day,3,getdate()),112) then 'T' else 'F' end as data";
+		$sql = "select case when '".$dt."' > convert(varchar(8),getdate(),112) then 'T' else 'F' end as data";
 		$query = $this->db->query($sql);
 		
 		$html = "";
@@ -879,21 +858,21 @@ class Ctransferscars extends MY_Controller {
 			begin try
 				declare @rec int = (
 					select count(*) from {$this->MAuth->getdb('INVTransfersDetails')}
-					where TRANSNO='".$TRANSNO."' collate thai_cs_as and RECEIVEDT is not null 
+					where TRANSNO='".$TRANSNO."' and RECEIVEDT is not null 
 				)
 				
 				if(@rec = 0)
 				begin
 					update {$this->MAuth->getdb('INVTransfers')}
 					set TRANSSTAT='Cancel'
-					where TRANSNO='".$TRANSNO."' collate thai_cs_as
+					where TRANSNO='".$TRANSNO."'
 					
 					update c 
 					set c.CRLOCAT=a.TRANSFM
 					from {$this->MAuth->getdb('INVTransfers')} a
-					left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO collate thai_cs_as
+					left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
 					left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate thai_cs_as
-					where a.TRANSNO='".$TRANSNO."' collate thai_cs_as and c.STRNO is not null
+					where a.TRANSNO='".$TRANSNO."' and c.STRNO is not null
 				end
 				else 
 				begin
@@ -937,53 +916,12 @@ class Ctransferscars extends MY_Controller {
 		echo json_encode($response); exit;
 	}
 	
-	function billunlock(){
-		$arrs["user"]	 = $_REQUEST["user"];
-		$arrs["pass"] 	 = $_REQUEST["pass"];
-		$arrs["comments"]= $_REQUEST["comments"];
-		$arrs["TRANSNO"] = $_REQUEST["TRANSNO"];
-		$arrs["diunem"]	 = $this->generateData(array($_REQUEST["diunem"]),"decode");
-		
-		$query = $this->MLogin->vertifylogin($arrs["user"],$this->sess["db"]);
-		if($query->row()){
-			foreach($query->result() as $row){
-				if($row->passwords == md5($arrs["pass"])){
-					$sql = "
-						begin tran tunlock
-						begin try
-							insert into {$this->MAuth->getdb('UNLOCKS')}
-							select '".$arrs["diunem"][0]."','ขอปลดล็อคบิลโอน','".$this->sess["db"]."','".$arrs["TRANSNO"]."','".$arrs["comments"]."','".$this->sess["USERID"]."',getdate();
-							
-							commit tran tunlock;
-						end try
-						begin catch
-							rollback tran tunlock;
-						end catch
-					";
-					//echo $sql; exit;
-					if($this->db->query($sql)){
-						$response = array("error"=>false,"msg"=>"ปลดล็อคบิลโอนแล้ว");
-					}else{
-						$response = array("error"=>true,"msg"=>"ผิดพลาด ไม่สามารถปลดล็อครายการโอนนี้ได้");
-					}
-				}else{
-					$response = array("error"=>true,"msg"=>"(1)รหัสผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง โปรดลองใหม่อีกครั้ง");
-				}
-			}
-		}else{
-			$response = array("error"=>true,"msg"=>"(2)รหัสผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง โปรดลองใหม่อีกครั้ง");
-		}
-		
-		echo json_encode($response); 
-	}
-	
 	function pdf(){
 		$data = array();
 		$data[] = $_GET["transno"];
 		
 		$arrs = $this->generateData($data,"decode");
-		$arrs[0] = urldecode($arrs[0]);
-				
+		
 		$sql = "select top 1 COMP_NM from {$this->MAuth->getdb('CONDPAY')}";
 		$query = $this->db->query($sql);
 		$row = $query->row();
@@ -996,7 +934,7 @@ class Ctransferscars extends MY_Controller {
 				,e.USERNAME as EMPCARRY,convert(varchar(8),b.TRANSDT,112) TRANSDTDetail
 				,f.USERNAME as EMPRC,convert(varchar(8),b.RECEIVEDT,112) RECEIVEDT
 			from {$this->MAuth->getdb('INVTransfers')} a
-			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO collate Thai_CS_AS
+			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
 			left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate Thai_CS_AS
 			left join (
 				select IDNo collate Thai_CS_AS USERID
@@ -1018,7 +956,7 @@ class Ctransferscars extends MY_Controller {
 			) f on b.RECEIVEBY=f.USERID
 			left join {$this->MAuth->getdb('INVLOCAT')} g on a.TRANSFM=g.LOCATCD collate Thai_CS_AS
 			left join {$this->MAuth->getdb('INVLOCAT')} h on a.TRANSTO=h.LOCATCD collate Thai_CS_AS
-			where a.TRANSNO='".$arrs[0]."' collate Thai_CS_AS
+			where a.TRANSNO='".$arrs[0]."'
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);

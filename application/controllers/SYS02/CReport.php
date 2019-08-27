@@ -100,6 +100,27 @@ class CReport extends MY_Controller {
 							</select>
 						</div>
 					</div>
+					<div class='col-xs-6 col-sm-4'>	
+						<div class='form-group'>
+							เลขตัวถัง
+							<input type='text' id='STRNO' class='form-control input-sm' placeholder='เลขตัวถัง' value=''>
+						</div>
+					</div>
+					
+					
+					<div class='col-xs-6 col-sm-4'>	
+						<div class='form-group'>
+							จำนวนวันที่สร้าง - วันที่โอน
+							<input type='number' id='CT' class='form-control input-sm' placeholder='จำนวนวันที่สร้าง - วันที่โอน' value=''>
+						</div>
+					</div>
+					<div class='col-xs-6 col-sm-4'>	
+						<div class='form-group'>
+							จำนวนวันที่โอน - รับโอน
+							<input type='number' id='TR' class='form-control input-sm' placeholder='จำนวนวันที่โอน - รับโอน' value=''>
+						</div>
+					</div>
+					
 					<div class='col-xs-12 col-sm-12'>	
 						<div class='form-group'>
 							<br>
@@ -117,20 +138,23 @@ class CReport extends MY_Controller {
 	
 	public function TransfersSearch(){
 		$arrs = array();
-		$arrs["TRANSNO"] = $_REQUEST["TRANSNO"];
-		$arrs["TRANSDTs"] = $this->Convertdate(1,$_REQUEST["TRANSDTs"]);
-		$arrs["TRANSDTe"] = $this->Convertdate(1,$_REQUEST["TRANSDTe"]);
-		$arrs["TRANSFM"] = $_REQUEST["TRANSFM"];
-		$arrs["TRANSTO"] = $_REQUEST["TRANSTO"];
-		$arrs["TRANSSTAT"] = $_REQUEST["TRANSSTAT"];
+		$arrs["TRANSNO"] 	= $_REQUEST["TRANSNO"];
+		$arrs["TRANSDTs"] 	= $this->Convertdate(1,$_REQUEST["TRANSDTs"]);
+		$arrs["TRANSDTe"] 	= $this->Convertdate(1,$_REQUEST["TRANSDTe"]);
+		$arrs["TRANSFM"] 	= $_REQUEST["TRANSFM"];
+		$arrs["TRANSTO"] 	= $_REQUEST["TRANSTO"];
+		$arrs["TRANSSTAT"]	= $_REQUEST["TRANSSTAT"];
 		$arrs["TRANSSTAT2"] = $_REQUEST["TRANSSTAT2"];
-		$arrs["TRANSSYS"] = $_REQUEST["TRANSSYS"];
+		$arrs["TRANSSYS"] 	= $_REQUEST["TRANSSYS"];
+		$arrs["STRNO"] 		= $_REQUEST["STRNO"];
+		$arrs["CT"] 		= $_REQUEST["CT"];
+		$arrs["TR"] 		= $_REQUEST["TR"];
 		
 		$cond = "";
 		$condDesc = "";
 		if($arrs["TRANSNO"] != ""){
 			$condDesc .= " เลขที่บิลโอน ".$arrs["TRANSNO"];
-			$cond .= " and a.TRANSNO like '".$arrs["TRANSNO"]."%' ";
+			$cond .= " and a.TRANSNO like '".$arrs["TRANSNO"]."%'  collate thai_cs_as ";
 		}else{
 			$condDesc .= " เลขที่บิลโอน ทั้งหมด";
 		}
@@ -197,23 +221,41 @@ class CReport extends MY_Controller {
 			$condDesc .= " ระบบ ทั้งหมด";
 		}
 		
+		if($arrs["STRNO"] != ""){
+			$data = $arrs["STRNO"];
+			$condDesc .= " เลขตัวถัง {$data}";
+			$cond .= " and b.STRNO like '".$arrs["STRNO"]."' ";
+		}
+		
+		if($arrs["CT"] != "" and $arrs["TR"] != ""){
+			$condDesc .= " จน.วันที่สร้าง - วันที่โอน {$arrs["CT"]} วันขึ้นไป และวันที่โอน - วันที่รับ {$arrs["TR"]} วันขึ้นไป";
+			$cond .= " and datediff(day,a.TRANSDT,isnull(b.TRANSDT,getdate())) >= {$arrs["CT"]} and datediff(day,b.TRANSDT,isnull(b.RECEIVEDT,getdate())) >= {$arrs["TR"]} ";
+		}else if($arrs["CT"] != "" and $arrs["TR"] == ""){
+			$condDesc .= " จน.วันที่สร้าง - วันที่โอน {$arrs["CT"]} วันขึ้นไป ";
+			$cond .= " and datediff(day,a.TRANSDT,isnull(b.TRANSDT,getdate())) >= {$arrs["CT"]} ";
+		}else if($arrs["CT"] == "" and $arrs["TR"] != ""){
+			$condDesc .= " จน.วันที่โอน - วันที่รับ {$arrs["TR"]} วันขึ้นไป";
+			$cond .= " and datediff(day,isnull(b.TRANSDT,a.TRANSDT),isnull(b.RECEIVEDT,getdate())) >= {$arrs["TR"]} ";
+		}
 		
 		$sql = "
 			select a.TRANSNO,a.TRANSFM,a.TRANSTO,b.TRANSITEM,b.STRNO
 				,c.titleName+c.firstName+' '+c.lastName as EMPCARRY
 				,convert(varchar(8),a.TRANSDT,112) as TRANSDTCreate
 				,convert(varchar(8),b.TRANSDT,112) as TRANSDT
+				,datediff(day,a.TRANSDT,isnull(b.TRANSDT,getdate())) as ct
+				,datediff(day,b.TRANSDT,isnull(b.RECEIVEDT,getdate())) as tr
 				,e.titleName+e.firstName+' '+e.lastName as RECEIVEBY,convert(varchar(8),b.RECEIVEDT,112) as RECEIVEDT
 				,d.titleName+d.firstName+' '+d.lastName as INSERTBY
 				,convert(varchar(8),b.INSERTDT,112) as INSERTDT 
 				,convert(varchar(5),b.INSERTDT,108) as INSERTDTTime 
 				,a.SYSTEM
 			from {$this->MAuth->getdb('INVTransfers')} a
-			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
+			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO collate thai_cs_as
 			left join {$this->MAuth->getdb('hp_vusers')} c on c.IDNo=b.EMPCARRY collate thai_cs_as
 			left join {$this->MAuth->getdb('hp_vusers')} d on d.IDNo=b.INSERTBY collate thai_cs_as
 			left join {$this->MAuth->getdb('hp_vusers')} e on e.IDNo=b.RECEIVEBY collate thai_cs_as
-			where 1=1 ".$cond."
+			where 1=1 ".$cond." and a.TRANSSTAT <> 'Cancel'
 			order by a.TRANSNO,b.TRANSITEM
 		";
 		//echo $sql; exit;
@@ -226,7 +268,7 @@ class CReport extends MY_Controller {
 				$css = "color:black;";
 				if($row->RECEIVEDT != ""){
 					$css = "color:blue;";
-				}else if($row->TRANSDT != "" and $row->RECEIVEDT == ""){
+				}else if($row->EMPCARRY != "" and $row->TRANSDT != "" and $row->RECEIVEDT == ""){
 					$css = "color:red;";
 				}
 				$html .= "
@@ -240,8 +282,10 @@ class CReport extends MY_Controller {
 						<td>".$row->STRNO."</td>
 						<td>".$row->EMPCARRY."</td>
 						<td>".$this->Convertdate(2,$row->TRANSDT)."</td>
+						<td>".$row->ct."</td>
 						<td>".$row->RECEIVEBY."</td>
 						<td>".$this->Convertdate(2,$row->RECEIVEDT)."</td>
+						<td>".$row->tr."</td>
 						<td>".$row->SYSTEM."</td>
 						<td>".$row->INSERTBY."</td>
 						<td>".$this->Convertdate(2,$row->INSERTDT)." ".$row->INSERTDTTime."</td>
@@ -257,21 +301,21 @@ class CReport extends MY_Controller {
 		}
 		
 		$html = "
-			<div id='table-fixed-TransfersSearch' class='col-sm-12' style='height:calc(100% - 25px);width:100%;overflow:auto;font-size:8pt;'>
+			<div id='table-fixed-TransfersSearch' class='col-sm-12' style='height:calc(100%);width:100%;overflow:auto;font-size:8pt;'>
 				<table id='table-TransfersSearch' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
 					<thead>
 						<tr>
-							<th colspan='14' class='text-center' style='font-size:12pt;border:0px;'> 
+							<th colspan='16' class='text-center' style='font-size:12pt;border:0px;'> 
 								รายงานการโอนย้ายรถ
 							</th>
 						</tr>
 						<tr>
-							<th colspan='14' class='text-center' style='border:0px;'>
+							<th colspan='16' class='text-center' style='border:0px;'>
 								ออกรายงานโดย ".$this->sess["name"]." &emsp; ณ วันที่ ".$this->MDATA->sysdt()."
 							</th>
 						</tr>
 						<tr>
-							<th colspan='14' class='text-center' style='border:0px;color:#666;'>
+							<th colspan='16' class='text-center' style='border:0px;color:#666;'>
 								เงื่อนไข :: ".$condDesc."
 							</th>
 						</tr>
@@ -285,8 +329,10 @@ class CReport extends MY_Controller {
 							<th style='vertical-align:middle;border:0px;'>เลขตัวถัง</th>
 							<th style='vertical-align:middle;border:0px;'>พขร.</th>
 							<th style='vertical-align:middle;border:0px;'>วันที่โอน</th>
+							<th style='vertical-align:middle;border:0px;'>จน.วัน<br/>สร้าง-โอน</th>
 							<th style='vertical-align:middle;border:0px;'>ผู้รับโอน</th>
 							<th style='vertical-align:middle;border:0px;'>วันที่รับโอน</th>
+							<th style='vertical-align:middle;border:0px;'>จน.วัน<br/>โอน-รับ</th>
 							<th style='vertical-align:middle;border:0px;'>ระบบ</th>
 							<th style='vertical-align:middle;border:0px;'>ผู้โอนย้าย</th>
 							<th style='vertical-align:middle;border:0px;'>วันที่บันทึกโอน</th>
@@ -296,9 +342,6 @@ class CReport extends MY_Controller {
 						".$html."
 					</tbody>					
 				</table>
-			</div>
-			<div>
-				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-TransfersSearch', 'รายงานการโอนย้ายรถ');\" style='width:30px;height:30px;cursor:pointer;'/>
 			</div>
 		";
 		
@@ -515,7 +558,7 @@ class CReport extends MY_Controller {
 			left join (
 				select * from (
 					select a.TRANSTO,c.STAT,c.STRNO from YTKManagement.dbo.INVTransfers a
-					left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO
+					left join YTKManagement.dbo.INVTransfersDetails b on a.TRANSNO=b.TRANSNO collate thai_cs_as 
 					left join HIINCOME.dbo.INVTRAN c on b.STRNO=c.STRNO collate thai_cs_as
 					where isnull(b.MOVENO,'')='' and isnull(RECEIVEBY,'')='' and RECEIVEDT is null and c.CRLOCAT='TRANS'
 				) as data
@@ -577,7 +620,7 @@ class CReport extends MY_Controller {
 		
 		
 		$html = "
-			<div id='table-fixed-TransfersPenddingSearch' class='col-sm-12' style='height:calc(100% - 25px);width:100%;overflow:auto;font-size:8pt;'>
+			<div id='table-fixed-TransfersPenddingSearch' class='col-sm-12' style='height:calc(100%);width:100%;overflow:auto;font-size:8pt;'>
 				<table id='table-TransfersPenddingSearch' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
 					<thead>
 						<tr>
@@ -620,9 +663,6 @@ class CReport extends MY_Controller {
 					</tbody>					
 				</table>
 			</div>
-			<div>
-				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-TransfersPenddingSearch', 'รายงานรถที่อยู่ระหว่างการโอนย้าย');\" style='width:30px;height:30px;cursor:pointer;'/>
-			</div>
 		";
 		
 		$response = array("html"=>$html);
@@ -661,7 +701,7 @@ class CReport extends MY_Controller {
 				,c.titleName+c.firstName+' '+c.lastName as EMPCARRY 
 				,a.SYSTEM
 			from INVTransfers a
-			left join INVTransfersDetails b on a.TRANSNO=b.TRANSNO
+			left join INVTransfersDetails b on a.TRANSNO=b.TRANSNO collate thai_cs_as 
 			left join {$this->MAuth->getdb('hp_vusers')} c on c.IDNo=b.EMPCARRY collate thai_cs_as
 			where b.MOVENO is null and b.RECEIVEBY is null and b.RECEIVEDT is null ".$cond."
 			order by b.TRANSDT 

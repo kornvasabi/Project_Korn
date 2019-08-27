@@ -65,7 +65,7 @@ class Creceivedcars extends MY_Controller {
 							</select>
 						</div>
 					</div>
-					<div class='col-sm-1'>	
+					<div class='col-sm-2'>	
 						<div class='form-group'>
 							<br>
 							<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
@@ -78,7 +78,8 @@ class Creceivedcars extends MY_Controller {
 						</div>
 					</div -->
 				</div>
-				<div id='resultt1received' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div>
+				<!-- div id='resultt1received' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div -->
+				<div id='resultt1received' style='background-color:white;'></div>
 			</div>
 			
 			<div class='tab2' style='height:calc(100vh - 132px);width:100%;overflow:auto;background-color:white;'>
@@ -218,7 +219,7 @@ class Creceivedcars extends MY_Controller {
 		
 		$cond = "";
 		if($arrs['TRANSNO'] != ""){
-			$cond .= " and a.TRANSNO like '%".$arrs['TRANSNO']."%'";
+			$cond .= " and a.TRANSNO like '%".$arrs['TRANSNO']."%' collate thai_cs_as";
 		}
 		
 		if($arrs['TRANSDT'] != ""){
@@ -246,11 +247,11 @@ class Creceivedcars extends MY_Controller {
 					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
 					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว' end TRANSSTATDesc
 			from {$this->MAuth->getdb('INVTransfers')} a
-			left join {$this->MAuth->getdb('INVMOVM')} b on a.TRANSNO=b.MOVENO collate Thai_CI_AS
+			left join {$this->MAuth->getdb('INVMOVM')} b on a.TRANSNO=b.MOVENO collate thai_cs_as
 			where 1=1 ".$cond."
 			order by a.TRANSTO,a.TRANSNO desc
 		";
-		
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$html = "";
@@ -331,7 +332,7 @@ class Creceivedcars extends MY_Controller {
 			) c on a.EMPCARRY=c.USERID
 			
 			left join {$this->MAuth->getdb('INVMOVM')} d on a.TRANSNO=d.MOVENO collate Thai_CI_AS
-			where a.TRANSNO='".$arrs['TRANSNO']."'
+			where a.TRANSNO='".$arrs['TRANSNO']."'  collate thai_cs_as
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -383,7 +384,7 @@ class Creceivedcars extends MY_Controller {
 					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
 				from {$this->MAuth->getdb('hp_vusers')}
 			) d on a.RECEIVEBY=d.USERID
-			where a.TRANSNO='".$arrs['TRANSNO']."' and a.RECEIVEDT is not null
+			where a.TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as and a.RECEIVEDT is not null
 			order by a.TRANSITEM
 		";
 		//echo $sql; exit;
@@ -462,13 +463,13 @@ class Creceivedcars extends MY_Controller {
 						set @getdt = getdate();
 						update a
 						set a.CRLOCAT=b.TRANSTO
-							,a.MOVENO=b.TRANSNO
+							,a.MOVENO=b.TRANSNO 
 							,a.MOVEDT=@getdt
 						from {$this->MAuth->getdb('INVTRAN')} a
 						left join (
 							select b.STRNO,a.TRANSTO,a.TRANSNO from {$this->MAuth->getdb('INVTransfers')} a 
-							left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
-							where a.TRANSNO='".$arrs['TRANSNO']."' and b.STRNO='".$arrs['STRNO'][$i][1]."'	
+							left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO  collate thai_cs_as
+							where a.TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as and b.STRNO='".$arrs['STRNO'][$i][1]."'	
 						) b on a.STRNO=b.STRNO collate Thai_CI_AS
 						where b.STRNO is not null
 						
@@ -476,14 +477,14 @@ class Creceivedcars extends MY_Controller {
 						select a.TRANSNO,b.STRNO,convert(varchar(8),@getdt,112),a.TRANSFM,a.TRANSTO
 							,isnull((select max(MOVSEQ)+1 from {$this->MAuth->getdb('INVMOVT')} where STRNO='".$arrs['STRNO'][$i][1]."'),1),@getdt
 						from {$this->MAuth->getdb('INVTransfers')} a
-						left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO
-						where a.TRANSNO='".$arrs['TRANSNO']."' and b.STRNO='".$arrs['STRNO'][$i][1]."'
+						left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO  collate thai_cs_as
+						where a.TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as and b.STRNO='".$arrs['STRNO'][$i][1]."'
 						
 						update {$this->MAuth->getdb('INVTransfersDetails')}
 						set MOVENO=TRANSNO
 							,RECEIVEBY='".$this->sess["IDNo"]."'
 							,RECEIVEDT=@getdt
-						where TRANSNO='".$arrs['TRANSNO']."' and STRNO='".$arrs['STRNO'][$i][1]."'
+						where TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as and STRNO='".$arrs['STRNO'][$i][1]."'
 					end
 					else if (1 = (select count(*) from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$arrs['STRNO'][$i][1]."'))
 					begin 
@@ -507,7 +508,7 @@ class Creceivedcars extends MY_Controller {
 			$response['msg'] = 'ไม่บันทึก เนื่องจากรถในรายการถูกรับโอนทุกคันแล้วครับ';
 			echo json_encode($response); exit;
 		}
-		
+		//print_R($this->sess); exit;
 		$sql = "
 			if object_id('tempdb..#transaction') is not null drop table #transaction;
 			create table #transaction (id varchar(20),msg varchar(max));
@@ -516,16 +517,19 @@ class Creceivedcars extends MY_Controller {
 			
 			begin tran ins
 			begin try
-				if((select count(*) from {$this->MAuth->getdb('INVMOVM')} where MOVENO='".$arrs['TRANSNO']."') > 0)
+				if((select count(*) from {$this->MAuth->getdb('INVMOVM')} where MOVENO='".$arrs['TRANSNO']."' collate thai_cs_as ) > 0)
 				begin 
 					".$sql."
 				end
 				else 
 				begin 
 					insert into {$this->MAuth->getdb('INVMOVM')}
-					select TRANSNO,convert(varchar(8),getdate(),112),INSERTBY,APPROVED,TRANSFM,TRANSTO,MEMO1,getdate() 
-					from {$this->MAuth->getdb('INVTransfers')}
-					where TRANSNO='".$arrs['TRANSNO']."'
+					select a.TRANSNO,convert(varchar(8),getdate(),112)
+						,(select USERID from YTKManagement.dbo.hp_mapusers where IDNo=a.INSERTBY and dblocat='".$this->sess["db"]."')
+						,(select USERID from YTKManagement.dbo.hp_mapusers where IDNo=a.APPROVED and dblocat='".$this->sess["db"]."')
+						,a.TRANSFM,a.TRANSTO,a.MEMO1,getdate() 
+					from {$this->MAuth->getdb('INVTransfers')} a
+					where a.TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as
 					
 					".$sql."
 				end 
@@ -533,14 +537,14 @@ class Creceivedcars extends MY_Controller {
 				declare @revcount int = (
 					select sum(case when RECEIVEDT is null then 1 else 0 end)
 					from {$this->MAuth->getdb('INVTransfersDetails')}
-					where TRANSNO='".$arrs['TRANSNO']."'
+					where TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as
 				)
 				
 				update {$this->MAuth->getdb('INVTransfers')}
 				set TRANSSTAT = (case when TRANSQTY > @revcount then 
 					(case when @revcount = 0 then 'Received' else 'Pendding' end) 
 					else 'Sendding' end)
-				where TRANSNO='".$arrs['TRANSNO']."'
+				where TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','SYS02::บันทึก รับโอนรถ','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
@@ -586,7 +590,7 @@ class Creceivedcars extends MY_Controller {
 					,firstName+' '+lastName collate Thai_CS_AS USERNAME  
 				from {$this->MAuth->getdb('hp_vusers')}
 			) c on a.EMPCARRY=c.USERID
-			where a.TRANSNO='".$arrs['TRANSNO']."' and a.RECEIVEDT is null
+			where a.TRANSNO='".$arrs['TRANSNO']."' collate thai_cs_as and a.RECEIVEDT is null
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);

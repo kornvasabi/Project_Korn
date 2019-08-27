@@ -15,7 +15,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	<!--lobiadmin-with-plugins.css contains all LobiAdmin css plus lobiplugins all css files, plus third party plugins-->
 	<link rel="stylesheet" href="../public/lobiadmin-master/version/1.0/ajax/css/lobiadmin-with-plugins.css"/>
 	
-	
+	<style>
+		tr td { white-space:nowrap; }
+		tr th { white-space:nowrap; }
+	</style>
 </head>
 <body class='menu-fixed' baseUrl='<?php echo $baseUrl; ?>' >
 	<nav class="navbar navbar-default navbar-header header">
@@ -241,13 +244,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	<script src="../public/bootstrap-datepicker-thai/js/bootstrap-datepicker.js"></script>
     <script src="../public/bootstrap-datepicker-thai/js/bootstrap-datepicker-thai.js"></script>
     <script src="../public/bootstrap-datepicker-thai/js/locales/bootstrap-datepicker.th.js"></script>
+	
+	<script src="../public/lobiadmin-master/version/1.0/ajax/js/plugin/datatables/jquery.dataTables.min.js"></script>
+	<script src="../public/lobiadmin-master/version/1.0/ajax/js/plugin/datatables/dataTables.bootstrap.min.js"></script>
+	<script src="../public/lobiadmin-master/version/1.0/ajax/js/plugin/datatables/dataTables.responsive.min.js"></script>
 </body>
 <script>
-	/*
-		setInterval(function(){
-			alert('x');
-		},60000);
-	*/
 	setInterval(function(){
 		__decss();
 	},250);
@@ -365,6 +367,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		}
 	});
 	
+	/*
 	var tableToExcel = (function() {
 		var uri = 'data:application/vnd.ms-excel;base64,'
 		  , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
@@ -376,9 +379,46 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		  window.location.href = uri + base64(format(template, ctx))
 		}
 	})()
+	*/
+	var tableToExcel = (function() {
+		var uri = 'data:application/vnd.ms-excel;base64,'
+			, template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+			, base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+			, format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+		return function(table, name, fileName) {
+			if (!table.nodeType) table = document.getElementById(table)
+			var ctx = {worksheet: name || 'Worksheet', table: table.innerHTML}
+			
+			var link = document.createElement("A");
+			link.href = uri + base64(format(template, ctx));
+			link.download = fileName || 'Workbook.xls';
+			link.target = '_blank';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		}
+	})();
+	
+	var tableToExcel_Export = (function() {
+		var uri = 'data:application/vnd.ms-excel;base64,'
+			, template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>{table}</body></html>'
+			, base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+			, format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+		return function(table, name, fileName) {
+			var ctx = {worksheet: name || 'Worksheet', table: table}
+
+			var link = document.createElement("A");
+			link.href = uri + base64(format(template, ctx));
+			link.download = fileName || 'Workbook.xls';
+			link.target = '_blank';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		}
+	})();
 		
 	$('body').keyup(function(e){
-		if ( e.keyCode === 114 ) { // ESC
+		if ( e.keyCode === 27 ) { // ESC
 			$('#loadding').hide();
 		}else if(e.keyCode === 112){ //F1
 			dataToPost = new Object();
@@ -519,6 +559,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			delay: false,
 			icon: false, 
 			width: 200,
+			sound: false, 
 			position: {
 				top:(event.pageY - 50),
 				left: 220//(event.pageX + 30)
@@ -531,5 +572,63 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	},function(){
 		LobiboxNotify.remove();
 	});
+	
+	function fn_datatables($tbname,$numbers,$usageHeight){
+		$dom = "";
+		$iDisplayLength = 100;
+		switch($numbers){
+			case 1: 
+				$dom = "<'row'<'col-sm-6 data-export'l><'col-sm-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>"; 
+				break; 
+			case 2: 
+				$dom = "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>"; 
+				break; 
+			case 3: 
+				$iDisplayLength = -1;
+				$dom = "<'row'<'col-sm-12'tr>>"; 
+				break; 
+			default: 
+				$iDisplayLength = 100;
+				$dom = "<'row'<'col-sm-6'l><'col-sm-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>"; 
+				break;
+		}
+		
+		$('#'+$tbname).DataTable({
+			//scrollY: ($(window).height() - 375),
+			scrollY: 'calc(100vh - '+$usageHeight+'px)',
+			scrollX: true,
+			autoWidth: true,
+			responsive: false,
+			iDisplayLength: $iDisplayLength,
+			lengthChange: false,
+			aLengthMenu: [ 50, 100, 500, 1000 ],
+			dom: $dom,
+			language: {
+				"decimal":        "",
+				"emptyTable":     "ไม่พบข้อมูล ตามเงื่อนไข..",
+				"info":           "ข้อมูล รายการที่ _START_ ถึง  _END_ จากทั้งหมด _TOTAL_ รายการ",
+				"infoEmpty":      "ข้อมูล รายการที่ 0 ถึง 0 จากทั้งหมด 0 รายการ",
+				"infoFiltered":   "(ค้นหาจากข้อมูล _MAX_ รายการ)",
+				"infoPostFix":    "",
+				"thousands":      ",",
+				"lengthMenu":     "แสดง _MENU_ รายการ",
+				"loadingRecords": "Loading...",
+				"processing":     "Processing...",
+				"search":         "ค้นหา :",
+				"zeroRecords":    "ไม่พบข้อมูลที่ค้นหา..",
+				"paginate": {
+					"first":      "หน้าแรก",
+					"last":       "หน้าสุดท้าย",
+					"next":       "ถัดไป",
+					"previous":   "ย้อนกลับ"
+				},
+				"aria": {
+					"sortAscending":  ": activate to sort column ascending",
+					"sortDescending": ": activate to sort column descending"
+				}
+			},
+			buttons: ['excel']
+		});
+	}
 </script>
 </html>

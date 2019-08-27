@@ -47,9 +47,18 @@ $('#btnt1transferPendding').click(function(){
 				draggable: false
 			});
 			
+			/*
 			document.getElementById("table-fixed-TransfersPenddingSearch").addEventListener("scroll", function(){
 				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 				this.querySelector("thead").style.transform = translate;						
+			});
+			*/
+			fn_datatables('table-TransfersPenddingSearch',1,300);
+			
+			// Export data to Excel
+			$('.data-export').prepend('<img id="table-TransfersPenddingSearch-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
+			$("#table-TransfersPenddingSearch-excel").click(function(){ 	
+				tableToExcel_Export(data.html,"sheet 1","Report_MaxStock.xlsx"); 
 			});
 			
 			$('#table-TransfersPenddingSearch tbody tr').hover(function(){

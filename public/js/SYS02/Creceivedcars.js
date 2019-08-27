@@ -268,37 +268,50 @@ function search(){
 			$('#resultt1received').find('.spinner, .spinner-backdrop').remove();
 			$('#resultt1received').html(data.html);
 			
+			/*
 			document.getElementById("table-fixed-Creceivedcars").addEventListener("scroll", function(){
 				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 				this.querySelector("thead").style.transform = translate;						
 			});
+			*/
+			$('#table-Creceivedcars').on('draw.dt',function(){ redraw(); });
+			fn_datatables('table-Creceivedcars',1,325);
 			
-			$('.getit').hover(function(){
-				$(this).css({'background-color':'yellow'});
-				$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#f9f9a9'});
-			},function(){
-				$(this).css({'background-color':'white'});
-				$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
+			/*
+			// Export data to Excel
+			$('.data-export').prepend('<img id="table-Ctransferscars-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
+			$("#table-Ctransferscars-excel").click(function(){ 	
+				tableToExcel_Export(data.html,"ข้อมูลการรับโอน","Received"); 
 			});
+			*/
 			
-			
-			$('.getit').click(function(){
-				dataToPost = new Object();
-				dataToPost.TRANSNO = $(this).attr('TRANSNO');
-				dataToPost.cup = $('.tab1[name="home"]').attr('cup');
-			
-				$('#loadding').show();	
-				$('#table-option tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน				
+			function redraw(){
+				$('.getit').hover(function(){
+					$(this).css({'background-color':'yellow'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#f9f9a9'});
+				},function(){
+					$(this).css({'background-color':'white'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
+				});
 				
-				var newOption;						
-				newOption = new Option($(this).attr('TRANSNO'), $(this).attr('TRANSNO'), false, false);
-				$('#add_TRANSNO').empty();
-				$('#add_TRANSNO').append(newOption); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
-				$('#add_TRANSNO').attr('disabled',true).trigger('change');
+				$('.getit').click(function(){
+					dataToPost = new Object();
+					dataToPost.TRANSNO = $(this).attr('TRANSNO');
+					dataToPost.cup = $('.tab1[name="home"]').attr('cup');
 				
-				$('.tab1').hide();
-				$('.tab2').show();
-			});
+					$('#loadding').show();	
+					$('#table-option tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน				
+					
+					var newOption;						
+					newOption = new Option($(this).attr('TRANSNO'), $(this).attr('TRANSNO'), false, false);
+					$('#add_TRANSNO').empty();
+					$('#add_TRANSNO').append(newOption); //กรณี select2 ไม่มี option จะต้อง append ค่าให้ใหม่
+					$('#add_TRANSNO').attr('disabled',true).trigger('change');
+					
+					$('.tab1').hide();
+					$('.tab2').show();
+				});
+			}
 		}
 	});
 }
