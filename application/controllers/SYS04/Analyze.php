@@ -9,7 +9,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                           _ _/ /
                          /___ /
 ********************************************************/
-class ReserveCar extends MY_Controller {
+class Analyze extends MY_Controller {
 	private $sess = array(); 
 	
 	function __construct(){
@@ -25,7 +25,6 @@ class ReserveCar extends MY_Controller {
 	
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
-		//print_r($claim); exit;
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "

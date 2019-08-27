@@ -13,7 +13,8 @@
 	"require": {
 		"php": ">=5.3.7",
 		"mpdf/mpdf": "^7.1",
-		"snapappointments/bootstrap-select": "^1.13"
+		"snapappointments/bootstrap-select": "^1.13",
+		"phpoffice/phpspreadsheet": "^1.6"
 	},
 	"suggest": {
 		"paragonie/random_compat": "Provides better randomness in PHP 5.x"

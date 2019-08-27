@@ -81,14 +81,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -102,14 +102,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -125,7 +125,7 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
@@ -135,7 +135,7 @@ class MLogin extends CI_Model {
 						for($i=1;$i <= $rage; $i++){ $html .= "</ul></li>"; }
 						
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -149,14 +149,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -170,14 +170,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -193,7 +193,7 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
@@ -203,7 +203,7 @@ class MLogin extends CI_Model {
 						for($i=1;$i <= $rage; $i++){ $html .= "</ul></li>"; }
 						
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -217,14 +217,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -238,14 +238,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -261,7 +261,7 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
@@ -271,7 +271,7 @@ class MLogin extends CI_Model {
 						for($i=1;$i <= $rage; $i++){ $html .= "</ul></li>"; }
 						
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -285,14 +285,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -306,14 +306,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -329,7 +329,7 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
@@ -339,7 +339,7 @@ class MLogin extends CI_Model {
 						for($i=1;$i <= $rage; $i++){ $html .= "</ul></li>"; }
 						
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -353,14 +353,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -374,14 +374,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -397,7 +397,7 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
@@ -407,7 +407,7 @@ class MLogin extends CI_Model {
 						for($i=1;$i <= $rage; $i++){ $html .= "</ul></li>"; }
 						
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -421,14 +421,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -442,14 +442,14 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
 						
 					}else{
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -465,7 +465,7 @@ class MLogin extends CI_Model {
 							<li>
 								<a href='#'>
 								<i class='".$row->menuicon."' aria-hidden='true'></i>
-								<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
+								<span class='inner-text notifyMenu' menuname='".$row->menuname."' mid='".$row->menuid."'>".$row->menuname."</span>
 							
 								<ul>
 						";
@@ -474,7 +474,7 @@ class MLogin extends CI_Model {
 						for($i=1;$i <= $rage; $i++){ $html .= "</ul></li>"; }
 						
 						$html .= "
-							<li>
+							<li class='notifyMenu' menuname='".$row->menuname."'>
 								<a href='#".$row->menulink."'>
 									<i class='".$row->menuicon." menu-item-icon'></i>
 									<span class='inner-text' mid='".$row->menuid."'>".$row->menuname."</span>
@@ -496,7 +496,7 @@ class MLogin extends CI_Model {
 		
 		$sql = "
 			select c.*,a.LEVEL_1 as level from {$sess["db"]}.dbo.PASSWRD a
-			left join YTKManagement.dbo.hp_mapusers b on a.USERID=b.USERID collate Thai_CI_AS
+			left join YTKManagement.dbo.hp_mapusers b on a.USERID=b.USERID collate Thai_CI_AS and b.dblocat='".$sess["db"]."'
 			left join YTKManagement.dbo.hp_groupuser_detail c on b.groupCode=c.groupCode collate Thai_CI_AS and c.dblocat='".$sess["db"]."'
 			left join YTKManagement.dbo.hp_menu d on c.menuid=d.menuid
 			where a.USERID='".$sess["USERID"]."' and d.menulink = '".$mid."'

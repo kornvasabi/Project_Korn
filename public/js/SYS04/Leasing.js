@@ -376,6 +376,9 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			type: 'POST',
 			dataType: 'json',
 			success: function(data) {
+				var newOption = new Option(data.ADDRDT, data.ADDRNO, true, true);
+				$('#add_addrno').empty().append(newOption).trigger('change');					
+				
 				if(data.GRADE == "F" || data.GRADE == "FF"){
 					Lobibox.notify('error', {
 						title: 'ผิดพลาด',
@@ -388,7 +391,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						messageHeight: '90vh',
 						msg: "รหัสลูกค้า "+dataToPost.cuscod+" เกรดลูกหนี้เป็น "+data.GRADE+" ไม่สามารถปล่อยสินเชื่อได้ครับ"
 					});
-					$('#add_cuscod').empty().trigger('change');					
+					$('#add_cuscod').empty().trigger('change');
 					$('#add_addrno').empty().trigger('change');
 				}else if(data.GRADE == ""){
 					$('#add_addrno').empty().trigger('change');
@@ -421,6 +424,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	$('#add_resvno').change(function(){
 		dataToPost = new Object();
 		dataToPost.resvno = (typeof $(this).find(':selected').val() === 'undefined' ? '' : $(this).find(':selected').val());
+		dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
 		
 		$.ajax({
 			url:'../SYS04/Leasing/resvnoChanged',
@@ -536,6 +540,9 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			}
 		});
 	});
+	
+	$('#add_vatrt').attr('disabled',true);
+	$('.add_nextlastmonth').hide();
 	
 	document.getElementById("dataTable-fixed-inopt").addEventListener("scroll", function(){
 		var translate = "translate(0,"+(this.scrollTop - 7)+"px)";
@@ -710,6 +717,51 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		});
 	});
 	
+	/*
+	$('#add_inprc').attr('disabled',true);
+	$('#add_indwn').attr('disabled',true);
+	$('#add_nopay').attr('disabled',true);
+	$('#add_upay').attr('disabled',true);
+	$('#add_payfirst').attr('disabled',true);
+	$('#add_paynext').attr('disabled',true);
+	$('#add_paylast').attr('disabled',true);
+	$('#add_sell').attr('disabled',true);
+	$('#add_totalSell').attr('disabled',true);	
+	$('#add_interest').attr('disabled',true);
+	$('#add_interestRate').attr('disabled',true);
+	$('#add_interestRateReal').attr('disabled',true);	
+	*/
+	
+	
+	function manualCal(){
+		dataToPost = new Object();
+		dataToPost.inclvat 	 = $('#add_inclvat').find(':selected').val();
+		dataToPost.vatrt 	 = $('#add_vatrt').val();
+		dataToPost.inprc 	 = $('#add_inprc').val();
+		dataToPost.indwn 	 = $('#add_indwn').val();
+		dataToPost.nopay 	 = $('#add_nopay').val();
+		
+		dataToPost.payfirst	 = $('#add_payfirst').val();
+		dataToPost.paynext 	 = $('#add_paynext').val();
+		dataToPost.paylast 	 = $('#add_paylast').val();
+		dataToPost.sell 	 = $('#add_sell').val();
+		dataToPost.totalSell = $('#add_totalSell').val();
+		dataToPost.interest	 = $('#add_interest').val();
+		
+		$.ajax({
+			url: '../SYS04/Leasing/manualCal',
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				
+			}
+		});
+		
+	}
+	
+	
+	
 	$('#add_emp').select2({ 
 		placeholder: 'เลือก',
         ajax: {
@@ -766,33 +818,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
-	$('#add_empSell').select2({ 
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getUSERS',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = $('#add_empSell').find(':selected').val();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: false,
-		multiple: false,
-		dropdownParent: $("#wizard-leasing"),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
+	$('#add_empSell').select2({ dropdownParent: true,disabled: true,width:'100%' });
 	
 	$('#add_acticod').select2({ 
 		placeholder: 'เลือก',
@@ -1247,7 +1273,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						content: data.msg,
 						draggable: true,
 						closeOnEsc: true,
-						shown: function($this){
+						shown: function($thisFormCalNopay){
 							var incv = {
 								"results": [
 									{
@@ -1368,6 +1394,373 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								}
 							});
 							
+							
+							$('#btnStd').click(function(){ 
+								$('#btnStd').attr('disabled',true);
+								
+								dataToPost = new Object();
+								dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
+								dataToPost.strno = (typeof $('#add_strno').find(':selected').val() === 'undefined' ? '' : $('#add_strno').find(':selected').val());
+								
+								$.ajax({
+									url:'../SYS04/Leasing/getFormStd',
+									data: dataToPost,
+									type: 'POST',
+									dataType: 'json',
+									success: function(data) {
+										Lobibox.window({
+											title: 'ดึงข้อมูลราคา std',
+											width: $(window).width(),
+											height: $(window).height(),
+											content: data.html,
+											draggable: true,
+											closeOnEsc: true,
+											shown: function($thisFormStd){
+												$('#std_acticod').select2({ 
+													placeholder: 'เลือก',
+													ajax: {
+														url: '../Cselect2/getACTI',
+														data: function (params) {
+															dataToPost = new Object();
+															dataToPost.now = $('#add_acticod').find(':selected').val();
+															dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
+															
+															return dataToPost;				
+														},
+														dataType: 'json',
+														delay: 1000,
+														processResults: function (data) {
+															return {
+																results: data
+															};
+														},
+														cache: true
+													},
+													allowClear: false,
+													multiple: false,
+													dropdownParent: $("#lobiwin_std"),
+													//disabled: true,
+													//theme: 'classic',
+													width: '100%'
+												});
+												
+												$('#btnStdSearch').click(function(){
+													dataToPost = new Object();
+													dataToPost.locat 	= (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
+													dataToPost.sdate    = $('#add_sdate').val();
+													dataToPost.model 	= $(this).attr('MODEL');
+													dataToPost.baab  	= $(this).attr('BAAB');
+													dataToPost.color 	= $(this).attr('COLOR');
+													dataToPost.acticod 	= (typeof $('#std_acticod').find(':selected').val() === 'undefined' ? '' : $('#std_acticod').find(':selected').val());
+													dataToPost.dwn 		= $('#std_dwn').val();
+													dataToPost.nopay 	= $('#std_nopay').val();
+													
+													$.ajax({
+														url:'../SYS04/Leasing/getFormStdSearch',
+														data: dataToPost,
+														type: 'POST',
+														dataType: 'json',
+														success: function(data) {
+															if(data.status == 'S'){
+																$('#stdResult').html(data.msg);
+																
+																$('#stdCond1').change(function(){
+																	if($(this).is(':checked')){
+																		$('#stdCond1').prop('checked',false);
+																	}else{
+																		$('#stdCond1').prop('checked',true);
+																	}
+																	
+																	Lobibox.confirm({
+																		title: 'ยืนยันการทำรายการ',
+																		iconClass: false,
+																		msg: 'คุณต้องการใช้อัตราดอกเบี้ยข้าราชการหรือไม่',
+																		buttons: {
+																			ok : {
+																				'class': 'btn btn-primary',
+																				text: 'ยืนยัน, ใช้ดอกเบี้ยข้าราชการ',
+																				closeOnClick: true,
+																			},
+																			cancel : {
+																				'class': 'btn btn-danger',
+																				text: 'ยืนยัน, ใช้ดอกเบี้ยทั่วไป',
+																				closeOnClick: true
+																			},
+																		},
+																		callback: function(lobibox, type){
+																			if (type === 'ok'){
+																				$('#stdCond1').prop('checked',true);
+																			}else{
+																				$('#stdCond1').prop('checked',false);
+																			}
+																		}
+																	});
+																});
+																
+																$('#stdCond2').change(function(){
+																	if($(this).is(':checked')){
+																		$('#stdCond2').prop('checked',false);
+																	}else{
+																		$('#stdCond2').prop('checked',true);
+																	}
+																	
+																	Lobibox.confirm({
+																		title: 'ยืนยันการทำรายการ',
+																		iconClass: false,
+																		msg: 'คุณต้องการรวมเบี้ยประกันด้วยหรือไม่',
+																		buttons: {
+																			ok : {
+																				'class': 'btn btn-primary',
+																				text: 'ยืนยัน, รวมเบี้ยประกัน',
+																				closeOnClick: true,
+																			},
+																			cancel : {
+																				'class': 'btn btn-danger',
+																				text: 'ยืนยัน, ไม่รวมเบี้ยประกัน',
+																				closeOnClick: true
+																			},
+																		},
+																		callback: function(lobibox, type){
+																			if (type === 'ok'){
+																				$('#stdCond2').prop('checked',true);
+																			}else{
+																				$('#stdCond2').prop('checked',false);
+																			}
+																		}
+																	});
+																});
+																
+																$('#stdCond3').change(function(){
+																	if($(this).is(':checked')){
+																		$('#stdCond3').prop('checked',false);
+																	}else{
+																		$('#stdCond3').prop('checked',true);
+																	}
+																	
+																	Lobibox.confirm({
+																		title: 'ยืนยันการทำรายการ',
+																		iconClass: false,
+																		msg: 'คุณต้องการรวมค่าโอนด้วยหรือไม่',
+																		buttons: {
+																			ok : {
+																				'class': 'btn btn-primary',
+																				text: 'ยืนยัน, รวมค่าโอน',
+																				closeOnClick: true,
+																			},
+																			cancel : {
+																				'class': 'btn btn-danger',
+																				text: 'ยืนยัน, ไม่รวมค่าโอน',
+																				closeOnClick: true
+																			},
+																		},
+																		callback: function(lobibox, type){
+																			if (type === 'ok'){
+																				$('#stdCond3').prop('checked',true);
+																			}else{
+																				$('#stdCond3').prop('checked',false);
+																			}
+																		}
+																	});
+																});
+																
+																$('#stdCond4').change(function(){
+																	if($(this).is(':checked')){
+																		$('#stdCond4').prop('checked',false);
+																	}else{
+																		$('#stdCond4').prop('checked',true);
+																	}
+																	
+																	Lobibox.confirm({
+																		title: 'ยืนยันการทำรายการ',
+																		iconClass: false,
+																		msg: 'คุณต้องการรวมค่าทะเบียนด้วยหรือไม่',
+																		buttons: {
+																			ok : {
+																				'class': 'btn btn-primary',
+																				text: 'ยืนยัน, รวมค่าทะเบียน',
+																				closeOnClick: true,
+																			},
+																			cancel : {
+																				'class': 'btn btn-danger',
+																				text: 'ยืนยัน, ไม่รวมค่าทะเบียน',
+																				closeOnClick: true
+																			},
+																		},
+																		callback: function(lobibox, type){
+																			if (type === 'ok'){
+																				$('#stdCond4').prop('checked',true);
+																			}else{
+																				$('#stdCond4').prop('checked',false);
+																			}
+																		}
+																	});
+																});
+																
+																$('#stdCond5').change(function(){
+																	if($(this).is(':checked')){
+																		$('#stdCond5').prop('checked',false);
+																	}else{
+																		$('#stdCond5').prop('checked',true);
+																	}
+																	
+																	Lobibox.confirm({
+																		title: 'ยืนยันการทำรายการ',
+																		iconClass: false,
+																		msg: 'คุณต้องการรวมค่าพ.ร.บ. ด้วยหรือไม่',
+																		buttons: {
+																			ok : {
+																				'class': 'btn btn-primary',
+																				text: 'ยืนยัน, รวมค่าพ.ร.บ.',
+																				closeOnClick: true,
+																			},
+																			cancel : {
+																				'class': 'btn btn-danger',
+																				text: 'ยืนยัน, ไม่รวมค่าพ.ร.บ.',
+																				closeOnClick: true
+																			},
+																		},
+																		callback: function(lobibox, type){
+																			if (type === 'ok'){
+																				$('#stdCond5').prop('checked',true);
+																			}else{
+																				$('#stdCond5').prop('checked',false);
+																			}
+																		}
+																	});
+																});
+																
+																$('#stdCond6').change(function(){
+																	if($(this).is(':checked')){
+																		$('#stdCond6').prop('checked',false);
+																	}else{
+																		$('#stdCond6').prop('checked',true);
+																	}
+																	
+																	Lobibox.confirm({
+																		title: 'ยืนยันการทำรายการ',
+																		iconClass: false,
+																		msg: 'คุณต้องการรวมคูปองชิงโชค ด้วยหรือไม่',
+																		buttons: {
+																			ok : {
+																				'class': 'btn btn-primary',
+																				text: 'ยืนยัน, รวมคูปองชิงโชค',
+																				closeOnClick: true,
+																			},
+																			cancel : {
+																				'class': 'btn btn-danger',
+																				text: 'ยืนยัน, ไม่รวมคูปองชิงโชค',
+																				closeOnClick: true
+																			},
+																		},
+																		callback: function(lobibox, type){
+																			if (type === 'ok'){
+																				$('#stdCond6').prop('checked',true);
+																			}else{
+																				$('#stdCond6').prop('checked',false);
+																			}
+																		}
+																	});
+																});
+																
+																$('#btnStdReceipt').click(function(){
+																	dataToPost = new Object();
+																	dataToPost.stdCond1 = ($('#stdCond1').is(':checked') ? 'T' : 'F');
+																	dataToPost.stdCond2 = ($('#stdCond2').is(':checked') ? 'T' : 'F');
+																	dataToPost.stdCond3 = ($('#stdCond3').is(':checked') ? 'T' : 'F');
+																	dataToPost.stdCond4 = ($('#stdCond4').is(':checked') ? 'T' : 'F');
+																	dataToPost.stdCond5 = ($('#stdCond5').is(':checked') ? 'T' : 'F');
+																	dataToPost.stdCond6 = ($('#stdCond6').is(':checked') ? 'T' : 'F');
+																	
+																	dataToPost.stdid = $(this).attr('stdid');
+																	dataToPost.plrank = $(this).attr('plrank');
+																	dataToPost.price = $(this).attr('price');
+																	dataToPost.interest_rate = $(this).attr('interest_rate');
+																	dataToPost.interest_rate2 = $(this).attr('interest_rate2');
+																	dataToPost.insurance = $(this).attr('insurance');
+																	dataToPost.transfers = $(this).attr('transfers');
+																	dataToPost.regist = $(this).attr('regist');
+																	dataToPost.act = $(this).attr('act');
+																	dataToPost.coupon = $(this).attr('coupon');
+																	dataToPost.optionTotal = $(this).attr('optionTotal');
+																	dataToPost.down = $(this).attr('down');
+																	dataToPost.nopay = $(this).attr('nopay');
+																	
+																	$.ajax({
+																		url:'../SYS04/Leasing/getStdReceived',
+																		data: dataToPost,
+																		type: 'POST',
+																		dataType: 'json',
+																		success: function(data) {
+																			$('#btnStd').attr('stdid',data['stdid']);
+																			$('#calc_incvat').select2({ dropdownParent: true,disabled: true,width:'100%' });
+																			$('#calc_incvat').val('Y').trigger('change');
+																			$('#calc_installment').select2({ dropdownParent: true,disabled: true,width:'100%' });
+																			$('#calc_installment').val('Y').trigger('change');
+																			
+																			$('#calc_npricev').attr('disabled',true);
+																			$('#calc_ndownv').attr('disabled',true);
+																			$('#calc_nopay').attr('disabled',true);
+																			$('#calc_nopays').attr('disabled',true);
+																			$('#calc_vatyear').attr('disabled',true);
+																			$('#calc_npricevOpt').attr('disabled',true);
+																			
+																			$('#calc_npricev').val(data['price']);
+																			$('#calc_ndownv').val(data['down']);
+																			$('#calc_nopay').val(data['nopay']);
+																			$('#calc_nopays').val(data['nopay']);
+																			$('#calc_vatyear').val(data['interestY']);
+																			$('#calc_npricevOpt').val(data['priceOpt']);
+																			
+																			fnCalculate();
+																			$thisFormStd.destroy();
+																		}
+																	});
+																});	
+																
+																$('#btnStdReceiptOld').click(function(){	
+																	$('#btnStd').attr('stdid',$(this).attr('stdid'));
+																	
+																	$('#calc_incvat').select2({ dropdownParent: true,disabled: true,width:'100%' });
+																	$('#calc_incvat').val('Y').trigger('change');
+																	
+																	$('#calc_installment').select2({ dropdownParent: true,disabled: true,width:'100%' });
+																	$('#calc_installment').val('Y').trigger('change');
+																	
+																	$('#calc_npricev').attr('disabled',true);
+																	$('#calc_ndownv').attr('disabled',true);
+																	$('#calc_nopay').attr('disabled',true);
+																	$('#calc_nopays').attr('disabled',true);
+																	$('#calc_vatyear').attr('disabled',true);
+																	$('#calc_npricevOpt').attr('disabled',true);
+																	
+																	$('#calc_npricev').val($(this).attr('price'));
+																	$('#calc_ndownv').val($(this).attr('down'));
+																	$('#calc_nopay').val($(this).attr('nopay'));
+																	$('#calc_nopays').val($(this).attr('nopay'));
+																	$('#calc_vatyear').val($(this).attr('interest_rate'));
+																	$('#calc_npricevOpt').val($(this).attr('optionTotal'));
+																	
+																	fnCalculate();
+																	$thisFormStd.destroy();
+																});																
+															}else if(data.status == 'W'){
+																$('#stdResult').html(data.msg);
+															}
+														},
+														error: function(x,m,l){
+															$('#stdResult').html(l);
+														}
+													});
+												});
+											},
+											beforeClose : function(){
+												$('#btnStd').attr('disabled',false);
+											}
+										});
+									}
+								});
+							});
+							
 							$('#btnCalculate').click(function(){ fnCalculate(); });
 							$('#calc_decimal').change(function(){ fnCalculate(); });
 							
@@ -1452,6 +1845,22 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 												msg: data.msg
 											});
 										}
+									},
+									error: function(x,m,l){
+										$('#loadding').hide();
+										Lobibox.notify('error', {
+											title: 'แจ้งเตือน',
+											size: 'mini',
+											closeOnClick: false,
+											delay: false,
+											pauseDelayOnHover: true,
+											continueDelayOnInactiveTab: false,
+											soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
+											soundExt: '.ogg',
+											icon: true,
+											messageHeight: '90vh',
+											msg: l
+										});
 									}
 								});
 							}
@@ -1474,17 +1883,19 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								dataToPost.vatmonth	= $('#calc_vatmonth').val();
 								dataToPost.vatall 	= $('#calc_vatall').val();
 								dataToPost.sellBvat = $('#calc_sellBvat').val();
-								dataToPost.installmentn	= $('#calc_installmentn').val();								
-								dataToPost.sellvatLast 	= $('#calc_sellvatLast').val();
-								dataToPost.installmentvLast	= $('#calc_installmentvLast').val();
-								dataToPost.sellBvatOpt		= $('#calc_sellBvatOpt').val();
-								dataToPost.installmentnOpt	= $('#calc_installmentnOpt').val();
-								dataToPost.sellvatLastOpt 	= $('#calc_sellvatLastOpt').val();
+								dataToPost.installmentn			= $('#calc_installmentn').val();								
+								dataToPost.sellvatLast 			= $('#calc_sellvatLast').val();
+								dataToPost.installmentvLast		= $('#calc_installmentvLast').val();
+								dataToPost.sellBvatOpt			= $('#calc_sellBvatOpt').val();
+								dataToPost.installmentnOpt		= $('#calc_installmentnOpt').val();
+								dataToPost.sellvatLastOpt 		= $('#calc_sellvatLastOpt').val();
 								dataToPost.installmentvLastOpt 	= $('#calc_installmentvLastOpt').val();
-								dataToPost.totalSell 		= $('#calc_totalSell').val();
-								dataToPost.totalInstallment = $('#calc_totalInstallment').val();
-								dataToPost.strno = $('#add_strno').find(':selected').val();
-								dataToPost.duefirst = $('#add_duefirst').val();
+								dataToPost.totalSell 			= $('#calc_totalSell').val();
+								dataToPost.totalInstallment 	= $('#calc_totalInstallment').val();
+								dataToPost.strno		 		= $('#add_strno').find(':selected').val();
+								dataToPost.duefirst 			= $('#add_duefirst').val();
+								dataToPost.npricevOpt 			= $('#calc_npricevOpt').val();
+								dataToPost.npriceOpt  			= $('#calc_npriceOpt').val();
 								
 								$('#loadding').show();
 								$.ajax({
@@ -1502,7 +1913,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 										$('#add_paynext').val(data.pay2);
 										$('#add_paylast').val(data.pay3);	
 										
-										$('#add_sell').val(data.STDPRC);
+										$('#add_sell').val(data.sellrv);
 										$('#add_totalSell').val(data.sellFresh);
 										$('#add_interest').val(data.interate);
 										$('#add_intRate').val(data.INT_RATE);
@@ -1513,7 +1924,24 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 										
 										$('#add_duelast').val(data.duelast);
 										
-										$this.destroy();
+										$('#add_save').attr('cal','y');										
+										$thisFormCalNopay.destroy();
+									},
+									error: function(x,m,l){
+										$('#loadding').hide();
+										Lobibox.notify('error', {
+											title: 'แจ้งเตือน',
+											size: 'mini',
+											closeOnClick: false,
+											delay: false,
+											pauseDelayOnHover: true,
+											continueDelayOnInactiveTab: false,
+											soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
+											soundExt: '.ogg',
+											icon: true,
+											messageHeight: '90vh',
+											msg: l
+										});
 									}
 								});								
 							});
@@ -1712,6 +2140,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						othmgar.push(data);
 					});
 					dataToPost.othmgar = othmgar;
+					dataToPost.cal = (typeof $('#add_save').attr('cal') === 'undefined' ? 'n' : $('#add_save').attr('cal'));
 					
 					$('#loadding').show();
 					$.ajax({
@@ -1980,7 +2409,7 @@ function permission($dataLoad,$thisWindowLeasing){
 	var newOption = new Option($dataLoad.PAYDESC, $dataLoad.PAYTYP, true, true);
 	$('#add_paydue').empty().append(newOption).trigger('change');
 	/*tab2*/
-	$('#add_inopt').attr('disabled',true);
+	//$('#add_inopt').attr('disabled',true);
 	$('#dataTables-inopt tbody').empty().append($dataLoad.option);
 	$('#add2_optcost').val($dataLoad.OPTCTOT);
 	$('#add2_optsell').val($dataLoad.OPTPTOT);
@@ -2069,7 +2498,7 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_reg').attr('disabled',true);
 	
 	$('#add_inprc').attr('disabled',true);
-	$('#add_inprcCal').unbind('click');
+	//$('#add_inprcCal').unbind('click');
 	$('#add_indwn').attr('disabled',true);
 	$('#add_dwninv').attr('disabled',true);
 	$('#add_dwninvDt').attr('disabled',true);

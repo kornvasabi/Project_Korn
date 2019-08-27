@@ -553,7 +553,7 @@ class Creceivedcars extends MY_Controller {
 				insert into #transaction select 'n' as id,ERROR_MESSAGE() as msg;
 			end catch
 		";
-		//echo $sql; exit;
+		echo $sql; exit;
 		$this->db->query($sql);		
 		$sql = "select * from #transaction";
 		$query = $this->db->query($sql);

@@ -71,7 +71,7 @@ class Leasing extends MY_Controller {
 					<div class='row'>
 						<div class=' col-sm-6'>	
 							<div class='form-group'>
-								<input type='button' id='btnt1leasing' class='btn btn-cyan btn-sm' value='เช่าซื้อ' style='width:100%'>
+								<input type='button' id='btnt1leasing' class='btn btn-cyan btn-sm' value='ทำรายการขายผ่อน' style='width:100%'>
 							</div>
 						</div>
 						<div class=' col-sm-6'>	
@@ -331,7 +331,7 @@ class Leasing extends MY_Controller {
 				$option .= "
 					<tr seq='old'>
 						<td align='center'>
-							<i class='inoptTab2 btn btn-xs btn-danger glyphicon glyphicon-minus' disabled
+							<i class='inoptTab2 btn btn-xs btn-danger glyphicon glyphicon-minus' 
 								opCode='".$row->OPTCODE."' total1='".$row->TOTPRC."' total2='".$row->OPTCTOT."' 
 								price1='".$row->NPRICE."' price2='".$row->OPTCST."' vat1='".$row->TOTVAT."' 
 								vat2='".$row->OPTCVT."' qty='".$row->QTY."' uprice='".$row->UPRICE."' 
@@ -491,14 +491,24 @@ class Leasing extends MY_Controller {
 		$row = $query->row();
 		$data["vatrt"] = number_format($row->VATRT,2);
 		
-		$sql = "
-			select CALINT,DISC_FM from {$this->MAuth->getdb('CONDPAY')}			
-		";
+		$sql = "select CALINT,DISC_FM from {$this->MAuth->getdb('CONDPAY')}";
 		$query = $this->db->query($sql);
 		$row = $query->row();
 		$data["CALINT"] = $row->CALINT;
 		$data["DISC_FM"] = $row->DISC_FM;
 		
+		$sql = "select top 1 PAYCODE,'('+PAYCODE+') '+PAYDESC PAYDESC from {$this->MAuth->getdb('PAYDUE')} order by PAYCODE";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$data["PAYCODE"] = $row->PAYCODE;
+		$data["PAYDESC"] = $row->PAYDESC;
+		
+		$sql = "select top 1 ACTICOD,'('+ACTICOD+') '+ACTIDES as ACTIDES from {$this->MAuth->getdb('SETACTI')} order by ACTICOD";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$data["ACTICOD"] = $row->ACTICOD;
+		$data["ACTIDES"] = $row->ACTIDES;
+			
 		$html = "
 			<div id='wizard-leasing' class='wizard-wrapper'>    
 				<div class='wizard'>
@@ -662,7 +672,9 @@ class Leasing extends MY_Controller {
 								<div class='col-sm-4'>	
 									<div class='form-group'>
 										วิธีชำระค่างวด
-										<select id='add_paydue' class='form-control input-sm' data-placeholder='วิธีชำระค่างวด'></select>
+										<select id='add_paydue' class='form-control input-sm' data-placeholder='วิธีชำระค่างวด'>
+											<option value='".$data["PAYCODE"]."' selected>".$data["PAYDESC"]."</option>
+										</select>
 									</div>
 								</div>
 							</div>
@@ -912,10 +924,12 @@ class Leasing extends MY_Controller {
 							<div class=' col-sm-3'>	
 								<div class='form-group'>
 									กิจกรรมการขาย
-									<select id='add_acticod' class='form-control input-sm' data-placeholder='กิจกรรมการขาย'></select>
+									<select id='add_acticod' class='form-control input-sm' data-placeholder='กิจกรรมการขาย'>
+										<option value='".$data["ACTICOD"]."' selected>".$data["ACTIDES"]."</option>
+									</select>
 								</div>
 							</div>
-							<div class=' col-sm-6'>	
+							<div class='add_nextlastmonth' class=' col-sm-6'>	
 								<div class='form-group'>
 									<input id='add_nextlastmonth' class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' value='ต้องการให้งวดถัดไปเป็นสิ้นเดือน'  >
 									<label class='form-check-label' style='cursor:pointer;' for='add_nextlastmonth'>ต้องการให้งวดถัดไปเป็นสิ้นเดือน</label>
@@ -1093,8 +1107,392 @@ class Leasing extends MY_Controller {
 		return $html;
 	}
 	
+	function getFormStd(){
+		$arrs = array();
+		$arrs["locat"] = $_REQUEST["locat"];
+		$arrs["strno"] = $_REQUEST["strno"];
+		
+		$sql = "
+			select * from {$this->MAuth->getdb('INVTRAN')} 
+			where CRLOCAT='".$arrs["locat"]."' and STRNO='".$arrs["strno"]."'
+		";
+		$query = $this->db->query($sql);
+		
+		$data = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["STRNO"]	= $row->STRNO;
+				$data["MODEL"]	= $row->MODEL;
+				$data["BAAB"] 	= $row->BAAB;
+				$data["COLOR"] 	= $row->COLOR;
+			}
+		}
+		
+		$sql = "select top 1 ACTICOD,'('+ACTICOD+') '+ACTIDES as ACTIDES from {$this->MAuth->getdb('SETACTI')} order by ACTICOD";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$data["ACTICOD"] = str_replace(chr(0),"",$row->ACTICOD);
+		$data["ACTIDES"] = str_replace(chr(0),"",$row->ACTIDES);
+		
+		$html = "
+			<div id='lobiwin_std' class='row'>
+				<div class='col-sm-4 col-sm-offset-2' style='border:1px dotted black;padding-bottom:30px;'> 
+					<p>ข้อมูลรถ</p>
+					<p class='text-primary'>เลขตัวถัง</p> <p class='text-red' style='font-size:8pt;'>".$data["STRNO"]."</p>
+					<p class='text-primary'>รุ่น</p> <p class='text-red' style='font-size:8pt;'>".$data["MODEL"]."</p>
+					<p class='text-primary'>แบบ</p> <p class='text-red' style='font-size:8pt;'>".$data["BAAB"]."</p>
+					<p class='text-primary'>สี</p> <p class='text-red' style='font-size:8pt;'>".$data["COLOR"]."</p>
+				</div>
+				<div class='col-sm-4' style='border:1px dotted black;padding-bottom:30px;'> 
+					<p>เงื่อนไข</p>			
+					<div class='col-sm-12'>
+						<span class='text-info' style='font-size:8pt;'>กิจกรรมการขาย</span>
+						<select id='std_acticod' class='form-control input-sm' data-placeholder='กิจกรรมการขาย'>
+							<option value='".$data["ACTICOD"]."' selected>".$data["ACTIDES"]."</option>
+						</select>
+					</div>
+					<div class='col-sm-12'>
+						<span class='text-info' style='font-size:8pt;'>จำนวนเงินดาวน์</span>
+						<div class='input-group'>
+							<input type='text' id='std_dwn' class='form-control input-sm' >
+							<span class='input-group-addon'>บาท</span>
+						</div>
+					</div>
+					<div class='col-sm-12'>
+						<span class='text-info' style='font-size:8pt;'>จำนวนผ่อน</span>
+						<div class='input-group'>
+							<input type='text' id='std_nopay' class='form-control input-sm' >
+							<span class='input-group-addon'>งวด</span>
+						</div>
+					</div>
+					
+					<p class='col-sm-12 text-right'>&emsp;</p>
+					<p class='col-sm-12 text-right'>
+						<icon id='btnStdSearch' 
+							STRNO='".$data["STRNO"]."' 
+							MODEL='".$data["MODEL"]."'
+							BAAB='".$data["BAAB"]."'
+							COLOR='".$data["COLOR"]."'
+							class='btn btn-xs btn-primary btn-block'>ค้นหา</icon>
+					</p>
+				</div>
+			</div>
+			<div class='row'>
+				<div id='stdResult' class='col-sm-8 col-sm-offset-2' style='border:1px dotted black;padding-bottom:30px;'></div>
+			</div>
+		";
+		
+		$response = array("html"=>$html);		
+		echo json_encode($response);
+	}
+	
+	function getFormStdSearch(){
+		$arrs = array();
+		$arrs["locat"] 	 = $_REQUEST["locat"];
+		$arrs["sdate"] 	 = $this->Convertdate(1,$_REQUEST["sdate"]);
+		$arrs["model"] 	 = $_REQUEST["model"];
+		$arrs["baab"]  	 = $_REQUEST["baab"];
+		$arrs["color"]	 = $_REQUEST["color"];
+		$arrs["acticod"] = $_REQUEST["acticod"];
+		$arrs["dwn"] 	 = $_REQUEST["dwn"];
+		$arrs["nopay"] 	 = $_REQUEST["nopay"];
+		//print_r($arrs); exit;
+		
+		if($arrs["dwn"] > 0){}else{
+			$response["status"] = "W";
+			$response["msg"] = "คุณยังไม่ได้ระบุจำนวนเงินดาวน์";
+			echo json_encode($response); exit;
+		}
+		
+		$sql = "
+			declare @locat varchar(20)		= '".$arrs["locat"]."';
+			declare @sdate varchar(20)		= '".$arrs["sdate"]."';
+			declare @model varchar(30)		= '".$arrs["model"]."';
+			declare @baab varchar(30)		= '".$arrs["baab"]."';
+			declare @color varchar(30)		= '".$arrs["color"]."';
+			declare @acticod varchar(30)	= '".$arrs["acticod"]."';
+			declare @down decimal(18,2)		= '".$arrs["dwn"]."';
+			declare @nopay int				= '".$arrs["nopay"]."';
+
+			if ((
+				select COUNT(*) from {$this->MAuth->getdb('std_vehicles')} a 
+				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+				left join {$this->MAuth->getdb('std_pricelist_locat')} c on b.id=c.id and b.plrank=c.plrank
+				where a.model=@model and a.baab=@baab and a.color=@color and b.ACTICOD=@acticod
+					and @sdate between b.event_s and isnull(b.event_e,@sdate) and c.locat=@locat
+			) > 0)
+			begin 
+				select a.id,a.model,a.baab,a.color,b.plrank
+					,b.price,b.pricespecial,b.ACTICOD
+					,convert(varchar(8),b.event_s,112) as event_s
+					,convert(varchar(8),b.event_e,112) as event_e
+					,c.locat,d.*
+					,(case when @down between dwnrate_s and dwnrate_e then 1 else 0 end) as checked
+				from {$this->MAuth->getdb('std_vehicles')} a 
+				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+				left join {$this->MAuth->getdb('std_pricelist_locat')} c on b.id=c.id and b.plrank=c.plrank
+				left join {$this->MAuth->getdb('std_down')} d on b.id=d.id and b.plrank=d.plrank
+				where a.model=@model and a.baab=@baab and a.color=@color and b.ACTICOD=@acticod
+					and @sdate between b.event_s and isnull(b.event_e,@sdate) and c.locat=@locat
+			end 
+			else if ((
+				select COUNT(*) from {$this->MAuth->getdb('std_vehicles')} a 
+				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+				left join {$this->MAuth->getdb('std_pricelist_locat')} c on b.id=c.id and b.plrank=c.plrank
+				where a.model=@model and a.baab=@baab and a.color=@color and b.ACTICOD=@acticod
+					and @sdate between b.event_s and isnull(b.event_e,@sdate) and c.locat='all'
+			) > 0)
+			begin 
+				select a.id,a.model,a.baab,a.color,b.plrank
+					,b.price,b.pricespecial,b.ACTICOD
+					,convert(varchar(8),b.event_s,112) as event_s
+					,convert(varchar(8),b.event_e,112) as event_e
+					,c.locat,d.*
+					,(case when @down between dwnrate_s and dwnrate_e then 1 else 0 end) as checked
+				from {$this->MAuth->getdb('std_vehicles')} a 
+				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+				left join {$this->MAuth->getdb('std_pricelist_locat')} c on b.id=c.id and b.plrank=c.plrank
+				left join {$this->MAuth->getdb('std_down')} d on b.id=d.id and b.plrank=d.plrank
+				where a.model=@model and a.baab=@baab and a.color=@color and b.ACTICOD=@acticod
+					and @sdate between b.event_s and isnull(b.event_e,@sdate) and c.locat='all'
+			end
+			else if ((
+				select COUNT(*) from {$this->MAuth->getdb('std_vehicles')} a 
+				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+				left join {$this->MAuth->getdb('std_pricelist_locat')} c on b.id=c.id and b.plrank=c.plrank
+				where a.model=@model and a.baab=@baab and a.color=@color and b.ACTICOD='all'
+					and @sdate between b.event_s and isnull(b.event_e,@sdate) and c.locat='all'
+			) > 0)
+			begin 
+				select a.id,a.model,a.baab,a.color,b.plrank
+					,b.price,b.pricespecial,b.ACTICOD
+					,convert(varchar(8),b.event_s,112) as event_s
+					,convert(varchar(8),b.event_e,112) as event_e
+					,c.locat,d.*
+					,(case when @down between dwnrate_s and dwnrate_e then 1 else 0 end) as checked
+				from {$this->MAuth->getdb('std_vehicles')} a 
+				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+				left join {$this->MAuth->getdb('std_pricelist_locat')} c on b.id=c.id and b.plrank=c.plrank
+				left join {$this->MAuth->getdb('std_down')} d on b.id=d.id and b.plrank=d.plrank
+				where a.model=@model and a.baab=@baab and a.color=@color and b.ACTICOD='all'
+					and @sdate between b.event_s and isnull(b.event_e,@sdate) and c.locat='all'
+			end
+			else if ((
+				select COUNT(*) from {$this->MAuth->getdb('std_vehicles')} a 
+				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+				left join {$this->MAuth->getdb('std_pricelist_locat')} c on b.id=c.id and b.plrank=c.plrank
+				where a.model=@model and a.baab=@baab and a.color='all' and b.ACTICOD='all'
+					and @sdate between b.event_s and isnull(b.event_e,@sdate) and c.locat='all'
+			) > 0)
+			begin 
+				select a.id,a.model,a.baab,a.color,b.plrank
+					,b.price,b.pricespecial,b.ACTICOD
+					,convert(varchar(8),b.event_s,112) as event_s
+					,convert(varchar(8),b.event_e,112) as event_e
+					,c.locat,d.*
+					,(case when @down between dwnrate_s and isnull(dwnrate_e,@down) then 1 else 0 end) as checked
+				from {$this->MAuth->getdb('std_vehicles')} a 
+				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+				left join {$this->MAuth->getdb('std_pricelist_locat')} c on b.id=c.id and b.plrank=c.plrank
+				left join {$this->MAuth->getdb('std_down')} d on b.id=d.id and b.plrank=d.plrank
+				where a.model=@model and a.baab=@baab and a.color='all' and b.ACTICOD='all'
+					and @sdate between b.event_s and isnull(b.event_e,@sdate) and c.locat='all'		
+			end
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$response = array();
+		$attrReceipt = "";
+		$correct = false;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["htmlHead"] = "
+					<div class='col-lg-12 text-blue'>รหัส std. :: ".$row->id."</div>
+					<div class='col-lg-4'>รุ่น :: ".$row->model."</div>
+					<div class='col-lg-4'>แบบ :: ".$row->baab."</div>
+					<div class='col-lg-4'>สี :: ".$row->color."</div>
+					<div class='col-lg-4'>ลำดับ :: ".$row->plrank."</div>
+					<div class='col-lg-4'>ราคาสด/ผ่อน :: ".number_format($row->price,2)."</div>
+					<div class='col-lg-4'>ราคาผลัด :: ".number_format($row->pricespecial,2)."</div>
+					<div class='col-lg-8'>กิจกรรมขาย :: ".$row->ACTICOD."</div>
+					<div class='col-lg-4'>สาขา :: ".$row->locat."</div>
+					<div class='col-lg-6'>เริ่มใช้ std ตั้งแต่วันที่ :: ".$this->Convertdate(2,$row->event_s)."</div>
+					<div class='col-lg-6'>วันที่สิ้นสุด std :: ".$this->Convertdate(2,$row->event_e)."</div>
+				";
+				if(!isset($response["htmlBody"])){$response["htmlBody"]='';}
+				
+				$text = "text-muted";
+				if($row->checked == 1){ 
+					$correct = true;
+					$text = "bg-success text-blue"; 
+					$attrReceipt .= " stdid='".$row->id."'";
+					$attrReceipt .= " plrank='".$row->plrank."'";	
+					$attrReceipt .= " price='".str_replace(",","",number_format($row->price,2))."'";	
+					$attrReceipt .= " interest_rate='".str_replace(",","",number_format(($row->interest_rate * 12),2))."'";	
+					$attrReceipt .= " interest_rate2='".str_replace(",","",number_format(($row->interest_rate2 * 12),2))."'";	
+					$attrReceipt .= " insurance='".str_replace(",","",number_format($row->insurance,2))."'";	
+					$attrReceipt .= " transfers='".str_replace(",","",number_format($row->transfers,2))."'";	
+					$attrReceipt .= " regist='".str_replace(",","",number_format($row->regist,2))."'";
+					$attrReceipt .= " act='".str_replace(",","",number_format($row->act,2))."'";
+					$attrReceipt .= " coupon='".str_replace(",","",number_format($row->coupon,2))."'";
+					
+					$optionTotal = $row->insurance + $row->transfers + $row->regist + $row->act + $row->coupon;
+					$attrReceipt .= " optionTotal='".str_replace(",","",number_format($optionTotal,2))."'";
+					$attrReceipt .= " down='".str_replace(",","",number_format($arrs["dwn"],2))."'";
+					$attrReceipt .= " nopay='".$arrs["nopay"]."'";
+				}
+				
+				$response["htmlBody"] .= "
+					<tr>
+						<td class='{$text}'><icon class='glyphicon glyphicon-".($text == 'text-muted'?'remove':'ok')."'></icon> ".$row->level_r."</td>
+						<td class='text-right {$text}'>".($row->dwnrate_s == "" ? "" : number_format($row->dwnrate_s,2))."</td>
+						<td class='text-right {$text}'>".($row->dwnrate_e == "" ? "" : number_format($row->dwnrate_e,2))."</td>
+						<td class='text-right {$text}'>".($row->interest_rate == "" ? "" : number_format($row->interest_rate,2))."</td>
+						<td class='text-right {$text}'>".($row->interest_rate2 == "" ? "" : number_format($row->interest_rate2,2))."</td>
+						<td class='text-right {$text}'>".($row->insurance == "" ? "" : number_format($row->insurance,2))."</td>
+						<td class='text-right {$text}'>".($row->transfers == "" ? "" : number_format($row->transfers,2))."</td>
+						<td class='text-right {$text}'>".($row->regist == "" ? "" : number_format($row->regist,2))."</td>
+						<td class='text-right {$text}'>".($row->act == "" ? "" : number_format($row->act,2))."</td>
+						<td class='text-right {$text}'>".($row->coupon == "" ? "" : number_format($row->coupon,2))."</td>
+					</tr>
+				";
+			}
+		}else{
+			$response["status"] = "W";
+			$response["msg"] = "ผิดพลาด รถรุ่นนี้ยังไม่ได้กำหนด std. ทีครับ";
+			echo json_encode($response); exit;
+		}
+		
+		$response["htmlBody"] = "
+			<div id='dataTable-fixed-inopt' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='max-height:calc(100% - 130px);height:calc(100% - 130px);overflow:auto;border:1px dotted black;background-color:#eee;'>
+				<table id='dataTables-inopt' class='table table-bordered table-dark' stat='' aria-describedby='dataTable_info' style='width:100%;line-height:10px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;' cellspacing='0'>
+					<thead>
+						<tr>
+							<th class='col-lg-1 text-center'>ลำดับ</th>
+							<th class='col-lg-4 text-center' colspan='2'>ช่วงการดาวน์</th>
+							<th class='col-lg-1 text-center'>ดอกเบี้ย/ด.<br>ทั่วไป</th>
+							<th class='col-lg-1 text-center'>ดอกเบี้ย/ด.<br>ราชการ</th>
+							<th class='col-lg-1 text-center'>ประกัน</th>
+							<th class='col-lg-1 text-center'>โอน</th>
+							<th class='col-lg-1 text-center'>ทะเบียน</th>
+							<th class='col-lg-1 text-center'>พรบ.</th>
+							<th class='col-lg-2 text-center'>คูปองชิงโชค</th>
+						</tr>
+					</thead>
+					<tbody>
+						".$response["htmlBody"]."
+					</tbody>
+				</table>
+			</div>	
+			<div class='col-sm-12'><br>
+				<div class='row'>
+					<div class='col-sm-3 col-sm-offset-3'>
+						<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='stdCond1' value='เป็นข้าราชการ'  ".$attrReceipt." ".($correct ? "enabled":"disabled").">
+						<label class='form-check-label' style='cursor:pointer;' for='stdCond1'>เป็นข้าราชการ</label>
+						<br>
+						<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='stdCond2' value='รวมประกัน'  checked ".$attrReceipt." ".($correct ? "enabled":"disabled").">
+						<label class='form-check-label' style='cursor:pointer;' for='stdCond2'>รวมประกัน</label>
+						<br>
+						<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='stdCond3' value='รวมโอน'  checked ".$attrReceipt." ".($correct ? "enabled":"disabled").">
+						<label class='form-check-label' style='cursor:pointer;' for='stdCond3'>รวมโอน</label>
+					</div>
+					<div class='col-sm-3'>					
+						<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='stdCond4' value='รวมทะเบียน'  checked ".$attrReceipt." ".($correct ? "enabled":"disabled").">
+						<label class='form-check-label' style='cursor:pointer;' for='stdCond4'>รวมทะเบียน</label>
+						<br>
+						<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='stdCond5' value='รวมพ.ร.บ.'  checked ".$attrReceipt." ".($correct ? "enabled":"disabled").">
+						<label class='form-check-label' style='cursor:pointer;' for='stdCond5'>รวมพ.ร.บ.</label>
+						<br>
+						<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='stdCond6' value='รวมโอน'  checked ".$attrReceipt." ".($correct ? "enabled":"disabled").">
+						<label class='form-check-label' style='cursor:pointer;' for='stdCond6'>คูปองชิงโชค</label>
+					</div>
+				</div>
+			</div>
+		";
+		
+		$response["htmlBody"] .= "
+			<div class='col-sm-6 col-sm-offset-3'><br>
+				<icon id='btnStdReceipt' ".$attrReceipt." ".($correct ? "enabled":"disabled")." class='btn btn-xs btn-primary btn-block'>รับค่า</icon>
+			</div>
+			<br><br><br><br><br><br><br><br><br>
+		";
+		
+		$response["status"] = "S";
+		$response["msg"] = $response["htmlHead"].$response["htmlBody"];
+		echo json_encode($response); 
+	}
+	
+	function getStdReceipt(){
+		$arrs = array();
+		$arrs["stdid"] 	 		= $_REQUEST["stdid"];
+		$arrs["plrank"] 	 	= $_REQUEST["plrank"];
+		$arrs["price"] 	 		= str_replace(",","",$_REQUEST["price"]);
+		$arrs["interest_rate"]  = str_replace(",","",$_REQUEST["interest_rate"]);
+		$arrs["insurance"]	 	= str_replace(",","",$_REQUEST["insurance"]);
+		$arrs["transfers"] 		= str_replace(",","",$_REQUEST["transfers"]);
+		$arrs["regist"] 	 	= str_replace(",","",$_REQUEST["regist"]);
+		$arrs["act"] 	 		= str_replace(",","",$_REQUEST["act"]);
+		$arrs["coupon"] 	 	= str_replace(",","",$_REQUEST["coupon"]);
+		$arrs["down"] 	 		= str_replace(",","",$_REQUEST["down"]);
+		$arrs["nopay"] 	 		= str_replace(",","",$_REQUEST["nopay"]);
+		$arrs["inclvat"] 		= $_REQUEST["inclvat"];
+		$arrs["vatrt"] 	 		= str_replace(",","",$_REQUEST["vatrt"]);
+		//$arrs["duefirst"] 	 	= str_replace(",","",$this->Convertdate(1,$_REQUEST["duefirst"]);
+		
+		$response = array();
+		$response["status"] = true;
+		
+		if($arrs["price"] < $arrs["down"]){
+			$response["status"] = false;
+			$response["msg"] = "ราคาขายต้องมากกว่าเงินดาวน์ครับ"; 
+			echo json_encode($response); exit;
+		}
+		
+		echo json_encode($response);
+	}
+	
+	function getStdReceived(){
+		$arrs = array();
+		$arrs["stdCond1"] 	= $_REQUEST["stdCond1"];
+		$arrs["stdCond2"] 	= $_REQUEST["stdCond2"];
+		$arrs["stdCond3"] 	= $_REQUEST["stdCond3"];
+		$arrs["stdCond4"] 	= $_REQUEST["stdCond4"];
+		$arrs["stdCond5"] 	= $_REQUEST["stdCond5"];
+		$arrs["stdCond6"] 	= $_REQUEST["stdCond6"];
+		$arrs["stdid"] 		= $_REQUEST["stdid"];
+		$arrs["plrank"]		= $_REQUEST["plrank"];
+		$arrs["price"] 		= $_REQUEST["price"];
+		$arrs["interest_rate"] 	= $_REQUEST["interest_rate"];
+		$arrs["interest_rate2"]	= $_REQUEST["interest_rate2"];
+		$arrs["insurance"] 	= $_REQUEST["insurance"];
+		$arrs["transfers"] 	= $_REQUEST["transfers"];
+		$arrs["regist"]		= $_REQUEST["regist"];
+		$arrs["act"]		= $_REQUEST["act"];
+		$arrs["coupon"] 	= $_REQUEST["coupon"];
+		$arrs["optionTotal"]= $_REQUEST["optionTotal"];
+		$arrs["down"] 		= $_REQUEST["down"];
+		$arrs["nopay"]		= $_REQUEST["nopay"];
+		
+		$response = array();
+		$response["price"] 		= number_format($arrs["price"],2);
+		$response["down"] 		= number_format($arrs["down"],2);
+		$response["nopay"] 		= $arrs["nopay"];
+		$response["interestY"] 	= ($arrs["stdCond1"] ? $arrs["interest_rate"] : ($arrs["interest_rate2"] == 0 ? $arrs["interest_rate"] : $arrs["interest_rate2"]) );
+		
+		$response["priceOpt"] 	=  ($arrs["stdCond2"] ? $arrs["insurance"] : 0);
+		$response["priceOpt"] 	+= ($arrs["stdCond3"] ? $arrs["transfers"] : 0);
+		$response["priceOpt"] 	+= ($arrs["stdCond4"] ? $arrs["regist"] : 0);
+		$response["priceOpt"] 	+= ($arrs["stdCond5"] ? $arrs["act"] : 0);
+		$response["priceOpt"] 	+= ($arrs["stdCond6"] ? $arrs["coupon"] : 0);
+		$response["priceOpt"] 	= number_format($response["priceOpt"],2);
+		
+		echo json_encode($response);
+	}
+	
 	function resvnoChanged(){
 		$resvno = $_REQUEST['resvno'];
+		$locat 	= $_REQUEST['locat'];
 		
 		$sql = "
 			select a.RESVNO,a.LOCAT
@@ -1104,6 +1502,7 @@ class Leasing extends MY_Controller {
 				,a.SMCHQ
 				,a.RESPAY
 				,a.SMPAY
+				,c.CRLOCAT
 			from {$this->MAuth->getdb('ARRESV')} a
 			left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD
 			left join {$this->MAuth->getdb('INVTRAN')} c on a.STRNO=c.STRNO and c.FLAG='D'
@@ -1121,7 +1520,7 @@ class Leasing extends MY_Controller {
 				$response["GRADE"]   = $row->GRADE;
 				$response["STRNO"]   = $row->STRNO;
 				$response["SMCHQ"]   = str_replace(",","",number_format($row->SMCHQ,2));
-				$response["msg"]   	 = ($row->SMCHQ > 0 ? "เช็คเงินจองยังไม่ผ่าน": ($row->RESPAY == $row->SMPAY ? "" : "เลขที่บิลจอง ".$row->RESVNO." ยังชำระเงินจองไม่ครบครับ"));
+				$response["msg"]   	 = ($row->CRLOCAT == $locat ? ($row->SMCHQ > 0 ? "เช็คเงินจองยังไม่ผ่าน": ($row->RESPAY == $row->SMPAY ? "" : "เลขที่บิลจอง ".$row->RESVNO." ยังชำระเงินจองไม่ครบครับ")) : "ผิดพลาด รถที่จองไม่ได้อยู่ในสาขาที่ทำรายการคีย์ขายครับ");
 			}
 		}else{
 			$response["RESVNO"]  = "";
@@ -1152,6 +1551,23 @@ class Leasing extends MY_Controller {
 			}
 		}else{
 			$response["GRADE"] = "";
+		}
+		
+		$sql = "
+			select top 1 ADDRNO,'('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB as ADDRDT from {$this->MAuth->getdb('CUSTADDR')}
+			where CUSCOD='".$cuscod."'
+			order by ADDRNO
+		";
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["ADDRNO"] = $row->ADDRNO;
+				$response["ADDRDT"] = $row->ADDRDT;
+			}
+		}else{
+			$response["ADDRNO"] = "";
+			$response["ADDRDT"] = "";
 		}
 		
 		$sql = "
@@ -1517,7 +1933,8 @@ class Leasing extends MY_Controller {
 		$html = "
 			<div id='inoptform' style='height:100%;'>				
 					<div class='col-sm-5' style='border:1px dotted black;padding-bottom:30px;'>
-						<p class='text-warning'>คำนวนราคาขาย</p>
+						<p class='text-warning col-xs-6'>คำนวนราคาขาย</p>
+						<p class='col-xs-6 text-right'><icon id='btnStd' class='btn btn-xs btn-primary btn-block'>ดึงราคาจาก std.</icon></p>
 						<div class='row'>
 							<div class='col-xs-6'>
 								<span id='span_npricev' class='".($inclvat == 'Y' ? 'text-info':'')."' style='font-size:8pt;'>ราคาขายสดรวม VAT</span>
@@ -1882,8 +2299,8 @@ class Leasing extends MY_Controller {
 			$response["ds6"] = number_format($arrs["npricev"] - $arrs["ndownv"],2);
 			$response["ds7"] = $arrs["nopay"];
 			$response["ds8"] = $arrs["nopays"];
-			$response["ds9"] = ($arrs["installment"] == 'Y' ? $arrs["vatyear"] : $arrs["vatmonth"] * 12 );
-			$response["ds10"] = ($arrs["installment"] == 'M' ? $arrs["vatmonth"] : $arrs["vatyear"] / 12 );
+			$response["ds9"] = ($arrs["installment"] == 'Y' ? $arrs["vatyear"] : number_format($arrs["vatmonth"] * 12,2));
+			$response["ds10"] = ($arrs["installment"] == 'M' ? $arrs["vatmonth"] : number_format($arrs["vatyear"] / 12,2));
 			$response["ds11"] = number_format(str_replace(",","",$response["ds5"]) * (($response["ds10"] / 100) * $response["ds7"]),2);
 			$response["ds12"] = number_format(str_replace(",","",$response["ds2"]) + str_replace(",","",$response["ds11"]),2);
 			$response["ds13"] = number_format(((str_replace(",","",$response["ds12"]) - str_replace(",","",$response["ds4"])) / $response["ds7"]),2);
@@ -2099,6 +2516,9 @@ class Leasing extends MY_Controller {
 		$arrs["strno"] = $_REQUEST["strno"];
 		$arrs["duefirst"] = $this->Convertdate(1,$_REQUEST["duefirst"]);
 		
+		$arrs["npricevOpt"] = str_replace(",","",$_REQUEST["npricevOpt"]);
+		$arrs["npriceOpt"] 	= str_replace(",","",$_REQUEST["npriceOpt"]);
+		
 		$arrs["vatCal"] = ((100 + $arrs["avatrt"])/100);
 		
 		$sql = "
@@ -2124,30 +2544,32 @@ class Leasing extends MY_Controller {
 		
 		switch($arrs["aincvat"]){
 			case 'Y':
-				$response["sell"] = number_format($arrs["totalSell"],2);
-				$response["down"] = number_format($arrs["ndownv"],2);
-				$response["nopay"] = $arrs["nopays"];
-				$response["upay"] = $arrs["nopays"] / $arrs["nopay"];
-				$response["pay1"] = number_format($arrs["totalInstallment"],2);
-				$response["pay2"] = number_format($arrs["totalInstallment"],2);
-				$response["pay3"] = number_format($arrs["totalInstallment"],2);
-				$response["sellFresh"] = number_format($arrs["npricev"],2);
-				$response["interate"] = number_format((($arrs["totalSell"] / $arrs["vatCal"])  - ($arrs["npricev"]/$arrs["vatCal"])),2);
-				$response["vatyear"] = number_format($arrs["vatyear"],2);
-				$response["vatyearReal"] = number_format((((( str_replace(",","",$response["sell"]) - $arrs["npricev"]) / $response["nopay"]) * (100 / ($arrs["npricev"] - $arrs["ndownv"]))) * 12),2);
+				$response["sell"] 		 = number_format($arrs["totalSell"],2);
+				$response["down"] 		 = number_format($arrs["ndownv"],2);
+				$response["nopay"] 		 = $arrs["nopays"];
+				$response["upay"] 		 = $arrs["nopays"] / $arrs["nopay"];
+				$response["pay1"] 		 = number_format($arrs["totalInstallment"],2);
+				$response["pay2"] 		 = number_format($arrs["totalInstallment"],2);
+				$response["pay3"] 		 = number_format($arrs["totalInstallment"],2);
+				$response["sellrv"]  	 = number_format($arrs["npricev"],2);
+				$response["sellFresh"] 	 = number_format($arrs["npricev"]+$arrs["npricevOpt"],2);
+				$response["interate"] 	 = number_format(($arrs["totalSell"] - ($arrs["npricev"]+$arrs["npricevOpt"])) / $arrs["vatCal"],2);  //number_format((($arrs["totalSell"] / $arrs["vatCal"])  - ($arrs["npricev"]/$arrs["vatCal"])),2);
+				$response["vatyear"] 	 = number_format($arrs["vatyear"],2);
+				$response["vatyearReal"] = number_format((((( str_replace(",","",$response["sell"]) - ($arrs["npricev"]+$arrs["npricevOpt"])) / $response["nopay"]) * (100 / (($arrs["npricev"]+$arrs["npricevOpt"]) - $arrs["ndownv"]))) * 12),2);
 			break;
 			case 'N':
-				$response["sell"] = number_format(($arrs["sellBvat"]+$arrs["sellBvatOpt"]),2);
-				$response["down"] = number_format($arrs["ndown"],2);
-				$response["nopay"] = $arrs["nopays"];
-				$response["upay"] = $arrs["nopays"] / $arrs["nopay"];
-				$response["pay1"] = number_format(($arrs["installmentn"]+$arrs["installmentnOpt"]),2);
-				$response["pay2"] = number_format(($arrs["installmentn"]+$arrs["installmentnOpt"]),2);
-				$response["pay3"] = number_format((($arrs["installmentn"]+$arrs["installmentnOpt"]) * $arrs["vatCal"]),2);
-				$response["sellFresh"] = number_format($arrs["nprice"],2);
-				$response["interate"] = number_format(($arrs["vatall"] + $arrs["sellBvatOpt"]),2);
-				$response["vatyear"] = number_format($arrs["vatyear"],2);
-				$response["vatyearReal"] = number_format((((( str_replace(",","",$response["sell"]) - $arrs["nprice"]) / $response["nopay"]) * (100 / ($arrs["nprice"] - $arrs["ndown"]))) * 12),2);
+				$response["sell"] 		 = number_format(($arrs["sellBvat"]+$arrs["sellBvatOpt"]),2);
+				$response["down"] 		 = number_format($arrs["ndown"],2);
+				$response["nopay"] 		 = $arrs["nopays"];
+				$response["upay"]		 = $arrs["nopays"] / $arrs["nopay"];
+				$response["pay1"] 		 = number_format(($arrs["installmentn"]+$arrs["installmentnOpt"]),2);
+				$response["pay2"] 		 = number_format(($arrs["installmentn"]+$arrs["installmentnOpt"]),2);
+				$response["pay3"] 		 = number_format((($arrs["installmentn"]+$arrs["installmentnOpt"]) * $arrs["vatCal"]),2);
+				$response["sellrv"]  	 = number_format($arrs["nprice"],2);
+				$response["sellFresh"] 	 = number_format($arrs["nprice"]+$arrs["npriceOpt"],2);
+				$response["interate"] 	 = number_format((($arrs["sellBvat"]+$arrs["sellBvatOpt"]) - ($arrs["nprice"]+$arrs["npriceOpt"])) / $arrs["vatCal"],2); //number_format(($arrs["vatall"] + $arrs["sellBvatOpt"]),2);
+				$response["vatyear"] 	 = number_format($arrs["vatyear"],2);
+				$response["vatyearReal"] = number_format((((( str_replace(",","",$response["sell"]) - ($arrs["nprice"]+$arrs["npriceOpt"])) / $response["nopay"]) * (100 / (($arrs["nprice"]+$arrs["npriceOpt"]) - $arrs["ndown"]))) * 12),2);
 			break;
 		}
 		
@@ -2434,6 +2856,29 @@ class Leasing extends MY_Controller {
 		return $arrs;
 	}
 	
+	function manualCal(){
+		$arrs = array();
+		$arrs["inclvat"] 	= $_REQUEST["inclvat"];
+		$arrs["vatrt"] 		= $_REQUEST["vatrt"];
+		$arrs["inprc"] 		= str_replace(",","",$_REQUEST["inprc"]);
+		$arrs["indwn"] 		= str_replace(",","",$_REQUEST["indwn"]);
+		$arrs["nopay"] 		= str_replace(",","",$_REQUEST["nopay"]);
+		$arrs["payfirst"] 	= str_replace(",","",$_REQUEST["payfirst"]);
+		$arrs["paynext"] 	= str_replace(",","",$_REQUEST["paynext"]);
+		$arrs["paylast"] 	= str_replace(",","",$_REQUEST["paylast"]);
+		$arrs["sell"] 		= str_replace(",","",$_REQUEST["sell"]);
+		$arrs["totalSell"] 	= str_replace(",","",$_REQUEST["totalSell"]);
+		$arrs["interest"] 	= str_replace(",","",$_REQUEST["interest"]);
+		
+		$arrs["vatCal"] 	= str_replace(",","",number_format((100 + $_REQUEST["vatrt"] / 100),2));
+		
+		if($arrs["inclvat"] == "Y"){
+			
+		}else{
+			
+		}		
+	}
+	
 	function save(){
 		$arrs = array();
 		$arrs["contno"] 	= $_REQUEST["contno"];
@@ -2487,6 +2932,7 @@ class Leasing extends MY_Controller {
 		$arrs["billdas"] 	= (isset($_REQUEST["billdas"]) ? $_REQUEST["billdas"] : array());
 		$arrs["mgar"] 		= (isset($_REQUEST["mgar"]) ? $_REQUEST["mgar"] : array());
 		$arrs["othmgar"] 	= (isset($_REQUEST["othmgar"]) ? $_REQUEST["othmgar"] : array());
+		$arrs["cal"] 		= $_REQUEST["cal"];
 		
 		$data = "";
 		if($arrs["interest"] 	== ""){ $data = "ดอกผลเช่าซื้อ"; }
@@ -2833,13 +3279,13 @@ class Leasing extends MY_Controller {
 					,'N',''
 				);
 				
-				/* ใบจอง  ARRESV */
+				/* ตารางผ่อน  ARPAY */
 					".$arrs["insertARPAY"]."
 				
 				/* INVTRAN */
 				if ((select count(*) from {$this->MAuth->getdb('INVTRAN')}
 					 where STRNO = '".$arrs["strno"]."' and FLAG='D' and SDATE is null and isnull(CONTNO,'')=''
-						and ((CURSTAT = 'R' and RESVNO='".$arrs["resvno"]."') or (CURSTAT is null and RESVNO is null))
+						and ((CURSTAT = 'R' and RESVNO='".$arrs["resvno"]."') or (isnull(CURSTAT,'')='' and isnull(RESVNO,'')=''))
 					) > 0 )
 				begin 
 					update {$this->MAuth->getdb('INVTRAN')}
@@ -2942,6 +3388,85 @@ class Leasing extends MY_Controller {
 			begin try
 				declare @CONTNO varchar(20) = '".$arrs["contno"]."';
 				
+				if('".$arrs["cal"]."' = 'y' and (select count(*) from {$this->MAuth->getdb('CHQTRAN')}
+					where CONTNO=@CONTNO and TSALE='H' and CANDT is null and CANTIME is null and isnull(CANID,'') = '') > 0)
+				begin
+					declare @FORDESC varchar(250) = (
+						select top 1 b.FORDESC from {$this->MAuth->getdb('CHQTRAN')} a
+						left join {$this->MAuth->getdb('PAYFOR')} b on a.PAYFOR=b.FORCODE
+						where CONTNO=@CONTNO and TSALE='H' and CANDT is null and CANTIME is null and isnull(CANID,'') = ''
+						order by INPDT asc
+					);
+					
+					rollback tran leasingTran;
+					insert into #leasingTemp select 'E' as id,'','บันทึกไม่สำเร็จ เนื่องจากเลขที่สัญญา '+@CONTNO+' มีการบันทึก '+@FORDESC+' แล้ว กรณีมีการคำนวนค่างวดใหม่จะต้องไม่มีการรับชำระค่าใดๆ ทั้งสิ้น' as msg;
+					return;
+				end
+				else
+				begin 
+					update {$this->MAuth->getdb('ARMAST')}
+					set 
+					where CONTNO=@CONTNO
+					
+					insert into {$this->MAuth->getdb('ARMAST')} (
+					
+					[STDPRC],[DSCPRC],[KEYINPRC],[NPRICE]
+					,[VATPRC],[TOTPRC],[NPAYRES],[VATPRES],[TOTPRES]
+					,[BALANC],[KEYINDWN],[NDAWN],[VATDWN],[TOTDWN]
+					,[NKANG],[VKANG],[TKANG],[PAYDWN],[SMPAY]
+					,[SMCHQ],[NCARCST]
+					
+					,[VCARCST],[TCARCST],[TAXNO],[TAXDT],[EXP_PRD]
+					,[EXP_AMT],[EXP_FRM],[EXP_TO],[LPAYD],[LPAYA]
+					,[YSTAT],[YDATE],[T_NOPAY],[T_UPAY],[KEYINFUPAY]
+					,[N_FUPAY],[V_FUPAY],[T_FUPAY],[KEYINUPAY],[N_UPAY]
+					,[V_UPAY],[TOT_UPAY],[LPAYTOT],[N_LUPAY],[V_LUPAY]
+					,[T_LUPAY],[FDATE],[LDATE],[CLOSAR],[ISSUNO]
+					,[ISSUDT],[KEYINCSHPRC],[NCSHPRC],[VCSHPRC],[TCSHPRC]
+					,[NPROFIT],[CHECKER],[BILLCOLL],[HLDNO],[INTRT]
+					,[EFRATE],[DELYRT],[DLDAY],[FLRATE],[FLSTOPV]
+					,[DTSTOPV],[CONFIR],[CONFIRID],[CONFIRDT],[MEMO1]
+					,[FLCANCL],[USERID],[INPDT],[DELID],[DELDT]
+					,[POSTDT],[PAYTYP],[CALINT],[CALDSC],[APPVNO]
+					,[LUPDINT],[COMEXT],[COMOPT],[COMOTH],[GRDCOD]
+					,[RECOMCOD],[ACTICOD],[CLOSDT],[EXP_DAY],[PROF_METHOD]
+					,[EFFRT_AFADJ],[STOPPROF_DT],[NETFREE],[VATFREE],[TOTFREE]
+					,[ITEMNPRC],[ITEMVPRC],[ITEMTPRC],[LIMITF],[INSUR]
+					,[ACT],[CAMPCODE]
+				) values (
+					
+					
+					".$arrs['stdprc'].",".$arrs["dscprc"].",".$arrs['keyinprc'].",".$arrs['nprice']."
+					,".$arrs["vatprc"].",".$arrs["totprc"].",".$arrs["npayres"].",".$arrs["vatpres"].",".$arrs["totpres"]."
+					,".$arrs["balanc"].",".$arrs["keyindwn"].",".$arrs["ndawn"].",".$arrs["vatdwn"].",".$arrs["totdwn"]."
+					,".$arrs["nkang"].",".$arrs["vkang"].",".$arrs["tkang"].",".$arrs["paydwn"].",".$arrs["smpay"]."
+					,".$arrs["smchq"].",".$arrs["ncarcst"]."
+					
+					,".$arrs["vcarcst"].",".$arrs["tcarcst"].",@TAXNO,@TAXDT,0
+					,0,0,0,'".$arrs['sdate']."',0
+					,'N',null,".$arrs['nopay'].",".$arrs['upay'].",".$arrs["keyinfupay"]."
+					,".$arrs["n_fupay"].",".$arrs["v_fupay"].",".$arrs["t_fupay"].",".$arrs["keyinupay"].",".$arrs["n_upay"]."
+					,".$arrs["v_upay"].",".$arrs["tot_upay"].",".$arrs["lpaytot"].",".$arrs["n_lupay"].",".$arrs["v_lupay"]."
+					,".$arrs["t_lupay"].",'".$arrs["duefirst"]."','".$arrs["duelast"]."','','".$arrs["release"]."'
+					,'".$arrs['released']."',".$arrs["keyincshprc"].",".$arrs["ncshprc"].",".$arrs["vcshprc"].",".$arrs["tcshprc"]."
+					,".$arrs["interest"].",'".$arrs['checker']."','".$arrs['billcoll']."',0,".$arrs["intrt"]."
+					,".$arrs["efrate"].",".$arrs["delyrt"].",".$arrs["dlday"].",0.0000,''
+					,null,'','',null,'".$arrs["comments"]."'
+					,'','".$this->sess["USERID"]."',getdate(),'',null
+					,null,'".$arrs["paydue"]."',".$arrs["calint"].",".$arrs["discfm"].",'".$arrs["approve"]."'
+					,null,".$arrs["comext"].",".$arrs["comopt"].",".$arrs["comoth"].",''
+					,'".$arrs["recomcod"]."','".$arrs["acticod"]."',null,0,''
+					,'0.000000',null,0.00,0.00,0.00
+					,0.00,0.00,0.00,0.00,'N'
+					,'N',''
+				);
+					
+					/* ตารางผ่อน  ARPAY */
+					delete from {$this->MAuth->getdb('ARPAY')} where CONTNO=@CONTNO
+					".$arrs["insertARPAY"]."
+				end
+				
+				
 				update {$this->MAuth->getdb('ARMAST')}
 				set PAYTYP='".$arrs["paydue"]."'
 					,BILLCOLL='".$arrs["billcoll"]."'
@@ -2961,12 +3486,27 @@ class Leasing extends MY_Controller {
 				where CONTNO=@CONTNO
 				
 				/* คนค้ำประกัน  ARMGAR */
-					delete {$this->MAuth->getdb('ARMGAR')} where CONTNO=@CONTNO
+					delete {$this->MAuth->getdb('ARMGAR')} where CONTNO=@CONTNO;
 					".$arrs["insertARMGAR"]."
 					
 				/* หลักทรัพย์ประกัน  AROTHGAR */
-					delete {$this->MAuth->getdb('AROTHGAR')} where CONTNO=@CONTNO
+					delete {$this->MAuth->getdb('AROTHGAR')} where CONTNO=@CONTNO;
 					".$arrs["insertAROTHGAR"]."	
+					
+					
+				/*อุปกรณ์เสริมรวมราคารถ ARINOPT */
+					DISABLE Trigger ALL ON {$this->MAuth->getdb('ARINOPT')};
+					update b 
+					set b.ONHAND = b.ONHAND+a.QTY
+					from {$this->MAuth->getdb('ARINOPT')} a
+					left join {$this->MAuth->getdb('OPTMAST')} b on a.LOCAT=b.LOCAT and a.OPTCODE=b.OPTCODE
+					where CONTNO=@CONTNO
+					
+					delete from {$this->MAuth->getdb('ARINOPT')} where CONTNO=@CONTNO;
+					
+					".$arrs['insertOpt']."					
+					ENABLE Trigger ALL ON {$this->MAuth->getdb('ARINOPT')};
+					
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','SYS04::บันทึกขายผ่อน (แก้ไข)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
@@ -2979,7 +3519,7 @@ class Leasing extends MY_Controller {
 				insert into #leasingTemp select 'E','',ERROR_MESSAGE();
 			end catch
 		";
-		
+		//echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "select * from #leasingTemp";
 		$query = $this->db->query($sql);
@@ -3009,6 +3549,21 @@ class Leasing extends MY_Controller {
 			begin tran leasingTran
 			begin try
 				declare @CONTNO varchar(20) = '".$contno."';
+				
+				if((select count(*) from {$this->MAuth->getdb('CHQTRAN')}
+					where CONTNO=@CONTNO and TSALE='H' and CANDT is null and CANTIME is null and isnull(CANID,'') = '') > 0)
+				begin
+					declare @FORDESC varchar(250) = (
+						select top 1 b.FORDESC from {$this->MAuth->getdb('CHQTRAN')} a
+						left join {$this->MAuth->getdb('PAYFOR')} b on a.PAYFOR=b.FORCODE
+						where CONTNO=@CONTNO and TSALE='H' and CANDT is null and CANTIME is null and isnull(CANID,'') = ''
+						order by INPDT asc
+					);
+					
+					rollback tran leasingTran;
+					insert into #leasingTemp select 'E' as id,'','ลบสัญญาไม่สำเร็จ เนื่องจากเลขที่สัญญา '+@CONTNO+' มีการบันทึก '+@FORDESC+' แล้ว' as msg;
+					return;
+				end				
 				
 				update {$this->MAuth->getdb('INVTRAN')} 
 				set SDATE=null,PRICE=null,CONTNO=null,FLAG='D'
@@ -3119,9 +3674,10 @@ class Leasing extends MY_Controller {
 				,a.MEMO1
 				
 				,a.STDPRC
+				,a.KEYINCSHPRC
 				,a.DSCPRC
 				,a.TOTDWN
-				,a.STDPRC-a.TOTDWN as DTPD
+				,a.KEYINCSHPRC-a.TOTDWN as DTPD
 				,a.INTRT
 				,a.EFRATE
 				,a.TOTPRC
@@ -3147,6 +3703,7 @@ class Leasing extends MY_Controller {
 				,a.T_NOPAY
 				,a.TKANG
 				
+				,a.OPTPTOT
 			from {$this->MAuth->getdb('ARMAST')} a
 			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO
 			where a.CONTNO='".$_REQUEST['contno']."'
@@ -3168,9 +3725,9 @@ class Leasing extends MY_Controller {
 				$data[8] = $row->CUSADDR;
 				$data[9] = str_replace("[explode]"," ",$row->MEMO1);
 				
-				$data[14] = number_format(0,2);
-				$data[16] = number_format(0,2);
-				$data[18] = number_format($row->STDPRC,2);
+				$data[14] = number_format($row->STDPRC,2);
+				$data[16] = number_format($row->OPTPTOT,2);
+				$data[18] = number_format($row->KEYINCSHPRC,2);
 				$data[20] = number_format($row->TOTDWN,2);
 				$data[22] = number_format($row->DTPD,2);
 				$data[24] = $row->INTRT;

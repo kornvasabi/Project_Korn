@@ -1468,7 +1468,7 @@ class Cautotransferscars extends MY_Controller {
 						
 			select * into #temp from YTKManagement.dbo.fn_autocars_beta2(@str,@lc,".$arrs['condStockEmpty'].",".$arrs['condMaxLimit'].");
 		";
-		//echo $sql; exit;
+		echo $sql; exit;
 		$this->db->query($sql);
 				
 		$sql = "

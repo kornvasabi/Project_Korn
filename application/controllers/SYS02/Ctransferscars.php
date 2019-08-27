@@ -69,7 +69,7 @@ class Ctransferscars extends MY_Controller {
 					<div class='col-xs-2 col-sm-1 col-sm-offset-3'>	
 						<div class='form-group'>
 							<br>
-							<input type='button' id='btnt1transfers' class='btn btn-cyan btn-sm' value='โอนย้ายรถ' style='width:100%'>
+							<input type='button' id='btnt1transfers' class='btn btn-default btn-sm' value='โอนย้ายรถ' style='width:100%'>
 						</div>
 					</div>
 				</div>
