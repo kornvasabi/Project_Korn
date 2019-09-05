@@ -226,7 +226,7 @@ function search(){
 			*/
 			
 			$('#table-Ctransferscars').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-Ctransferscars',1,400);
+			fn_datatables('table-Ctransferscars',1,360);
 			
 			/*
 			// Export data to Excel

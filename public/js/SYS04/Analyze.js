@@ -49,7 +49,7 @@ $("#btnt1search").click(function(){
 					$("#table-fixed-Analyze-detail").hide(0);
 					
 					$('#table-Analyze').on('draw.dt',function(){ redraw(); });
-					fn_datatables('table-Analyze',1,320);
+					fn_datatables('table-Analyze',1,275);
 					
 					// Export data to Excel
 					$('.data-export').prepend('<img id="table-Analyze-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
