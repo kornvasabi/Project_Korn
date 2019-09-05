@@ -61,7 +61,7 @@ class Cautotransferscars extends MY_Controller {
 													<table id='table-choose' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' style='width:100%;background-color:white;'>
 														<thead>
 															<tr>
-																<th style='width:100px;'><button id='addSTRNO' LOCAT='' class='btn btn-sm btn-primary btn-block'>เพิ่มรถ</button></th>
+																<th style='width:100px;'><button id='addSTRNO' LOCAT='' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-plus'> เพิ่มรถ</span></button></button></th>
 																<th>เลขตัวถัง</th>
 																<th>รุ่น</th>
 																<th>แบบ</th>
@@ -153,10 +153,10 @@ class Cautotransferscars extends MY_Controller {
 										<div class='col-sm-12'>
 											<div class='row'>
 												<div class='col-sm-2 col-sm-offset-8'>
-													<button id='tab11Clear' name='tab11' class='btn btn-sm btn-default btn-block'>เคลียร์</button>
+													<button id='tab11Clear' name='tab11' class='btn btn-sm btn-inverse btn-block'><span class='glyphicon glyphicon-refresh'> เคลียร์</span></button>
 												</div>
-												<div class='col-sm-2 '>													
-													<button id='tab11processCar' name='tab11' class='btn btn-sm btn-primary btn-block'>ถัดไป</button>
+												<div class='col-sm-2 '>
+													<button id='tab11processCar' name='tab11' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-step-forward'> ถัดไป</span></button>
 												</div>
 											</div>
 										</div>
@@ -168,10 +168,10 @@ class Cautotransferscars extends MY_Controller {
 										<div class='col-sm-12'>
 											<div class='row'>
 												<div class='col-sm-2'>
-													<button id='tab22Back' name='tab22' class='btn btn-sm btn-danger btn-block'>ย้อนกลับ</button>
+													<button id='tab22Back' name='tab22' class='btn btn-sm btn-danger btn-block'><span class='glyphicon glyphicon-step-backward'> ย้อนกลับ</span></button>
 												</div>
 												<div class='col-sm-2 col-sm-offset-8'>
-													<button id='tab22processCar' name='tab22' class='btn btn-sm btn-primary btn-block'>ถัดไป</button>
+													<button id='tab22processCar' name='tab22' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-step-forward'> ถัดไป</span></button>
 												</div>
 											</div>
 										</div>
@@ -186,7 +186,7 @@ class Cautotransferscars extends MY_Controller {
 													<!-- button id='tab33Back' name='tab33' class='btn btn-sm btn-danger btn-block'>ย้อนกลับ</button -->
 												</div>
 												<div class='col-sm-2 col-sm-offset-8'>
-													<button id='tab33processCar' name='tab33' class='btn btn-sm btn-primary btn-block'>ทำรายการเพิ่มเติม</button>
+													<button id='tab33processCar' name='tab33' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-pencil'> ทำรายการเพิ่มเติม</span></button>
 												</div>
 											</div>
 										</div>
@@ -809,10 +809,10 @@ class Cautotransferscars extends MY_Controller {
 								</select>
 							</div>
 						</div>
-						<div class='col-sm-1 col-sm-offset-0'>	
+						<div class='col-sm-2 col-sm-offset-0'>	
 							<div class='form-group'>
 								<br>
-								<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'>แสดง</button>
+								<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 							</div>
 						</div>
 					</div>
@@ -1468,7 +1468,7 @@ class Cautotransferscars extends MY_Controller {
 						
 			select * into #temp from YTKManagement.dbo.fn_autocars_beta2(@str,@lc,".$arrs['condStockEmpty'].",".$arrs['condMaxLimit'].");
 		";
-		echo $sql; exit;
+		//echo $sql; exit;
 		$this->db->query($sql);
 				
 		$sql = "

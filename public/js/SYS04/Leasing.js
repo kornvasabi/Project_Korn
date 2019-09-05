@@ -1477,13 +1477,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 																		msg: 'คุณต้องการใช้อัตราดอกเบี้ยข้าราชการหรือไม่',
 																		buttons: {
 																			ok : {
-																				'class': 'btn btn-primary',
-																				text: 'ยืนยัน, ใช้ดอกเบี้ยข้าราชการ',
+																				'class': 'btn btn-primary glyphicon glyphicon-ok',
+																				text: ' ยืนยัน, ใช้ดอกเบี้ยข้าราชการ',
 																				closeOnClick: true,
 																			},
 																			cancel : {
-																				'class': 'btn btn-danger',
-																				text: 'ยืนยัน, ใช้ดอกเบี้ยทั่วไป',
+																				'class': 'btn btn-danger glyphicon glyphicon-ok',
+																				text: ' ยืนยัน, ใช้ดอกเบี้ยทั่วไป',
 																				closeOnClick: true
 																			},
 																		},
@@ -1510,13 +1510,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 																		msg: 'คุณต้องการรวมเบี้ยประกันด้วยหรือไม่',
 																		buttons: {
 																			ok : {
-																				'class': 'btn btn-primary',
-																				text: 'ยืนยัน, รวมเบี้ยประกัน',
+																				'class': 'btn btn-primary glyphicon glyphicon-ok',
+																				text: ' ยืนยัน, รวมเบี้ยประกัน',
 																				closeOnClick: true,
 																			},
 																			cancel : {
-																				'class': 'btn btn-danger',
-																				text: 'ยืนยัน, ไม่รวมเบี้ยประกัน',
+																				'class': 'btn btn-danger glyphicon glyphicon-remove',
+																				text: ' ยืนยัน, ไม่รวมเบี้ยประกัน',
 																				closeOnClick: true
 																			},
 																		},
@@ -1543,13 +1543,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 																		msg: 'คุณต้องการรวมค่าโอนด้วยหรือไม่',
 																		buttons: {
 																			ok : {
-																				'class': 'btn btn-primary',
-																				text: 'ยืนยัน, รวมค่าโอน',
+																				'class': 'btn btn-primary glyphicon glyphicon-ok',
+																				text: ' ยืนยัน, รวมค่าโอน',
 																				closeOnClick: true,
 																			},
 																			cancel : {
-																				'class': 'btn btn-danger',
-																				text: 'ยืนยัน, ไม่รวมค่าโอน',
+																				'class': 'btn btn-danger glyphicon glyphicon-remove',
+																				text: ' ยืนยัน, ไม่รวมค่าโอน',
 																				closeOnClick: true
 																			},
 																		},
@@ -1576,13 +1576,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 																		msg: 'คุณต้องการรวมค่าทะเบียนด้วยหรือไม่',
 																		buttons: {
 																			ok : {
-																				'class': 'btn btn-primary',
-																				text: 'ยืนยัน, รวมค่าทะเบียน',
+																				'class': 'btn btn-primary glyphicon glyphicon-ok',
+																				text: ' ยืนยัน, รวมค่าทะเบียน',
 																				closeOnClick: true,
 																			},
 																			cancel : {
-																				'class': 'btn btn-danger',
-																				text: 'ยืนยัน, ไม่รวมค่าทะเบียน',
+																				'class': 'btn btn-danger glyphicon glyphicon-remove',
+																				text: ' ยืนยัน, ไม่รวมค่าทะเบียน',
 																				closeOnClick: true
 																			},
 																		},
@@ -1609,13 +1609,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 																		msg: 'คุณต้องการรวมค่าพ.ร.บ. ด้วยหรือไม่',
 																		buttons: {
 																			ok : {
-																				'class': 'btn btn-primary',
-																				text: 'ยืนยัน, รวมค่าพ.ร.บ.',
+																				'class': 'btn btn-primary glyphicon glyphicon-ok',
+																				text: ' ยืนยัน, รวมค่าพ.ร.บ.',
 																				closeOnClick: true,
 																			},
 																			cancel : {
-																				'class': 'btn btn-danger',
-																				text: 'ยืนยัน, ไม่รวมค่าพ.ร.บ.',
+																				'class': 'btn btn-danger glyphicon glyphicon-remove',
+																				text: ' ยืนยัน, ไม่รวมค่าพ.ร.บ.',
 																				closeOnClick: true
 																			},
 																		},
@@ -1642,13 +1642,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 																		msg: 'คุณต้องการรวมคูปองชิงโชค ด้วยหรือไม่',
 																		buttons: {
 																			ok : {
-																				'class': 'btn btn-primary',
-																				text: 'ยืนยัน, รวมคูปองชิงโชค',
+																				'class': 'btn btn-primary glyphicon glyphicon-ok',
+																				text: ' ยืนยัน, รวมคูปองชิงโชค',
 																				closeOnClick: true,
 																			},
 																			cancel : {
-																				'class': 'btn btn-danger',
-																				text: 'ยืนยัน, ไม่รวมคูปองชิงโชค',
+																				'class': 'btn btn-danger glyphicon glyphicon-remove',
+																				text: ' ยืนยัน, ไม่รวมคูปองชิงโชค',
 																				closeOnClick: true
 																			},
 																		},
@@ -2029,13 +2029,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			msg: 'คุณต้องการบันทึกการขายผ่อนหรือไม่',
 			buttons: {
 				ok : {
-					'class': 'btn btn-primary',
-					text: 'ยืนยัน',
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ยืนยัน',
 					closeOnClick: true,
 				},
 				cancel : {
-					'class': 'btn btn-danger',
-					text: 'ยกเลิก',
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ยกเลิก',
 					closeOnClick: true
 				},
 			},
@@ -2603,7 +2603,7 @@ function btnOther($thisWindowLeasing){
 			}
 		});
 	});
-		
+	
 	$('#add_delete').click(function(){
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
@@ -2611,13 +2611,13 @@ function btnOther($thisWindowLeasing){
 			msg: 'คุณต้องการ<span style="color:red;">ลบเลขที่สัญญา</span> '+$('#add_contno').val()+' หรือไม่',
 			buttons: {
 				ok : {
-					'class': 'btn btn-primary',
-					text: 'ลบ',
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ลบ',
 					closeOnClick: true,
 				},
 				cancel : {
-					'class': 'btn btn-danger',
-					text: 'ยกเลิก',
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ยกเลิก',
 					closeOnClick: true
 				},
 			},

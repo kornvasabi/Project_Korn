@@ -189,79 +189,171 @@ class ReserveCar extends MY_Controller {
 	
 	function getfromReserve(){
 		$html = "
-			<div style='background-color:#ccc;height:calc(100vh - 120px);'>
-				<div style='height:150px;overflow:auto;'>
-					<div class='row col-sm-12'>
-						<div class='col-sm-3'>	
-							<div class='form-group'>
-								สาขา
-								<select id='t1LOCAT' class='form-control input-sm'></select>
-							</div>
-						</div>
-						<div class='col-sm-3'>	
-							<div class='form-group'>
-								เลขที่บิลรับรถ
-								<select id='t1RECVNO' class='form-control input-sm'></select>
-							</div>
-						</div>
-						<div class='col-sm-3'>	
-							<div class='form-group'>
-								รุ่นรถ
-								<select id='t1MODEL' class='form-control input-sm'></select>
-							</div>
-						</div>
-						<div class='col-sm-3'>	
-							<div class='form-group'>
-								สี
-								<select id='t1COLOR' class='form-control input-sm'></select>
-							</div>
-						</div>
-					</div>
-					
-					<div class='row col-sm-12'>
-						<div class='col-sm-3'>	
-							<div class='form-group'>
-								เลขตัวถัง
-								<input type='text' id='t1STRNO' class='form-control input-sm' placeholder='เลขตัวถัง'>
-							</div>
-						</div>
-						<div class='col-sm-2' style='display:none;'>	
-							<div class='form-group'>
-								สถานะรถ
-								<select id='t1STAT' class='form-control input-sm'>
-									<option value=''>ทั้งหมด</option>
-									<option value='N'>รถใหม่</option>
-									<option value='O'>รถเก่า</option>
-								</select>
-							</div>
-						</div>
-						<div class='col-sm-1 col-sm-offset-0'>	
-							<div class='form-group'>
-								<br>
-								<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'>แสดง</button>
-							</div>
-						</div>
+			<h3 class='text-primary'>ผู้เช่าซื้อ</h3>
+			<div class='row col-sm-12' style='border:1px dotted #aaa;'>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						เลขที่บิลจอง
+						<input type='text' id='' class='form-control input-sm'>
 					</div>
 				</div>
-				
-				<div id='resultSearcht1' style='height:calc(100% - 150px);overflow:auto;background-color:white;'></div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						วันที่จอง
+						<input type='text' id='' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value='".$this->today('today')."'>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						สาขา
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						ชื่อสกุล-ลูกค้า
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						รหัสผู้รับจอง
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						รหัสพนักงานขาย
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						อัตราภาษี(%)
+						<input type='text' id='' class='form-control input-sm'>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						เลขที่ใบกำกับ
+						<input type='text' id='' class='form-control input-sm' disabled>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						วันที่ใบกำกับ
+						<input type='text' id='' class='form-control input-sm' disabled>
+					</div>
+				</div>
+			</div>
+			
+			
+			<h3 class='text-primary'>ข้อมูลรถ</h3>
+			<div class='row col-sm-12' style='border:1px dotted #aaa;'>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						เลขตัวถัง
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						ประเภทสินค้า
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						ยี่ห้อ
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						รุ่น
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						แบบ
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						สี
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						ขนาด
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						สถานะ
+						<select id='' class='form-control input-sm'></select>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						ราคาขายรวมภาษี
+						<input type='text' id='' class='form-control input-sm'>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						เงินจองรวมภาษี
+						<input type='text' id='' class='form-control input-sm'>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						ยอดคงเหลือ
+						<input type='text' id='' class='form-control input-sm'>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						วันนัดรับรถ
+						<input type='text' id='' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value=''>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						วันที่รับรถจริง
+						<input type='text' id='' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value=''>
+					</div>
+				</div>
+				<div class='col-sm-3 col-sm-offset-3'>	
+					<div class='form-group'>
+						ชำระเงินจองแล้ว
+						<input type='text' id='' class='form-control input-sm'>
+					</div>
+				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						ค้างชำระเงินจอง
+						<input type='text' id='' class='form-control input-sm'>
+					</div>
+				</div>
+				<div class='col-sm-6'>	
+					<div class='form-group'>
+						หมายเหตุ
+						<textarea id='' class='form-control input-sm'></textarea>
+					</div>
+				</div>
+			</div>
+			
+			<div class='row col-sm-2 col-sm-offset-10'>
+				<br/><br/>
+				<button id='' class='btn-sm btn-primary btn-block'>บันทึก</button>
+				<br/>
 			</div>
 		";
-		
-		/*
-		$html = '
-			<div class="panel panel-default">
-				<div class="panel-heading">
-					<div class="panel-title">
-						<h4>Panel title</h4>
-					</div>
-				</div>
-				<div class="panel-body">
-					Lorem ipsum...
-				</div>
-			</div>
-		';
-		*/
 		
 		$response = array('html'=>$html,'status'=>true);
 		echo json_encode($response);

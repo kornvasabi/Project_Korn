@@ -138,11 +138,19 @@ class Cselect2 extends MY_Controller {
 		$cuscod = $_REQUEST["cuscod"];
 		
 		$sql = "
-			select ADDRNO,'('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB as ADDRNODetails from {$this->MAuth->getdb('CUSTADDR')}
+			select a.ADDRNO,'('+a.ADDRNO+') '+a.ADDR1+' '+a.ADDR2+' ต.'+a.TUMB
+				+' อ.'+b.AUMPDES+' จ.'+c.PROVDES+' '+a.ZIP	as ADDRNODetails 			
+			from {$this->MAuth->getdb('CUSTADDR')} a
+			left join {$this->MAuth->getdb('SETAUMP')} b on a.AUMPCOD=b.AUMPCOD
+			left join {$this->MAuth->getdb('SETPROV')} c on b.PROVCOD=c.PROVCOD
 			where CUSCOD = '".$cuscod."' collate Thai_CI_AS and ADDRNO = '".$dataNow."' collate Thai_CI_AS
 			
 			union
-			select ADDRNO,'('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB as ADDRNODetails from {$this->MAuth->getdb('CUSTADDR')}
+			select a.ADDRNO,'('+a.ADDRNO+') '+a.ADDR1+' '+a.ADDR2+' ต.'+a.TUMB
+				+' อ.'+b.AUMPDES+' จ.'+c.PROVDES+' '+a.ZIP	as ADDRNODetails
+			from {$this->MAuth->getdb('CUSTADDR')} a
+			left join {$this->MAuth->getdb('SETAUMP')} b on a.AUMPCOD=b.AUMPCOD
+			left join {$this->MAuth->getdb('SETPROV')} c on b.PROVCOD=c.PROVCOD
 			where CUSCOD = '".$cuscod."' collate Thai_CI_AS and '('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB like '%".$dataSearch."%' collate Thai_CI_AS
 			order by ADDRNO
 		";
@@ -380,9 +388,11 @@ class Cselect2 extends MY_Controller {
 			
 			union
 			--บิลจองจากสาขาอื่น แต่ลูกค้ามาออกรถกับอีกสาขา
-			select top 10 RESVNO from {$this->MAuth->getdb('ARRESV')}
-			where 1=1 and RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
-				and isnull(STRNO,'') <> '' and SDATE is null
+			select top 10 a.RESVNO from {$this->MAuth->getdb('ARRESV')} a
+			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO and a.RESVNO=b.RESVNO
+			where b.CRLOCAT='".$locat."' and a.RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
+				and isnull(a.STRNO,'') <> '' and a.SDATE is null
+				
 			--order by RESVNO desc
 		";
 		$query = $this->db->query($sql);

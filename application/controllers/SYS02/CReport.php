@@ -124,7 +124,7 @@ class CReport extends MY_Controller {
 					<div class='col-xs-12 col-sm-12'>	
 						<div class='form-group'>
 							<br>
-							<input type='button' id='btnt1transfer' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+							<button id='btnt1transfer' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 						</div>
 					</div>
 				</div>
@@ -302,7 +302,7 @@ class CReport extends MY_Controller {
 		
 		$html = "
 			<div id='table-fixed-TransfersSearch' class='col-sm-12' style='height:calc(100%);width:100%;overflow:auto;font-size:8pt;'>
-				<table id='table-TransfersSearch' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+				<table id='table-TransfersSearch' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
 						<tr>
 							<th colspan='16' class='text-center' style='font-size:12pt;border:0px;'> 
@@ -442,7 +442,7 @@ class CReport extends MY_Controller {
 					<div class='col-xs-12 col-sm-12'>	
 						<div class='form-group'>
 							<br>
-							<input type='button' id='btnt1transferPendding' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+							<button id='btnt1transferPendding' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 						</div>
 					</div>
 				</div>

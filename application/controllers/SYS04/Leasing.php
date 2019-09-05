@@ -71,12 +71,12 @@ class Leasing extends MY_Controller {
 					<div class='row'>
 						<div class=' col-sm-6'>	
 							<div class='form-group'>
-								<input type='button' id='btnt1leasing' class='btn btn-cyan btn-sm' value='ทำรายการขายผ่อน' style='width:100%'>
+								<button id='btnt1leasing' class='btn btn-cyan btn-block'><span class='glyphicon glyphicon-pencil'> ทำรายการขายผ่อน</span></button>
 							</div>
 						</div>
 						<div class=' col-sm-6'>	
 							<div class='form-group'>
-								<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+								<button id='btnt1search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 							</div>
 						</div>
 					</div>		
@@ -574,9 +574,9 @@ class Leasing extends MY_Controller {
 					<input type='button' id='btnLock' class='btn btn-xs btn-info' style='width:100px;' value='Lock สัญญา' disabled>
 				</div>
 				<div class='col-sm-6 text-right'>
-					<input type='button' id='add_save' class='btn btn-xs btn-primary right' style='width:100px;' value='บันทึก' >
+					<button id='add_save' class='btn btn-xs btn-primary' style='width:100px;'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
 					<br>
-					<input type='button' id='add_delete' class='btn btn-xs btn-danger right' style='width:100px;' value='ลบ' >
+					<button id='add_delete' class='btn btn-xs btn-danger' style='width:100px;'><span class='glyphicon glyphicon-trash'> ลบ</span></button>
 				</div>
 			</div>
 		";
