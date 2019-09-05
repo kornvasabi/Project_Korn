@@ -272,10 +272,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			$("#select2-"+this.id+"-container").css({'background-color':'#ccc','color':'black','cursor':'not-allowed','height':'28px'});
 		});
 		$(".select2-selection--single").css({'height':'30px'});
-		
-		$(".dataTables_scrollHead").css({ 'width':'calc(100vw - 70px)' });
-		$(".dataTables_scrollBody").css({ 'width':'calc(100vw - 70px)' });
-		$(".dataTables_scrollFoot").css({ 'width':'calc(100vw - 70px)' });
 	}
 	
 	var setwidth = $(window).width();

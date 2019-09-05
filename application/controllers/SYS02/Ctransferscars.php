@@ -146,13 +146,13 @@ class Ctransferscars extends MY_Controller {
 						<div class='col-sm-2'>
 							<div class='form-group'>
 								<br>
-								<button id='btnt2addSTRNo' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-plus'> เพิ่มเลขตัวถัง</span></button>
+								<button id='btnt2addSTRNo' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-plus'> เพิ่มเลขตัวถัง</span></button>
 							</div>
 						</div>
 						<div class='col-sm-2 col-sm-offset-8'>
 							<div class='form-group'>
 								<br>
-								<input type='button' id='btnt1transfers' class='btn btn-primary btn-sm' value='&#9776;&emsp; ดูลำดับการโอนรถ' style='width:100%'>
+								<input type='button' id='btnt1transfers' class='btn btn-sm btn-primary btn-sm' value='&#9776;&emsp; ดูลำดับการโอนรถ' style='width:100%'>
 							</div>
 						</div>
 					</div>
@@ -183,14 +183,14 @@ class Ctransferscars extends MY_Controller {
 						<div class='col-sm-1'>
 							<div class='form-group'>
 								<br>
-								<button id='btnt2home' class='btn btn-inverse btn-block'><span class='glyphicon glyphicon-home'> หน้าแรก</span></button>
+								<button id='btnt2home' class='btn btn-sm btn-inverse btn-block'><span class='glyphicon glyphicon-home'> หน้าแรก</span></button>
 							</div>
 						</div>
 
 						<!--div class='col-sm-1'>
 							<div class='form-group'>
 								<br>
-								<input type='button' id='btnt2bill' class='btn btn-primary btn-sm' value='บิลโอน' style='width:100%'>
+								<input type='button' id='btnt2bill' class='btn btn-sm btn-primary btn-sm' value='บิลโอน' style='width:100%'>
 							</div>
 						</div-->
 
@@ -214,14 +214,14 @@ class Ctransferscars extends MY_Controller {
 						<div class='col-sm-1 col-sm-offset-7'>
 							<div class='form-group'>
 								<br>
-								<input type='button' id='btnt2del' class='btn btn-danger btn-sm' value='ยกเลิกบิลโอน' style='width:100%'>
+								<input type='button' id='btnt2del' class='btn btn-sm btn-danger btn-sm' value='ยกเลิกบิลโอน' style='width:100%'>
 							</div>
 						</div>
 
 						<div class='col-sm-1'>
 							<div class='form-group'>
 								<br>
-								<button id='btnt2save' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-floppy-disk''> บันทึก</span></button>
+								<button id='btnt2save' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-floppy-disk''> บันทึก</span></button>
 							</div>
 						</div>
 					</div>
@@ -315,7 +315,7 @@ class Ctransferscars extends MY_Controller {
 		}
 
 		$html = "
-			<div id='table-fixed-Ctransferscars' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+			<div id='table-fixed-Ctransferscars' class='col-sm-12' style='height:100%;overflow:auto;'>
 				<table id='table-Ctransferscars' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
 						<tr>
