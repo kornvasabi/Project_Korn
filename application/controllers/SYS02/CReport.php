@@ -174,18 +174,17 @@ class CReport extends MY_Controller {
 		
 		if($arrs["TRANSFM"] != ""){
 			$condDesc .= " สาขาต้นทาง ".$arrs["TRANSFM"];
+			$cond .= " and a.TRANSFM like '".$arrs["TRANSFM"]."%'";
 		}else{
 			$condDesc .= " สาขาต้นทาง ทั้งหมด";
 		}
 		
 		if($arrs["TRANSTO"] != ""){
 			$condDesc .= " สาขาปลายทาง  ".$arrs["TRANSTO"];
+			$cond .= " and a.TRANSTO like '".$arrs["TRANSTO"]."%'";
 		}else{
 			$condDesc .= " สาขาปลายทาง ทั้งหมด";
 		}
-		
-		$cond .= " and a.TRANSFM like '".$arrs["TRANSFM"]."%'";
-		$cond .= " and a.TRANSTO like '".$arrs["TRANSTO"]."%'";
 		
 		if($arrs["TRANSSTAT"] != ""){
 			if($arrs["TRANSSTAT"] == "Sendding2"){
@@ -238,8 +237,10 @@ class CReport extends MY_Controller {
 			$cond .= " and datediff(day,isnull(b.TRANSDT,a.TRANSDT),isnull(b.RECEIVEDT,getdate())) >= {$arrs["TR"]} ";
 		}
 		
+		$condDesc .= ($cond == "" ? " แสดงรายการ 1,000 อันดับแรก":"");
+		
 		$sql = "
-			select a.TRANSNO,a.TRANSFM,a.TRANSTO,b.TRANSITEM,b.STRNO
+			select ".($cond == "" ? "top 1000":"")." a.TRANSNO,a.TRANSFM,a.TRANSTO,b.TRANSITEM,b.STRNO
 				,c.titleName+c.firstName+' '+c.lastName as EMPCARRY
 				,convert(varchar(8),a.TRANSDT,112) as TRANSDTCreate
 				,convert(varchar(8),b.TRANSDT,112) as TRANSDT
