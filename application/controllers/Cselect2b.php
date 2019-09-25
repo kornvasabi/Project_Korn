@@ -671,8 +671,10 @@ class Cselect2b extends MY_Controller {
 		$select = "";
 		if($ugroup == 'HP'){
 			$select = "";
-		}else{
+		}else if($ugroup == 'MM'){
 			$select = "where GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F')";
+		}else if($ugroup == 'RC'){
+			$select = "where GCODE in ('02','16','29')";
 		}
 		
 		$sql = "
@@ -706,8 +708,10 @@ class Cselect2b extends MY_Controller {
 		$select = "";
 		if($ugroup == 'HP'){
 			$select = "";
-		}else{
+		}else if($ugroup == 'MM'){
 			$select = "where GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F')";
+		}else if($ugroup == 'RC'){
+			$select = "where GCODE in ('02','16','29')";
 		}
 		
 		$sql = "
