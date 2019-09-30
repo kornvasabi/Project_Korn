@@ -132,23 +132,12 @@ class CHomenew extends MY_Controller {
 		
 		if(isset($_REQUEST["inpGCODE"])){
 			if($_REQUEST["inpGCODE"] == ''){
-				if($ugroup != 'HP'){
-					$cond .= " and a.GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F') ";
-				}else{
-					//$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
-					$cond .= "";
-				}
+				$cond .= " and a.GCODE collate thai_ci_as in (select GCODE from {$this->MAuth->getdb('hp_groupuser_GCODE')} where groupCode='{$ugroup}')";
 			}else{
 				$cond .= " and a.GCODE = '".str_replace(chr(0),'',$_REQUEST["inpGCODE"])."' ";				
 			}
 		}else{
-			//$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
-			if($ugroup != 'HP'){
-				$cond .= " and a.GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F') ";
-			}else{
-				//$cond .= " and a.GCODE in ('04','15','16','022','023','024','29','30','04F','15F','16F','22F','23F','24F','29F','30F') ";
-				$cond .= "";
-			}
+			$cond .= " and a.GCODE collate thai_ci_as in (select GCODE from {$this->MAuth->getdb('hp_groupuser_GCODE')} where groupCode='{$ugroup}')";
 		}
 		$top = ""; 
 		if($_REQUEST["inpCONTNO"] == '' && $_REQUEST["inpCUSCOD"] == '' && $_REQUEST["inpSTRNO"] == '' && $_REQUEST["inpLOCAT"] == '' && $_REQUEST["inpGCODE"] == ''){
