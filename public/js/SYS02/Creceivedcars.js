@@ -122,7 +122,11 @@ $('#add_TRANSNO').change(function(){
 			if(data.html['TRANSSTAT'] == "Received"){
 				$('#btnt2save').attr('disabled',true);
 				$('#btnt2addSTRNO').attr('disabled',true);
-				
+				$('.tab2').css({'background-color':'#fff'});
+			}else if(data.html['TRANSSTAT'] == "Cancel"){
+				$('#btnt2save').attr('disabled',true);
+				$('#btnt2addSTRNO').attr('disabled',true);
+				$('.tab2').css({'background-color':'#ffd6d6'});
 			}else{
 				//$('#btnt2save').attr('disabled',false);
 				//$('#btnt2addSTRNO').attr('disabled',false);
@@ -133,6 +137,7 @@ $('#add_TRANSNO').change(function(){
 					$('#btnt2addSTRNO').attr('disabled',true);
 					$('#btnt2save').attr('disabled',true);
 				}
+				$('.tab2').css({'background-color':'#fff'});
 			}
 			
 			var STRNO = data.html['STRNO'];

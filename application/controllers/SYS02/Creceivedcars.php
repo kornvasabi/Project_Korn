@@ -62,6 +62,7 @@ class Creceivedcars extends MY_Controller {
 								<option value='Sendding'>อยู่ระหว่างการโอนย้ายรถ</option>
 								<option value='Pendding'>รับโอนรถบางส่วน</option>
 								<option value='Received'>รับโอนรถครบแล้ว</option>
+								<option value='Cancel'>ยกเลิกบิลโอน</option>
 							</select>
 						</div>
 					</div>
@@ -245,7 +246,8 @@ class Creceivedcars extends MY_Controller {
 				,a.TRANSFM,a.TRANSTO,a.TRANSQTY,a.TRANSSTAT
 				,case when a.TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ'
 					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
-					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว' end TRANSSTATDesc
+					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว'
+					when a.TRANSSTAT='Cancel' then 'ยกเลิกบิลโอน'  end TRANSSTATDesc
 			from {$this->MAuth->getdb('INVTransfers')} a
 			left join {$this->MAuth->getdb('INVMOVM')} b on a.TRANSNO=b.MOVENO collate thai_cs_as
 			where 1=1 ".$cond."
@@ -259,7 +261,7 @@ class Creceivedcars extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$html .= "
-					<tr class='trow' seq=".$NRow.">
+					<tr class='trow' seq=".$NRow." ".($row->TRANSSTAT == 'Cancel' ? 'style="color:red;"' : '').">
 						<td class='getit' seq=".$NRow++." TRANSNO='".$row->TRANSNO."' style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
 						<td>".$row->TRANSNO."</td>
 						<td>".$this->Convertdate(2,$row->TRANSDT)."</td>
@@ -267,7 +269,7 @@ class Creceivedcars extends MY_Controller {
 						<td>".$row->TRANSFM."</td>
 						<td>".$row->TRANSTO."</td>
 						<td align='center'>".$row->TRANSQTY."</td>
-						<td style='color:".($row->TRANSSTAT == 'Sendding' ? 'black' : ($row->TRANSSTAT == 'Pendding' ? 'blue' : 'green')).";'>".$row->TRANSSTATDesc."</td>
+						<td style='color:".($row->TRANSSTAT == 'Sendding' ? 'black' : ($row->TRANSSTAT == 'Pendding' ? 'blue' : ($row->TRANSSTAT == 'Cancel' ? 'red' : 'green'))).";'>".$row->TRANSSTATDesc."</td>
 					</tr>
 				";
 			}
@@ -314,7 +316,9 @@ class Creceivedcars extends MY_Controller {
 				,a.TRANSSTAT
 				,case when a.TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ' 
 					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน' 
-					else 'รับโอนรถครบแล้ว' end as TRANSSTATDesc
+					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว' 
+					when a.TRANSSTAT='Cancel' then 'ยกเลิกบิลโอน' 
+				 end as TRANSSTATDesc
 				,a.MEMO1
 				,CONVERT(varchar(8),d.MOVEDT,112) as MOVEDT
 			from {$this->MAuth->getdb('INVTransfers')} a 
