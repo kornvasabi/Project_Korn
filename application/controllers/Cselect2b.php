@@ -709,7 +709,7 @@ class Cselect2b extends MY_Controller {
 				select GCODE, GDESC from {$this->MAuth->getdb('SETGROUP')}
 				where GCODE collate thai_ci_as in (
 					select GCODE from {$this->MAuth->getdb('hp_groupuser_GCODE')} 
-					where groupCode='{$ugroup}'
+					where groupCode='{$ugroup}' and ALLOW='EDIT'
 				)
 			)a
 			where GCODE like '%".$dataSearch."%' collate Thai_CI_AS or GDESC like '%".$dataSearch."%' collate Thai_CI_AS
