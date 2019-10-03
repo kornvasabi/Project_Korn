@@ -219,12 +219,14 @@ class CHomenew extends MY_Controller {
 		$STRNO = $_REQUEST['STRNO'];
 		$ugroups = $_REQUEST["ugroup"];
 		
+		/*
 		$gcodes = "";
 		if($ugroups != 'HP'){
 			$gcodes = " and a.GCODE in ('','15','16','022','023','024','027','29','30','','15F','16F','22F','23F','24F','27F','29F','30F')";
 		}else{
 			$gcodes = "";
 		}
+		*/
 		
 		$sql = "
 			select a.STRNO,a.CONTNO,a.CRLOCAT,a.STAT
@@ -247,8 +249,12 @@ class CHomenew extends MY_Controller {
 				select CONTNO,CUSCOD from {$this->MAuth->getdb('HARFINC')}
 			) c on a.CONTNO=c.CONTNO
 			left join {$this->MAuth->getdb('CUSTMAST')} d on c.CUSCOD=d.CUSCOD
-			where a.STRNO='".$STRNO."' ".$gcodes."
+			where a.STRNO='".$STRNO."' and a.GCODE collate thai_cs_as in (
+				select GCODE from {$this->MAuth->getdb('hp_groupuser_GCODE')} 
+				where groupCode='".$ugroups."'
+			)
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$data = array();
