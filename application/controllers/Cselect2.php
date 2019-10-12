@@ -92,7 +92,7 @@ class Cselect2 extends MY_Controller {
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
-		$html = "";
+		$json = array();
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>$row->IDNo, 'text'=>$row->Name];
@@ -301,7 +301,7 @@ class Cselect2 extends MY_Controller {
 		$TYPECOD = $_REQUEST['TYPECOD'];
 		
 		$sql = "
-			select MODELCOD from {$this->MAuth->getdb('SETMODEL')}
+			select top 20 MODELCOD from {$this->MAuth->getdb('SETMODEL')}
 			where TYPECOD='".$TYPECOD."' and MODELCOD like '%".$dataSearch."%' collate Thai_CI_AS
 			order by MODELCOD
 		"; 
@@ -427,6 +427,7 @@ class Cselect2 extends MY_Controller {
 				and isnull(RESVNO,'')=''
 			order by STRNO desc
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$html = "";
@@ -514,7 +515,7 @@ class Cselect2 extends MY_Controller {
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
-		$html = "";
+		$json = array();
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>str_replace(chr(0),'',$row->ACTICOD), 'text'=>str_replace(chr(0),'',$row->ACTIDES)];
@@ -556,6 +557,40 @@ class Cselect2 extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>str_replace(chr(0),'',$row->SaleNo), 'text'=>str_replace(chr(0),'',$row->SaleNo)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getANALYZE(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$locat = ($_REQUEST["locat"]);
+		
+		$sql = "
+			select ID,ANSTAT
+			from {$this->MAuth->getdb('ARANALYZE')}
+			where 1=1 and ID='".$dataNow."' collate Thai_CI_AS and LOCAT='".$locat."' 
+				
+			union
+			select ID,ANSTAT
+			from {$this->MAuth->getdb('ARANALYZE')}
+			where 1=1 and ID like '%".$dataSearch."%' collate Thai_CI_AS and LOCAT='".$locat."'
+			order by ID
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					'id'=>str_replace(chr(0),'',$row->ID), 
+					'text'=>str_replace(chr(0),'',$row->ID),
+					'disabled'=>($row->ANSTAT == 'A' ? false:true)
+				);
 			}
 		}
 		

@@ -249,7 +249,7 @@ class ReserveCar extends MY_Controller {
 			
 			
 			<h3 class='text-primary'>ข้อมูลรถ</h3>
-			<div class='row col-sm-12' style='border:1px dotted #aaa;'>
+			<div id='datepkposition' class='row col-sm-12' style='border:1px dotted #aaa;'>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
 						เลขตัวถัง
@@ -319,7 +319,7 @@ class ReserveCar extends MY_Controller {
 				<div class='col-sm-3'>	
 					<div class='form-group'>
 						วันนัดรับรถ
-						<input type='text' id='' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value=''>
+						<input type='text' id='ccccccc' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' data-date-container='#datepkposition' value=''>
 					</div>
 				</div>
 				<div class='col-sm-3'>	

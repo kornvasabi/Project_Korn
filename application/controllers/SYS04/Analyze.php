@@ -26,10 +26,11 @@ class Analyze extends MY_Controller {
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
-		
+		//style='height:calc(100vh - 132px);overflow:auto;background-color:white;'
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div class='col-sm-12' style='overflow:auto;'>					
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' 
+			>
+				<div class='divcondition col-sm-12' style='overflow:auto;'>
 					<div class='row'>
 						<div class='col-sm-2'>	
 							<div class='form-group'>
@@ -106,11 +107,13 @@ class Analyze extends MY_Controller {
 							</div>
 						</div>
 					</div>
+					
+					<div id='result'></div>
 				</div>
 			</div>
 		";
 		
-		$html.= "<script src='".base_url('public/js/SYS04/Analyze.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/SYS04/Analyze.js?tm='.date("his"))."'></script>";
 		echo $html;
 	}
 	
@@ -185,17 +188,18 @@ class Analyze extends MY_Controller {
 					,CONVERT(varchar(8),a.CREATEDATE,112) as CREATEDATE
 					,CONVERT(varchar(5),a.CREATEDATE,108) as CREATETM
 					,a.LOCAT,a.RESVNO,a.NOPAY
+					,a.ANSTAT
 					,case when a.ANSTAT='I' then 'รออนุมัติ' 
 						when a.ANSTAT='A' then 'อนุมัติ' 
 						when a.ANSTAT='N' then 'ไม่อนุมัติ' 
-						when a.ANSTAT='C' then 'ยกเลิก'  end as ANSTAT
+						when a.ANSTAT='C' then 'ยกเลิก'  end as ANSTATDESC
 					,CONVERT(varchar(8),b.APPROVEDT,112) as APPROVEDT
 					,CONVERT(varchar(5),b.APPROVEDT,108) as APPROVETM
 				from {$this->MAuth->getdb('ARANALYZE')} a 
 				left join {$this->MAuth->getdb('ARANALYZEDATA')} b on a.ID=b.ID
 				where 1=1 ".$cond."
 			) as data
-			where data.CUSNAME like '".$arrs['SCUSNAME']."%'
+			where data.CUSNAME like '%".$arrs['SCUSNAME']."%'
 			order by data.ID
 		";
 		//echo $sql; exit;		
@@ -205,8 +209,15 @@ class Analyze extends MY_Controller {
 		$NRow = 1;
 		if($query->row()){
 			foreach($query->result() as $row){
+				$css = "color:black";
+				if($row->ANSTAT == "A"){
+					$css = "color:green";
+				}else if($row->ANSTAT == "N"){
+					$css = "color:red";
+				}
+				
 				$html .= "
-					<tr>
+					<tr style='{$css}'>
 						<td>
 							<i class='andetail btn btn-xs btn-success glyphicon glyphicon-zoom-in' ANID='".$row->ID."' style='cursor:pointer;'> รายละเอียด  </i>
 						</td>
@@ -221,7 +232,7 @@ class Analyze extends MY_Controller {
 						<td>".$row->LOCAT."</td>
 						<td>".$row->RESVNO."</td>
 						<td>".$row->NOPAY."</td>
-						<td>".$row->ANSTAT."</td>
+						<td>".$row->ANSTATDESC."</td>
 						<td>".$this->Convertdate(2,$row->APPROVEDT)." ".$row->APPROVETM."</td>
 					</tr>
 				";
@@ -232,28 +243,28 @@ class Analyze extends MY_Controller {
 		
 		$html = "
 			<div id='table-fixed-Analyze' class='col-sm-12' style='height:calc(100% - 30px);width:100%;overflow:auto;font-size:8pt;'>
-				<table id='table-Analyze' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
+				<table id='table-Analyze' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)' style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png&#39;) repeat scroll 0% 0%;'>
 					<thead>						
 						<tr align='center' style='line-height:20px;'>
-							<td style='vertical-align:middle;background-color:#c8e6b7;text-align:center;font-size:8pt;' colspan='14'>
+							<th style='vertical-align:middle;background-color:#c8e6b7;text-align:center;font-size:8pt;' colspan='14'>
 								เงื่อนไข :: ".$condDesc."
-							</td>
+							</th>
 						</tr>
-						<tr align='center'>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>###</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>เลขที่<br>ใบวิเคราะห์</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>ผู้เช่าซื้อ</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>เลขตัวถัง</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>รุ่น</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>แบบ</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>สี</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>สถานะรถ</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>วันที่สร้าง</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>สาขา</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>เลขที่บิลจอง</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>จำนวนงวด</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>สถานะ<br>ใบวิเคราะห์</th>
-							<th style='vertical-align:middle;background-color:#c8e6b7;'>วันที่อนุมัติ</th>
+						<tr align='center'  style='background-color:#c8e6b7;'>
+							<th>###</th>
+							<th style='vertical-align:middle;'>เลขที่<br>ใบวิเคราะห์</th>
+							<th style='vertical-align:middle;'>ผู้เช่าซื้อ</th>
+							<th style='vertical-align:middle;'>เลขตัวถัง</th>
+							<th style='vertical-align:middle;'>รุ่น</th>
+							<th style='vertical-align:middle;'>แบบ</th>
+							<th style='vertical-align:middle;'>สี</th>
+							<th style='vertical-align:middle;'>สถานะรถ</th>
+							<th style='vertical-align:middle;'>วันที่สร้าง</th>
+							<th style='vertical-align:middle;'>สาขา</th>
+							<th style='vertical-align:middle;'>เลขที่บิลจอง</th>
+							<th style='vertical-align:middle;'>จำนวนงวด</th>
+							<th style='vertical-align:middle;'>สถานะ<br>ใบวิเคราะห์</th>
+							<th style='vertical-align:middle;'>วันที่อนุมัติ</th>
 						</tr>
 					</thead>	
 					<tbody>
@@ -274,22 +285,30 @@ class Analyze extends MY_Controller {
 		$ANID = $_POST["ANID"];
 		
 		$sql = "
-			select ID,LOCAT
-				,CONVERT(varchar(8),CREATEDATE,112) as CREATEDATE
-				,CONVERT(varchar(5),CREATEDATE,108) as CREATETIME
-				,RESVNO
-				,RESVAMT as M_RESVAMT,DWN as M_DWN
-				,DWN_INSURANCE as M_DWN_INSURANCE,NOPAY
-				,STRNO,MODEL+' ('+BAAB+')' as MODEL,COLOR
-				,case when STAT='N' then 'รถใหม่' else 'รถเก่า' end as STAT
-				,CONVERT(varchar(8),SDATE,112) as SDATE
-				,CONVERT(varchar(8),YDATE,112) as YDATE
-				,PRICE as M_PRICE,ANSTAT,INSBY
-				,CONVERT(varchar(8),INSDT,112) as INSDT
-				,CONVERT(varchar(5),INSDT,108) as INSTM
-			from {$this->MAuth->getdb('ARANALYZE')}
-			where ID='".$ANID."'
+			select a.ID,a.LOCAT
+				,CONVERT(varchar(8),a.CREATEDATE,112) as CREATEDATE
+				,CONVERT(varchar(5),a.CREATEDATE,108) as CREATETIME
+				,a.RESVNO
+				,a.RESVAMT as M_RESVAMT,a.DWN as M_DWN
+				,a.DWN_INSURANCE as M_DWN_INSURANCE,a.NOPAY
+				,a.STRNO,a.MODEL+' ('+a.BAAB+')' as MODEL,a.COLOR
+				,case when a.STAT='N' then 'รถใหม่' else 'รถเก่า' end as STAT
+				,CONVERT(varchar(8),a.SDATE,112) as SDATE
+				,CONVERT(varchar(8),a.YDATE,112) as YDATE
+				,a.PRICE as M_PRICE,a.ANSTAT,a.INSBY
+				,CONVERT(varchar(8),a.INSDT,112) as INSDT
+				,CONVERT(varchar(5),a.INSDT,108) as INSTM
+				,CONVERT(varchar(8),b.APPROVEDT,112) as APPDT
+				,CONVERT(varchar(5),b.APPROVEDT,108) as APPTM
+				,case when a.ANSTAT='I' then 'รออนุมัติ' 
+					when a.ANSTAT='A' then 'อนุมัติ' 
+					when a.ANSTAT='N' then 'ไม่อนุมัติ' 
+					when a.ANSTAT='C' then 'ยกเลิก'  end as ANSTATDESC
+			from {$this->MAuth->getdb('ARANALYZE')} a
+			left join {$this->MAuth->getdb('ARANALYZEDATA')} b on a.ID=b.ID
+			where a.ID='".$ANID."'
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$arrs = array("null"=>"");
@@ -302,6 +321,9 @@ class Analyze extends MY_Controller {
 							$arrs[$key] = $this->Convertdate(2,$val); 
 							break;
 						case 'SDATE': 
+							$arrs[$key] = $this->Convertdate(2,$val); 
+							break;
+						case 'APPDT': 
 							$arrs[$key] = $this->Convertdate(2,$val); 
 							break;
 						default: 
@@ -364,47 +386,86 @@ class Analyze extends MY_Controller {
 			}
 		}
 		
+		$sql = "
+			select a.EMP,'คุณ'+b.firstName+' '+b.lastName as EMPNAME,a.EMPTEL
+				,a.MNG,'คุณ'+c.firstName+' '+c.lastName as MNGNAME,a.MNGTEL
+				,a.APPROVE,'คุณ'+d.firstName+' '+d.lastName as APPROVENAME,a.APPROVETEL
+				,a.comment
+			from {$this->MAuth->getdb('ARANALYZEDATA')} a
+			left join {$this->MAuth->getdb('hp_vusers')} b on a.EMP=b.IDNo collate thai_cs_as
+			left join {$this->MAuth->getdb('hp_vusers')} c on a.MNG=c.IDNo collate thai_cs_as
+			left join {$this->MAuth->getdb('hp_vusers')} d on a.APPROVE=d.IDNo collate thai_cs_as
+			where a.ID='".$ANID."'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				foreach($row as $key => $val){
+					$arrs[$key] = ($val == "" ? "-":$val);
+				}
+			}
+		}
+		
+		$css = "";
+		if($arrs["ANSTAT"] == "A"){
+			$css = "color:green";
+		}else if($arrs["ANSTAT"] == "N"){
+			$css = "color:red";
+		}
+		
 		$html = "
-			<div class='col-sm-12' style='border:1px dotted #aaa;'>
+			<div class='col-sm-12' style='border:1px dotted #aaa;{$css}'>
 				<div class='col-sm-10 col-sm-offset-1'>	
 					<table  style='width:100%;font-size:10pt;'>
-						<tr style='background-color:#1fecff;'>
+						<!-- tr style='background-color:#1fecff;' -->
+						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
 								<div class='col-sm-4'><b>เลขที่ใบวิเคราะห์ :: </b>".$arrs["ID"]."</div>
 								<div class='col-sm-4 col-sm-offset-4'><b>วันที่ขออนุมัติ :: </b> ".$arrs["CREATEDATE"]." ".$arrs["CREATETIME"]."</div>
 							</td>
 						</tr>
-						<tr style='background-color:#1fecff;'>
+						<!-- tr style='background-color:#1fecff;' -->
+						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
 								<div class='col-sm-4'><b>สาขา :: </b>".$arrs["LOCAT"]."</div>
-								<div class='col-sm-4 col-sm-offset-4'><b>วันที่อนุมัติ :: </b> </div>
+								<div class='col-sm-4 col-sm-offset-4'><b>วันที่อนุมัติ :: </b> ".$arrs["APPDT"]." ".$arrs["APPTM"]."</div>
 							</td>
 						</tr>
-						<tr style='background-color:#1fecff;'>
+						<!-- tr style='background-color:#1fecff;' -->
+						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
 								<div class='col-sm-4'><b>รุ่น :: </b>".$arrs["MODEL"]."</div>
 								<div class='col-sm-4'><b>สถานะรถ :: </b> ".$arrs["STAT"]."</div>
 								<div class='col-sm-4'><b>เลขตัวถัง :: </b> ".$arrs["STRNO"]."</div>
 							</td>
 						</tr>
-						<tr style='background-color:#1fecff;'>
+						<!-- tr style='background-color:#1fecff;' -->
+						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
 								<div class='col-sm-4'><b>เงินดาวน์รถ :: </b>".$arrs["DWN"]."</div>
 								<div class='col-sm-4'><b>เงินจอง :: </b> ".$arrs["RESVAMT"]."</div>
 								<div class='col-sm-4'><b>วันที่ขายล่าสุด :: </b> ".$arrs["SDATE"]."</div>
 							</td>
 						</tr>
-						<tr style='background-color:#1fecff;'>
+						<!-- tr style='background-color:#1fecff;' -->
+						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
 								<div class='col-sm-4'><b>เงินดาวน์ ป.1 :: </b>".$arrs["DWN_INSURANCE"]."</div>
 								<div class='col-sm-4'><b>จำนวนงวด :: </b> ".$arrs["NOPAY"]."</div>
 								<div class='col-sm-4'><b>วันที่ยึด :: </b> ".$arrs["YDATE"]."</div>
 							</td>
 						</tr>
+						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
+							<td>
+								<hr>
+							</td>
+						</tr>
 						
 						
-						
-						<tr style='background-color:#f2ff8f;'>
+						<!-- tr style='background-color:#f2ff8f;' -->
+						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png&#39;) repeat scroll 0% 0%;'>
 							<td>
 								<table style='width:100%;font-size:10pt;'>
 									<tr>
@@ -427,9 +488,9 @@ class Analyze extends MY_Controller {
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ว.ด.ป.เกิด (คศ)</th>
-										<td>".(isset($arrs["CUSIDNO"][0]) ? $arrs["CUSIDNO"][0]:"-")."</td>
-										<td>".(isset($arrs["CUSIDNO"][1]) ? $arrs["CUSIDNO"][1]:"-")."</td>
-										<td>".(isset($arrs["CUSIDNO"][2]) ? $arrs["CUSIDNO"][2]:"-")."</td>
+										<td>".(isset($arrs["CUSBIRTH"][0]) ? $arrs["CUSBIRTH"][0]:"-")."</td>
+										<td>".(isset($arrs["CUSBIRTH"][1]) ? $arrs["CUSBIRTH"][1]:"-")."</td>
+										<td>".(isset($arrs["CUSBIRTH"][2]) ? $arrs["CUSBIRTH"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ว.ด.ป.บัตรหมดอายุ (คศ)</th>
@@ -548,9 +609,44 @@ class Analyze extends MY_Controller {
 								</table>
 							</td>
 						</tr>
+						
+						<!-- tr style='background-color:#1fecff;' -->
+						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
+							<td>
+								<div class='col-sm-4'>
+									<div class='form-group'>
+										พนักงาน
+										<span class='form-control'>".(!isset($arrs["EMPNAME"]) ?"":$arrs["EMPNAME"])." ".(!isset($arrs["EMPTEL"]) ?"":$arrs["EMPTEL"])."</span>
+									</div>
+								</div>
+								<div class='col-sm-4'>
+									<div class='form-group'>
+										ผู้จัดการสาขา
+										<span class='form-control'>".(!isset($arrs["MNGNAME"]) ?"":$arrs["MNGNAME"])." ".(!isset($arrs["MNGTEL"]) ?"":$arrs["MNGTEL"])."</span>
+									</div>
+								</div>
+								<div class='col-sm-4'>
+									<div class='form-group'>
+										ผู้อนุมัติ
+										<span class='form-control'>".(!isset($arrs["APPROVENAME"]) ?"":$arrs["APPROVENAME"])." ".(!isset($arrs["APPROVETEL"]) ?"":$arrs["APPROVETEL"])." ".$arrs["ANSTATDESC"]."</span>
+									</div>
+								</div>
+							</td>
+						</tr>	
+						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
+							<td>
+								<div class='col-sm-12'>
+									<div class='form-group'>
+										หมายเหตุ
+										<textarea class='form-control' rows=5 readonly>".(!isset($arrs["comment"]) ?"":$arrs["comment"])."</textarea>
+									</div>
+								</div>
+							</td>
+						</tr>								
 					</table>
 				</div>
 				
+				<div class='col-sm-12'><div class='row'>&emsp;</div></div>
 				<div class='col-sm-10 col-sm-offset-1'>	
 					<div class='row'>
 						<div class='col-sm-2'>	
@@ -562,6 +658,7 @@ class Analyze extends MY_Controller {
 						</div>
 					</div>
 				</div>
+				<div class='col-sm-12'><div class='row'>&emsp;</div></div>
 			</div>
 		";
 		
@@ -591,7 +688,13 @@ class Analyze extends MY_Controller {
 									</select>
 								</div>
 							</div>
-							<div class='col-sm-2 col-sm-offset-6'>	
+							<div class='col-sm-2 col-sm-offset-4'>	
+								<div class='form-group'>
+									กิจกรรมการขาย
+									<select id='acticod' class='form-control input-sm select2'></select>
+								</div>
+							</div>
+							<div class='col-sm-2'>	
 								<div class='form-group'>
 									วันที่
 									<input type='text' id='createDate' class='form-control input-sm' value='".$this->Convertdate(2,$r->dt)."' disabled>
@@ -1168,19 +1271,19 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									เบอร์ติดต่อ
-									<input type='text' id='empTel' class='form-control input-sm'>
+									<input type='text' id='empTel' class='form-control input-sm' maxlength=10>
 								</div>
 							</div>
 							<div class='col-sm-3'>	
 								<div class='form-group'>
 									ผู้จัดการสาขา
-									<input type='text' id='mngIDNo' class='form-control input-sm'>
+									<select id='mngIDNo' class='form-control input-sm select2'></select>	
 								</div>
 							</div>
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									เบอร์ติดต่อ
-									<input type='text' id='mngTel' class='form-control input-sm'>
+									<input type='text' id='mngTel' class='form-control input-sm' maxlength=10>
 								</div>
 							</div>
 						</div>
@@ -1201,11 +1304,20 @@ class Analyze extends MY_Controller {
 	}
 	
 	function dataResv(){
-		$resvno = $_POST["resvno"];
+		$response = array("html"=>"","error"=>false,"msg"=>"");
+		$resvno   = $_POST["resvno"];
+		$acticod  = $_POST["acticod"];
+		
+		if($acticod == "ALL"){
+			$response["error"] = true;
+			$response["msg"] = "ผิดพลาด :: โปรดระบุกิจกรรมการขายก่อนครับ";
+			echo json_encode($response); exit;
+		}
 		
 		$sql = "
 			select a.RESVNO,a.RESPAY,a.STRNO,a.MODEL,a.BAAB,a.COLOR
 				,case when a.STAT='N' then 'รถใหม่'  else 'รถเก่า' end as STAT
+				,a.STAT as STATEN
 				,convert(varchar(8),b.SDATE,112) as SDATE
 				,convert(varchar(8),b.YDATE,112) as YDATE
 				,a.CUSCOD
@@ -1247,17 +1359,75 @@ class Analyze extends MY_Controller {
 				}
 			}
 		}
+		if($data["STATEN"] == "N"){
+			$sql = "
+				if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				end
+			";
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$data["price"] = $row->price;
+				}
+			}else{
+				$response["error"] = true;
+				$response["msg"] = "
+					ผิดพลาด ไม่พบราคาขายรถใหม่ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+					รุ่น :: ".$data["MODEL"]."<br>
+					แบบ :: ".$data["BAAB"]."<br>
+					สี :: ".$data["COLOR"]."
+				";
+			}
+		}
 		
-		$response = array("html"=>$data);
+		$response["html"] = $data;
 		echo json_encode($response);
 	}
 	
 	function dataSTR(){
-		$strno = $_POST["strno"];
+		$response = array("html"=>"","error"=>false,"msg"=>"");
+		$strno 	  = $_POST["strno"];
+		$acticod  = $_POST["acticod"];
+		
+		if($acticod == "ALL"){
+			$response["error"] = true;
+			$response["msg"] = "ผิดพลาด :: โปรดระบุกิจกรรมการขายก่อนครับ";
+			echo json_encode($response); exit;
+		}
 		
 		$sql = "
 			select a.STRNO,a.MODEL,a.BAAB,a.COLOR
 				,case when a.STAT='N' then 'รถใหม่'  else 'รถเก่า' end as STAT
+				,a.STAT as STATEN
 				,convert(varchar(8),b.SDATE,112) as SDATE
 				,convert(varchar(8),b.YDATE,112) as YDATE
 				,a.CRLOCAT
@@ -1284,7 +1454,64 @@ class Analyze extends MY_Controller {
 			}
 		}
 		
-		$response = array("html"=>$data);
+		if($data["STATEN"] == "N"){
+			$sql = "
+				if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' 
+						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+				)
+				begin 
+					select a.id,b.price from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' 
+						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' 
+						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+				)
+				begin 
+					select a.id,b.price from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' 
+						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' 
+						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+				)
+				begin 
+					select a.id,b.price from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' 
+						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+				end
+			";
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$data["stdid"] = $row->id;
+					$data["price"] = $row->price;
+				}
+			}else{
+				$response["error"] = true;
+				$response["msg"] = "
+					ผิดพลาด ไม่พบราคาขายรถใหม่ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+					รุ่น :: ".$data["MODEL"]."<br>
+					แบบ :: ".$data["BAAB"]."<br>
+					สี :: ".$data["COLOR"]."
+				";
+			}
+		}
+		
+		$response["html"] = $data;
 		echo json_encode($response);
 	}
 	
@@ -1325,6 +1552,29 @@ class Analyze extends MY_Controller {
 				}
 			}
 		}
+		
+		$sql = "
+			select (
+				select count(*) r from {$this->MAuth->getdb('ARMAST')}
+				where CUSCOD='".$cuscod."' and SDATE between convert(varchar(8),dateadd(day,-7,getdate()),112) and convert(varchar(8),getdate(),112)
+			) as ARM
+			,(
+				select count(*) r from {$this->MAuth->getdb('ARRESV')}
+				where CUSCOD='".$cuscod."' and RESVDT between convert(varchar(8),dateadd(day,-7,getdate()),112) and convert(varchar(8),getdate(),112)
+			) as ARR
+		";
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				foreach($row as $key => $val){
+					switch($key){
+						default:  $data[$key] = $val; break;
+					}
+				}
+			}
+		}
+		
 		
 		$response = array("html"=>$data);
 		echo json_encode($response);
@@ -1415,6 +1665,11 @@ class Analyze extends MY_Controller {
 		$arrs["is2_hostRelation"] 	= "'".$_POST["is2_hostRelation"]."'";
 		$arrs["is2_empRelation"] 	= "'".$_POST["is2_empRelation"]."'";
 		$arrs["is2_reference"] 		= "'".$_POST["is2_reference"]."'";
+		
+		$arrs["empIDNo"] 	= "'".$_POST["empIDNo"]."'";
+		$arrs["empTel"] 	= "'".$_POST["empTel"]."'";
+		$arrs["mngIDNo"] 	= "'".$_POST["mngIDNo"]."'";
+		$arrs["mngTel"] 	= "'".$_POST["mngTel"]."'";
 				
 		$sql = "
 			if object_id('tempdb..#transaction') is not null drop table #transaction;
@@ -1505,16 +1760,16 @@ class Analyze extends MY_Controller {
 				if exists(select * from {$this->MAuth->getdb('ARANALYZEDATA')} where ID=@ANID)
 				begin 
 					update {$this->MAuth->getdb('ARANALYZEDATA')}
-					set EMP=''
-						,EMPTEL=''
-						,MNG=''
-						,MNGTEL=''						
+					set EMP=".$arrs["empIDNo"]."
+						,EMPTEL=".$arrs["empTel"]."
+						,MNG=".$arrs["mngIDNo"]."
+						,MNGTEL=".$arrs["mngTel"]."					
 					where ID=@ANID
 				end
 				else 
 				begin
 					insert into {$this->MAuth->getdb('ARANALYZEDATA')}(ID,EMP,EMPTEL,MNG,MNGTEL)
-					select @ANID,'','','','';
+					select @ANID,".$arrs["empIDNo"].",".$arrs["empTel"].",".$arrs["mngIDNo"].",".$arrs["mngTel"].";
 				end
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
@@ -1717,6 +1972,26 @@ class Analyze extends MY_Controller {
 			}
 		}
 		
+		if($_POST["empIDNo"] == ""){ 
+			$response["error"] = true; 
+			$response["msg"][] = "คุณยังไม่ระบุพนักงานสาขา"; 
+		}
+		
+		if($_POST["empTel"] == ""){ 
+			$response["error"] = true; 
+			$response["msg"][] = "คุณยังไม่ระบุเบอร์ติดต่อพนักงานสาขา"; 
+		}
+		
+		if($_POST["mngIDNo"] == ""){ 
+			$response["error"] = true; 
+			$response["msg"][] = "คุณยังไม่ระบุผจก/ว่าที่ ผจก.สาขา"; 
+		}
+		
+		if($_POST["mngTel"] == ""){ 
+			$response["error"] = true; 
+			$response["msg"][] = "คุณยังไม่ระบุเบอร์ติดต่อผจก/ว่าที่ ผจก.สาขา";
+		}
+		
 		if($response["error"]){ echo json_encode($response); exit; }
 	}
 	
@@ -1731,6 +2006,19 @@ class Analyze extends MY_Controller {
 
 			begin tran upd
 			begin try
+				if exists(select * from {$this->MAuth->getdb('ARANALYZE')} where ID='".$anid."')
+				begin 
+					update {$this->MAuth->getdb('ARANALYZE')} 
+					set ANSTAT='".$apptype."'
+					where ID='".$anid."'
+				end
+				else
+				begin
+					rollback tran upd;
+					insert into #transaction select 'y' as error,'".$anid."' as id,'ผิดพลาด ไม่พบข้อมูล<br>เลขที่ใบวิเคราะห์สินเชื่อ (1)".$anid."' as msg;
+					return;
+				end
+				
 				if exists(select * from {$this->MAuth->getdb('ARANALYZEDATA')} where ID='".$anid."')
 				begin 
 					update {$this->MAuth->getdb('ARANALYZEDATA')} 
@@ -1739,12 +2027,17 @@ class Analyze extends MY_Controller {
 						,COMMENT='".$comment."'
 					where ID='".$anid."'
 				end
-				
+				else
+				begin
+					rollback tran upd;
+					insert into #transaction select 'y' as error,'".$anid."' as id,'ผิดพลาด ไม่พบข้อมูล<br>เลขที่ใบวิเคราะห์สินเชื่อ (2)".$anid."' as msg;
+					return;
+				end
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-				values ('".$this->sess["IDNo"]."','SYS04::สร้างใบวิเคราะห์สินเชื่อ',@ANID+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				values ('".$this->sess["IDNo"]."','SYS04::อนุมัติใบวิเคราะห์สินเชื่อ ".$anid."','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				
-				insert into #transaction select 'n' as error,@ANID as id,'อนุมัติรายการวิเคราะห์สินเชื่อเสร็จแล้ว <br>เลขที่ใบวิเคราะห์สินเชื่อ ".$anid."' as msg;
+				insert into #transaction select 'n' as error,'".$anid."' as id,'อนุมัติรายการวิเคราะห์สินเชื่อเสร็จแล้ว <br>เลขที่ใบวิเคราะห์สินเชื่อ ".$anid."' as msg;
 				commit tran upd;
 			end try
 			begin catch
@@ -1752,6 +2045,32 @@ class Analyze extends MY_Controller {
 				insert into #transaction select 'y' as error,'' as id,ERROR_MESSAGE() as msg;
 			end catch
 		";
+		$this->db->query($sql);
+		
+		$sql 	= "select * from #transaction";   
+		$query 	= $this->db->query($sql);
+		
+		$stat 	= true;
+		$ARANALYZE_ID  = '';
+		$msg  	= '';
+		
+		if($query->row()) {
+			foreach ($query->result() as $row) {
+				$stat = ($row->error == "y" ? true : false);
+				$ARANALYZE_ID = $row->id;
+				$msg = $row->msg;
+			}
+		}else{
+			$stat = false;
+			$msg = "ผิดพลาด :: ไม่สามารถทำรายการได้ในขณะนี้ โปรดลองทำรายการใหม่ภายหลัง";
+		}
+		
+		$response = array();
+		$response['error'] = $stat;
+		$response['msg'][] = $msg;
+		$response['ARANALYZE_ID'] = $ARANALYZE_ID;
+		
+		echo json_encode($response); exit;
 	}
 	
 }

@@ -6,7 +6,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<title>YTKMini</title>
-	<link rel="shortcut icon" href="../public/lobiadmin-master/version/1.0/ajax/img/logo/lobiadmin-logo-48.png" />
+	<link rel="shortcut icon" href="../public/images/ytkicon.png" />
 	
 	<link rel="stylesheet" href="../public/lobiadmin-master/documentation/css/bootstrap.min.css"/>
 	<link rel="stylesheet" href="../public/lobiadmin-master/version/1.0/ajax/css/font-awesome.min.css"/>
@@ -16,8 +16,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	<link rel="stylesheet" href="../public/lobiadmin-master/version/1.0/ajax/css/lobiadmin-with-plugins.css"/>
 	
 	<style>
-		tr td { white-space:nowrap; }
 		tr th { white-space:nowrap; }
+		tr td { white-space:nowrap; }
+		tr td.nnr { white-space:normal;text-align:left; }
 		
 		select:-moz-focusring {
 			color: transparent;
@@ -28,7 +29,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		}
 	</style>
 </head>
-<body class='menu-fixed' baseUrl='<?php echo $baseUrl; ?>' >
+<!-- style='background: rgba(0, 0, 0, 0) url("../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png") repeat scroll 0% 0%;' -->
+<body class='header-fixed menu-fixed ribbon-fixed' baseUrl='<?php echo $baseUrl; ?>'>
 	<nav class="navbar navbar-default navbar-header header">
 		<a class="navbar-brand" href="#">
 			<div class="navbar-brand-img"></div>
@@ -256,6 +258,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	<script src="../public/lobiadmin-master/version/1.0/ajax/js/plugin/datatables/jquery.dataTables.min.js"></script>
 	<script src="../public/lobiadmin-master/version/1.0/ajax/js/plugin/datatables/dataTables.bootstrap.min.js"></script>
 	<script src="../public/lobiadmin-master/version/1.0/ajax/js/plugin/datatables/dataTables.responsive.min.js"></script>
+	
+	<script src="../public/lobiadmin-master/version/1.0/ajax/js/plugin/duallistbox/jquery.bootstrap-duallistbox.js"></script>
+	
+	<link rel="stylesheet" href="../vendor/snapappointments/bootstrap-select/dist/css/bootstrap-select.css"/>
+	<script src="../vendor/snapappointments/bootstrap-select/dist/js/bootstrap-select.js"></script>
 </body>
 <script>
 	setInterval(function(){
@@ -272,6 +279,45 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			$("#select2-"+this.id+"-container").css({'background-color':'#ccc','color':'black','cursor':'not-allowed','height':'28px'});
 		});
 		$(".select2-selection--single").css({'height':'30px'});
+		
+		/* - @อนุญาติให้คีย์ ตัวเลข เท่านั้น */
+		$(".jzAllowNumber").keydown(function (e) {
+			// Allow: backspace, delete, tab, escape, enter and .
+			if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+				 // Allow: Ctrl+A, Command+A
+				(e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+				 // Allow: home, end, left, right, down, up
+				(e.keyCode >= 35 && e.keyCode <= 40)) {
+					 // let it happen, don't do anything
+					 return;
+			}
+			// Ensure that it is a number and stop the keypress
+			if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+				e.preventDefault();
+			}
+		});	
+	}
+
+	$(".jzAllowNumber").keyup(function (e) {
+		var adjust = ($(this).val()).toString().replace(',','');
+		adjust = addCommas(adjust);
+		$(this).val(adjust);
+	});
+
+	function addCommas(str){
+	   var arr,int,dec;
+	   str += '';
+
+	   arr = str.split('.');
+	   int = arr[0] + '';
+	   dec = arr.length>1?'.'+arr[1]:'';
+
+	   return int.replace(/(\d)(?=(\d{3})+$)/g,"$1,") + dec;
+	}
+	
+	//const numberWithCommas = (x) => {
+	const numberWithCommas = function(x) {
+		return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 	}
 	
 	var setwidth = $(window).width();
@@ -288,7 +334,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		setheight = setheight - 50;
 	}
 	
-	$('.xccc').datepicker({ autoclose: true });
 	$('#content').css({'background-color':'whiteSmoke'});
 	
 	$("#LOCATCHANGE").click(function(){
@@ -569,7 +614,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			width: 200,
 			sound: false, 
 			position: {
-				top:(event.pageY - 50),
+				//top:(event.pageY - 50),
+				top:(event.clientY - 50),
 				left: 220//(event.pageX + 30)
 			},
 			messageHeight: '90vh',
@@ -581,7 +627,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		LobiboxNotify.remove();
 	});
 	
-	function fn_datatables($tbname,$numbers,$usageHeight){
+	function fn_datatables($tbname,$numbers,$usageHeight,$overHeight="NO"){
 		$dom = "";
 		$iDisplayLength = 100;
 		switch($numbers){
@@ -601,12 +647,19 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 				break;
 		}
 		
+		if($overHeight=="NO"){
+			$scrollY = 'calc(100vh - '+$usageHeight+'px)';			
+		}else{
+			$scrollY = $usageHeight;
+		}
+		
 		$('#'+$tbname).DataTable({
 			//scrollY: ($(window).height() - 375),
-			scrollY: 'calc(100vh - '+$usageHeight+'px)',
+			scrollY: $scrollY,
 			scrollX: true,
 			autoWidth: true,
 			responsive: false,
+			ordering: true,
 			iDisplayLength: $iDisplayLength,
 			lengthChange: false,
 			aLengthMenu: [ 50, 100, 500, 1000 ],

@@ -266,12 +266,154 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			},
 			cache: true
         },
-		allowClear: false,
+		allowClear: true,
 		multiple: false,
 		dropdownParent: $("#wizard-leasing"),
 		//disabled: true,
 		//theme: 'classic',
 		width: '100%'
+	});
+	
+	$('#add_approve').select2({
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2/getANALYZE',
+			data: function (params) {
+				dataToPost = new Object();
+				dataToPost.now = (typeof $('#add_approve').find(':selected').val() === 'undefined' ? '' : $('#add_approve').find(':selected').val());
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: true,
+		multiple: false,
+		dropdownParent: $("#wizard-leasing"),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
+	var jd_add_approve = null;
+	$('#add_approve').on("select2:select",function(){
+		dataToPost = new Object();
+		dataToPost.ANID = $(this).find(':selected').val();
+		
+		$('#loadding').show();
+		jd_add_approve = $.ajax({
+			url:'../SYS04/Leasing/getDataANALYZE',
+			data:dataToPost,
+			type:'POST',
+			dataType:'json',
+			success: function(data){
+				/*tab 1*/
+				var newOption = new Option(data.RESVNO, data.RESVNO, true, true);
+				$('#add_resvno').attr('disabled',true);
+				$('#add_resvno').empty().append(newOption).trigger('change');	
+				
+				var newOption = new Option(data.CUSNAME, data.CUSCOD, true, true);
+				$('#add_cuscod').attr('disabled',true);
+				$('#add_cuscod').empty().append(newOption).trigger('change');	
+				
+				var newOption = new Option(data.ADDRNODetails, data.ADDRDOCNO, true, true);
+				$('#add_addrno').empty().append(newOption).trigger('change');	
+				
+				var newOption = new Option(data.STRNO, data.STRNO, true, true);
+				$('#add_strno').attr('disabled',true);
+				$('#add_strno').empty().append(newOption).trigger('change');
+				
+				/*tab 2*/
+				$('#add_inprc').val(addCommas(data.PRICE_TOTAL));
+				$('#add_indwn').val(addCommas(data.DWN));
+				$('#add_nopay').val(data.NOPAY);
+				$('#add_upay').val(data.NOPAYPerMonth);
+				
+				/*tab 3*/
+				$('#add_payfirst').val(addCommas(data.PERMONTH_TOTAL));
+				$('#add_paynext').val(addCommas(data.PERMONTH_TOTAL));
+				$('#add_paylast').val(addCommas(data.PERMONTH_TOTAL));
+				$('#add_sell').val(addCommas(data.TOTAL_CAROPT));
+				$('#add_totalSell').val(addCommas(data.TOTAL_CAROPT));
+				$('#add_interest').val(addCommas(data.HP_TOTAL));
+				
+				$('#add_intRate').val(data.INT_RATE);
+				$('#add_delay').val(data.DELAY_DAY);
+				$('#add_interestRate').val(data.INTERAST_RATE);
+				$('#add_interestRateReal').val(data.INTERAST_RATE_REAL);
+				
+				/*tab 5*/
+				var ref_size = Object.keys(data.REF).length; // นับว่ามีคนค้ำกี่คน
+				$('#dataTable_ARMGAR tbody').empty(); // เคลียข้อมูลคนค้ำ
+				for(var i = 1;i<=ref_size;i++){
+					var rank 	 = data.REF[i]['rank']; //ลำดับ
+					var cuscod 	 = data.REF[i]['cuscod']; //รหัสลูกค้า
+					var refname  = data.REF[i]['refname']; //ชื่อลูกค้า
+					var relation = data.REF[i]['relation']; //ความสัมพันธ์
+					
+					var row = '<tr seq="new">';							
+					row += "<td align='center'> ";
+					row += "	<i class='mgarTab5 btn btn-xs btn-danger glyphicon glyphicon-minus' ";
+					row += "		position='"+(rank)+"' cuscod='"+cuscod+"' cusval='"+refname+"' relation='"+relation+"' ";
+					row += "		style='cursor:pointer;'> ลบ   ";
+					row += "	</i> ";
+					row += "</td> ";
+					row += "<td>"+($('.mgarTab5').length + 1)+"</td>";
+					row += "<td>"+refname+"</td>";
+					row += "<td>"+relation+"</td>";
+					row += '</tr>';
+					
+					$('#dataTable_ARMGAR tbody').append(row);
+				}
+				
+				jd_add_approve = null;
+				$('#loadding').hide();
+			},
+			beforeSend: function(){
+				if(jd_add_approve !== null){ jd_add_approve.abort(); }
+			}
+		});
+	});	
+	
+	$('#add_approve').on("select2:unselect",function(){
+		/*tab 1*/
+		$('#add_resvno').attr('disabled',false);	
+		$('#add_resvno').empty().trigger('change');	
+		$('#add_cuscod').attr('disabled',false);
+		$('#add_cuscod').empty().trigger('change');	
+		$('#add_addrno').empty().trigger('change');	
+		$('#add_strno').attr('disabled',false);
+		$('#add_strno').empty().trigger('change');	
+		
+		/*tab 2*/
+		$('#add_inprc').val('');
+		$('#add_indwn').val('');
+		$('#add_nopay').val('');
+		$('#add_upay').val('');
+		
+		/*tab 3*/
+		$('#add_payfirst').val('');
+		$('#add_paynext').val('');
+		$('#add_paylast').val('');
+		$('#add_sell').val('');
+		$('#add_totalSell').val('');
+		$('#add_interest').val('');
+		
+		$('#add_intRate').val('');
+		$('#add_delay').val('');
+		$('#add_interestRate').val('');
+		$('#add_interestRateReal').val('');
+		
+		/*tab 5*/
+		$('#dataTable_ARMGAR tbody').empty();
 	});
 	
 	$('#add_inclvat').select2({ 
@@ -366,7 +508,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
-	$('#add_cuscod').change(function(){
+	//$('#add_cuscod').change(function(){
+	$('#add_cuscod').on("select2:select",function(){	
 		dataToPost = new Object();
 		dataToPost.cuscod = $(this).find(':selected').val();
 		
@@ -421,7 +564,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		});
 	});
 	
-	$('#add_resvno').change(function(){
+	$('#add_cuscod').on("select2:unselect",function(){
+		$('#add_cuscod').empty().trigger('change');
+		$('#add_addrno').empty().trigger('change');
+	});
+	
+	//$('#add_resvno').change(function(){
+	$('#add_resvno').on("select2:select",function(){	
 		dataToPost = new Object();
 		dataToPost.resvno = (typeof $(this).find(':selected').val() === 'undefined' ? '' : $(this).find(':selected').val());
 		dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
@@ -433,19 +582,11 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			dataType: 'json',
 			success: function(data) {
 				if(data.SMCHQ > 0 || data.msg != ""){
-					$('#add_cuscod').select2({
-						dropdownParent: true,
-						disabled: true,
-						width:'100%'
-					});
+					$('#add_cuscod').attr('disabled',true);
 					$('#add_cuscod').empty().trigger('change');
 					$('#add_addrno').empty().trigger('change');
 					
-					$('#add_strno').select2({
-						dropdownParent: true,
-						disabled: true,
-						width:'100%'
-					});
+					$('#add_strno').attr('disabled',true);
 					$('#add_strno').empty().trigger('change');
 					
 					Lobibox.notify('error', {
@@ -459,86 +600,30 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						messageHeight: '90vh',
 						msg: data.msg
 					});
-				}else if(data.RESVNO == ""){
-					$('#add_cuscod').select2({
-						placeholder: 'เลือก',
-						ajax: {
-							url: '../Cselect2/getCUSTOMERS',
-							data: function (params) {
-								dataToPost = new Object();
-								dataToPost.now = $('#add_cuscod').find(':selected').val();
-								dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-								
-								return dataToPost;				
-							},
-							dataType: 'json',
-							delay: 1000,
-							processResults: function (data) {
-								return {
-									results: data
-								};
-							},
-							cache: true
-						},
-						allowClear: false,
-						multiple: false,
-						dropdownParent: $("#wizard-leasing"),
-						disabled: false,
-						//theme: 'classic',
-						width: '100%'
-					});
+				}else if(data.RESVNO == ""){					
 					$('#add_cuscod').empty().trigger('change');
 					$('#add_addrno').empty().trigger('change');
-					
-					$('#add_strno').select2({ 
-						placeholder: 'เลือก',
-						ajax: {
-							url: '../Cselect2/getSTRNO',
-							data: function (params) {
-								dataToPost = new Object();
-								dataToPost.now = $('#add_strno').find(':selected').val();
-								dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-								dataToPost.locat = $('#add_locat').find(':selected').val();
-								
-								return dataToPost;				
-							},
-							dataType: 'json',
-							delay: 1000,
-							processResults: function (data) {
-								return {					
-									results: data
-								};
-							},
-							cache: true
-						},
-						allowClear: false,
-						multiple: false,
-						dropdownParent: $("#wizard-leasing"),
-						disabled: false,
-						//theme: 'classic',
-						width: '100%'
-					});
 					$('#add_strno').empty().trigger('change');
 				}else{
-					$('#add_cuscod').select2({
-						dropdownParent: true,
-						disabled: true,
-						width:'100%'
-					});
 					var newOption = new Option(data.CUSNAME, data.CUSCOD, true, true);
+					$('#add_cuscod').attr('disabled',true);
 					$('#add_cuscod').empty().append(newOption).trigger('change');
 					$('#add_addrno').empty().trigger('change');
 					
-					$('#add_strno').select2({
-						dropdownParent: true,
-						disabled: true,
-						width:'100%'
-					});
 					var newOption = new Option(data.STRNO, data.STRNO, true, true);
+					$('#add_strno').attr('disabled',true);
 					$('#add_strno').empty().append(newOption).trigger('change');
 				}
 			}
 		});
+	});
+	
+	$('#add_resvno').on("select2:unselect",function(){	
+		$('#add_cuscod').attr('disabled',false);
+		$('#add_cuscod').empty().trigger('change');
+		$('#add_addrno').empty().trigger('change');
+		$('#add_strno').attr('disabled',false);
+		$('#add_strno').empty().trigger('change');
 	});
 	
 	$('#add_vatrt').attr('disabled',true);

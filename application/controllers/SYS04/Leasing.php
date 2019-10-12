@@ -623,7 +623,8 @@ class Leasing extends MY_Controller {
 								<div class='col-sm-4'>	
 									<div class='form-group'>
 										เลขที่ใบอนุมัติ
-										<input type='text' id='add_approve' class='form-control input-sm' placeholder='เลขที่ใบอนุมัติ' >
+										<!-- input type='text' id='add_approve' class='form-control input-sm' placeholder='เลขที่ใบอนุมัติ'  -->
+										<select id='add_approve' class='form-control input-sm' data-placeholder='เลขที่ใบอนุมัติ'></select>
 									</div>
 								</div>
 								<div class='col-sm-4'>	
@@ -1480,11 +1481,11 @@ class Leasing extends MY_Controller {
 		$response["nopay"] 		= $arrs["nopay"];
 		$response["interestY"] 	= ($arrs["stdCond1"] ? $arrs["interest_rate"] : ($arrs["interest_rate2"] == 0 ? $arrs["interest_rate"] : $arrs["interest_rate2"]) );
 		
-		$response["priceOpt"] 	=  ($arrs["stdCond2"] ? $arrs["insurance"] : 0);
-		$response["priceOpt"] 	+= ($arrs["stdCond3"] ? $arrs["transfers"] : 0);
-		$response["priceOpt"] 	+= ($arrs["stdCond4"] ? $arrs["regist"] : 0);
-		$response["priceOpt"] 	+= ($arrs["stdCond5"] ? $arrs["act"] : 0);
-		$response["priceOpt"] 	+= ($arrs["stdCond6"] ? $arrs["coupon"] : 0);
+		$response["priceOpt"] 	=  ($arrs["stdCond2"] == 'T' ? $arrs["insurance"] : 0);
+		$response["priceOpt"] 	+= ($arrs["stdCond3"] == 'T' ? $arrs["transfers"] : 0);
+		$response["priceOpt"] 	+= ($arrs["stdCond4"] == 'T' ? $arrs["regist"] : 0);
+		$response["priceOpt"] 	+= ($arrs["stdCond5"] == 'T' ? $arrs["act"] : 0);
+		$response["priceOpt"] 	+= ($arrs["stdCond6"] == 'T' ? $arrs["coupon"] : 0);
 		$response["priceOpt"] 	= number_format($response["priceOpt"],2);
 		
 		echo json_encode($response);
@@ -3969,6 +3970,122 @@ class Leasing extends MY_Controller {
 		$mpdf->SetHTMLFooter("<div class='wf pf' style='top:1060;left:0;font-size:6pt;width:720px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
 		$mpdf->Output();
+	}
+	
+	// 20191009 created
+	function getDataANALYZE(){
+		$ANID = $_POST["ANID"];
+		
+		$sql = "
+			declare @INT_RATE decimal(7,2) = (select INT_RATE from {$this->MAuth->getdb('CONDPAY')});
+			declare @DELAY_DAY decimal(7,2) = (select DELAY_DAY from {$this->MAuth->getdb('CONDPAY')});
+			
+			select a.ID,isnull(a.RESVNO,'') as RESVNO,a.DWN,a.NOPAY,1 as NOPAYPerMonth
+				,a.STRNO,a.MODEL,a.BAAB,a.COLOR
+				,a.PRICE
+				,b.CUSCOD
+				,c.SNAM+c.NAME1+' '+c.NAME2+' ('+c.CUSCOD+')'+'-'+c.GRADE as CUSNAME
+				,b.ADDRDOCNO
+				,'('+d.ADDRNO+') '+d.ADDR1+' '+d.ADDR2+' ต.'+d.TUMB+' อ.'+e.AUMPDES+' จ.'+f.PROVDES+' '+d.ZIP	as ADDRNODetails 	
+				,a.STDID,a.STDPLRANK
+				,@INT_RATE as INT_RATE
+				,@DELAY_DAY as DELAY_DAY
+			from {$this->MAuth->getdb('ARANALYZE')} a
+			left join {$this->MAuth->getdb('ARANALYZEREF')} b on a.ID=b.ID and b.CUSTYPE=0
+			left join {$this->MAuth->getdb('CUSTMAST')} c on b.CUSCOD=c.CUSCOD collate thai_cs_as
+			left join {$this->MAuth->getdb('CUSTADDR')} d on b.CUSCOD=d.CUSCOD collate thai_cs_as and b.ADDRDOCNO=d.ADDRNO collate thai_cs_as
+			left join {$this->MAuth->getdb('SETAUMP')} e on d.AUMPCOD=e.AUMPCOD
+			left join {$this->MAuth->getdb('SETPROV')} f on d.PROVCOD=f.PROVCOD
+			where a.ID='".$ANID."'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$data = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				foreach($row  as $key => $val){
+					switch($key){
+						case 'DWN': 
+							$data[$key] = number_format($val,2);
+							$data['ORI_DWN'] = $val;
+							break;
+						default:
+							$data[$key] = $val;
+							break;
+					}
+				}
+				
+				$sql = "
+					select price,pricespecial 
+						,interest_rate,interest_rate2
+						,insurance,transfers,regist,act,coupon 
+						,isnull(insurance,0)+isnull(transfers,0)+isnull(regist,0)+isnull(act,0)+isnull(coupon,0) as total
+					from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_down')} c on b.id=c.id and b.plrank=c.plrank
+					where a.id='".$data["STDID"]."' and b.plrank='".$data["STDPLRANK"]."' and '".$data["ORI_DWN"]."' between c.dwnrate_s and c.dwnrate_e
+				";
+				//echo $sql; exit;
+				$query_std = $this->db->query($sql);
+
+				if($query_std->row()){
+					foreach($query_std->result() as $row_std){
+						$data["std_price"] 			= $row_std->price;
+						$data["std_pricespecial"] 	= $row_std->pricespecial;
+						$data["std_interest_rate"] 	= $row_std->interest_rate;
+						$data["std_interest_rate2"] = $row_std->interest_rate2;
+						$data["std_opt_total"]		= $row_std->total;
+					}
+				}
+				
+				
+				$sql = "
+					select * from {$this->MAuth->getdb('fn_jd_calPriceForSale')}(
+						'".$data["std_price"]."',
+						'".$data["ORI_DWN"]."',
+						(select VATRT from {$this->MAuth->getdb('VATMAST')} where getdate() between FRMDATE and TODATE),
+						'".$data["std_opt_total"]."',
+						'".$data["std_interest_rate"]."',
+						'".$data["NOPAY"]."',
+						'5'
+					)
+				";
+				//echo $sql; exit;
+				$q = $this->db->query($sql);
+				
+				if($q->row()){
+					foreach($q->result() as $row_q){
+						foreach($row_q  as $key_q => $val_q){
+							switch($key_q){
+								default:
+									$data[$key_q] = $val_q;
+									break;
+							}
+						}
+					}
+				}
+				
+				$sql = "
+					select a.CUSTYPE,a.CUSCOD,b.SNAM+b.NAME1+' '+b.NAME2+' ('+b.CUSCOD+')-'+b.GRADE as REFNAME 
+					from {$this->MAuth->getdb('ARANALYZEREF')} a
+					left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD collate thai_cs_as
+					where a.CUSTYPE<>0 and a.ID='".$data["ID"]."'
+				";
+				$qref = $this->db->query($sql);
+				
+				if($qref->row()){
+					foreach($qref->result() as $row_qref){
+						$data['REF'][$row_qref->CUSTYPE]['rank'] = $row_qref->CUSTYPE;
+						$data['REF'][$row_qref->CUSTYPE]['cuscod'] = $row_qref->CUSCOD;
+						$data['REF'][$row_qref->CUSTYPE]['refname'] = $row_qref->REFNAME;
+						$data['REF'][$row_qref->CUSTYPE]['relation'] = 'xxx';
+					}
+				}
+			}
+		}
+		
+		echo json_encode($data);
 	}
 }
 
