@@ -21,6 +21,13 @@ $(function(){
 		placeholder: 'เลือก',
 		ajax: {
 			url: '../Cselect2/getGroupCode',
+			data: function (params) {
+				dataToPost = new Object();
+				dataToPost.now = (typeof $('#groupCode').find(':selected').val() === "undefined" ? "":$('#groupCode').find(':selected').val());
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
 			dataType: 'json',
 			delay: 1000,
 			processResults: function (data) {
@@ -402,6 +409,13 @@ function getDetailsFN($this){
 				placeholder: 'เลือก',
 				ajax: {
 					url: '../Cselect2/getGroupCode',
+					data: function (params) {
+						dataToPost = new Object();
+						dataToPost.now = (typeof $('#t2groupCode').find(':selected').val() === "undefined" ? "":$('#t2groupCode').find(':selected').val());
+						dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+						
+						return dataToPost;				
+					},
 					dataType: 'json',
 					delay: 1000,
 					processResults: function (data) {
@@ -423,7 +437,7 @@ function getDetailsFN($this){
 					url: '../SYS99/CUsers/getLOCAT',
 					data: function (params) {
 						return {
-							q: params.term, // search term
+							q: (typeof params.term === 'undefined' ? '' : params.term), // search term
 							dblocat: $('#tab1dblocat').attr('dblocat')
 						};
 					},
