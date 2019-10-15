@@ -579,13 +579,23 @@ class Creceivedcars extends MY_Controller {
 	
 	function addSTRNO(){
 		$arrs = array();
-		$arrs['TRANSNO'] = $_REQUEST['TRANSNO'];
+		$arrs['TRANSNO'] = $_POST['TRANSNO'];
+		$arrs['STRNO']   = (!isset($_POST['STRNO']) ? array():$_POST['STRNO']);
+		
+		$s = sizeof($arrs['STRNO']); 		
+		$strno = "''";
+		for($i=0;$i<$s;$i++){
+			if($strno != ""){ $strno .= ","; }
+			$strno .= "'".$arrs['STRNO'][$i]."'";
+		}
+		//echo $strno; exit;	
 		
 		$sql = "
 			select a.STRNO,b.TYPE,b.MODEL,b.BAAB,b.COLOR,b.CC,b.GCODE
 				,isnull(a.EMPCARRY,'') EMPCARRY
 				,a.EMPCARRY+' :: '+c.USERNAME+'' as EMPCARRYNM	
 				,isnull(convert(varchar(8),a.TRANSDT,112),'') TRANSDT
+				,case when a.STRNO in (".$strno.") then 'y' else 'n' end as active
 			from {$this->MAuth->getdb('INVTransfersDetails')} a 
 			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO collate Thai_CI_AS
 			left join (
@@ -613,10 +623,10 @@ class Creceivedcars extends MY_Controller {
 							EMPCARRYNM='".$row->EMPCARRYNM."'
 							style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
 				";
-				if($row->EMPCARRY == "" or $row->TRANSDT == ""){ $td = "<td></td>"; }
+				if($row->EMPCARRY == "" or $row->TRANSDT == "" or $row->active == "y"){ $td = "<td></td>"; }
 				
 				$html .= "
-					<tr class='trow' seq=".$NRow.">
+					<tr class='trow' seq=".$NRow." style='".($row->active == "y" ? "color:blue;":"")."'>
 						".$td."
 						<td>".$row->STRNO."</td>
 						<td>".$row->MODEL."</td>
