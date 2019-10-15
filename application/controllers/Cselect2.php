@@ -113,9 +113,11 @@ class Cselect2 extends MY_Controller {
 			
 			union
 			select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+'-'+GRADE as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
-			where CUSCOD like '%".$dataSearch."%' collate Thai_CI_AS 
-				or NAME1+' '+NAME2 like '%".$dataSearch."%' collate Thai_CI_AS
-				or IDNO like '%".$dataSearch."%' collate Thai_CI_AS
+			where CUSCOD in (
+				select CUSCOD from {$this->MAuth->getdb('CUSTMAST')}
+				where CUSCOD like '%".$dataSearch."%' collate Thai_CI_AS 
+					or NAME1+' '+NAME2+' '+IDNO like '%".$dataSearch."%' collate Thai_CI_AS
+			)
 			order by CUSCOD
 		";
 		//echo $sql; exit;
@@ -294,10 +296,41 @@ class Cselect2 extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getTYPES(){
+		//รุ่นรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select TYPECOD from {$this->MAuth->getdb('SETTYPE')}
+			where TYPECOD='".$dataNow."' collate Thai_CI_AS
+			
+			union
+			select TYPECOD from {$this->MAuth->getdb('SETTYPE')}
+			where TYPECOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by TYPECOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
+				$json[] = array('id'=>str_replace(chr(0),"",$row->TYPECOD), 'text'=>str_replace(chr(0),"",$row->TYPECOD));
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
 	function getMODEL(){
 		//รุ่นรถ
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		$TYPECOD = $_REQUEST['TYPECOD'];
 		
 		$sql = "
@@ -313,7 +346,7 @@ class Cselect2 extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
-				$json[] = array('id'=>$row->MODELCOD, 'text'=>$row->MODELCOD);
+				$json[] = array('id'=>str_replace(chr(0),"",$row->MODELCOD), 'text'=>str_replace(chr(0),"",$row->MODELCOD));
 			}
 		}
 		
@@ -324,6 +357,7 @@ class Cselect2 extends MY_Controller {
 		//แบบรถ
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		$TYPECOD = $_REQUEST['TYPECOD'];
 		$MODEL = $_REQUEST['MODEL'];
 		
@@ -340,7 +374,7 @@ class Cselect2 extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
-				$json[] = array('id'=>$row->BAABCOD, 'text'=>$row->BAABCOD);
+				$json[] = array('id'=>str_replace(chr(0),"",$row->BAABCOD), 'text'=>str_replace(chr(0),"",$row->BAABCOD));
 			}
 		}
 		
@@ -351,6 +385,7 @@ class Cselect2 extends MY_Controller {
 		//สีรถ
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		
 		$sql = "
 			select COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
@@ -364,7 +399,7 @@ class Cselect2 extends MY_Controller {
 		$json = array();
 		if($query->row()){
 			foreach($query->result() as $row){
-				$json[] = array('id'=>$row->COLORCOD, 'text'=>$row->COLORCOD);
+				$json[] = array('id'=>str_replace(chr(0),"",$row->COLORCOD), 'text'=>str_replace(chr(0),"",$row->COLORCOD));
 			}
 		}
 		
@@ -395,9 +430,10 @@ class Cselect2 extends MY_Controller {
 				
 			--order by RESVNO desc
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
-		$html = "";
+		$json = array();
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>str_replace(chr(0),'',$row->RESVNO), 'text'=>str_replace(chr(0),'',$row->RESVNO)];
@@ -413,6 +449,33 @@ class Cselect2 extends MY_Controller {
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		$locat = $_REQUEST['locat'];
 		
+		$GCODE = (!isset($_REQUEST["GCODE"]) ? "" : $_REQUEST["GCODE"]);
+		$TYPE = (!isset($_REQUEST["TYPE"]) ? "" : $_REQUEST["TYPE"]);
+		$MODEL = (!isset($_REQUEST["MODEL"]) ? "" : $_REQUEST["MODEL"]);
+		$BAAB = (!isset($_REQUEST["BAAB"]) ? "" : $_REQUEST["BAAB"]);
+		$COLOR = (!isset($_REQUEST["COLOR"]) ? "" : $_REQUEST["COLOR"]);
+		$STAT = (!isset($_REQUEST["STAT"]) ? "" : $_REQUEST["STAT"]);
+		
+		$cond = "";
+		if($GCODE != ""){
+			$cond .= " and GCODE='".$GCODE."'";
+		}
+		if($TYPE != ""){
+			$cond .= " and TYPE='".$TYPE."'";
+		}
+		if($MODEL != ""){
+			$cond .= " and MODEL='".$MODEL."'";
+		}
+		if($BAAB != ""){
+			$cond .= " and BAAB='".$BAAB."'";
+		}
+		if($COLOR != ""){
+			$cond .= " and COLOR='".$COLOR."'";
+		}
+		if($STAT != ""){
+			$cond .= " and STAT='".$STAT."'";
+		}
+		
 		$sql = "
 			select STRNO from {$this->MAuth->getdb('INVTRAN')}
 			where CRLOCAT = '".$locat."' collate Thai_CI_AS 
@@ -424,13 +487,13 @@ class Cselect2 extends MY_Controller {
 			where CRLOCAT = '".$locat."' collate Thai_CI_AS 
 				and STRNO like '".$dataSearch."%' collate Thai_CI_AS 
 				and FLAG='D' and isnull(CONTNO,'')='' and SDATE is null 
-				and isnull(RESVNO,'')=''
+				and isnull(RESVNO,'')='' ".$cond."
 			order by STRNO desc
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
-		$html = "";
+		$json = array();
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>str_replace(chr(0),'',$row->STRNO), 'text'=>str_replace(chr(0),'',$row->STRNO)];

@@ -207,4 +207,55 @@ class MY_Controller extends CI_Controller {
 		
 		return "";
 	}
+	
+	public function opt($data,$valued){
+		$opt = "";
+		switch($data){
+			case 'CC':
+				$sql = "select CCCOD from {$this->MAuth->getdb('SETCC')}";
+				$query = $this->db->query($sql);
+				
+				if($query->row()){
+					foreach($query->result() as $row){
+						$cccod = (str_replace(chr(0),'',$row->CCCOD));
+						$opt .= "<option value='".$cccod."' ".($valued == $cccod ? "selected":"").">".$cccod."</option>";
+					}
+				}
+				break;
+			case 'STAT':
+				$sql = "
+					select 'N' as STATCOD,'รถใหม่' as STATNAME
+					union
+					select 'O' as STATCOD,'รถเก่า' as STATNAME
+				";
+				$query = $this->db->query($sql);
+				
+				if($query->row()){
+					foreach($query->result() as $row){
+						$STATCOD = (str_replace(chr(0),'',$row->STATCOD));
+						$STATNAME = (str_replace(chr(0),'',$row->STATNAME));
+						
+						$opt .= "<option value='".$STATCOD."' ".($valued == $STATCOD ? "selected":"").">".$STATNAME."</option>";
+					}
+				}
+				break;
+		}
+		
+		return $opt;
+	}
+	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

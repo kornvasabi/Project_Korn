@@ -28,8 +28,7 @@ class Analyze extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		//style='height:calc(100vh - 132px);overflow:auto;background-color:white;'
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' 
-			>
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
 				<div class='divcondition col-sm-12' style='overflow:auto;'>
 					<div class='row'>
 						<div class='col-sm-2'>	
@@ -244,13 +243,13 @@ class Analyze extends MY_Controller {
 		$html = "
 			<div id='table-fixed-Analyze' class='col-sm-12' style='height:calc(100% - 30px);width:100%;overflow:auto;font-size:8pt;'>
 				<table id='table-Analyze' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)' style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png&#39;) repeat scroll 0% 0%;'>
-					<thead>						
+					<thead style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 						<tr align='center' style='line-height:20px;'>
-							<th style='vertical-align:middle;background-color:#c8e6b7;text-align:center;font-size:8pt;' colspan='14'>
+							<th style='vertical-align:middle;text-align:center;font-size:8pt;' colspan='14'>
 								เงื่อนไข :: ".$condDesc."
 							</th>
 						</tr>
-						<tr align='center'  style='background-color:#c8e6b7;'>
+						<tr align='center'>
 							<th>###</th>
 							<th style='vertical-align:middle;'>เลขที่<br>ใบวิเคราะห์</th>
 							<th style='vertical-align:middle;'>ผู้เช่าซื้อ</th>
@@ -1359,6 +1358,7 @@ class Analyze extends MY_Controller {
 				}
 			}
 		}
+		
 		if($data["STATEN"] == "N"){
 			$sql = "
 				if exists(
@@ -1374,12 +1374,32 @@ class Analyze extends MY_Controller {
 				else if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
 					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
 					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
 				)
 				begin 
 					select * from {$this->MAuth->getdb('std_vehicles')} a
 					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
 					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
 				end 
 				else if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
@@ -1391,12 +1411,24 @@ class Analyze extends MY_Controller {
 					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
 					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
 				end
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
+				end
 			";
 			$query = $this->db->query($sql);
 			
 			if($query->row()){
 				foreach($query->result() as $row){
 					$data["price"] = $row->price;
+					$data["stdid"] = $row->id;
+					$data["stdplrank"] = $row->plrank;
 				}
 			}else{
 				$response["error"] = true;
@@ -1404,7 +1436,8 @@ class Analyze extends MY_Controller {
 					ผิดพลาด ไม่พบราคาขายรถใหม่ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
 					รุ่น :: ".$data["MODEL"]."<br>
 					แบบ :: ".$data["BAAB"]."<br>
-					สี :: ".$data["COLOR"]."
+					สี :: ".$data["COLOR"]."<br>
+					กิจกรรมการขาย :: ".$acticod."
 				";
 			}
 		}
