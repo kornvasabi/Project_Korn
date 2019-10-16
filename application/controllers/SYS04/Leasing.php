@@ -3990,6 +3990,7 @@ class Leasing extends MY_Controller {
 				,a.STDID,a.STDPLRANK
 				,@INT_RATE as INT_RATE
 				,@DELAY_DAY as DELAY_DAY
+				,isnull(a.DWN_INSURANCE,0) as DWN_INSURANCE
 			from {$this->MAuth->getdb('ARANALYZE')} a
 			left join {$this->MAuth->getdb('ARANALYZEREF')} b on a.ID=b.ID and b.CUSTYPE=0
 			left join {$this->MAuth->getdb('CUSTMAST')} c on b.CUSCOD=c.CUSCOD collate thai_cs_as
@@ -4029,16 +4030,20 @@ class Leasing extends MY_Controller {
 				//echo $sql; exit;
 				$query_std = $this->db->query($sql);
 
+				$data["std_price"] 			= 0;
+				$data["std_pricespecial"] 	= 0;
+				$data["std_interest_rate"] 	= 0;
+				$data["std_interest_rate2"] = 0;
+				$data["std_opt_total"]		= 0;
 				if($query_std->row()){
 					foreach($query_std->result() as $row_std){
 						$data["std_price"] 			= $row_std->price;
 						$data["std_pricespecial"] 	= $row_std->pricespecial;
 						$data["std_interest_rate"] 	= $row_std->interest_rate;
 						$data["std_interest_rate2"] = $row_std->interest_rate2;
-						$data["std_opt_total"]		= $row_std->total;
+						$data["std_opt_total"]		= $row_std->total - $data["DWN_INSURANCE"];
 					}
 				}
-				
 				
 				$sql = "
 					select * from {$this->MAuth->getdb('fn_jd_calPriceForSale')}(

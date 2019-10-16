@@ -683,7 +683,6 @@ function fn_loadPropoties($thisWindow,$EVENT){
 		$('#fSTAT').val(null).trigger('change');
 		$('#btnDelete').hide();
 	}else{
-		alert(_level);
 		if(_level == 1){
 			$('#fRESVDT').attr('disabled',false);
 			$('#fCUSCOD').attr('disabled',false);

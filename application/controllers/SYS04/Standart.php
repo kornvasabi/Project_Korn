@@ -613,6 +613,7 @@ class Standart extends MY_Controller {
 		$data = "";
 		$data_excel = "";
 		$NRow = 1;
+		$size_free_col = 0;
 		if($query->row()){
 			$bg = "#d6e8ff";
 			foreach($query->result() as $row){
@@ -769,6 +770,7 @@ class Standart extends MY_Controller {
 	function html_excel($query){
 		$data_excel = "";
 		$NRow = 0;
+		$size_free_col = 0;
 		if($query->row()){
 			$bg = "#d6e8ff";
 			foreach($query->result() as $row){
@@ -2085,6 +2087,16 @@ class Standart extends MY_Controller {
 					<input type='text' id='formcoupon' class='form-control input-sm jzAllowNumber' value='".$_POST["formcoupon"]."'>
 				</div>
 			</div>
+			<div class='col-sm-12'>
+				<div class='form-group'>
+					<div class='checkbox'>
+						<label>
+							<input type='checkbox' id='' value=''>
+							ขั้นเงินดาวน์นี้ต้องแนบรายการขออนุมัติด้วย
+						</label>
+					</div>
+				</div>
+			</div>
 			<div class='col-sm-10 col-sm-offset-1'>
 				<button id='btnSWNADD' class='btn btn-warning btn-block'><span class='glyphicon glyphicon-".($_POST["formevent"] == "add"?"plus":"edit")."'> ".($_POST["formevent"] == "add"?"เพิ่ม":"แก้ไข")."</span></button>
 			</div>
@@ -2206,7 +2218,7 @@ class Standart extends MY_Controller {
 		$DETAIL 	= ($_POST["DETAIL"]);
 		$FPRICE 	= ($_POST["FPRICE"] == "" ?"NULL":$_POST["FPRICE"]);
 		$FPRICE2 	= ($_POST["FPRICE2"] == "" ?"NULL":$_POST["FPRICE2"]);
-		$LOCAT 	 	= ($_POST["LOCAT"]);
+		$LOCAT 	 	= ($_POST["LOCAT"] == "" ? array():$_POST["LOCAT"]);
 		$STDDWN	 	= ($_POST["STDDWN"]);
 		$STDFREE 	= ($_POST["STDFREE"]);
 		

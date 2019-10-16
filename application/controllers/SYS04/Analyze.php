@@ -780,7 +780,7 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									ราคารถ(สด) ก่อนหักส่วนลด
-									<input type='text' id='price' class='form-control input-sm'>
+									<input type='text' id='price' class='form-control input-sm' stdid='' stdplrank=''> 
 								</div>
 							</div>
 						</div>
@@ -1307,16 +1307,19 @@ class Analyze extends MY_Controller {
 		$resvno   = $_POST["resvno"];
 		$acticod  = $_POST["acticod"];
 		
+		/*
 		if($acticod == "ALL"){
 			$response["error"] = true;
 			$response["msg"] = "ผิดพลาด :: โปรดระบุกิจกรรมการขายก่อนครับ";
 			echo json_encode($response); exit;
 		}
+		*/
 		
 		$sql = "
 			select a.RESVNO,a.RESPAY,a.STRNO,a.MODEL,a.BAAB,a.COLOR
 				,case when a.STAT='N' then 'รถใหม่'  else 'รถเก่า' end as STAT
 				,a.STAT as STATEN
+				,convert(varchar(8),a.RESVDT,112) as RESVDT
 				,convert(varchar(8),b.SDATE,112) as SDATE
 				,convert(varchar(8),b.YDATE,112) as YDATE
 				,a.CUSCOD
@@ -1329,6 +1332,11 @@ class Analyze extends MY_Controller {
 				,'('+c.ADDRNO+') '+d.ADDR1+' '+d.ADDR2+' ต.'+d.TUMB+' อ.'+e.AUMPDES+' จ.'+f.PROVDES+' '+d.ZIP as ADDR
 				,c.MOBILENO
 				,isnull(c.MREVENU,0) as MREVENU
+				,g.ACTICOD
+				,'('+g.ACTICOD+') '+h.ACTIDES collate thai_cs_as as ACTIDES
+				,case when i.price is null then a.PRICE else i.price end as price
+				,isnull(g.STDID,'') as stdid
+				,isnull(cast(g.STDPLRANK as varchar),'') as stdplrank
 			from {$this->MAuth->getdb('ARRESV')} a 
 			left join (
 				select ROW_NUMBER() over(partition by STRNO order by STRNO,sdate desc) r,* 
@@ -1338,7 +1346,10 @@ class Analyze extends MY_Controller {
 			left join {$this->MAuth->getdb('CUSTADDR')} d on c.CUSCOD=d.CUSCOD and c.ADDRNO=d.ADDRNO
 			left join {$this->MAuth->getdb('SETAUMP')} e on d.AUMPCOD=e.AUMPCOD
 			left join {$this->MAuth->getdb('SETPROV')} f on e.PROVCOD=f.PROVCOD
-			where RESVNO='".$resvno."'
+			left join {$this->MAuth->getdb('ARRESVOTH')} g on a.RESVNO=g.RESVNO collate thai_cs_as
+			left join {$this->MAuth->getdb('SETACTI')} h on g.ACTICOD=h.ACTICOD collate thai_cs_as
+			left join {$this->MAuth->getdb('std_pricelist')} i on g.STDID=i.id and g.STDPLRANK=i.plrank 
+			where a.RESVNO='".$resvno."'
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -1353,72 +1364,74 @@ class Analyze extends MY_Controller {
 						case 'BIRTHDT': $data[$key] = $this->Convertdate(2,$val); break;
 						case 'EXPDT': $data[$key] = $this->Convertdate(2,$val); break;
 						case 'MREVENU': $data[$key] = number_format($val,2); break;
+						case 'ACTICOD': $data[$key] = str_replace(chr(0),"",$val); break;
+						case 'ACTIDES': $data[$key] = str_replace(chr(0),"",$val); break;
 						default:  $data[$key] = $val; break;
 					}
 				}
 			}
 		}
 		
-		if($data["STATEN"] == "N"){
+		if($data["STATEN"] == "N" and ($data["stdid"] == "" or $data["stdplrank"] == "")){
 			$sql = "
 				if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
 				)
 				begin 
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
 				end 
 				else if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
 				)
 				begin 
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
 				end 
 				else if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
 				)
 				begin 
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
 				end 
 				else if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
 				)
 				begin 
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
 				end 
 				else if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
 				)
 				begin 
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
 				end
 				else if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
 				)
 				begin 
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
 					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
 				end
 			";
@@ -1426,9 +1439,9 @@ class Analyze extends MY_Controller {
 			
 			if($query->row()){
 				foreach($query->result() as $row){
-					$data["price"] = $row->price;
-					$data["stdid"] = $row->id;
-					$data["stdplrank"] = $row->plrank;
+					$data["stdid"] 		= $row->id;
+					$data["stdplrank"] 	= $row->plrank;
+					$data["price"] 		= $row->price;
 				}
 			}else{
 				$response["error"] = true;
@@ -1437,7 +1450,7 @@ class Analyze extends MY_Controller {
 					รุ่น :: ".$data["MODEL"]."<br>
 					แบบ :: ".$data["BAAB"]."<br>
 					สี :: ".$data["COLOR"]."<br>
-					กิจกรรมการขาย :: ".$acticod."
+					วันที่จอง :: ".$this->Convertdate(2,$data["RESVDT"])."
 				";
 			}
 		}
@@ -1632,6 +1645,8 @@ class Analyze extends MY_Controller {
 		$arrs["sdateold"] 	= ($_POST["sdateold"] == "" ? "NULL":"'".$this->Convertdate(1,$_POST["sdateold"])."'");
 		$arrs["ydate"] 		= ($_POST["ydate"] == "" ? "NULL":"'".$this->Convertdate(1,$_POST["ydate"])."'");
 		$arrs["price"] 		= "'".$_POST["price"]."'";
+		$arrs["stdid"] 		= "'".$_POST["stdid"]."'";
+		$arrs["stdplrank"]	= "'".$_POST["stdplrank"]."'";
 		
 		$arrs["cuscod"] 	= "'".$_POST["cuscod"]."'";
 		$arrs["idno"] 		= "'".$_POST["idno"]."'";
@@ -1724,11 +1739,11 @@ class Analyze extends MY_Controller {
 				declare @id bigint;
 				insert into {$this->MAuth->getdb('ARANALYZE')} (
 					ID,LOCAT,RESVNO,RESVAMT,DWN,DWN_INSURANCE,NOPAY,STRNO,MODEL
-					,BAAB,COLOR,STAT,SDATE,YDATE,PRICE,ANSTAT,INSBY,INSDT
+					,BAAB,COLOR,STAT,SDATE,YDATE,PRICE,ANSTAT,STDID,STDPLRANK,INSBY,INSDT
 				) select @ANID,".$arrs["locat"].",".$arrs["resvno"].",".$arrs["resvAmt"].",".$arrs["dwnAmt"]."
 					,".$arrs["insuranceAmt"].",".$arrs["nopay"].",".$arrs["strno"].",".$arrs["model"]."
 					,".$arrs["baab"].",".$arrs["color"].",".$arrs["stat"].",".$arrs["sdateold"].",".$arrs["ydate"]."
-					,".$arrs["price"].",'I','".$this->sess["IDNo"]."',getdate();
+					,".$arrs["price"].",'I',".$arrs["stdid"].",".$arrs["stdplrank"].",'".$this->sess["IDNo"]."',getdate();
 				
 				insert into {$this->MAuth->getdb('ARANALYZEREF')} (
 					ID,CUSCOD,CUSTYPE,CUSSTAT,CUSBABY,ADDRNO,ADDRDOCNO,SOCAILSECURITY,CAREER,CAREERADDR,
