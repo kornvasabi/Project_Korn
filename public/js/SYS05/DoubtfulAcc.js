@@ -6,10 +6,10 @@ var _update = $('.b_tab1[name="home"]').attr('cup');
 var _delete = $('.b_tab1[name="home"]').attr('cdel');
 var _level  = $('.b_tab1[name="home"]').attr('clev');
 var _today  = $('.b_tab1[name="home"]').attr('today');
-var _vat  	= $('.b_tab1[name="home"]').attr('vat');
 
 //หน้าแรก
 $(function(){
+	
 	$('#LOCAT1').select2({
 		placeholder: 'เลือก',
         ajax: {
@@ -38,10 +38,10 @@ $(function(){
 		width: '100%'
 	});
 	
-	/*$('#CUSCOD1').select2({
+	$('#TYPLOST1').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2b/getCUSTOMERS',
+			url: '../Cselect2b/getTYPLOST',
 			data: function (params) {
 				dataToPost = new Object();
 				//dataToPost.now = $('#add_cuscod').find(':selected').val();
@@ -64,7 +64,7 @@ $(function(){
 		//disabled: true,
 		//theme: 'classic',
 		width: '100%'
-	});*/
+	});
 });
 	
 //กดเพิ่มข้อมูล	
@@ -73,14 +73,14 @@ $('#bth1add').click(function(){
 	dataToPost.level = _level;
 	$('#loadding').show();
 	$.ajax({
-		url:'../SYS05/ExchangeCar/getfromExchangeCar',
+		url:'../SYS05/DoubtfulAcc/getfromDoubtfulAcc',
 		data: dataToPost,
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
 			$('#loadding').hide();
 			Lobibox.window({
-				title: 'บันทึกรถแลกเปลี่ยน',
+				title: 'บันทึกรายการหนี้สงสัยจะสูญ',
 				width: $(window).width(),
 				height: $(window).height(),
 				//width:'100%',
@@ -89,7 +89,7 @@ $('#bth1add').click(function(){
 				draggable: true,
 				closeOnEsc: true,
 				shown: function($this){
-					Add_ExchangCar($this);
+					Add_DoubtfulAcc($this);
 				}
 	
 			});			
@@ -97,14 +97,14 @@ $('#bth1add').click(function(){
 	});
 });
 
-function Add_ExchangCar($thisWindowChange){
+function Add_DoubtfulAcc($thisWindowarlost){
 	
-	$('#btndel_exchangecar').attr('disabled',true);
+	$('#btndel_arlost').attr('disabled',true);
 	
 	$('#CONTNO').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2b/getCONTNO_ExchangCar',
+			url: '../Cselect2b/getCONTNO_DoubtfulAcc',
 			data: function (params) {
 				dataToPost = new Object();
 				//dataToPost.now = $('#add_cuscod').find(':selected').val();
@@ -136,7 +136,7 @@ function Add_ExchangCar($thisWindowChange){
 		dataToPost.contno = contno;
 			
 		CONTNOCHANGE = $.ajax({
-			url : '../SYS05/ExchangeCar/searchCONTNO',
+			url : '../SYS05/DoubtfulAcc/searchCONTNO',
 			data : dataToPost,
 			type : "POST",
 			dataType : "json",
@@ -153,17 +153,7 @@ function Add_ExchangCar($thisWindowChange){
 					$('#NETAR').val(data.EXP_AMT);
 					$('#BOOKVALUE').val(data.BOOKVALUE);
 					$('#SALEVAT').val(data.VATPRC);
-					$('#LOCATR').val(data.CRLOCAT);
-					$('#SALENEW').val(data.NEWPRC);	
-					
-					newOption = new Option('('+data.GCODE+') '+data.GDESC, data.GCODE, false, false);
-					$('#GCODENEW').empty();
-					$('#GCODENEW').append(newOption).trigger('change'); 
-					
-					if(data.VATRT == '0'){
-						$('#COSTVAT').val('0.00');
-					}
-					COSTVAT(data.VATRT );
+					$('#NPROFIT').val(data.NPROF);	
 					
 				}else{
 					$('#LOCAT').val('');
@@ -177,18 +167,13 @@ function Add_ExchangCar($thisWindowChange){
 					$('#NETAR').val('');
 					$('#BOOKVALUE').val('');
 					$('#SALEVAT').val('');
-					$('#COST').val('');
-					$('#COSTVAT').val('');
-					$('#DATECHG').val(_today);
-					$('#LOCATR').val('');
-					$('#SALENEW').val('');
-					$('#GCODENEW').empty().trigger('change');
+					$('#NPROFIT').val('');
+					$('#DATELOST').val(_today);
 					$('#MEMO').val('');
 				}
 				CONTNOCHANGE = null;
 			},
 			beforeSend: function(){
-				$('#COST').val('');
 				if(CONTNOCHANGE !== null){
 					CONTNOCHANGE.abort();
 				}
@@ -196,28 +181,13 @@ function Add_ExchangCar($thisWindowChange){
 		});
 	});
 	
-	function COSTVAT(VATRT){
-		$('#COST').keyup(function BBB(BBB) {
-			var cost = $(this).val();
-			var rate = (cost * _vat)/100;
-			/*if(VATRT != '0'){
-				$('#COSTVAT').val(rate.toFixed(2));
-			}else{ 
-				$('#COSTVAT').val('0.00');
-			}*/
-			$('#COSTVAT').val(rate.toFixed(2));
-		});
-	}
-	COSTVAT();	
-
-	$('#GCODENEW').select2({
+	$('#TYPLOST').select2({
 		placeholder: 'เลือก',
 		ajax: {
-			url: '../Cselect2b/getGCode_ExchangCar',
+			url: '../Cselect2b/getTYPLOST',
 			data: function (params) {
 				dataToPost = new Object();
 				//dataToPost.now = $('#add_cuscod').find(':selected').val();
-				dataToPost.GCODEold = (typeof $('#GCODENEW').find(':selected').val() === 'undefined' ? '':$('#GCODENEW').find(':selected').val());
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				return dataToPost;				
 			},
@@ -238,30 +208,28 @@ function Add_ExchangCar($thisWindowChange){
 		dropdownAutoWidth : true,
 		width: '100%'
 	});
-
+	
 	//_insert = 'T';
 	if(_level == '1'){
-		$('#btnsave_exchangecar').attr('disabled',false);
+		$('#btnsave_arlost').attr('disabled',false);
 	}else{
 		if(_insert == 'T'){
-			$('#btnsave_exchangecar').attr('disabled',false);
+			$('#btnsave_arlost').attr('disabled',false);
 		}else{
-			$('#btnsave_exchangecar').attr('disabled',true);
+			$('#btnsave_arlost').attr('disabled',true);
 		}
 	}
-	
-	$('#btnsave_exchangecar').click(function(){
-		Save_exchangecar($thisWindowChange);
-		$('#resultt_ExchangeCar').hide(); 
+	$('#btnsave_arlost').click(function(){
+		Save_ARlost($thisWindowarlost);
 	});
 }
 
 
-function Save_exchangecar($thisWindowChange){
+function Save_ARlost($thisWindowarlost){
 	Lobibox.confirm({
 		title: 'ยืนยันการทำรายการ',
 		iconClass: false,
-		msg: 'คุณต้องการบันทึกรายการแลกเปลี่ยนรถหรือไม่',
+		msg: 'คุณต้องการบันทึกรายการหนี้สงสัยจะสูญหรือไม่',
 		buttons: {
 			ok : {
 				'class': 'btn btn-primary',
@@ -279,26 +247,22 @@ function Save_exchangecar($thisWindowChange){
 			if (type === 'ok'){
 				dataToPost = new Object();
 				dataToPost.CONTNO 	= (typeof $('#CONTNO').find(':selected').val() === 'undefined' ? '':$('#CONTNO').find(':selected').val());
-				dataToPost.GCODENEW = (typeof $('#GCODENEW').find(':selected').val() === 'undefined' ? '':$('#GCODENEW').find(':selected').val());
+				dataToPost.TYPLOST 	= (typeof $('#TYPLOST').find(':selected').val() === 'undefined' ? '':$('#TYPLOST').find(':selected').val());
 				dataToPost.STRNO 	= $('#STRNO').val();
 				dataToPost.BOOKVAL 	= $('#BOOKVALUE').val();
 				dataToPost.SALEVAT 	= $('#SALEVAT').val();
-				dataToPost.COST 	= $('#COST').val();
-				dataToPost.COSTVAT 	= $('#COSTVAT').val();
-				dataToPost.DATECHG 	= $('#DATECHG').val();
-				dataToPost.SALENEW 	= $('#SALENEW').val();
+				dataToPost.NPROFIT 	= $('#NPROFIT').val();
+				dataToPost.DATELOST = $('#DATELOST').val();
 				dataToPost.MEMO 	= $('#MEMO').val();
 				
-				if(dataToPost.BOOKVAL == "" || dataToPost.COST == "" || dataToPost.COSTVAT == "" || dataToPost.SALENEW == ""){	
+				if(dataToPost.BOOKVAL == "" || dataToPost.NPROFIT == ""  || dataToPost.TYPLOST == ""){	
 					var $msg = "";
 					if(dataToPost.BOOKVAL == ""){
 						$msg = "กรุณาระบุ มูลค่าคงเหลือตามบัญชี";
-					}else if(dataToPost.COST == ""){
-						$msg = "กรุณาระบุ มูลค่าต้นทุน (ไม่รวม VAT)";
-					}else if(dataToPost.COSTVAT == ""){
-						$msg = "กรุณาระบุ ภาษีต้นทุนรถ";
-					}else if(dataToPost.SALENEW){
-						$msg = "กรุณาระบุ ราคาขายใหม่";
+					}else if(dataToPost.NPROFIT == ""){
+						$msg = "กรุณาระบุ ดอกผลเช่าซื้อคงเหลือ";
+					}else if(dataToPost.TYPLOST == ""){
+						$msg = "กรุณาระบุ ประเภทหนี้สูญ";
 					}
 					Lobibox.notify('warning', {
 						title: 'แจ้งเตือน',
@@ -316,14 +280,14 @@ function Save_exchangecar($thisWindowChange){
 				}else{
 					$('#loadding').show();
 					$.ajax({
-						url:'../SYS05/ExchangeCar/Save_exchangecar',
+						url:'../SYS05/DoubtfulAcc/Save_ARlost',
 						data: dataToPost,
 						type: 'POST',
 						dataType: 'json',
 						success: function(data) {
 							$('#loadding').hide();
 							if(data.status == 'S'){
-								$thisWindowChange.destroy();
+								$thisWindowarlost.destroy();
 								Lobibox.notify('success', {
 									title: 'สำเร็จ',
 									size: 'mini',
@@ -370,53 +334,52 @@ function Save_exchangecar($thisWindowChange){
 
 //กดแสดงข้อมูล
 $('#btnt1search').click(function(){
-	$('#resultt_ExchangeCar').show(); 
+	$('#resultt_DoubtfulAcc').show(); 
 	search();
 });
 
 function search(){
 	dataToPost = new Object();
 	dataToPost.LOCAT1 = (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
-	dataToPost.CONTNO1 = (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.CUSCOD1 = (typeof $('#CUSCOD1').find(':selected').val() === 'undefined' ? '':$('#CUSCOD1').find(':selected').val());
-	dataToPost.FROMDATECHG 	= $('#FROMDATECHG').val();
-	dataToPost.TODATECHG 	= $('#TODATECHG').val();
+	dataToPost.TYPLOST1 = (typeof $('#TYPLOST1').find(':selected').val() === 'undefined' ? '':$('#TYPLOST1').find(':selected').val());
+	dataToPost.FROMDATE 	= $('#FROMDATE').val();
+	dataToPost.TODATE 	= $('#TODATE').val();
 	
 	var spinner = $('body>.spinner').clone().removeClass('hide');
-    $('#resultt_ExchangeCar').html('');
-	$('#resultt_ExchangeCar').append(spinner);
+    $('#resultt_DoubtfulAcc').html('');
+	$('#resultt_DoubtfulAcc').append(spinner);
 	
 	$.ajax({
-		url:'../SYS05/ExchangeCar/search',
+		url:'../SYS05/DoubtfulAcc/search',
 		data:dataToPost,
 		type:'POST',
 		dataType:'json',
 		success:function(data){
-			$('#resultt_ExchangeCar').find('.spinner, .spinner-backdrop').remove();
-			$('#resultt_ExchangeCar').html(data.html);
+			$('#resultt_DoubtfulAcc').find('.spinner, .spinner-backdrop').remove();
+			$('#resultt_DoubtfulAcc').html(data.html);
 			
-			$('#table-ExchangeCar').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-ExchangeCar',1,340);
+			$('#table-ARlost').on('draw.dt',function(){ redraw(); });
+			fn_datatables('table-ARlost',1,340);
 			
-			$('.data-export').prepend('<img id="print-ExchangeCar" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(70%);">');
-			$("#print-ExchangeCar").hover(function() {
-				document.getElementById("print-ExchangeCar").style.filter = "contrast(100%)";
+			$('.data-export').prepend('<img id="print-ARlost" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(70%);">');
+			$("#print-ARlost").hover(function() {
+				document.getElementById("print-ARlost").style.filter = "contrast(100%)";
 			}, function() {
-				document.getElementById("print-ExchangeCar").style.filter = "contrast(70%)";
+				document.getElementById("print-ARlost").style.filter = "contrast(70%)";
 			});
 			
-			$('.data-export').prepend('<img id="table-ExchangeCar-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(70%);">');
-			$("#table-ExchangeCar-excel").hover(function() {
-				document.getElementById("table-ExchangeCar-excel").style.filter = "contrast(100%)";
+			$('.data-export').prepend('<img id="table-ARlost-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(70%);">');
+			$("#table-ARlost-excel").hover(function() {
+				document.getElementById("table-ARlost-excel").style.filter = "contrast(100%)";
 			}, function() {
-				document.getElementById("table-ExchangeCar-excel").style.filter = "contrast(70%)";
+				document.getElementById("table-ARlost-excel").style.filter = "contrast(70%)";
 			});
 			
-			$("#table-ExchangeCar-excel").click(function(){ 
-				tableToExcel_Export(data.report,"sheet 1","Report_ExchangeCar"); 
+			$("#table-ARlost-excel").click(function(){ 
+				tableToExcel_Export(data.report,"sheet 1","Report_ARlost"); 
 			});
-			
-			$('#print-ExchangeCar').click(function(){
+
+			$('#print-ARlost').click(function(){
 				printReport();
 			});
 			
@@ -442,17 +405,15 @@ function search(){
 					var	EXP_AMT = $(this).attr('EXP_AMT');
 					var	BOOKVAL = $(this).attr('BOOKVAL');
 					var	BOOKVAT = $(this).attr('BOOKVAT');
-					var	COST 	= $(this).attr('COST');
-					var	COSTVAT = $(this).attr('COSTVAT');
-					var	DATECHG = $(this).attr('DATECHG');
-					var	RCVLOCAT= $(this).attr('RCVLOCAT');
-					var	STDPRC 	= $(this).attr('STDPRC');
-					var	N_GCODE = $(this).attr('N_GCODE');
-					var	GDESC 	= $(this).attr('GDESC');
+					var	BALPROF = $(this).attr('BALPROF');
+					var	LOSTDTS = $(this).attr('LOSTDTS');
+					var	LOSTCOD	= $(this).attr('LOSTCOD');
+					var	LOSTESC = $(this).attr('LOSTESC');
 					var	MEMO1 	= $(this).attr('MEMO1');
 					loadform(
 						CONTNO,LOCAT,CUSCOD,CUSNAME,REGNO,STRNO,TOTPRC,SMPAY,TOTBAL,EXP_AMT,BOOKVAL,
-						BOOKVAT,COST,COSTVAT,DATECHG,RCVLOCAT,STDPRC,N_GCODE,GDESC,MEMO1);
+						BOOKVAT,BALPROF,LOSTDTS,LOSTCOD,LOSTESC,MEMO1
+					);
 				});
 			}		
 		}
@@ -462,18 +423,18 @@ function search(){
 function printReport(){
 	dataToPost = new Object();
 	dataToPost.LOCAT1 = (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
-	dataToPost.CONTNO1 = (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.FROMDATECHG 	= $('#FROMDATECHG').val();
-	dataToPost.TODATECHG 	= $('#TODATECHG').val();
+	dataToPost.TYPLOST1 = (typeof $('#TYPLOST1').find(':selected').val() === 'undefined' ? '':$('#TYPLOST1').find(':selected').val());
+	dataToPost.FROMDATE 	= $('#FROMDATE').val();
+	dataToPost.TODATE 	= $('#TODATE').val();
 	$.ajax({
-		url: '../SYS05/ExchangeCar/conditiontopdf',
+		url: '../SYS05/DoubtfulAcc/conditiontopdf',
 		data: dataToPost,
 		type:'POST',
 		dataType: 'json',
 		success: function(data){
 			//alert(data[0]);
 			var baseUrl = $('body').attr('baseUrl');
-			var url = baseUrl+'SYS05/ExchangeCar/pdf?condpdf='+data[0];
+			var url = baseUrl+'SYS05/DoubtfulAcc/pdf?condpdf='+data[0];
 			var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 			Lobibox.window({
 				title: 'พิมพ์รายงาน',
@@ -482,24 +443,25 @@ function printReport(){
 				height: $(window).height(),
 				width: $(window).width()
 			});
+
 		}
 	});
 }
 
-function loadform(CONTNO,LOCAT,CUSCOD,CUSNAME,REGNO,STRNO,TOTPRC,SMPAY,TOTBAL,EXP_AMT,BOOKVAL,BOOKVAT,COST,COSTVAT,DATECHG,RCVLOCAT,STDPRC,N_GCODE,GDESC,MEMO1){
+function loadform(CONTNO,LOCAT,CUSCOD,CUSNAME,REGNO,STRNO,TOTPRC,SMPAY,TOTBAL,EXP_AMT,BOOKVAL,BOOKVAT,BALPROF,LOSTDTS,LOSTCOD,LOSTESC,MEMO1){
 	dataToPost = new Object();
 	dataToPost.level = _level;
 
 	$('#loadding').show();
 	$.ajax({
-		url:'../SYS05/ExchangeCar/getfromExchangeCar',
+		url:'../SYS05/DoubtfulAcc/getfromDoubtfulAcc',
 		data: dataToPost,
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
 			$('#loadding').hide();
 			Lobibox.window({
-				title: 'บันทึกรถแลกเปลี่ยน',
+				title: 'บันทึกรายการหนี้สงสัยจะสูญ',
 				width: $(window).width(),
 				height: $(window).height(),
 				//width:'100%',
@@ -508,14 +470,13 @@ function loadform(CONTNO,LOCAT,CUSCOD,CUSNAME,REGNO,STRNO,TOTPRC,SMPAY,TOTBAL,EX
 				draggable: true,
 				closeOnEsc: true,
 				shown: function($this){	
-					$('#GCODENEW').select2({
+					$('#TYPLOST').select2({
 						placeholder: 'เลือก',
 						ajax: {
-							url: '../Cselect2b/getGCode_ExchangCar',
+							url: '../Cselect2b/getTYPLOST',
 							data: function (params) {
 								dataToPost = new Object();
 								//dataToPost.now = $('#add_cuscod').find(':selected').val();
-								dataToPost.GCODEold = "";
 								dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 								return dataToPost;				
 							},
@@ -540,9 +501,9 @@ function loadform(CONTNO,LOCAT,CUSCOD,CUSNAME,REGNO,STRNO,TOTPRC,SMPAY,TOTBAL,EX
 					newOption = new Option(CONTNO, CONTNO, false, false);
 					$('#CONTNO').empty();
 					$('#CONTNO').append(newOption).trigger('change'); 
-					newOption = new Option('('+N_GCODE+') '+GDESC, N_GCODE, false, false);
-					$('#GCODENEW').empty();
-					$('#GCODENEW').append(newOption).trigger('change'); 
+					newOption = new Option(LOSTCOD+' - '+LOSTESC, LOSTCOD, false, false);
+					$('#TYPLOST').empty();
+					$('#TYPLOST').append(newOption).trigger('change'); 
 					
 					$('#LOCAT').val(LOCAT);
 					$('#CUSNAME').val(CUSNAME);
@@ -555,15 +516,12 @@ function loadform(CONTNO,LOCAT,CUSCOD,CUSNAME,REGNO,STRNO,TOTPRC,SMPAY,TOTBAL,EX
 					$('#NETAR').val(EXP_AMT);
 					$('#BOOKVALUE').val(BOOKVAL);
 					$('#SALEVAT').val(BOOKVAT);
-					$('#COST').val(COST);
-					$('#COSTVAT').val(COSTVAT);
-					$('#DATECHG').val(DATECHG);
-					$('#LOCATR').val(RCVLOCAT);
-					$('#SALENEW').val(STDPRC);
+					$('#NPROFIT').val(BALPROF);
+					$('#DATELOST').val(LOSTDTS);
 					$('#MEMO').val(MEMO1);
 					
 					$('#CONTNO').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
-					
+
 					$('#LOCAT').attr('disabled',true);
 					$('#CUSNAME').attr('disabled',true);
 					$('#CUSCOD').attr('disabled',true);
@@ -573,58 +531,53 @@ function loadform(CONTNO,LOCAT,CUSCOD,CUSNAME,REGNO,STRNO,TOTPRC,SMPAY,TOTBAL,EX
 					$('#SMPAY').attr('disabled',true);
 					$('#BALANCE').attr('disabled',true);
 					$('#NETAR').attr('disabled',true);
-					$('#LOCATR').attr('disabled',true);
 					
 					//var _update = 'T';
 					if(_level == '1'){
-						$('#btnsave_exchangecar').attr('disabled',false);
+						$('#btnsave_arlost').attr('disabled',false);
 					}else{
 						if(_update == 'T'){ //มีสิทธิ์แก้ไขไหม
 							if(_locat == LOCAT){ //เป็นสาขาตัวเองหรือไม่ ถ้าไม่ใช่ ห้ามแก้ไข
-								$('#btnsave_exchangecar').attr('disabled',false);
+								$('#btnsave_arlost').attr('disabled',false);
 							}else{
-								$('#btnsave_exchangecar').attr('disabled',true);
-								$('#GCODENEW').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
+								$('#btnsave_arlost').attr('disabled',true);
+								$('#TYPLOST').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
 								$('#BOOKVALUE').attr('disabled',true);
 								$('#SALEVAT').attr('disabled',true);
-								$('#COST').attr('disabled',true);
-								$('#COSTVAT').attr('disabled',true);
-								$('#DATECHG').attr('disabled',true);
-								$('#SALENEW').attr('disabled',true);
+								$('#NPROFIT').attr('disabled',true);
+								$('#DATELOST').attr('disabled',true);
 								$('#MEMO').attr('disabled',true);
 							}
 						}else{
-							$('#btnsave_exchangecar').attr('disabled',true);
-							$('#GCODENEW').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
+							$('#btnsave_arlost').attr('disabled',true);
+							$('#TYPLOST').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
 							$('#BOOKVALUE').attr('disabled',true);
 							$('#SALEVAT').attr('disabled',true);
-							$('#COST').attr('disabled',true);
-							$('#COSTVAT').attr('disabled',true);
-							$('#DATECHG').attr('disabled',true);
-							$('#SALENEW').attr('disabled',true);
+							$('#NPROFIT').attr('disabled',true);
+							$('#DATELOST').attr('disabled',true);
 							$('#MEMO').attr('disabled',true);
 						}
 					}
-					$('#btnsave_exchangecar').click(function(){ 
-						Edit_exchangecar($this);
+					$('#btnsave_arlost').click(function(){ 
+						Edit_arlost($this);
 					});
 					
 					//var _delete = 'T';
 					if(_level == '1'){
-						$('#btndel_exchangecar').attr('disabled',false);
+						$('#btndel_arlost').attr('disabled',false);
 					}else{
 						if(_delete == 'T'){ //มีสิทธิ์แก้ไขไหม
 							if(_locat == LOCAT){ //เป็นสาขาตัวเองหรือไม่ ถ้าไม่ใช่ ห้ามแก้ไข
-								$('#btndel_exchangecar').attr('disabled',false);
+								$('#btndel_arlost').attr('disabled',false);
 							}else{
-								$('#btndel_exchangecar').attr('disabled',true);
+								$('#btndel_arlost').attr('disabled',true);
 							}
 						}else{
-							$('#btndel_exchangecar').attr('disabled',true);
-						}	
+							$('#btndel_arlost').attr('disabled',true);
+						}
 					}
-					$('#btndel_exchangecar').click(function(){ 
-						Delete_exchangecar($this);
+					$('#btndel_arlost').click(function(){ 
+						Delete_arlost($this);
 					});
 				}
 			});			
@@ -632,11 +585,11 @@ function loadform(CONTNO,LOCAT,CUSCOD,CUSNAME,REGNO,STRNO,TOTPRC,SMPAY,TOTBAL,EX
 	});
 }
 
-function Edit_exchangecar($thisWindowEdit){
+function Edit_arlost($thisWindowEdit){
 	Lobibox.confirm({
 		title: 'ยืนยันการทำรายการ',
 		iconClass: false,
-		msg: 'คุณต้องการแก้ไขรายการแลกเปลี่ยนรถหรือไม่',
+		msg: 'คุณต้องการแก้ไขรายการตั้งหนี้สงสัยจะสูญหรือไม่',
 		buttons: {
 			ok : {
 				'class': 'btn btn-primary',
@@ -654,76 +607,97 @@ function Edit_exchangecar($thisWindowEdit){
 			if (type === 'ok'){
 				dataToPost = new Object();
 				dataToPost.CONTNO 	= (typeof $('#CONTNO').find(':selected').val() === 'undefined' ? '':$('#CONTNO').find(':selected').val() );
-				dataToPost.CUSCOD 	= $('#CUSCOD').val();
-				dataToPost.GCODENEW = (typeof $('#GCODENEW').find(':selected').val() === 'undefined' ? '':$('#GCODENEW').find(':selected').val());
+				dataToPost.TYPLOST 	= (typeof $('#TYPLOST').find(':selected').val() === 'undefined' ? '':$('#TYPLOST').find(':selected').val());
 				dataToPost.STRNO 	= $('#STRNO').val();
 				dataToPost.BOOKVAL 	= $('#BOOKVALUE').val();
 				dataToPost.SALEVAT 	= $('#SALEVAT').val();
-				dataToPost.COST 	= $('#COST').val();
-				dataToPost.COSTVAT 	= $('#COSTVAT').val();
-				dataToPost.DATECHG 	= $('#DATECHG').val();
-				dataToPost.SALENEW 	= $('#SALENEW').val();
+				dataToPost.NPROFIT 	= $('#NPROFIT').val();
+				dataToPost.DATELOST = $('#DATELOST').val();
 				dataToPost.MEMO 	= $('#MEMO').val();
-
-				$('#loadding').show();
-				$.ajax({
-					url:'../SYS05/ExchangeCar/Edit_exchangecar',
-					data: dataToPost,
-					type: 'POST',
-					dataType: 'json',
-					success: function(data) {
-						$('#loadding').hide();
-						if(data.status == 'S'){
-							$thisWindowEdit.destroy();
-							Lobibox.notify('success', {
-								title: 'สำเร็จ',
-								size: 'mini',
-								closeOnClick: false,
-								delay: 15000,
-								pauseDelayOnHover: true,
-								continueDelayOnInactiveTab: false,
-								icon: true,
-								messageHeight: '90vh',
-								msg: data.msg
-							});
-						}else if(data.status == 'W'){
-							Lobibox.notify('warning', {
-								title: 'แจ้งเตือน',
-								size: 'mini',
-								closeOnClick: false,
-								delay: 15000,
-								pauseDelayOnHover: true,
-								continueDelayOnInactiveTab: false,
-								icon: true,
-								messageHeight: '90vh',
-								msg: data.msg
-							});
-						}else if(data.status == 'E'){
-							Lobibox.notify('error', {
-								title: 'ผิดพลาด',
-								size: 'mini',
-								closeOnClick: false,
-								delay: false,
-								pauseDelayOnHover: true,
-								continueDelayOnInactiveTab: false,
-								icon: true,
-								messageHeight: '90vh',
-								msg: data.msg
-							});
-						}
-						search();
+				
+				if(dataToPost.BOOKVAL == "" || dataToPost.NPROFIT == ""  || dataToPost.TYPLOST == ""){	
+					var $msg = "";
+					if(dataToPost.BOOKVAL == ""){
+						$msg = "กรุณาระบุ มูลค่าคงเหลือตามบัญชี";
+					}else if(dataToPost.NPROFIT == ""){
+						$msg = "กรุณาระบุ ดอกผลเช่าซื้อคงเหลือ";
+					}else if(dataToPost.TYPLOST == ""){
+						$msg = "กรุณาระบุ ประเภทหนี้สูญ";
 					}
-				});
+					Lobibox.notify('warning', {
+						title: 'แจ้งเตือน',
+						size: 'mini',
+						closeOnClick: false,
+						delay: 15000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
+						soundExt: '.ogg',
+						icon: true,
+						messageHeight: '90vh',
+						msg: $msg
+					});
+				}else{
+					$('#loadding').show();
+					$.ajax({
+						url:'../SYS05/DoubtfulAcc/Edit_arlost',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						success: function(data) {
+							$('#loadding').hide();
+							if(data.status == 'S'){
+								$thisWindowEdit.destroy();
+								Lobibox.notify('success', {
+									title: 'สำเร็จ',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 15000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}else if(data.status == 'W'){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 15000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}else if(data.status == 'E'){
+								Lobibox.notify('error', {
+									title: 'ผิดพลาด',
+									size: 'mini',
+									closeOnClick: false,
+									delay: false,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}
+							search();
+						}
+					});
+				}
 			}
 		}
 	});
 }
 
-function Delete_exchangecar($thisWindowDel){
+function Delete_arlost($thisWindowDel){
 	Lobibox.confirm({
 		title: 'ยืนยันการทำรายการ',
 		iconClass: false,
-		msg: 'คุณต้องการลบรายการแลกเปลี่ยนรถหรือไม่',
+		msg: 'คุณต้องการลบรายการตั้งหนี้สงสัยจะสูญหรือไม่',
 		buttons: {
 			ok : {
 				'class': 'btn btn-primary',
@@ -743,11 +717,10 @@ function Delete_exchangecar($thisWindowDel){
 				dataToPost.CONTNO = (typeof $('#CONTNO').find(':selected').val() === 'undefined' ? '':$('#CONTNO').find(':selected').val() );
 				dataToPost.CUSCOD = $('#CUSCOD').val();
 				dataToPost.STRNO = $('#STRNO').val();
-				dataToPost.CUSNAME = $('#CUSNAME').val();
 
 				$('#loadding').show();
 				$.ajax({
-					url:'../SYS05/ExchangeCar/Delete_exchangecar',
+					url:'../SYS05/DoubtfulAcc/Delete_arlost',
 					data: dataToPost,
 					type: 'POST',
 					dataType: 'json',
@@ -798,4 +771,3 @@ function Delete_exchangecar($thisWindowDel){
 		}
 	});
 }
-

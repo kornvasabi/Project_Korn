@@ -22,7 +22,7 @@ class ARother extends MY_Controller {
 		
 		$html = "
 			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div class='col-sm-12' style='overflow:auto;'>					
+				<div class='col-sm-12 col-xs-12' style='overflow:auto;'>					
 					<div class='row'>
 						<div class='col-sm-2 col-xs-2'>	
 							<div class='form-group'>
@@ -62,14 +62,14 @@ class ARother extends MY_Controller {
 						</div>
 					</div>	
 					<div class='row'>
-						<div class='col-sm-1 col-xs-1'>	
+						<div class='col-sm-6 col-xs-6'>	
 							<div class='form-group'>
-								<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='?: สอบถาม' style='width:100%'>
+								<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'><span class='glyphicon glyphicon-search'> สอบถาม</span></button>
 							</div>
 						</div>
-						<div class='col-sm-1 col-xs-1'>	
+						<div class='col-sm-6 col-xs-6'>	
 							<div class='form-group'>
-								<input type='button' id='bthARother' class='btn btn-cyan btn-sm' value='+ เพิ่มข้อมูล' style='width:100%'>
+								<button id='bthARother' class='btn btn-cyan btn-sm'  style='width:100%'><span class='glyphicon glyphicon-pencil'> เพิ่มข้อมูล</span></button>
 							</div>
 						</div>
 					</div>
@@ -96,7 +96,7 @@ class ARother extends MY_Controller {
 
 		$html = "
 			<div class='b_add_arother' style='width:100%;height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div style='float:left;height:100%;overflow:auto;' class='col-sm-4 col-sm-offset-4'>					
+				<div style='float:left;height:100%;overflow:auto;' class='col-sm-6 col-sm-offset-3'>					
 					<div class='row'>
 						<div class='col-sm-12 col-xs-12' >	
 							<div class='form-group'>
@@ -177,6 +177,33 @@ class ARother extends MY_Controller {
 								<input type='text' id='PAYMENTS' class='form-control input-sm' style='font-size:10.5pt' placeholder='0.00' disabled>
 							</div>
 						</div>
+						<div class='col-sm-4 col-xs-4 UPLOADPIC'>	
+							<div class='form-group'>
+								<span style='font-size:10.5pt;'>รูปที่ 1</span>
+								<div class='input-group'>
+									<input type='text' id='FILEPIC1' class='form-control input-sm' readonly>
+									<span id='PIC1' class='input-group-addon btn-cyan'>เพิ่ม</span>
+								</div>
+							</div>
+						</div>
+						<div class='col-sm-4 col-xs-4 UPLOADPIC'>	
+							<div class='form-group'>
+								<span style='font-size:10.5pt;'>รูปที่ 2</span>
+								<div class='input-group'>
+									<input type='text' id='FILEPIC2' class='form-control input-sm' readonly>
+									<span id='PIC2' class='input-group-addon btn-cyan'>เพิ่ม</span>
+								</div>
+							</div>
+						</div>
+						<div class='col-sm-4 col-xs-4 UPLOADPIC'>	
+							<div class='form-group'>
+								<span style='font-size:10.5pt;'>รูปที่ 3</span>
+								<div class='input-group'>
+									<input type='text' id='FILEPIC3' class='form-control input-sm' readonly>
+									<span id='PIC3' class='input-group-addon btn-cyan'>เพิ่ม</span>
+								</div>
+							</div>
+						</div>
 						<div class=' col-sm-12 col-xs-12'>	
 							<div class='form-group'>
 								หมายเหตุ
@@ -185,9 +212,10 @@ class ARother extends MY_Controller {
 						</div>	
 					</div>
 					<div class='row'>
+						<br>
 						<div class=' col-sm-2 col-sm-offset-3'>	
 							<div class='form-group'>
-								<input type='button' id='btnsave_arother' class='btn btn-primary btn-sm' value='บันทึก' style='width:100%' >
+								<button id='btnsave_arother' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
 							</div>
 						</div>
 						<div class=' col-sm-2'>	
@@ -220,7 +248,7 @@ class ARother extends MY_Controller {
 		$CUSCOD	= $_REQUEST["CUSCOD"];
 		$PAYFOR	= $_REQUEST["PAYFOR"];
 		$USERID	= $this->sess["USERID"];
-		$PAYAMT	= $_REQUEST["PAYAMT"];
+		$PAYAMT	= str_replace(',','',$_REQUEST["PAYAMT"]);
 		$VATRT	= $_REQUEST["VATRT"];
 		$MEMO	= $_REQUEST["MEMO"];
 		if($VATRT == ''){
@@ -327,9 +355,9 @@ class ARother extends MY_Controller {
 		
 		$top = "";
 		if($LOCATS != '' || $TSALE != '' || $PAYFOR != ''){
-			$top = "top 20";
+			$top = "top 100";
 		}else if($cond == ''){
-			$top = "top 20";
+			$top = "top 50";
 		}
 		$sql = "
 			select ".$top." a.ARCONT, a.LOCAT, convert(nvarchar,dateadd(year,543,a.ARDATE),103) as ARDATE, a.CONTNO, b.SNAM+b.NAME1+' '+b.NAME2 as CUSNAME, 
@@ -354,7 +382,7 @@ class ARother extends MY_Controller {
 				//print_r($row->DESC1);
 				$html .= "
 					<tr class='trow' seq=".$NRow." style='".$bgcolor."'>
-						<td class='getit' seq=".$NRow++."  style='width:50px;cursor:pointer;text-align:center;'
+						<td class='getit' seq=".$NRow++."  style='cursor:pointer;text-align:center;'
 						INCFL 	= '".$row->INCFL."' 
 						LOCAT 	= '".$row->LOCAT."' 
 						ARDATE 	= '".$row->ARDATE."' 
@@ -387,7 +415,7 @@ class ARother extends MY_Controller {
 		
 		$html = "
 			<div id='table-fixed-ARother' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
-				<table id='table-ARother' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+				<table id='table-ARother' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
 						<tr>
 							<th style='vertical-align:middle;'>#</th>
@@ -412,6 +440,57 @@ class ARother extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function Edit_AROTHER(){
+		$ARCONT	= $_REQUEST["ARCONT"];
+		$CONTNO	= $_REQUEST["CONTNO"];
+		$CUSCOD	= $_REQUEST["CUSCOD"];
+		$PAYFOR	= $_REQUEST["PAYFOR"];
+		$PAYAMT	= str_replace(',','',$_REQUEST["PAYAMT"]);
+		$MEMO	= $_REQUEST["MEMO"];
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#EditAROYHTemp') is not null drop table #EditAROYHTemp;
+			create table #EditAROYHTemp (id varchar(20),contno varchar(20),msg varchar(max));
+			
+			begin tran EditAROYHTemp
+			begin try
+			
+				declare @CONTNO varchar(max) = '".$ARCONT."';
+				
+				update {$this->MAuth->getdb('AROTHR')}
+				set PAYFOR = '".$PAYFOR."', PAYAMT = '".$PAYAMT."', MEMO1 = '".$MEMO."'
+				where ARCONT like '%".$ARCONT."%' and CONTNO like '%".$CONTNO."%' and CUSCOD like '%".$CUSCOD."%'
+				
+				insert into #EditAROYHTemp select 'S',@CONTNO,'แก้ไขลูกหนี้อื่น เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
+				
+				commit tran EditAROYHTemp;
+			end try
+			begin catch
+				rollback tran EditAROYHTemp;
+				insert into #EditAROYHTemp select 'E','',ERROR_MESSAGE();
+			end catch
+		";
+		//echo $sql; exit;
+		
+		$this->db->query($sql);
+		$sql = "select * from #EditAROYHTemp";
+		$query = $this->db->query($sql);
+	  
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["status"] = $row->id;
+				$response["contno"] = $row->contno;
+				$response["msg"] = $row->msg;
+			}
+		}else{
+			$response["status"] = false;
+			$response["contno"] = '';
+			$response["msg"] = 'ผิดพลาดไม่สามารถแก้ไขรายการลูกหนี้อื่นได้ โปรดติดต่อฝ่ายไอที';
+		}
+		
+		echo json_encode($response);
+	}
+	
 	function Delete_AROTHER(){
 		$LOCAT	= $_REQUEST["LOCAT"];
 		$ARCONT	= $_REQUEST["ARCONT"];
@@ -427,8 +506,8 @@ class ARother extends MY_Controller {
 			
 				declare @CONTNO varchar(max) = '".$ARCONT."';
 				delete {$this->MAuth->getdb('AROTHR')}
-				where ARCONT = '".$ARCONT."' collate thai_cs_as and CONTNO = '".$CONTNO."' collate thai_cs_as 
-				and CUSCOD = '".$CUSCOD."' collate thai_cs_as and LOCAT = '".$LOCAT."'
+				where ARCONT = '".$ARCONT."' and CONTNO = '".$CONTNO."'
+				and CUSCOD = '".$CUSCOD."' and LOCAT = '".$LOCAT."'
 				
 				insert into #DelAROYHTemp select 'S',@CONTNO,'ลบลูกหนี้อื่น เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 				commit tran DelAROYHTemp;
@@ -457,6 +536,37 @@ class ARother extends MY_Controller {
 		}
 		
 		echo json_encode($response);
+	}
+	
+	function upload_SaleTarget(){
+		$TargetMonth 	= $_REQUEST["TargetMonth"]; 
+		$TargetYear 	= $_REQUEST["TargetYear"];
+		
+		$output_dir = $_SERVER['DOCUMENT_ROOT']."/reports/test/";
+		//echo $output_dir; exit;
+		
+		if(isset($_FILES["myfile"])){
+			$error = $_FILES["myfile"]["error"];
+			if(!is_array($_FILES["myfile"]["name"])) {  //single file
+				
+				$exfile = explode(".",$_FILES["myfile"]["name"]);
+				//$fileName = $_FILES["myfile"]["name"].".".$exfile[(sizeof($exfile)-1)];
+				$fileName = $TargetMonth."_".$TargetYear.".".$exfile[(sizeof($exfile)-1)];
+				
+				$destination_file = $output_dir.$fileName;
+				$source_file	  = $_FILES["myfile"]["tmp_name"];
+				move_uploaded_file($source_file,$output_dir.$fileName);
+				
+				//$fileServer = str_replace($output_dir,"",$arrsResult['filePath']);
+				$fileServer = $output_dir;
+				$response["origin"][] = $_FILES["myfile"]["name"];
+				$response["new"][] = $fileName;
+				$response["locat"][] = $fileServer.$output_dir.$fileName;
+				//$response = array('origin'=>$_FILES["myfile"]["name"],'new'=>$fileName,'locat'=>$fileServer.$output_dir.$fileName);
+
+			}	
+			echo json_encode($response);
+		}
 	}
 }
 
