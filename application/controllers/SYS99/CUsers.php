@@ -90,7 +90,7 @@ class CUsers extends MY_Controller {
 							<input type='text' id='Name' class='form-control input-sm' placeholder='ชื่อ-สกุล' >
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-1'>	
+					<div class='col-xs-2 col-sm-2'>	
 						<div class='form-group'>
 							กลุ่มผู้ใช้งาน
 							<select id='groupCode' class='form-control input-sm chosen-select' data-placeholder='สถานะ'>
@@ -169,9 +169,12 @@ class CUsers extends MY_Controller {
 		
 		$sql = "
 			select a.USERID,c.employeeCode,c.IDNo
-				,c.titleName+c.firstName+' '+c.lastName+(case when isnull(c.nick,'')='' then '' else ' ('+c.nick+')' end) as Name
-				,a.DEPCODE,a.LEVEL_1,a.LOCAT,a.PASSWD 
+				,case when c.IDNo is null then a.USERNAME collate thai_ci_as
+					else (c.titleName+c.firstName+' '+c.lastName+(case when isnull(c.nick,'')='' then '' else ' ('+c.nick+')' end)) 
+					end as Name
+				,a.DEPCODE,b.groupCode as DEPCODEYTK,a.LEVEL_1,a.LOCAT,a.PASSWD 
 				,RAND() * 10000 as OTP
+				,case when b.IDNo is not null and c.IDNo is null then 'OUT' else 'IN' end __Status
 			from {$arrs['dblocat']}.dbo.PASSWRD a
 			left join YTKManagement.dbo.hp_mapusers b on a.USERID=b.USERID collate Thai_CI_AS and b.dblocat='{$arrs['dblocat']}'
 			left join YTKManagement.dbo.hp_vusers c on b.IDNo=c.IDNo and b.employeeCode=c.employeeCode
@@ -185,15 +188,20 @@ class CUsers extends MY_Controller {
 		$NRow = 1;
 		if($query->row()){
 			foreach($query->result() as $row){
+				
 				$html .= "
-					<tr class='trow' seq=".$NRow.">						
+					<tr class='trow' seq=".$NRow." style='".($row->__Status=="OUT"?"color:red;text-decoration-line: line-through;background-color:#f4dcdc;":"")."'>
 						<td class='getit' seq=".$NRow++." USERID='".$row->USERID."' style='width:50px;cursor:pointer;text-align:center;'>".$row->USERID."</td>
 						<td>
 							".$row->employeeCode."<br/>
 							".$row->IDNo."<br/>
 							".$row->Name."<br/>
 						</td>
-						<td>".$row->DEPCODE."</td>
+						<td>
+							[".$row->DEPCODEYTK."] YTK 
+							<br>
+							<span style='color:red;text-decoration-line: line-through;'>[".$row->DEPCODE."] senior </span>
+						</td>
 						<td align='center'>".$row->LEVEL_1."</td>			
 						<td>".$row->LOCAT."</td>			
 						<td>".strtoupper(substr(md5(rand(10,100)),0,3).$row->PASSWD."P".substr(md5(rand(10,1000)),0,7))."</td>
@@ -238,7 +246,7 @@ class CUsers extends MY_Controller {
 			select a.USERID,a.IDNo,a.employeeCode,a.dblocat,a.groupCode 
 				,b.titleName+b.firstName+' '+b.lastName+(case when isnull(b.nick,'')='' then '' else ' ('+b.nick+')' end) as Name
 			from YTKManagement.dbo.hp_mapusers a
-			left join hp_vusers b on a.employeeCode=b.employeeCode and a.IDNo=b.IDNo
+			left join YTKManagement.dbo.hp_vusers b on a.employeeCode=b.employeeCode and a.IDNo=b.IDNo
 			where a.USERID='".$arrs['USERID']."' and a.dblocat='".$arrs['dblocat']."'
 		";
 		$query = $this->db->query($sql);

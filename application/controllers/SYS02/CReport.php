@@ -124,7 +124,7 @@ class CReport extends MY_Controller {
 					<div class='col-xs-12 col-sm-12'>	
 						<div class='form-group'>
 							<br>
-							<input type='button' id='btnt1transfer' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+							<button id='btnt1transfer' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 						</div>
 					</div>
 				</div>
@@ -174,18 +174,17 @@ class CReport extends MY_Controller {
 		
 		if($arrs["TRANSFM"] != ""){
 			$condDesc .= " สาขาต้นทาง ".$arrs["TRANSFM"];
+			$cond .= " and a.TRANSFM like '".$arrs["TRANSFM"]."%'";
 		}else{
 			$condDesc .= " สาขาต้นทาง ทั้งหมด";
 		}
 		
 		if($arrs["TRANSTO"] != ""){
 			$condDesc .= " สาขาปลายทาง  ".$arrs["TRANSTO"];
+			$cond .= " and a.TRANSTO like '".$arrs["TRANSTO"]."%'";
 		}else{
 			$condDesc .= " สาขาปลายทาง ทั้งหมด";
 		}
-		
-		$cond .= " and a.TRANSFM like '".$arrs["TRANSFM"]."%'";
-		$cond .= " and a.TRANSTO like '".$arrs["TRANSTO"]."%'";
 		
 		if($arrs["TRANSSTAT"] != ""){
 			if($arrs["TRANSSTAT"] == "Sendding2"){
@@ -238,8 +237,10 @@ class CReport extends MY_Controller {
 			$cond .= " and datediff(day,isnull(b.TRANSDT,a.TRANSDT),isnull(b.RECEIVEDT,getdate())) >= {$arrs["TR"]} ";
 		}
 		
+		$condDesc .= ($cond == "" ? " แสดงรายการ 1,000 อันดับแรก":"");
+		
 		$sql = "
-			select a.TRANSNO,a.TRANSFM,a.TRANSTO,b.TRANSITEM,b.STRNO
+			select ".($cond == "" ? "top 1000":"")." a.TRANSNO,a.TRANSFM,a.TRANSTO,b.TRANSITEM,b.STRNO
 				,c.titleName+c.firstName+' '+c.lastName as EMPCARRY
 				,convert(varchar(8),a.TRANSDT,112) as TRANSDTCreate
 				,convert(varchar(8),b.TRANSDT,112) as TRANSDT
@@ -302,7 +303,7 @@ class CReport extends MY_Controller {
 		
 		$html = "
 			<div id='table-fixed-TransfersSearch' class='col-sm-12' style='height:calc(100%);width:100%;overflow:auto;font-size:8pt;'>
-				<table id='table-TransfersSearch' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+				<table id='table-TransfersSearch' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
 						<tr>
 							<th colspan='16' class='text-center' style='font-size:12pt;border:0px;'> 
@@ -442,7 +443,7 @@ class CReport extends MY_Controller {
 					<div class='col-xs-12 col-sm-12'>	
 						<div class='form-group'>
 							<br>
-							<input type='button' id='btnt1transferPendding' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+							<button id='btnt1transferPendding' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 						</div>
 					</div>
 				</div>

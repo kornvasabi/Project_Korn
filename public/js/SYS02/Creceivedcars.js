@@ -122,7 +122,11 @@ $('#add_TRANSNO').change(function(){
 			if(data.html['TRANSSTAT'] == "Received"){
 				$('#btnt2save').attr('disabled',true);
 				$('#btnt2addSTRNO').attr('disabled',true);
-				
+				$('.tab2').css({'background-color':'#fff'});
+			}else if(data.html['TRANSSTAT'] == "Cancel"){
+				$('#btnt2save').attr('disabled',true);
+				$('#btnt2addSTRNO').attr('disabled',true);
+				$('.tab2').css({'background-color':'#ffd6d6'});
 			}else{
 				//$('#btnt2save').attr('disabled',false);
 				//$('#btnt2addSTRNO').attr('disabled',false);
@@ -133,6 +137,7 @@ $('#add_TRANSNO').change(function(){
 					$('#btnt2addSTRNO').attr('disabled',true);
 					$('#btnt2save').attr('disabled',true);
 				}
+				$('.tab2').css({'background-color':'#fff'});
 			}
 			
 			var STRNO = data.html['STRNO'];
@@ -156,8 +161,16 @@ $('#btnt2addSTRNO').click(function(){
 	dataToPost = new Object();
 	dataToPost.TRANSNO = $('#add_TRANSNO').val();
 	
-	$('#loadding').show();
+	$str = [];
+	$(".delSTRNO").each(function(){
+		data = new Object();
+		data.strno = $(this).attr('strno');
+		
+		$str.push(data.strno);
+	});
+	dataToPost.STRNO = $str;
 	
+	$('#loadding').show();
 	$.ajax({
 		url:'../SYS02/Creceivedcars/addSTRNO',
 		data:dataToPost,
@@ -219,7 +232,7 @@ $('#btnt2addSTRNO').click(function(){
 							});
 						}else{
 							var row = '<tr seq="new'+generate+'">';
-							row += '<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="new'+generate+'" value="ยกเลิก"></td>';
+							row += '<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="new'+generate+'" strno="'+STRNO+'" value="ยกเลิก"></td>';
 							row += '<td>'+STRNO+'</td>';
 							//row += '<td>'+TYPE+'</td>';
 							row += '<td>'+MODEL+'</td>';

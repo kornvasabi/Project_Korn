@@ -62,13 +62,14 @@ class Creceivedcars extends MY_Controller {
 								<option value='Sendding'>อยู่ระหว่างการโอนย้ายรถ</option>
 								<option value='Pendding'>รับโอนรถบางส่วน</option>
 								<option value='Received'>รับโอนรถครบแล้ว</option>
+								<option value='Cancel'>ยกเลิกบิลโอน</option>
 							</select>
 						</div>
 					</div>
 					<div class='col-sm-2'>	
 						<div class='form-group'>
 							<br>
-							<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+							<button id='btnt1search' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 						</div>
 					</div>
 					<!-- div class='col-sm-1'>	
@@ -150,16 +151,16 @@ class Creceivedcars extends MY_Controller {
 					</div -->
 					
 					<div class='row'>
-						<div class='col-sm-1'>	
+						<div class='col-sm-2'>	
 							<div class='form-group'>
 								<br>
-								<input type='button' id='btnt2addSTRNO' class='btn btn-primary btn-sm' value='เพิ่มเลขตัวถัง' style='width:100%'>
+								<button id='btnt2addSTRNO' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-plus'> เพิ่มเลขตัวถัง</span></button>
 							</div>
 						</div>
-						<div class='col-sm-2 col-sm-offset-9'>	
+						<div class='col-sm-2 col-sm-offset-8'>	
 							<div class='form-group'>
 								<br>
-								<input type='button' id='btnt2detail' class='btn btn-primary btn-sm' value='&#9776;&emsp; ดูลำดับการโอนรถ' style='width:100%'>
+								<input type='button' id='btnt2detail' class='btn btn-sm btn-primary btn-sm' value='&#9776;&emsp; ดูลำดับการโอนรถ' style='width:100%'>
 							</div>
 						</div>
 					</div>
@@ -190,13 +191,13 @@ class Creceivedcars extends MY_Controller {
 						<div class='col-sm-1'>	
 							<div class='form-group'>
 								<br>
-								<input type='button' id='btnt2home' class='btn btn-inverse btn-sm' value='หน้าแรก' style='width:100%'>
+								<button id='btnt2home' class='btn btn-sm btn-inverse btn-block'><span class='glyphicon glyphicon-home'> หน้าแรก</span></button>
 							</div>
 						</div>
 						<div class='col-sm-1 col-sm-offset-10'>	
 							<div class='form-group'>
 								<br>
-								<input type='button' id='btnt2save' class='btn btn-primary btn-sm' value='บันทึก' style='width:100%'>
+								<button id='btnt2save' class='btn btn-sm btn-primary btn-block'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
 							</div>
 						</div>
 					</div>
@@ -245,7 +246,8 @@ class Creceivedcars extends MY_Controller {
 				,a.TRANSFM,a.TRANSTO,a.TRANSQTY,a.TRANSSTAT
 				,case when a.TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ'
 					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
-					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว' end TRANSSTATDesc
+					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว'
+					when a.TRANSSTAT='Cancel' then 'ยกเลิกบิลโอน'  end TRANSSTATDesc
 			from {$this->MAuth->getdb('INVTransfers')} a
 			left join {$this->MAuth->getdb('INVMOVM')} b on a.TRANSNO=b.MOVENO collate thai_cs_as
 			where 1=1 ".$cond."
@@ -259,7 +261,7 @@ class Creceivedcars extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$html .= "
-					<tr class='trow' seq=".$NRow.">
+					<tr class='trow' seq=".$NRow." ".($row->TRANSSTAT == 'Cancel' ? 'style="color:red;"' : '').">
 						<td class='getit' seq=".$NRow++." TRANSNO='".$row->TRANSNO."' style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
 						<td>".$row->TRANSNO."</td>
 						<td>".$this->Convertdate(2,$row->TRANSDT)."</td>
@@ -267,7 +269,7 @@ class Creceivedcars extends MY_Controller {
 						<td>".$row->TRANSFM."</td>
 						<td>".$row->TRANSTO."</td>
 						<td align='center'>".$row->TRANSQTY."</td>
-						<td style='color:".($row->TRANSSTAT == 'Sendding' ? 'black' : ($row->TRANSSTAT == 'Pendding' ? 'blue' : 'green')).";'>".$row->TRANSSTATDesc."</td>
+						<td style='color:".($row->TRANSSTAT == 'Sendding' ? 'black' : ($row->TRANSSTAT == 'Pendding' ? 'blue' : ($row->TRANSSTAT == 'Cancel' ? 'red' : 'green'))).";'>".$row->TRANSSTATDesc."</td>
 					</tr>
 				";
 			}
@@ -275,7 +277,7 @@ class Creceivedcars extends MY_Controller {
 		
 		$html = "
 			<div id='table-fixed-Creceivedcars' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
-				<table id='table-Creceivedcars' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+				<table id='table-Creceivedcars' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
 						<tr>
 							<th>#</th>
@@ -314,7 +316,9 @@ class Creceivedcars extends MY_Controller {
 				,a.TRANSSTAT
 				,case when a.TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ' 
 					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน' 
-					else 'รับโอนรถครบแล้ว' end as TRANSSTATDesc
+					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว' 
+					when a.TRANSSTAT='Cancel' then 'ยกเลิกบิลโอน' 
+				 end as TRANSSTATDesc
 				,a.MEMO1
 				,CONVERT(varchar(8),d.MOVEDT,112) as MOVEDT
 			from {$this->MAuth->getdb('INVTransfers')} a 
@@ -575,13 +579,23 @@ class Creceivedcars extends MY_Controller {
 	
 	function addSTRNO(){
 		$arrs = array();
-		$arrs['TRANSNO'] = $_REQUEST['TRANSNO'];
+		$arrs['TRANSNO'] = $_POST['TRANSNO'];
+		$arrs['STRNO']   = (!isset($_POST['STRNO']) ? array():$_POST['STRNO']);
+		
+		$s = sizeof($arrs['STRNO']); 		
+		$strno = "''";
+		for($i=0;$i<$s;$i++){
+			if($strno != ""){ $strno .= ","; }
+			$strno .= "'".$arrs['STRNO'][$i]."'";
+		}
+		//echo $strno; exit;	
 		
 		$sql = "
 			select a.STRNO,b.TYPE,b.MODEL,b.BAAB,b.COLOR,b.CC,b.GCODE
 				,isnull(a.EMPCARRY,'') EMPCARRY
 				,a.EMPCARRY+' :: '+c.USERNAME+'' as EMPCARRYNM	
 				,isnull(convert(varchar(8),a.TRANSDT,112),'') TRANSDT
+				,case when a.STRNO in (".$strno.") then 'y' else 'n' end as active
 			from {$this->MAuth->getdb('INVTransfersDetails')} a 
 			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO collate Thai_CI_AS
 			left join (
@@ -609,10 +623,10 @@ class Creceivedcars extends MY_Controller {
 							EMPCARRYNM='".$row->EMPCARRYNM."'
 							style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
 				";
-				if($row->EMPCARRY == "" or $row->TRANSDT == ""){ $td = "<td></td>"; }
+				if($row->EMPCARRY == "" or $row->TRANSDT == "" or $row->active == "y"){ $td = "<td></td>"; }
 				
 				$html .= "
-					<tr class='trow' seq=".$NRow.">
+					<tr class='trow' seq=".$NRow." style='".($row->active == "y" ? "color:blue;":"")."'>
 						".$td."
 						<td>".$row->STRNO."</td>
 						<td>".$row->MODEL."</td>

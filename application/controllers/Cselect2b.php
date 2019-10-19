@@ -662,6 +662,7 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+<<<<<<< HEAD
 	function getGCode_ExchangCar(){
 		//กลุ่มสินค้า
 		$sess = $this->session->userdata('cbjsess001');
@@ -688,27 +689,27 @@ class Cselect2b extends MY_Controller {
 	}
 	
 	function getGCode_typecar(){
+=======
+	function getGCode_typecar(){ //หน้าค้นหา
+>>>>>>> master
 		//กลุ่มสินค้า
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
 		$ugroup = $_REQUEST["ugroup"];
-
-		$select = "";
-		if($ugroup == 'HP'){
-			$select = "";
-		}else{
-			$select = "where GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F')";
-		}
 		
 		$sql = "
 			select GCODE, GDESC
 			from(
-				select GCODE, GDESC from {$this->MAuth->getdb('SETGROUP')} ".$select."
+				select GCODE, GDESC from {$this->MAuth->getdb('SETGROUP')} 
+				where GCODE collate thai_ci_as in (
+					select GCODE from {$this->MAuth->getdb('hp_groupuser_GCODE')} 
+					where groupCode='{$ugroup}'
+				)
 			)a
 			where GCODE like '%".$dataSearch."%' collate Thai_CI_AS or GDESC like '%".$dataSearch."%' collate Thai_CI_AS
+			order by GCODE
 		"; 
 		//echo $sql; exit;
-		
 		$query = $this->db->query($sql);
 		
 		$html = "";
@@ -721,19 +722,12 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($json);
 	}
 	
-	function getGCode_typecar2(){
+	function getGCode_typecar2(){ //หน้าแก้ไข
 		//กลุ่มสินค้า
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
 		$ugroup = $_REQUEST["ugroup"];
 		$GCODES = $_REQUEST["GCODES"];
-
-		$select = "";
-		if($ugroup == 'HP'){
-			$select = "";
-		}else{
-			$select = "where GCODE in ('15','16','022','023','024','29','30','15F','16F','22F','23F','24F','29F','30F','027','27F')";
-		}
 		
 		$sql = "
 			select GCODE, GDESC, 
@@ -741,12 +735,16 @@ class Cselect2b extends MY_Controller {
 					when GCODE = '04' then 'disabled'
 					else '' end as disabled
 			from(
-				select GCODE, GDESC from {$this->MAuth->getdb('SETGROUP')} ".$select."
+				select GCODE, GDESC from {$this->MAuth->getdb('SETGROUP')}
+				where GCODE collate thai_ci_as in (
+					select GCODE from {$this->MAuth->getdb('hp_groupuser_GCODE')} 
+					where groupCode='{$ugroup}' and ALLOW='EDIT'
+				)
 			)a
 			where GCODE like '%".$dataSearch."%' collate Thai_CI_AS or GDESC like '%".$dataSearch."%' collate Thai_CI_AS
+			order by GCODE
 		"; 
 		//echo $sql; exit;
-		
 		$query = $this->db->query($sql);
 		
 		$html = "";

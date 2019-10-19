@@ -496,7 +496,7 @@ class MLogin extends CI_Model {
 		
 		$sql = "
 			select c.*,a.LEVEL_1 as level from {$sess["db"]}.dbo.PASSWRD a
-			left join YTKManagement.dbo.hp_mapusers b on a.USERID=b.USERID collate Thai_CI_AS
+			left join YTKManagement.dbo.hp_mapusers b on a.USERID=b.USERID collate Thai_CI_AS and b.dblocat='".$sess["db"]."'
 			left join YTKManagement.dbo.hp_groupuser_detail c on b.groupCode=c.groupCode collate Thai_CI_AS and c.dblocat='".$sess["db"]."'
 			left join YTKManagement.dbo.hp_menu d on c.menuid=d.menuid
 			where a.USERID='".$sess["USERID"]."' and d.menulink = '".$mid."'

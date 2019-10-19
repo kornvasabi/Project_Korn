@@ -323,6 +323,7 @@
         '     <button type="button" class="btn clear1 pull-right"></button>' +
         '   </span>' +
         '   <input class="filter" type="text">' +
+		'   <div class="form-control text-center text-danger" style="height:20px;font-size:7pt;pointer-events: none;">ไม่เลือก</div>' +
         '   <div class="btn-group buttons">' +
         '     <button type="button" class="btn moveall">' +
         '       <i></i>' +
@@ -341,6 +342,7 @@
         '     <button type="button" class="btn clear2 pull-right"></button>' +
         '   </span>' +
         '   <input class="filter" type="text">' +
+		'   <div class="form-control text-center text-primary" style="height:20px;font-size:7pt;pointer-events: none;">เลือก</div>' +
         '   <div class="btn-group buttons">' +
         '     <button type="button" class="btn remove">' +
         '       <i></i>' +

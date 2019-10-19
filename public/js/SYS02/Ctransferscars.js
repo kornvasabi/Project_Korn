@@ -457,7 +457,7 @@ $('#btnt1transfers').click(function(){
 	$('#add_TRANSNO').val('Auto Generate');
 	$('#add_TRANSNO').attr('readonly',true);
 	
-	$('#add_TRANSDT').val('');
+	$('#add_TRANSDT').val($('#add_TRANSDT').attr('thisvalue'));
 	$('#add_TRANSTO').val(null).trigger('change');
 	$('#add_EMPCARRY').val(null).trigger('change');
 	$('#add_APPROVED').val(null).trigger('change');
@@ -605,7 +605,7 @@ $('#btnt2addSTRNo').click(function(){
 										});
 									}else{
 										var display = $('#add_EMPCARRY').find(':selected').text();
-										var valued = $('#add_EMPCARRY').find(':selected').val();	
+										var valued = (typeof $('#add_EMPCARRY').find(':selected').val() === "undefined" ? "" : $('#add_EMPCARRY').find(':selected').val());	
 										
 										var row = '<tr seq="new'+generate+'">';
 										row += '<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="new'+generate+'" value="ยกเลิก"></td>';
@@ -615,8 +615,14 @@ $('#btnt2addSTRNo').click(function(){
 										row += '<td>'+COLOR+'</td>';
 										row += '<td>'+GCODE+'</td>';
 										row += '<td>อยู่ระหว่างการโอนย้ายรถ</td>';
-										row += '<td><input type="text" STRNO="'+STRNO+'" class="SETTRANSDT form-control input-sm" data-provide="datepicker" data-date-language="th-th" placeholder="วันที่โอน"  style="width:100px;" value="'+($('#add_TRANSDT').val())+'"></td>';
-										row += '<td><select STRNO="'+STRNO+'" class="SETEMPCARRY select2"><option value=\''+(valued)+'\'>'+(display)+'</option></select></td>';
+										row += '<td><input type="text" STRNO="'+STRNO+'" class="SETTRANSDT form-control input-sm" data-provide="datepicker" data-date-language="th-th" placeholder="วันที่โอน"  style="width:100px;" value=""></td>';
+										
+										if(valued === ""){
+											row += '<td><select STRNO="'+STRNO+'" class="SETEMPCARRY select2"></select></td>';
+										}else{
+											row += '<td><select STRNO="'+STRNO+'" class="SETEMPCARRY select2"><option value=\''+(valued)+'\'>'+(display)+'</option></select></td>';
+										}
+										
 										row += '</tr>';
 										  
 										$('#table-STRNOTRANS tbody').append(row);
