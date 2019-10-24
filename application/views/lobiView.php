@@ -263,6 +263,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	
 	<link rel="stylesheet" href="../vendor/snapappointments/bootstrap-select/dist/css/bootstrap-select.css"/>
 	<script src="../vendor/snapappointments/bootstrap-select/dist/js/bootstrap-select.js"></script>
+	
+	<link rel='stylesheet' type='text/css' media='screen' href='../public/upload/uploadfile.css' />
+	<script type='text/javascript' src='../public/upload/jquery.uploadfile.min.js'></script>
 </body>
 <script>
 	setInterval(function(){
@@ -622,7 +625,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			msg: $(this).attr('menuname')
 		});
 		$('.lobibox-notify').css({'z-index':'99999','border-radius':'50px'});
-		$('.lobibox-close').fadeout();
+		$('.lobibox-close').fadeOut(0);
 	},function(){
 		LobiboxNotify.remove();
 	});

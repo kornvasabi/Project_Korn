@@ -64,14 +64,14 @@ class ReserveCar extends MY_Controller {
 						</div>
 					</div>
 					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-8'>	
+						<div class='col-sm-6'>	
 							<div class='form-group'>
 								<button id='btnt1reserve' class='btn btn-cyan btn-block'>
 									<span class='glyphicon glyphicon-pencil'> จอง</span>
 								</button>
 							</div>
 						</div>
-						<div class='col-sm-2'>	
+						<div class='col-sm-6'>	
 							<div class='form-group'>
 								<button id='btnt1search' class='btn btn-primary btn-block'>
 									<span class='glyphicon glyphicon-search'> แสดง</span>

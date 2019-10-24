@@ -386,11 +386,21 @@ class Cselect2 extends MY_Controller {
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$model = (!isset($_REQUEST["model"]) ? "" : $_REQUEST["model"]);
+		$baab  = (!isset($_REQUEST["baab"]) ? "" : $_REQUEST["baab"]);
 		
 		$sql = "
+			/*
 			select COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
 			where COLORCOD like '%".$dataSearch."%' collate Thai_CI_AS
 			order by COLORCOD
+			*/
+			
+			select COLOR as COLORCOD from {$this->MAuth->getdb('INVTRAN')}
+			where MODEL='".$model."' and BAAB='".$baab."' and COLOR like '%".$dataSearch."%'
+			union
+			select COLOR from {$this->MAuth->getdb('HINVTRAN')}
+			where MODEL='".$model."' and BAAB='".$baab."' and COLOR like '%".$dataSearch."%'
 		"; 
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
