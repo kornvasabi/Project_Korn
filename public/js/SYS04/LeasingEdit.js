@@ -140,7 +140,7 @@ function redraw(){
 					draggable: false,
 					closeOnEsc: true,
 					shown: function($this){
-						fn_afterchoose();
+						fn_afterchoose($this);
 					},
 					beforeClose : function(){
 						$('.leasingEdit').attr('disabled',false);
@@ -174,7 +174,7 @@ function redraw(){
 }
 
 
-function fn_afterchoose(){
+function fn_afterchoose($thisWindow){
 	//$('#table-aroth').on('draw.dt',function(){ redraw(); });
 	fn_datatables('table-aroth',2,250,'YES');	
 	
@@ -236,13 +236,13 @@ function fn_afterchoose(){
 		width: '100%'
 	});
 	
-	$('#uieUSERID').select2({
+	$('#uieSALCOD').select2({
 		placeholder: 'เลือก',
         ajax: {
 			url: '../Cselect2/getUSERS',
 			data: function (params) {
 				dataToPost = new Object();
-				dataToPost.now = (typeof $('#uieUSERID').find(':selected').val() === 'undefined'?'':$('#uieUSERID').find(':selected').val());
+				dataToPost.now = (typeof $('#uieSALCOD').find(':selected').val() === 'undefined'?'':$('#uieSALCOD').find(':selected').val());
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				
 				return dataToPost;				
@@ -352,42 +352,134 @@ function fn_afterchoose(){
 		width: '100%'
 	});
 	
+	$('#uieCONTSTAT').select2({
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2/getTYPCONT',
+			data: function (params) {
+				dataToPost = new Object();
+				dataToPost.now = (typeof $('#uieCONTSTAT').find(':selected').val() === 'undefined'?'':$('#uieCONTSTAT').find(':selected').val());
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: false,
+		multiple: false,
+		dropdownParent: $('.lobibox-body'),
+		//disabled: (_level == 1 ? false : true),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
 	var jd_UIESave = null;
 	$('#UIESave').click(function(){
-		dataToPost = new Object();
-		
-		$('#loadding').fadeIn(200);
-		jd_UIESave = $.ajax({
-			url:'../SYS04/Leasing/getFormEdit',
-			data: dataToPost,
-			type: 'POST',
-			dataType: 'json',
-			success: function(data){
-				
-				$('#loadding').fadeOut(200);
-				jd_UIESave = null;
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			iconClass: false,
+			msg: 'คุณต้องการ<span style="color:red;">แก้ไขเลขที่สัญญา '+$('#uiesCONTNO').val()+' หรือไม่</span>',
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ยืนยัน, แก้ไข',
+					closeOnClick: true,
+				},
+				cancel : {
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ยกเลิก. ไว้ก่อน',
+					closeOnClick: true
+				},
 			},
-			error: function (x,c,b){
-				Lobibox.notify('error', {
-					title: 'แจ้งเตือน',
-					size: 'mini',
-					closeOnClick: false,
-					delay: 15000,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					icon: true,
-					messageHeight: '90vh',
-					msg: x.status +' '+ b
-				});
-				$('#loadding').fadeOut(200);
-			},
-			beforeSend: function(){
-				if(jd_UIESave !== null){
-					jd_UIESave.abort();
+			callback: function(lobibox, type){
+				if (type === 'ok'){
+					dataToPost = new Object();
+					dataToPost.CONTNO 	= $("#uiesCONTNO").val();
+					dataToPost.CONTSTAT = (typeof $("#uieCONTSTAT").find(':selected').val() === 'undefined' ? '' : $("#uieCONTSTAT").find(':selected').val());
+					dataToPost.CHECKER 	= (typeof $("#uieCHECKER").find(':selected').val() === 'undefined' ? '' : $("#uieCHECKER").find(':selected').val());
+					dataToPost.ACTICOD 	= (typeof $("#uieACTICOD").find(':selected').val() === 'undefined' ? '' : $("#uieACTICOD").find(':selected').val());
+					dataToPost.BILLCOLL = (typeof $("#uieBILLCOLL").find(':selected').val() === 'undefined' ? '' : $("#uieBILLCOLL").find(':selected').val());
+					dataToPost.PAYCODE 	= (typeof $("#uiePAYCODE").find(':selected').val() === 'undefined' ? '' : $("#uiePAYCODE").find(':selected').val());
+					dataToPost.SALCOD 	= (typeof $("#uieSALCOD").find(':selected').val() === 'undefined' ? '' : $("#uieSALCOD").find(':selected').val());
+					
+					dataToPost.DELYRT 	= $("#uieDELYRT").val();
+					dataToPost.DLDAY 	= $("#uieDLDAY").val();
+					dataToPost.CUSCOD 	= (typeof $("#uieCUSCOD").find(':selected').val() === 'undefined' ? '' : $("#uieCUSCOD").find(':selected').val());
+					dataToPost.CALINT 	= $("input:radio[name=uieCALINT]:checked").val();
+					dataToPost.CALDSC 	= $("input:radio[name=uieCALDSC]:checked").val();
+					dataToPost.DAS	 	= $("#uieMEMO1").attr('das');
+					dataToPost.MEMO1 	= $("#uieMEMO1").val();
+					
+					$('#loadding').fadeIn(200);
+					jd_UIESave = $.ajax({
+						url:'../SYS04/Leasing/EditCONTNO',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						success: function(data){
+							if(data.error){
+								Lobibox.notify('error', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});	
+							}else{
+								Lobibox.notify('success', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+								
+								$thisWindow.destroy();
+							}
+							$('#loadding').fadeOut(200);
+							jd_UIESave = null;
+						},
+						error: function (x,c,b){
+							Lobibox.notify('error', {
+								title: 'แจ้งเตือน',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 15000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: x.status +' '+ b
+							});
+							$('#loadding').fadeOut(200);
+						},
+						beforeSend: function(){
+							if(jd_UIESave !== null){
+								jd_UIESave.abort();
+							}
+						}
+					});
 				}
 			}
 		});
 	});
+	
 }
 
 

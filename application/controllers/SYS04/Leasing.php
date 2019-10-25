@@ -497,20 +497,20 @@ class Leasing extends MY_Controller {
 		$sql = "select CALINT,DISC_FM from {$this->MAuth->getdb('CONDPAY')}";
 		$query = $this->db->query($sql);
 		$row = $query->row();
-		$data["CALINT"] = $row->CALINT;
-		$data["DISC_FM"] = $row->DISC_FM;
+		$data["CALINT"] = str_replace(chr(0),'',$row->CALINT);
+		$data["DISC_FM"] = str_replace(chr(0),'',$row->DISC_FM);
 		
 		$sql = "select top 1 PAYCODE,'('+PAYCODE+') '+PAYDESC PAYDESC from {$this->MAuth->getdb('PAYDUE')} order by PAYCODE";
 		$query = $this->db->query($sql);
 		$row = $query->row();
-		$data["PAYCODE"] = $row->PAYCODE;
-		$data["PAYDESC"] = $row->PAYDESC;
+		$data["PAYCODE"] = str_replace(chr(0),'',$row->PAYCODE);
+		$data["PAYDESC"] = str_replace(chr(0),'',$row->PAYDESC);
 		
 		$sql = "select top 1 ACTICOD,'('+ACTICOD+') '+ACTIDES as ACTIDES from {$this->MAuth->getdb('SETACTI')} order by ACTICOD";
 		$query = $this->db->query($sql);
 		$row = $query->row();
-		$data["ACTICOD"] = $row->ACTICOD;
-		$data["ACTIDES"] = $row->ACTIDES;
+		$data["ACTICOD"] = str_replace(chr(0),'',$row->ACTICOD);
+		$data["ACTIDES"] = str_replace(chr(0),'',$row->ACTIDES);
 			
 		$html = "
 			<div id='wizard-leasing' class='wizard-wrapper'>    
@@ -4020,7 +4020,7 @@ class Leasing extends MY_Controller {
 							$data['ORI_DWN'] = $val;
 							break;
 						default:
-							$data[$key] = $val;
+							$data[$key] = str_replace(chr(0),'',$val);
 							break;
 					}
 				}
@@ -4270,7 +4270,9 @@ class Leasing extends MY_Controller {
 		
 		$sql = "
 			select a.CONTNO ,a.LOCAT,a.STRNO,a.CUSCOD,b.SNAM+b.NAME1+' '+b.NAME2 as CUSNAME
-				,a.RESVNO,convert(varchar(8),a.SDATE,112) as SDATE,a.SMPAY,a.TOTPRC,a.TCSHPRC,a.CONTSTAT
+				,a.RESVNO,convert(varchar(8),a.SDATE,112) as SDATE,a.SMPAY,a.TOTPRC,a.STDPRC
+				,a.CONTSTAT
+				,(select ff.CONTDESC from {$this->MAuth->getdb('TYPCONT')} ff where ff.CONTTYP=a.CONTSTAT) as CONTDESC
 				,a.CHECKER,(select aa.USERNAME from {$this->MAuth->getdb('PASSWRD')} aa where aa.USERID=a.CHECKER collate thai_ci_as) as CHECKERNAME
 				,a.ACTICOD
 				,(select bb.ACTIDES from {$this->MAuth->getdb('SETACTI')} bb where bb.ACTICOD=a.ACTICOD) as ACTIDES
@@ -4278,12 +4280,12 @@ class Leasing extends MY_Controller {
 				,(select cc.USERNAME from {$this->MAuth->getdb('PASSWRD')} cc where cc.USERID=a.BILLCOLL collate thai_ci_as) as BILLCOLLNAME
 				,a.PAYTYP as PAYCODE
 				,(select dd.PAYDESC from {$this->MAuth->getdb('PAYDUE')} dd where dd.PAYCODE=a.PAYTYP) as PAYDESC				
-				,a.USERID
-				,(select ee.USERNAME from {$this->MAuth->getdb('PASSWRD')} ee where ee.USERID=a.USERID collate thai_ci_as) as USERNAME				
+				,a.SALCOD
+				,(select ee.USERNAME from {$this->MAuth->getdb('PASSWRD')} ee where ee.USERID=a.SALCOD collate thai_ci_as) as SALNAME				
 				,a.DELYRT,a.DLDAY,a.CALINT,a.CALDSC,a.MEMO1
 			from {$this->MAuth->getdb('ARMAST')} a
 			left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD
-			where a.CONTNO = '".$contno."'		
+			where a.CONTNO = '".$contno."'
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -4293,17 +4295,50 @@ class Leasing extends MY_Controller {
 			foreach($query->result() as $row){
 				foreach($row as $key => $val){
 					switch($key){
-						case 'SDATE':
-							$data[$key] = $this->Convertdate(2,$val);
-							break;							
-						default:
-							$data[$key] = $val;
+						case 'SDATE': $data[$key] = $this->Convertdate(2,$val); break;
+						case 'SMPAY': $data[$key] = number_format($val,2); break;
+						case 'TOTPRC': $data[$key] = number_format($val,2); break;
+						case 'STDPRC': $data[$key] = number_format($val,2); break;
+						case 'MEMO1':
+							$MEMO = explode('[explode]',$val);
+							if(sizeof($MEMO) == 2){
+								$data["das"] = $MEMO[0]."[explode]";
+								$data[$key]  = $MEMO[1];
+							}else{
+								$data[$key] = $val;
+							}
 							break;
+						default: $data[$key] = $val; break;
 					}
-					
 				}
 			}
 		}
+		
+		$sql = "
+			select ARCONT,convert(varchar(8),ARDATE,112) as ARDATE
+				,CONTNO,CUSCOD,PAYFOR,PAYAMT,PAYAMT-SMPAY-SMCHQ AS KANG
+			from {$this->MAuth->getdb('AROTHR')} 
+			where PAYAMT-SMPAY-SMCHQ>0 and CONTNO='".$contno."'
+		";
+		$query = $this->db->query($sql);
+		
+		$data["other"] = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["other"] .= "
+					<tr>
+						<td>".$row->ARCONT."</td>
+						<td>".$this->Convertdate(2,$row->ARDATE)."</td>
+						<td>".$row->CONTNO."</td>
+						<td>".$row->CUSCOD."</td>
+						<td>".$row->PAYFOR."</td>
+						<td>".$row->PAYAMT."</td>						
+						<td>".$row->KANG."</td>
+					</tr>
+				";
+			}
+		}
+		
 		
 		$html = "
 			<div id='MAINUIE' class='col-sm-12' style='height:calc(100% - 40px);overflow:auto;'>
@@ -4311,62 +4346,62 @@ class Leasing extends MY_Controller {
 					<div class=' col-sm-2'>	
 						<div class='form-group'>
 							เลขที่สัญญา
-							<input type='text' id='CONTNO' value='".$data["CONTNO"]."' class='form-control input-sm' placeholder='เลขที่สัญญา' readonly>
+							<input type='text' id='uiesCONTNO' value='".$data["CONTNO"]."' class='form-control input-sm' placeholder='เลขที่สัญญา' readonly>
 						</div>
 					</div>
 					<div class=' col-sm-2'>
 						<div class='form-group'>
 							สาขา
-							<input type='text' id='CONTNO' value='".$data["LOCAT"]."' class='form-control input-sm' placeholder='สาขา' readonly>
+							<input type='text' id='uiesLOCAT' value='".$data["LOCAT"]."' class='form-control input-sm' placeholder='สาขา' readonly>
 						</div>
 					</div>
 					<div class=' col-sm-2'>
 						<div class='form-group'>
 							เลขตัวถัง
-							<input type='text' id='CONTNO' value='".$data["STRNO"]."' class='form-control input-sm' placeholder='เลขตัวถัง' readonly>
+							<input type='text' id='uiesSTRNO' value='".$data["STRNO"]."' class='form-control input-sm' placeholder='เลขตัวถัง' readonly>
 						</div>
 					</div>
 					<div class=' col-sm-2'>
 						<div class='form-group'>
 							รหัสลูกค้า
-							<input type='text' id='CONTNO' value='".$data["CUSCOD"]."' class='form-control input-sm' placeholder='รหัสลูกค้า' readonly>
+							<input type='text' id='uiesCUSCOD' value='".$data["CUSCOD"]."' class='form-control input-sm' placeholder='รหัสลูกค้า' readonly>
 						</div>
 					</div>
 					<div class=' col-sm-4'>
 						<div class='form-group'>
 							ชื่อ-สกุล ลูกค้า
-							<input type='text' id='CONTNO' value='".$data["CUSNAME"]."' class='form-control input-sm' placeholder='ชื่อ-สกุล ลูกค้า' readonly>
+							<input type='text' id='uiesCUSNAME' value='".$data["CUSNAME"]."' class='form-control input-sm' placeholder='ชื่อ-สกุล ลูกค้า' readonly>
 						</div>
 					</div>
 					
 					<div class='col-sm-2 col-sm-offset-1'>	
 						<div class='form-group'>
 							เลขที่ใบจอง
-							<input type='text' id='CONTNO' value='".$data["RESVNO"]."' class='form-control input-sm' placeholder='เลขที่ใบจอง' readonly>
+							<input type='text' id='uiesRESVNO' value='".$data["RESVNO"]."' class='form-control input-sm' placeholder='เลขที่ใบจอง' readonly>
 						</div>
 					</div>
 					<div class=' col-sm-2'>	
 						<div class='form-group'>
 							วันที่ทำสัญญา
-							<input type='text' id='CONTNO' value='".$data["SDATE"]."' class='form-control input-sm' placeholder='วันที่ทำสัญญา' readonly>
+							<input type='text' id='uiesSDATE' value='".$data["SDATE"]."' class='form-control input-sm' placeholder='วันที่ทำสัญญา' readonly>
 						</div>
 					</div>
 					<div class=' col-sm-2'>	
 						<div class='form-group'>
 							ชำระเงินแล้ว
-							<input type='text' id='CONTNO' value='".$data["SMPAY"]."' class='form-control input-sm' placeholder='ชำระเงินแล้ว' readonly>
+							<input type='text' id='uiesSMPAY' value='".$data["SMPAY"]."' class='form-control input-sm' placeholder='ชำระเงินแล้ว' readonly>
 						</div>
 					</div>
 					<div class=' col-sm-2'>	
 						<div class='form-group'>
 							ราคาขาย
-							<input type='text' id='CONTNO' value='".$data["TOTPRC"]."' class='form-control input-sm' placeholder='ราคาขาย' readonly>
+							<input type='text' id='uiesTOTPRC' value='".$data["TOTPRC"]."' class='form-control input-sm' placeholder='ราคาขาย' readonly>
 						</div>
 					</div>
 					<div class=' col-sm-2'>	
 						<div class='form-group'>
 							ราคาขายหน้าร้าน
-							<input type='text' id='CONTNO' value='".$data["TCSHPRC"]."' class='form-control input-sm' placeholder='ราคาขายหน้าร้าน' readonly>
+							<input type='text' id='uiesSTDPRC' value='".$data["STDPRC"]."' class='form-control input-sm' placeholder='ราคาขายหน้าร้าน' readonly>
 						</div>
 					</div>
 				</div>
@@ -4374,7 +4409,9 @@ class Leasing extends MY_Controller {
 					<div class='col-sm-4'>	
 						<div class='form-group'>
 							สถานะสัญญา
-							<input type='text' id='uieCONTSTAT' value='".$data["CONTSTAT"]."' class='form-control input-sm' placeholder='สถานะสัญญา' >
+							<select id='uieCONTSTAT' class='form-control input-sm'>
+								<option value='".$data["CONTSTAT"]."'>(".$data["CONTSTAT"].") ".$data["CONTDESC"]."</option>
+							</select>
 						</div>
 					</div>
 					<div class='col-sm-4'>	
@@ -4414,8 +4451,8 @@ class Leasing extends MY_Controller {
 					<div class='col-sm-4'>	
 						<div class='form-group'>
 							พนักงานขาย
-							<select id='uieUSERID' class='form-control input-sm'>
-								<option value='".$data["USERID"]."'>".$data["USERNAME"]." (".$data["USERID"].")</option>
+							<select id='uieSALCOD' class='form-control input-sm'>
+								<option value='".$data["SALCOD"]."'>".$data["SALNAME"]." (".$data["SALCOD"].")</option>
 							</select>
 						</div>
 					</div>
@@ -4481,7 +4518,7 @@ class Leasing extends MY_Controller {
 					<div class='col-sm-12'>	
 						<div class='form-group'>
 							หมายเหตุ
-							<textarea id='uieMEMO1' class='form-control input-sm' rows='3' style='resize:vertical;'>".$data["MEMO1"]."</textarea>
+							<textarea id='uieMEMO1' das='".$data["das"]."' class='form-control input-sm' rows='3' style='resize:vertical;'>".$data["MEMO1"]."</textarea>
 						</div>
 					</div>
 				</div>
@@ -4503,7 +4540,7 @@ class Leasing extends MY_Controller {
 							</tr>
 						</thead>
 						<tbody>
-							
+							".$data["other"]."
 						</tbody>
 					</table>
 				</div>
@@ -4521,6 +4558,84 @@ class Leasing extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function EditCONTNO(){
+		$CONTNO 	= $_POST["CONTNO"];
+		$CONTSTAT 	= $_POST["CONTSTAT"];
+		$CHECKER 	= $_POST["CHECKER"];
+		$ACTICOD 	= $_POST["ACTICOD"];
+		$BILLCOLL 	= $_POST["BILLCOLL"];
+		$PAYCODE 	= $_POST["PAYCODE"];
+		$SALCOD 	= $_POST["SALCOD"];
+		
+		$DELYRT 	= $_POST["DELYRT"];
+		$DLDAY 		= $_POST["DLDAY"];
+		$CUSCOD 	= $_POST["CUSCOD"];
+		$CALINT 	= $_POST["CALINT"];
+		$CALDSC 	= $_POST["CALDSC"];
+		$MEMO1	 	= $_POST["DAS"].$_POST["MEMO1"];
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#UIETemp') is not null drop table #UIETemp;
+			create table #UIETemp (id varchar(20),contno varchar(20),msg varchar(max));
+			
+			begin tran UIEleasingTran
+			begin try
+				if ((select CUSCOD from {$this->MAuth->getdb('ARMAST')} where CONTNO='".$CONTNO."') <> '".$CUSCOD."')
+				begin
+					update {$this->MAuth->getdb('AROTHR')} 
+					set CUSCOD='".$CUSCOD."'
+					where PAYAMT-SMPAY-SMCHQ>0 and CONTNO='".$CONTNO."'
+				end
+				
+				if exists(select * from {$this->MAuth->getdb('ARMAST')} where CONTNO='".$CONTNO."')
+				begin
+					update {$this->MAuth->getdb('ARMAST')} 
+					set CONTSTAT='".$CONTSTAT."',
+						CHECKER='".$CHECKER."',
+						ACTICOD='".$ACTICOD."',
+						BILLCOLL='".$BILLCOLL."',
+						PAYTYP='".$PAYCODE."',
+						SALCOD='".$SALCOD."',
+						DELYRT='".$DELYRT."',
+						DLDAY='".$DLDAY."',
+						CUSCOD='".$CUSCOD."',
+						CALINT='".$CALINT."',
+						CALDSC='".$CALDSC."',
+						MEMO1='".$MEMO1."'
+					where CONTNO='".$CONTNO."'
+				end 
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS04::แก้ไขข้อมูลสัญญาเช่าซื้อแล้ว','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+
+				insert into #UIETemp select 'S','".$CONTNO."','แก้ไขข้อมูลสัญญาเช่าซื้อ เลขที่สัญญา ".$CONTNO." แล้วครับ';
+				commit tran UIEleasingTran;
+			end try
+			begin catch
+				rollback tran UIEleasingTran;
+				insert into #UIETemp select 'E','',ERROR_MESSAGE();
+			end catch
+		";
+		//echo $sql; exit;
+		
+		$this->db->query($sql);
+		$sql = "select * from #UIETemp";
+		$query = $this->db->query($sql);
+	  
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["error"]  = ($row->id == "E" ?true:false);
+				$response["contno"] = $row->contno;
+				$response["msg"] = $row->msg;
+			}
+		}else{
+			$response["error"]  = true;
+			$response["contno"] = '';
+			$response["msg"] = 'ผิดพลาดไม่สามารถบันทึกการขายได้ โปรดติดต่อฝ่ายไอที';
+		}
+		
+		echo json_encode($response);
+	}
 	
 }
 
