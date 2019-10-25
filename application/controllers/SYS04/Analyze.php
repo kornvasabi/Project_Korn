@@ -703,6 +703,24 @@ class Analyze extends MY_Controller {
 						<div class='row'>
 							<div class='col-sm-2 col-sm-offset-1'>	
 								<div class='form-group'>
+									เงินดาวน์รถ
+									<input type='text' id='dwnAmt' class='form-control input-sm jzAllowNumber'>
+								</div>
+							</div>
+							<div class='col-sm-2'>	
+								<div class='form-group'>
+									เงินดาวน์ ป.1
+									<input type='text' id='insuranceAmt' class='form-control input-sm jzAllowNumber'>
+								</div>
+							</div>
+							<div class='col-sm-2'>	
+								<div class='form-group'>
+									จำนวนงวด
+									<input type='text' id='nopay' class='form-control input-sm jzAllowNumber' maxlength=2>
+								</div>
+							</div>
+							<div class='col-sm-2'>	
+								<div class='form-group'>
 									เลขที่บิลจอง
 									<select id='resvno' class='form-control input-sm select2'></select>	
 								</div>
@@ -711,24 +729,6 @@ class Analyze extends MY_Controller {
 								<div class='form-group'>
 									เงินจอง
 									<input type='text' id='resvAmt' class='form-control input-sm' value='' disabled>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เงินดาวน์รถ
-									<input type='text' id='dwnAmt' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เงินดาวน์ ป.1
-									<input type='text' id='insuranceAmt' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									จำนวนงวด
-									<input type='text' id='nopay' class='form-control input-sm'>
 								</div>
 							</div>
 						</div>
@@ -780,7 +780,13 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									ราคารถ(สด) ก่อนหักส่วนลด
-									<input type='text' id='price' class='form-control input-sm' stdid='' stdplrank=''> 
+									<input type='text' id='price' class='form-control input-sm jzAllowNumber' stdid='' stdplrank=''> 
+								</div>
+							</div>
+							<div class='col-sm-2'>	
+								<div class='form-group'>
+									อัตราดอกเบี้ยต่อเดือน
+									<input type='text' id='interatert' class='form-control input-sm jzAllowNumber'>
 								</div>
 							</div>
 						</div>
@@ -789,10 +795,10 @@ class Analyze extends MY_Controller {
 				<div class='row' style='border:1px dotted #aaa;background-color:#eff2ba;'>
 					<h3>
 						<div class='col-sm-10 col-sm-offset-1 text-primary'>
-							<span class='toggleData glyphicon glyphicon-plus' thisc='toggleData2' style='cursor:pointer;'>&emsp;ผู้เช่าซื้อ</span>
+							<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData2' style='cursor:pointer;'>&emsp;ผู้เช่าซื้อ</span>
 						</div>
 					</h3>
-					<div class='toggleData2' isshow=0 hidden>
+					<div class='toggleData2' isshow=1>
 						<div class='row'>
 							<div class='col-sm-2 col-sm-offset-1'>	
 								<div class='form-group'>
@@ -823,7 +829,7 @@ class Analyze extends MY_Controller {
 									<div class='col-sm-6'>
 										<div class='form-group'>
 											อายุ
-											<input type='text' id='idnoAge' class='form-control input-sm'>
+											<input type='text' id='idnoAge' class='form-control input-sm jzAllowNumber'>
 										</div>
 									</div>
 									<div class='col-sm-6'>
@@ -857,13 +863,13 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									เบอร์ติดต่อ
-									<input type='text' id='phoneNumber' class='form-control input-sm'>
+									<input type='text' id='phoneNumber' class='form-control input-sm jzAllowNumber'>
 								</div>
 							</div>
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									จำนวนบุตร
-									<input type='text' id='baby' class='form-control input-sm'>
+									<input type='text' id='baby' class='form-control input-sm jzAllowNumber'>
 								</div>
 							</div>
 						</div>
@@ -891,13 +897,13 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2 col-sm-offset-1'>	
 								<div class='form-group'>
 									เบอร์ติดต่อที่ทำงาน
-									<input type='text' id='careerPhone' class='form-control input-sm'>
+									<input type='text' id='careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
 								</div>
 							</div>
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									รายได้/เดือน
-									<input type='text' id='income' class='form-control input-sm'>
+									<input type='text' id='income' class='form-control input-sm jzAllowNumber'>
 								</div>
 							</div>
 							<div class='col-sm-3'>
@@ -917,7 +923,7 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2 col-sm-offset-1'>	
 								<div class='form-group'>
 									เบอร์ติดต่อที่ (เจ้าบ้าน)
-									<input type='text' id='hostPhone' class='form-control input-sm'>
+									<input type='text' id='hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
 								</div>
 							</div>
 							<div class='col-sm-2'>	
@@ -945,10 +951,10 @@ class Analyze extends MY_Controller {
 				<div class='row' style='border:1px dotted #aaa;background-color:#f2cdba;'>
 					<h3>
 						<div class='col-sm-10 col-sm-offset-1 text-primary'>
-							<span class='toggleData glyphicon glyphicon-plus' thisc='toggleData3' style='cursor:pointer;'>&emsp;ผู้ค้ำประกัน 1</span>
+							<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData3' style='cursor:pointer;'>&emsp;ผู้ค้ำประกัน 1</span>
 						</div>
 					</h3>
-					<div class='toggleData3' isshow=0 hidden>
+					<div class='toggleData3' isshow=1>
 						<div class='row'>
 							<div class='col-sm-2 col-sm-offset-1'>	
 								<div class='form-group'>
@@ -1013,13 +1019,13 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									เบอร์ติดต่อ
-									<input type='text' id='is1_phoneNumber' class='form-control input-sm'>
+									<input type='text' id='is1_phoneNumber' class='form-control input-sm jzAllowNumber'>
 								</div>
 							</div>
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									จำนวนบุตร
-									<input type='text' id='is1_baby' class='form-control input-sm'>
+									<input type='text' id='is1_baby' class='form-control input-sm jzAllowNumber'>
 								</div>
 							</div>
 						</div>
@@ -1047,13 +1053,13 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2 col-sm-offset-1'>	
 								<div class='form-group'>
 									เบอร์ติดต่อที่ทำงาน
-									<input type='text' id='is1_careerPhone' class='form-control input-sm'>
+									<input type='text' id='is1_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
 								</div>
 							</div>
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									รายได้/เดือน
-									<input type='text' id='is1_income' class='form-control input-sm'>
+									<input type='text' id='is1_income' class='form-control input-sm jzAllowNumber'>
 								</div>
 							</div>
 							<div class='col-sm-3'>
@@ -1073,7 +1079,7 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2 col-sm-offset-1'>	
 								<div class='form-group'>
 									เบอร์ติดต่อที่ (เจ้าบ้าน)
-									<input type='text' id='is1_hostPhone' class='form-control input-sm'>
+									<input type='text' id='is1_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
 								</div>
 							</div>
 							<div class='col-sm-2'>	
@@ -1168,13 +1174,13 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									เบอร์ติดต่อ
-									<input type='text' id='is2_phoneNumber' class='form-control input-sm'>
+									<input type='text' id='is2_phoneNumber' class='form-control input-sm jzAllowNumber'>
 								</div>
 							</div>
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									จำนวนบุตร
-									<input type='text' id='is2_baby' class='form-control input-sm'>
+									<input type='text' id='is2_baby' class='form-control input-sm jzAllowNumber'>
 								</div>
 							</div>
 						</div>
@@ -1202,13 +1208,13 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2 col-sm-offset-1'>	
 								<div class='form-group'>
 									เบอร์ติดต่อที่ทำงาน
-									<input type='text' id='is2_careerPhone' class='form-control input-sm'>
+									<input type='text' id='is2_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
 								</div>
 							</div>
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									รายได้/เดือน
-									<input type='text' id='is2_income' class='form-control input-sm'>
+									<input type='text' id='is2_income' class='form-control input-sm jzAllowNumber'>
 								</div>
 							</div>
 							<div class='col-sm-3'>
@@ -1228,7 +1234,7 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2 col-sm-offset-1'>	
 								<div class='form-group'>
 									เบอร์ติดต่อที่ (เจ้าบ้าน)
-									<input type='text' id='is2_hostPhone' class='form-control input-sm'>
+									<input type='text' id='is2_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
 								</div>
 							</div>
 							<div class='col-sm-2'>	
@@ -1256,10 +1262,10 @@ class Analyze extends MY_Controller {
 				<div class='row' style='border:1px dotted #aaa;background-color:#baeff2;'>
 					<h3>
 						<div class='col-sm-10 col-sm-offset-1 text-primary'>
-							<span class='toggleData glyphicon glyphicon-plus' thisc='toggleData5' style='cursor:pointer;'>&emsp;สาขา</span>
+							<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData5' style='cursor:pointer;'>&emsp;สาขา</span>
 						</div>
 					</h3>
-					<div class='toggleData5' isshow=0 hidden>
+					<div class='toggleData5' isshow=1>
 						<div class='row'>
 							<div class='col-sm-3 col-sm-offset-1'>	
 								<div class='form-group'>
@@ -1270,7 +1276,7 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									เบอร์ติดต่อ
-									<input type='text' id='empTel' class='form-control input-sm' maxlength=10>
+									<input type='text' id='empTel' class='form-control input-sm jzAllowNumber' maxlength=10>
 								</div>
 							</div>
 							<div class='col-sm-3'>	
@@ -1282,7 +1288,7 @@ class Analyze extends MY_Controller {
 							<div class='col-sm-2'>	
 								<div class='form-group'>
 									เบอร์ติดต่อ
-									<input type='text' id='mngTel' class='form-control input-sm' maxlength=10>
+									<input type='text' id='mngTel' class='form-control input-sm jzAllowNumber' maxlength=10>
 								</div>
 							</div>
 						</div>
@@ -1304,8 +1310,19 @@ class Analyze extends MY_Controller {
 	
 	function dataResv(){
 		$response = array("html"=>"","error"=>false,"msg"=>"");
+		$dwnAmt	  = str_replace(",","",$_POST["dwnAmt"]);
 		$resvno   = $_POST["resvno"];
 		$acticod  = $_POST["acticod"];
+		
+		if($dwnAmt == ""){
+			$response["error"] = true;
+			$response["msg"] = "ผิดพลาด :: โปรดระบุเงินดาวน์ก่อนครับ";
+			echo json_encode($response); exit;
+		}else if(!is_numeric($dwnAmt)){
+			$response["error"] = true;
+			$response["msg"] = "ผิดพลาด :: โปรดระบุเงินดาวน์ให้ถูกต้อง";
+			echo json_encode($response); exit;
+		}
 		
 		/*
 		if($acticod == "ALL"){
@@ -1337,6 +1354,7 @@ class Analyze extends MY_Controller {
 				,case when i.price is null then a.PRICE else i.price end as price
 				,isnull(g.STDID,'') as stdid
 				,isnull(cast(g.STDPLRANK as varchar),'') as stdplrank
+				,a.RESPAY - (isnull(a.SMPAY,0) + isnull(a.SMCHQ,0)) as BALANCE
 			from {$this->MAuth->getdb('ARRESV')} a 
 			left join (
 				select ROW_NUMBER() over(partition by STRNO order by STRNO,sdate desc) r,* 
@@ -1372,6 +1390,13 @@ class Analyze extends MY_Controller {
 			}
 		}
 		
+		if($data["BALANCE"] > 0)
+		{
+			$response["error"] = true;
+			$response["msg"] = "ผิดพลาด :: โปรดเลขที่บิลจอง ".$data["RESVNO"]." ยังไม่ได้ชำระค่าจองทีครับ";
+			echo json_encode($response); exit;	
+		}	
+	
 		if($data["STATEN"] == "N" and ($data["stdid"] == "" or $data["stdplrank"] == "")){
 			$sql = "
 				if exists(
@@ -1455,14 +1480,42 @@ class Analyze extends MY_Controller {
 			}
 		}
 		
+		$data["interest_rate"]  = 0;
+		$data["interest_rate2"] = 0;
+		if($data["STATEN"] == "N"){
+			$sql = "
+				select * from {$this->MAuth->getdb('std_down')} a
+				where id='".$data["stdid"]."' and plrank='".$data["stdplrank"]."' and '".$dwnAmt."' between dwnrate_s and isnull(dwnrate_e,'".$data["price"]."')
+			";
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$data["interest_rate"] 	= $row->interest_rate;
+					$data["interest_rate2"]	= $row->interest_rate2;
+				}
+			}else{
+				$response["error"] = true;
+				$response["msg"] = "
+					ผิดพลาด ไม่พบขั้นเงินดาวน์ที่ระบุมา โปรดตรวจสอบข้อมูลใหม่อีกครั้ง<br><br>
+					รุ่น :: ".$data["MODEL"]."<br>
+					แบบ :: ".$data["BAAB"]."<br>
+					สี :: ".$data["COLOR"]."<br>
+					วันที่จอง :: ".$this->Convertdate(2,$data["RESVDT"])."
+				";
+			}
+		}
+		
 		$response["html"] = $data;
 		echo json_encode($response);
 	}
 	
 	function dataSTR(){
-		$response = array("html"=>"","error"=>false,"msg"=>"");
-		$strno 	  = $_POST["strno"];
-		$acticod  = $_POST["acticod"];
+		$response   = array("html"=>"","error"=>false,"msg"=>"");
+		$dwnAmt	    = $_POST["dwnAmt"];
+		$createDate = $this->Convertdate(1,$_POST["createDate"]);
+		$strno 	    = $_POST["strno"];
+		$acticod    = $_POST["acticod"];
 		
 		if($acticod == "ALL"){
 			$response["error"] = true;
@@ -1500,43 +1553,69 @@ class Analyze extends MY_Controller {
 			}
 		}
 		
+		$data["interest_rate"] 	= "";
+		$data["interest_rate2"]	= "";
 		if($data["STATEN"] == "N"){
 			$sql = "
 				if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' 
-						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
 				)
 				begin 
-					select a.id,b.price from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' 
-						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
 				end 
 				else if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' 
-						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
 				)
 				begin 
-					select a.id,b.price from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' 
-						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
 				end 
 				else if exists(
 					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' 
-						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
 				)
 				begin 
-					select a.id,b.price from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' 
-						and (b.ACTICOD='{$acticod}' or b.ACTICOD='ALL')
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				end
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
 				end
 			";
 			$query = $this->db->query($sql);
@@ -1544,6 +1623,7 @@ class Analyze extends MY_Controller {
 			if($query->row()){
 				foreach($query->result() as $row){
 					$data["stdid"] = $row->id;
+					$data["stdplrank"] = $row->plrank;
 					$data["price"] = $row->price;
 				}
 			}else{
@@ -1552,7 +1632,30 @@ class Analyze extends MY_Controller {
 					ผิดพลาด ไม่พบราคาขายรถใหม่ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
 					รุ่น :: ".$data["MODEL"]."<br>
 					แบบ :: ".$data["BAAB"]."<br>
-					สี :: ".$data["COLOR"]."
+					สี :: ".$data["COLOR"]."<br>
+					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
+				";
+			}
+			
+			$sql = "
+				select * from {$this->MAuth->getdb('std_down')} a
+				where id='".$data["stdid"]."' and plrank='".$data["stdplrank"]."' and '".$dwnAmt."' between dwnrate_s and isnull(dwnrate_e,'".$data["price"]."')
+			";
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$data["interest_rate"] 	= $row->interest_rate;
+					$data["interest_rate2"]	= $row->interest_rate2;
+				}
+			}else{
+				$response["error"] = true;
+				$response["msg"] = "
+					ผิดพลาด ไม่พบขั้นเงินดาวน์ที่ระบุมา โปรดตรวจสอบข้อมูลใหม่อีกครั้ง<br><br>
+					รุ่น :: ".$data["MODEL"]."<br>
+					แบบ :: ".$data["BAAB"]."<br>
+					สี :: ".$data["COLOR"]."<br>
+					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
 				";
 			}
 		}
@@ -1606,7 +1709,7 @@ class Analyze extends MY_Controller {
 			) as ARM
 			,(
 				select count(*) r from {$this->MAuth->getdb('ARRESV')}
-				where CUSCOD='".$cuscod."' and RESVDT between convert(varchar(8),dateadd(day,-7,getdate()),112) and convert(varchar(8),getdate(),112)
+				where CUSCOD='".$cuscod."' and SDATE is null and RESVDT between convert(varchar(8),dateadd(day,-7,getdate()),112) and convert(varchar(8),getdate(),112)					
 			) as ARR
 		";
 		$query = $this->db->query($sql);
@@ -1647,6 +1750,7 @@ class Analyze extends MY_Controller {
 		$arrs["price"] 		= "'".$_POST["price"]."'";
 		$arrs["stdid"] 		= "'".$_POST["stdid"]."'";
 		$arrs["stdplrank"]	= "'".$_POST["stdplrank"]."'";
+		$arrs["interatert"]	= "'".$_POST["interatert"]."'";
 		
 		$arrs["cuscod"] 	= "'".$_POST["cuscod"]."'";
 		$arrs["idno"] 		= "'".$_POST["idno"]."'";
@@ -1738,10 +1842,11 @@ class Analyze extends MY_Controller {
 				
 				declare @id bigint;
 				insert into {$this->MAuth->getdb('ARANALYZE')} (
-					ID,LOCAT,RESVNO,RESVAMT,DWN,DWN_INSURANCE,NOPAY,STRNO,MODEL
+					ID,LOCAT,RESVNO,RESVAMT,DWN,DWN_INSURANCE,INTEREST_RT,NOPAY,STRNO,MODEL
 					,BAAB,COLOR,STAT,SDATE,YDATE,PRICE,ANSTAT,STDID,STDPLRANK,INSBY,INSDT
-				) select @ANID,".$arrs["locat"].",".$arrs["resvno"].",".$arrs["resvAmt"].",".$arrs["dwnAmt"]."
-					,".$arrs["insuranceAmt"].",".$arrs["nopay"].",".$arrs["strno"].",".$arrs["model"]."
+				) 
+				select @ANID,".$arrs["locat"].",".$arrs["resvno"].",".$arrs["resvAmt"].",".$arrs["dwnAmt"]."
+					,".$arrs["insuranceAmt"].",".$arrs["interatert"].",".$arrs["nopay"].",".$arrs["strno"].",".$arrs["model"]."
 					,".$arrs["baab"].",".$arrs["color"].",".$arrs["stat"].",".$arrs["sdateold"].",".$arrs["ydate"]."
 					,".$arrs["price"].",'I',".$arrs["stdid"].",".$arrs["stdplrank"].",'".$this->sess["IDNo"]."',getdate();
 				

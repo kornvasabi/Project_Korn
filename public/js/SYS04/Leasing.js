@@ -43,8 +43,9 @@ $(function(){
 	});
 });
 
+var jd_btnt1search = null;
 $('#btnt1search').click(function(){
-	$('#btnt1search').attr('disabled',true);
+	//$('#btnt1search').attr('disabled',true);
 	dataToPost = new Object();
 	dataToPost.contno 	= $('#CONTNO').val();
 	dataToPost.sdatefrm = $('#SDATEFRM').val();
@@ -54,14 +55,23 @@ $('#btnt1search').click(function(){
 	dataToPost.cuscod 	= (typeof $('#CUSCOD').find(':selected').val() === 'undefined' ? '' : $('#CUSCOD').find(':selected').val());
 	
 	$('#loadding').show();
-	$.ajax({
+	jd_btnt1search = $.ajax({
 		url:'../SYS04/Leasing/search',
 		data: dataToPost,
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
+			$('#jd_result').html(data.html);
+			
+			//$('#table-ReserveCar').on('draw.dt',function(){ redraw(); });
+			//fn_datatables('table-ReserveCar',1,250);
+			$('.leasingDetails').click(function(){
+				leasingDetails($(this).attr('contno'),'search');
+			});
+			
 			$('#loadding').hide();
 			
+			/*
 			Lobibox.window({
 				title: 'รายการเช่าซื้อ',
 				width: $(window).width(),
@@ -80,6 +90,8 @@ $('#btnt1search').click(function(){
 					$('#btnt1search').attr('disabled',false);
 				}
 			});
+			*/
+			jd_btnt1search = null;
 		},
 		error: function (x,c,b){
 			Lobibox.notify('error', {
@@ -94,6 +106,11 @@ $('#btnt1search').click(function(){
 				msg: x.status +' '+ b
 			});
 			$('#loadding').hide();
+		},
+		beforeSend: function(){
+			if(jd_btnt1search !== null){
+				jd_btnt1search.abort();
+			}
 		}
 	});
 });
@@ -554,6 +571,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								var resvno = $(this).attr('resvno');
 								var newOption = new Option(resvno, resvno, true, true);
 								$('#add_resvno').empty().append(newOption).trigger('change');
+								$('#add_resvno').trigger('select2:select');
 								
 								$this.destroy();
 							});

@@ -166,11 +166,13 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				dataToPost.now = (typeof $('#fCUSCOD').find(':selected').val() === 'undefined' ? '' : $('#fCUSCOD').find(':selected').val());
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				
+				$('#loadding').fadeIn(200);
 				return dataToPost;				
 			},
 			dataType: 'json',
 			delay: 250,
 			processResults: function (data) {
+				$('#loadding').fadeOut(200);
 				return {
 					results: data
 				};
@@ -500,15 +502,21 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				dataToPost.now 	 = (typeof $('#fCOLOR').find(':selected').val() === 'undefined' ? '' : $('#fCOLOR').find(':selected').val());
 				dataToPost.q 	 = (typeof params.term === 'undefined' ? '' : params.term);
 				
+				dataToPost.model = (typeof $('#fMODEL').find(':selected').val() === 'undefined' ? '' : $('#fMODEL').find(':selected').val());
+				dataToPost.baab	 = (typeof $('#fBAAB').find(':selected').val() === 'undefined' ? '' : $('#fBAAB').find(':selected').val());
+				
+				$('#loadding').fadeIn(200);
+				
 				return dataToPost;				
 			},
 			dataType: 'json',
 			delay: 1000,
 			processResults: function (data) {
+				$('#loadding').fadeOut(200);
 				return {
 					results: data
 				};
-			},
+			},			
 			cache: true
         },
 		allowClear: true,

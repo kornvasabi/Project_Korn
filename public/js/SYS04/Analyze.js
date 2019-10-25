@@ -377,6 +377,7 @@ function fnload($thisForm){
 	$('#resvno').on("select2:select",function(){
 		//$('#resvno').val(null).trigger('change');
 		dataToPost = new Object();
+		dataToPost.dwnAmt = $('#dwnAmt').val();
 		dataToPost.resvno = (typeof $(this).find(':selected').val() === "undefined" ? "" : $(this).find(':selected').val());
 		dataToPost.acticod	= (typeof $("#acticod").find(':selected').val() === "undefined" ? "ALL" : $("#acticod").find(':selected').val());
 		
@@ -437,6 +438,8 @@ function fnload($thisForm){
 					$('#price').val(data.html["price"]);
 					$('#price').attr('stdid',data.html["stdid"]);
 					$('#price').attr('stdplrank',data.html["stdplrank"]);
+					$('#interatert').val(data.html["interest_rate"]);
+					
 					
 					if(typeof data.html["RESVNO"] === 'undefined'){
 						$('#acticod').attr("disabled",false).trigger('change');
@@ -448,6 +451,7 @@ function fnload($thisForm){
 						$('#price').attr("disabled",false);				
 						$('#price').attr('stdid','');
 						$('#price').attr('stdplrank','');						
+						$('#interatert').attr("disabled",false);
 						$('#cuscod').attr("disabled",false).trigger('change');
 						$("#idno").attr("disabled",false);
 						$('#idnoBirth').attr("disabled",false);
@@ -460,7 +464,8 @@ function fnload($thisForm){
 						$('#baab').attr("disabled",true).trigger('change');
 						$('#color').attr("disabled",true).trigger('change');
 						
-						$('#price').attr("disabled",true);						
+						$('#price').attr("disabled",true);
+						$('#interatert').attr("disabled",true);
 						$('#cuscod').attr("disabled",true).trigger('change');
 						$("#idno").attr("disabled",true);
 						$('#idnoBirth').attr("disabled",true);
@@ -498,6 +503,8 @@ function fnload($thisForm){
 		$('#price').val("");
 		$('#price').attr("stdid","");
 		$('#price').attr("stdplrank","");
+		$('#interatert').val("");
+		
 		$('#cuscod').empty().trigger('change');
 		$("#idno").val("");
 		$('#idnoBirth').val("");
@@ -516,6 +523,7 @@ function fnload($thisForm){
 		$('#baab').attr("disabled",false).trigger('change');
 		$('#color').attr("disabled",false).trigger('change');
 		$('#price').attr("disabled",false);
+		$('#interatert').attr("disabled",false);
 		$('#cuscod').attr("disabled",false).trigger('change');
 		$("#idno").attr("disabled",false);
 		$('#idnoBirth').attr("disabled",false);
@@ -556,8 +564,10 @@ function fnload($thisForm){
 	//$('#strno').on('select2:select', function (e) {
 	$('#strno').on("select2:select",function(){
 		dataToPost = new Object();
-		dataToPost.strno 	= (typeof $(this).find(':selected').val() === "undefined" ? "" : $(this).find(':selected').val());
-		dataToPost.acticod	= (typeof $("#acticod").find(':selected').val() === "undefined" ? "ALL" : $("#acticod").find(':selected').val());
+		dataToPost.dwnAmt 	  = $('#dwnAmt').val();
+		dataToPost.createDate = $('#createDate').val();
+		dataToPost.strno 	  = (typeof $(this).find(':selected').val() === "undefined" ? "" : $(this).find(':selected').val());
+		dataToPost.acticod	  = (typeof $("#acticod").find(':selected').val() === "undefined" ? "ALL" : $("#acticod").find(':selected').val());
 		
 		if(dataToPost.strno != ""){
 			$('#loadding').fadeIn(0);
@@ -594,6 +604,7 @@ function fnload($thisForm){
 							$('#price').val(data.html["price"]);
 							$('#price').attr("stdid",data.html["stdid"]);
 							$('#price').attr("stdplrank",data.html["stdplrank"]);
+							$('#interatert').val(data.html["interest_rate"]);
 							
 							if(typeof data.html["STRNO"] === 'undefined'){
 								$('#model').attr("disabled",false).trigger('change');
@@ -602,14 +613,17 @@ function fnload($thisForm){
 								$('#price').attr("disabled",false);
 								$('#price').attr("stdid","");
 								$('#price').attr("stdplrank","");
+								$('#interatert').attr("disabled",false);
 							}else{
 								$('#model').attr("disabled",true).trigger('change');
 								$('#baab').attr("disabled",true).trigger('change');
 								$('#color').attr("disabled",true).trigger('change');
 								if(data.html["STAT"] == "รถใหม่"){
 									$('#price').attr("disabled",true);
+									$('#interatert').attr("disabled",true);
 								}else{
 									$('#price').attr("disabled",false);
+									$('#interatert').attr("disabled",false);
 								}
 							}					
 						}else{
@@ -659,11 +673,13 @@ function fnload($thisForm){
 		$('#price').val("");
 		$('#price').attr("stdid","");
 		$('#price').attr("stdplrank","");
+		$('#interatert').val("");
 		
 		$('#model').attr("disabled",false).trigger('change');
 		$('#baab').attr("disabled",false).trigger('change');
 		$('#color').attr("disabled",false).trigger('change');
 		$('#price').attr("disabled",false);
+		$('#interatert').attr("disabled",false);
 	});	
 	
 	$('#model').select2({
@@ -852,21 +868,6 @@ function fnload($thisForm){
 						icon: true,
 						messageHeight: '90vh',
 						msg: "ลูกค้า "+$("#cuscod").find(':selected').text()+" ได้มีการทำรายการเช่าซื้อภายใน 7 วันที่ผ่านมา"
-					});
-				}
-				
-				//จองภายใน 7 วัน
-				if(data.html["ARR"] > 0){
-					Lobibox.notify('warning', {
-						title: 'แจ้งเตือน',
-						size: 'mini',
-						closeOnClick: false,
-						delay: 15000,
-						pauseDelayOnHover: true,
-						continueDelayOnInactiveTab: false,
-						icon: true,
-						messageHeight: '90vh',
-						msg: "ลูกค้า "+$("#cuscod").find(':selected').text()+" ได้มีการทำรายการจองภายใน 7 วันที่ผ่านมา"
 					});
 				}
 				
@@ -1634,6 +1635,7 @@ function fnload($thisForm){
 		dataToPost.price		= $('#price').val();
 		dataToPost.stdid		= $('#price').attr('stdid');
 		dataToPost.stdplrank	= $('#price').attr('stdplrank');
+		dataToPost.interatert	= $('#interatert').val();
 		
 		dataToPost.cuscod 		= (typeof $('#cuscod').find(':selected').val() === 'undefined' ? '' : $('#cuscod').find(':selected').val());
 		dataToPost.idno			= $('#idno').val();
