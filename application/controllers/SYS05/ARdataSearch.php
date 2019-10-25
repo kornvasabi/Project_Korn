@@ -438,11 +438,11 @@ class ARdataSearch extends MY_Controller {
 					<div class='col-sm-12 col-xs-12'>
 						<div class=' col-sm-6 col-xs-6'>	
 							<br><br><br><br>
-							<button id='btnpenalty' class='btn btn-info btn-block ' style='font-size:10pt'><span class='glyphicon glyphicon-calendar'><b> เบี้ยปรับ</b></span></button>
+							<button id='btnpenalty' class='btn btn-primary btn-outline btn-block' style='font-size:10pt'><span class='glyphicon glyphicon-calendar'><b> เบี้ยปรับ</b></span></button>
 						</div>
 						<div class=' col-sm-6 col-xs-6'>	
 							<br><br><br><br>
-							<button id='btndiscount' class='btn btn-info btn-block ' style='font-size:10pt'><span class='glyphicon glyphicon-list-alt'><b> ส่วนลดตัดสด</b></span></button>
+							<button id='btndiscount' class='btn btn-primary btn-outline btn-block' style='font-size:10pt'><span class='glyphicon glyphicon-list-alt'><b> ส่วนลดตัดสด</b></span></button>
 						</div>
 					</div>
 				</fieldset>
@@ -456,29 +456,27 @@ class ARdataSearch extends MY_Controller {
 			<div class='tab-pane' name='tab44' style='height:calc(100vh - 220px);overflow:auto;'>
 				<fieldset style='height:100%'>
 					<div style='float:left;height:100%;' class='col-sm-12 col-xs-12'>	
+						<div class='row'>เงื่อนไข</div>
 						<div class='row'>
-							<b>เงื่อนไข</b>
-							<div class='col-sm-12 col-xs-12'>
-							<div class='col-sm-8 col-xs-8 col-sm-offset-2'>
-								<div class='col-sm-5 col-xs-5'>	
+							<div class=' col-sm-10 col-xs-10 col-sm-offset-1'>
+								<div class=' col-sm-4 col-xs-4 col-sm-offset-1'>	
 									<div class='form-group text-primary'>
-										ลูกค้า
+										<b>ลูกค้า</b>
 										<select id='CUSCOD2' class='form-control input-sm' data-placeholder='ลูกค้า'></select>
 									</div>
 								</div>
-								<div class='col-sm-5 col-xs-5'>	
+								<div class=' col-sm-4 col-xs-4'>	
 									<div class='form-group text-primary'>
-										เลขที่สัญญาลูกหนี้อื่น
+										<b>เลขที่สัญญาลูกหนี้อื่น</b>
 										<input type='text' id='4_ARCONT' class='form-control input-sm'>
 									</div>
 								</div>
-								<div class='col-sm-2 col-xs-2'>	
+								<div class=' col-sm-2 col-xs-2'>	
 									<div class='form-group'>
 										<br>
-										<button id='btntsearcharothr' class='btn btn-primary btn-sm' style='width:100%;'><span class='glyphicon glyphicon-search'> <b>สอบถาม</b></span></button>
+										<button id='btntsearcharothr' class='btn btn-primary btn-sm' style='width:100%'><span class='glyphicon glyphicon-search'><b> สอบถาม</b></span></button>
 									</div>
 								</div>
-							</div>	
 							</div>
 						</div>
 						<br>
@@ -1481,6 +1479,59 @@ class ARdataSearch extends MY_Controller {
 		
 		$this->db->query($sql);
 		$sql = "select * from #updatemessage";
+		$query = $this->db->query($sql);
+	  
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["status"] = $row->id;
+				$response["contno"] = $row->contno;
+				$response["msg"] = $row->msg;
+			}
+		}else{
+			$response["status"] = false;
+			$response["contno"] = '';
+			$response["msg"] = 'ผิดพลาดไม่สามารถแก้ไขข้อความแจ้งเตือน';
+		}
+		
+		echo json_encode($response);
+	}
+	
+	function updateINTAMT(){
+		$CONTNO		= $_REQUEST["CONTNO"];
+		$DATESEARCH	= $this->Convertdate(1,$_REQUEST["DATESEARCH"]);
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#updateintamt') is not null drop table #updateintamt;
+			create table #updateintamt (id varchar(20),contno varchar(20),msg varchar(max));
+			
+			begin tran updateintamt
+			begin try
+	
+				declare @contno varchar(12) = '".$CONTNO."'
+				declare @delayrate decimal(6,4) = (select DELYRT*0.01 from {$this->MAuth->getdb('ARMAST')} where CONTNO = @contno)
+				declare @delayday decimal(6,0) = (select DLDAY from {$this->MAuth->getdb('ARMAST')} where CONTNO = @contno)
+				declare @locat varchar(10) = (select LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO = @contno)
+				declare @day varchar(10) = '".$DATESEARCH."'
+
+				update {$this->MAuth->getdb('ARPAY')}
+				set DELAY	=	DATEDIFF(DAY,DDATE,@day),
+					INTAMT	=	case when DATEDIFF(DAY,DDATE,@day) > @delayday	then round((((DAMT-PAYMENT)*@delayrate)/30)*(DATEDIFF(DAY,DDATE,@day)),0)
+								when DATEDIFF(DAY,DDATE,@day) <= @delayday	then 0 end
+				where CONTNO = @contno and LOCAT = @locat and DDATE < @day and PAYMENT < DAMT 
+				
+				insert into #updateintamt select 'S',@CONTNO,'อัพเดทวันล้าช้าและเบี้ยปรับล่าช้าแล้ว';
+				
+				commit tran updateintamt;
+			end try
+			begin catch
+				rollback tran updateintamt;
+				insert into #updateintamt select 'E','',ERROR_MESSAGE();
+			end catch
+		";
+		//echo $sql; exit;
+		
+		$this->db->query($sql);
+		$sql = "select * from #updateintamt";
 		$query = $this->db->query($sql);
 	  
 		if($query->row()){

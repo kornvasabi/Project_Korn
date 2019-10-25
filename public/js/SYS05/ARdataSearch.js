@@ -114,7 +114,7 @@ $(function(){
 				
 				switch(index){
 					case 0: //tab1
-							nextTab(ind2); 
+						nextTab(ind2); 
 						break;
 					case 1: //tab2						
 						nextTab(ind2); 
@@ -618,7 +618,36 @@ function updatemessage(CONTNO,MSGLOCAT,STARTDT,ENDDT,MSGMEMO,USERID){
 	});
 }
 
+function updateINTAMT(){
+	dataToPost = new Object();
+	dataToPost.CONTNO 		= $('#3_CONTNO').val();
+	dataToPost.DATESEARCH 	= $('#3_DATESEARCH').val();
+
+	$.ajax({
+		url:'../SYS05/ARdataSearch/updateINTAMT',
+		data: dataToPost,
+		type: 'POST',
+		dataType: 'json',
+		success: function(data) {
+			if(data.status == 'E'){
+				Lobibox.notify('error', {
+					title: 'ผิดพลาด',
+					size: 'mini',
+					closeOnClick: false,
+					delay: false,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					msg: data.msg
+				});
+			}
+		}
+	});
+}
+
 $('#btnpenalty').click(function(){
+	updateINTAMT();
 	dataToPost = new Object();
 	dataToPost.CONTNO 	= $('#3_CONTNO').val();
 	var DATESEARCH 	= $('#3_DATESEARCH').val();
@@ -696,6 +725,7 @@ function printpenalty(P_DATESEARCH){
 }
 
 $('#btndiscount').click(function(){
+	updateINTAMT();
 	dataToPost = new Object();
 	dataToPost.CONTNO 	= $('#3_CONTNO').val();
 	var DATESEARCH 	= $('#3_DATESEARCH').val();

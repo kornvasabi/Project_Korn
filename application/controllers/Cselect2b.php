@@ -662,7 +662,7 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($json);
 	}
 	
-<<<<<<< HEAD
+
 	function getGCode_ExchangCar(){
 		//กลุ่มสินค้า
 		$sess = $this->session->userdata('cbjsess001');
@@ -689,9 +689,6 @@ class Cselect2b extends MY_Controller {
 	}
 	
 	function getGCode_typecar(){
-=======
-	function getGCode_typecar(){ //หน้าค้นหา
->>>>>>> master
 		//กลุ่มสินค้า
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
@@ -1093,6 +1090,74 @@ class Cselect2b extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_C(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select CONTNO from {$this->MAuth->getdb('ARCRED')}
+				where CONTNO like '%".$dataSearch."%'
+	
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getTYPECOD(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select TYPECOD from {$this->MAuth->getdb('SETTYPE')} 
+				where TYPECOD like '%".$dataSearch."%' 
+				order by TYPECOD
+	
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->TYPECOD, 'text'=>$row->TYPECOD];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getMODELS(){
+		//รุ่นรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		
+		$sql = "
+			select MODELCOD from {$this->MAuth->getdb('SETMODEL')}
+			where MODELCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by MODELCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
+				$json[] = array('id'=>$row->MODELCOD, 'text'=>$row->MODELCOD);
 			}
 		}
 		

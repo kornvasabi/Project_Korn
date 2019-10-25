@@ -182,7 +182,7 @@ class ARother extends MY_Controller {
 								<span style='font-size:10.5pt;'>รูปที่ 1</span>
 								<div class='input-group'>
 									<input type='text' id='FILEPIC1' class='form-control input-sm' readonly>
-									<span id='PIC1' class='input-group-addon btn-cyan'>เพิ่ม</span>
+									<span id='PIC1' class='input-group-addon btn-cyan' id='fileToUpload'>เพิ่ม</span>
 								</div>
 							</div>
 						</div>
@@ -539,8 +539,8 @@ class ARother extends MY_Controller {
 	}
 	
 	function upload_SaleTarget(){
-		$TargetMonth 	= $_REQUEST["TargetMonth"]; 
-		$TargetYear 	= $_REQUEST["TargetYear"];
+		$TargetMonth 	= 'AA'; 
+		$TargetYear 	= 'BB';
 		
 		$output_dir = $_SERVER['DOCUMENT_ROOT']."/reports/test/";
 		//echo $output_dir; exit;

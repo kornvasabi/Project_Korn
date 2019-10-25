@@ -361,6 +361,31 @@ function Add_AROTHER($thisWindowARothr){
 		//loadForm();
 	});
 	
+	/*$('#PIC1').uploadFile({
+		//url:base_url+'Jaahe/Report_SaleTarget/upload_SaleTarget'
+		url:'../SYS05/ARother/upload_SaleTarget'
+		,fileName: 'myfile'
+		,multiple: false
+		,maxFileSize: 10240*1024 // Allow size 10MB
+		,allowedTypes: "xls,xlsx"
+		,acceptFiles: 'application/vnd.ms-excel,application'
+		,showStatusAfterSuccess: false
+		,autoSubmit:true
+		,dynamicFormData: function(){
+		}
+		,dragDropStr: 'เลือกไฟล์'
+		,abortStr:'เลือกไฟล์'
+		,cancelStr:'ยกเลิก'
+		,doneStr:'ผิดพลาด :: doneStr'
+		,extErrorStr:'ผิดพลาด :: ต้องเป็นไฟล์ '
+		,sizeErrorStr:'ผิดพลาด sizeErrorStr'
+		,uploadErrorStr:'ผิดพลาด uploadErrorStr'
+		,uploadStr:'เลือกไฟล์'
+		,onSuccess:function(files,data,xhr,pd) {	
+				
+		}
+	});*/
+	
 	$('#PIC2').click(function(){
 		alert('ยังไม่เปิดให้ใช้งาน');
 		//loadForm();
