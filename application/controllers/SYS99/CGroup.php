@@ -244,7 +244,6 @@ class CGroup extends MY_Controller {
 			";
 		}
 		
-		
 		$html = "
 			<div id='table-fixed-CGroupDetail' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
 				<table id='table-CGroupDetail' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>

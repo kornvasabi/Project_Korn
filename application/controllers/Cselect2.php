@@ -670,6 +670,40 @@ class Cselect2 extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getTYPCONT(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select CONTTYP,'('+CONTTYP+') '+CONTDESC as CONTDESC
+			from {$this->MAuth->getdb('TYPCONT')}
+			where 1=1 and CONTTYP='".$dataNow."' collate Thai_CS_AS 
+				
+			union
+			select top 20 CONTTYP,'('+CONTTYP+') '+CONTDESC as CONTDESC
+			from {$this->MAuth->getdb('TYPCONT')}
+			where 1=1 and CONTTYP+' '+CONTDESC like '%".$dataSearch."%' collate Thai_CS_AS 
+			order by CONTTYP
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					'id'=>str_replace(chr(0),'',$row->CONTTYP), 
+					'text'=>str_replace(chr(0),'',$row->CONTDESC)
+				);
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	
+	
 }
 
 
