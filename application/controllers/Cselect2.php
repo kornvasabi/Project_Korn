@@ -459,6 +459,8 @@ class Cselect2 extends MY_Controller {
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		$locat = $_REQUEST['locat'];
 		
+		$strno = (!isset($_REQUEST['strno']) ? '':$_REQUEST['strno']);
+		
 		$GCODE = (!isset($_REQUEST["GCODE"]) ? "" : $_REQUEST["GCODE"]);
 		$TYPE = (!isset($_REQUEST["TYPE"]) ? "" : $_REQUEST["TYPE"]);
 		$MODEL = (!isset($_REQUEST["MODEL"]) ? "" : $_REQUEST["MODEL"]);
@@ -484,6 +486,16 @@ class Cselect2 extends MY_Controller {
 		}
 		if($STAT != ""){
 			$cond .= " and STAT='".$STAT."'";
+		}
+		
+		if($strno != ""){
+			$strnolength = sizeof($strno);
+			$str = "";
+			for($i=0;$i<$strnolength;$i++){
+				if($str != ""){ $str .= ","; }
+				$str.= "'".$strno[$i]["strno"]."'";
+			}
+			$cond .= " and STRNO not in (".$str.")";
 		}
 		
 		$sql = "
@@ -612,6 +624,12 @@ class Cselect2 extends MY_Controller {
 		$query = $this->db->query($sql);
 		$row = $query->row();
 		
+		/*@@@@@@@@@@@@@@@@@@@@@@@@
+			@@ RTSL ขายปลีก
+			@@ WHSL ขายส่ง
+			@@ PMSL ขายโปรโมชั่น
+			@@ SLCP ขายแคมเปญ
+		@@@@@@@@@@@@@@@@@@@@@@@@*/
 		$sql = "
 			select SaleNo from DBFREE.dbo.SPSale 
 			where cast(left(SaleDate,4)-543 as varchar(4))+CAST(replace(right(SaleDate,5),'/','') as varchar(4))='".$sdate."'
@@ -702,7 +720,123 @@ class Cselect2 extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getfromCUSTOMER(){
+		$html = "
+			<div class='row'>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						ชื่อ
+						<input type='text' id='cus_fname' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						สกุล
+						<input type='text' id='cus_lname' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						หมายเลขบัตร
+						<input type='text' id='cus_idno' class='form-control'>
+					</div>
+				</div>
+				
+				<div class='col-sm-12'>
+					<button id='cus_search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
+				</div>
+				
+				<div id='cus_result' class='col-sm-12'></div>
+			</div>
+		";
+		
+		echo json_encode(array("html"=>$html));
+	}
 	
+	function getResultCUSTOMER(){
+		$fname = $_POST['fname'];
+		$lname = $_POST['lname'];
+		$idno  = $_POST['idno'];
+		
+		$cond = "";
+		if($fname != ""){
+			$cond .= " and a.NAME1 like '%".$fname."%'";
+		}
+		if($lname != ""){
+			$cond .= " and a.NAME2 like '%".$lname."%'";
+		}
+		if($idno != ""){
+			$cond .= " and a.IDNo like '%".$idno."%'";
+		}
+		
+		
+		$sql = "
+			select top 100 a.CUSCOD,a.SNAM+a.NAME1+' '+a.NAME2 as CUSNAME,a.GRADE
+				,case when a.GRADE in ('F','FF') then 'F' 
+					when a.GRADE not in (select GRDCOD from SETGRADCUS) then 'F'
+					else '' end GRADESTAT
+				,a.SNAM+a.NAME1+' '+a.NAME2+' ('+a.CUSCOD+')'+'-'+a.GRADE as CUSNAMES
+				,1 as ADDRNO
+				,(
+					select '('+aa.ADDRNO+') '+aa.ADDR1+' '+aa.ADDR2+' ต.'+aa.TUMB
+						+' อ.'+bb.AUMPDES+' จ.'+cc.PROVDES+' '+aa.ZIP as ADDRNODetails 			
+					from {$this->MAuth->getdb('CUSTADDR')} aa
+					left join {$this->MAuth->getdb('SETAUMP')} bb on aa.AUMPCOD=bb.AUMPCOD
+					left join {$this->MAuth->getdb('SETPROV')} cc on bb.PROVCOD=cc.PROVCOD
+					where aa.CUSCOD=a.CUSCOD and aa.ADDRNO=1
+				) as ADDRDES
+			from {$this->MAuth->getdb('CUSTMAST')} a 
+			where 1=1 ".$cond."
+			order by CUSCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .= "
+					<tr style='".($row->GRADESTAT == 'F' ? "color:#aaa;":"")."'>
+						<td style='width:40px;'>
+							<i class='
+								".($row->GRADESTAT == 'F' ? "":"CUSDetails")."
+								".($row->GRADESTAT == 'F' ? "btn-default":"btn-warning")."
+								btn btn-xs glyphicon glyphicon-zoom-in' 
+								CUSCOD='".$row->CUSCOD."'
+								CUSNAMES='".$row->CUSNAMES."' 
+								ADDRNO='".$row->ADDRNO."' 
+								ADDRDES='".$row->ADDRDES."' 
+								style='cursor:pointer;".($row->GRADESTAT == 'F' ? "color:#ddd;":"")."'> เลือก  </i>
+						</td>
+						<td style='vertical-align:middle;'>".$row->CUSCOD."</td>
+						<td style='vertical-align:middle;'>".$row->CUSNAME."</td>
+						<td style='vertical-align:middle;'>".$row->GRADE."</td>
+					</tr>
+				";
+			}
+		}
+		
+		$html = "
+			<div>
+				<table class='table'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>รหัสลูกค้า</th>
+							<th>ชื่อ-สกุล</th>
+							<th>เกรด</th>
+						</tr>
+					</thead>
+					<tbody>
+						".$html."
+					</tbody>
+				</table>
+			</div>
+		";
+		
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
 	
 }
 

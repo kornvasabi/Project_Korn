@@ -632,6 +632,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					$('#add_strno').attr('disabled',true);
 					$('#add_strno').empty().append(newOption).trigger('change');
 				}
+				
+				$('#add_cuscod').trigger('select2:select');
 			}
 		});
 	});
@@ -2396,9 +2398,11 @@ function fn_billdasActive(rank){
 		
 			$('.add_billdas').each(function(){								
 				if(size > 1){
-					$(this).select2('destroy');
-					$(this).remove();
-					size -= 1;
+					if(typeof $(this).find(':selected').val() === 'undefined'){ 
+						$(this).select2('destroy');
+						$(this).remove();
+						size -= 1;
+					}
 				}
 			});
 		}

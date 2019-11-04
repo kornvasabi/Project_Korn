@@ -43,8 +43,10 @@ $(function(){
 	});
 });
 
+var jd_btnt1search = null;
+var jd_sellDetails = null;
+var jd_loadSell = null;
 $('#btnt1search').click(function(){
-	$('#btnt1search').attr('disabled',true);
 	dataToPost = new Object();
 	dataToPost.contno 	= $('#CONTNO').val();
 	dataToPost.sdatefrm = $('#SDATEFRM').val();
@@ -53,33 +55,31 @@ $('#btnt1search').click(function(){
 	dataToPost.strno 	= $('#STRNO').val();
 	dataToPost.cuscod 	= (typeof $('#CUSCOD').find(':selected').val() === 'undefined' ? '' : $('#CUSCOD').find(':selected').val());
 	
-	$('#loadding').show();
-	$.ajax({
+	$('#jd_result').html('');
+	$('#loadding').fadeIn(200);
+	jd_btnt1search = $.ajax({
 		url:'../SYS04/Sell/search',
 		data: dataToPost,
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
-			$('#loadding').hide();
+			$('#loadding').fadeOut(200);
 			
-			Lobibox.window({
-				title: 'รายการขายสด',
-				width: $(window).width(),
-				height: $(window).height(),
-				content: data.html,
-				draggable: false,
-				closeOnEsc: false,
-				shown: function($this){
-					//$this.destroy();
-					//wizard();		
-					$('.sellDetails').click(function(){
-						sellDetails($(this).attr('contno'),'search');
-					});
-				},
-				beforeClose : function(){
-					$('#btnt1search').attr('disabled',false);
-				}
+			$('#jd_result').html(data.html);
+			$('#table-sellCar').on('draw.dt',function(){ redraw(); });
+			fn_datatables('table-sellCar',1,250);
+			$('.data-export').prepend('<img id="table-sellCar-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
+			$("#table-sellCar-excel").click(function(){ 	
+				tableToExcel_Export(data.html,"ขายสด","sell"); 
 			});
+			
+			function redraw(){
+				$('.sellDetails').click(function(){
+					sellDetails($(this).attr('contno'),'search');
+				});
+			}
+			
+			jd_btnt1search = null;
 		},
 		error: function (x,c,b){
 			Lobibox.notify('error', {
@@ -93,7 +93,11 @@ $('#btnt1search').click(function(){
 				messageHeight: '90vh',
 				msg: x.status +' '+ b
 			});
-			$('#loadding').hide();
+			$('#loadding').fadeOut(200);
+			jd_btnt1search = null;
+		},
+		beforeSend: function(){
+			if(jd_btnt1search !== null){ jd_btnt1search.abort(); }
 		}
 	});
 });
@@ -103,7 +107,7 @@ function sellDetails($contno,$event){
 	dataToPost.contno = $contno;
 	
 	$('#loadding').show();
-	$.ajax({
+	jd_sellDetails = $.ajax({
 		url:'../SYS04/Sell/loadSell',
 		data: dataToPost,
 		type: 'POST',
@@ -112,6 +116,7 @@ function sellDetails($contno,$event){
 			$('#loadding').hide();
 			//load form leasing
 			loadSell(data);
+			jd_sellDetails = null;
 		},
 		error: function (x,c,b){
 			Lobibox.notify('error', {
@@ -126,13 +131,17 @@ function sellDetails($contno,$event){
 				msg: x.status +' '+ b
 			});
 			$('#loadding').hide();
+			jd_sellDetails = null;
+		},
+		beforeSend: function(){
+			if(jd_sellDetails !== null){ jd_sellDetails.abort(); }
 		}
 	});
 }
 
 function loadSell($param){
 	$('#loadding').show();
-	$.ajax({
+	jd_loadSell = $.ajax({
 		url:'../SYS04/Sell/getfromSell',
 		type: 'POST',
 		dataType: 'json',
@@ -152,15 +161,21 @@ function loadSell($param){
 				beforeClose : function(){
 					$('#btnt1leasing').attr('disabled',false);
 				}
-			});			
+			});
+			
+			jd_loadSell = null;
+		},
+		beforeSend: function(){
+			if(jd_loadSell !== null){ jd_loadSell.abort(); }
 		}
 	});
 }
 
+var jd_btnt1sell = null;
 $('#btnt1sell').click(function(){
 	$('#btnt1sell').attr('disabled',true);
 	$('#loadding').show();
-	$.ajax({
+	jd_btnt1sell = $.ajax({
 		url:'../SYS04/Sell/getfromSell',
 		type: 'POST',
 		dataType: 'json',
@@ -179,7 +194,12 @@ $('#btnt1sell').click(function(){
 				beforeClose : function(){
 					$('#btnt1sell').attr('disabled',false);
 				}
-			});			
+			});	
+
+			jd_btnt1sell = null;	
+		},
+		beforeSend: function(){
+			if(jd_btnt1sell !== null){ jd_btnt1sell.abort(); }
 		}
 	});
 });
@@ -207,7 +227,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				});
 				
 				var sdate = $('#add_sdate').val();
-				var cuscod = (typeof $('#add_cuscod').find(':selected').val() === 'undefined' ? '' : $('#add_cuscod').find(':selected').val());
+				var cuscod = $('#add_cuscod').attr('CUSCOD');
 				var cuscodaddr = (typeof $('#add_addrno').find(':selected').val() === 'undefined' ? '' : $('#add_addrno').find(':selected').val());
 				var strno = (typeof $('#add_strno').find(':selected').val() === 'undefined' ? '' : $('#add_strno').find(':selected').val());
 				var paydue = (typeof $('#add_paydue').find(':selected').val() === 'undefined' ? '' : $('#add_paydue').find(':selected').val());
@@ -332,7 +352,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
-	$('#add_cuscod').select2({
+	/* $('#add_cuscod').select2({
 		placeholder: 'เลือก',
         ajax: {
 			url: '../Cselect2/getCUSTOMERS',
@@ -352,12 +372,91 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			},
 			cache: true
         },
-		allowClear: false,
+		allowClear: true,
 		multiple: false,
 		dropdownParent: $("#wizard-sell"),
-		//disabled: true,
-		//theme: 'classic',
+		// disabled: true,
+		// theme: 'classic',
 		width: '100%'
+	}); */
+	
+	$('#add_cuscod').click(function(){
+		$('#loadding').fadeIn(200);
+		
+		$.ajax({
+			url:'../Cselect2/getfromCUSTOMER',
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				$('#add_cuscod').attr('disabled',true);
+				$('#add_save').attr('disabled',true);
+				
+				Lobibox.window({
+					title: 'FORM CUSTOMER',
+					//width: $(window).width(),
+					//height: $(window).height(),
+					content: data.html,
+					draggable: false,
+					closeOnEsc: true,
+					shown: function($thisCUS){
+						var jd_cus_search = null;
+						$('#cus_fname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_lname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_idno').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_search').click(function(){ fnResultCUSTOMER(); });
+						
+						function fnResultCUSTOMER(){
+							data = new Object();
+							data.fname = $('#cus_fname').val();
+							data.lname = $('#cus_lname').val();
+							data.idno = $('#cus_idno').val();
+							
+							$('#loadding').fadeIn(200);
+							jd_cus_search = $.ajax({
+								url:'../Cselect2/getResultCUSTOMER',
+								data:data,
+								type: 'POST',
+								dataType: 'json',
+								success: function(data){
+									$('#cus_result').html(data.html);
+									
+									$('.CUSDetails').unbind('click');
+									$('.CUSDetails').click(function(){
+										dtp = new Object();
+										dtp.cuscod  = $(this).attr('CUSCOD');
+										dtp.cusname = $(this).attr('CUSNAMES');
+										dtp.addrno  = $(this).attr('ADDRNO');
+										dtp.addrdes = $(this).attr('ADDRDES');
+										
+										$('#add_cuscod').attr('CUSCOD',dtp.cuscod);
+										$('#add_cuscod').val(dtp.cusname);
+										
+										var newOption = new Option(dtp.addrdes, dtp.addrno, true, true);
+										//$('#add_addrno').attr('disabled',true);
+										$('#add_addrno').empty().append(newOption).trigger('change');	
+										
+										$thisCUS.destroy();
+									});
+									
+									$('#loadding').fadeOut(200);
+									jd_cus_search = null;
+								},
+								beforeSend: function(){
+									if(jd_cus_search !== null){ jd_cus_search.abort(); }
+								}
+							});
+						}
+						
+					},
+					beforeClose : function(){
+						$('#add_cuscod').attr('disabled',false);
+						$('#add_save').attr('disabled',false);
+					}
+				});
+				
+				$('#loadding').fadeOut(200);
+			}
+		});
 	});
 	
 	$('#add_inclvat').select2({ 
@@ -374,7 +473,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				dataToPost = new Object();
 				dataToPost.now = $('#add_addrno').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				dataToPost.cuscod = $('#add_cuscod').find(':selected').val();
+				dataToPost.cuscod = $('#add_cuscod').attr('CUSCOD');
 				
 				return dataToPost;				
 			},
@@ -452,7 +551,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
-	$('#add_cuscod').change(function(){
+	//$('#add_cuscod').change(function(){
+	/* $('#add_cuscod').on('select2:select', function (e) {	
 		dataToPost = new Object();
 		dataToPost.cuscod = $(this).find(':selected').val();
 		
@@ -462,6 +562,9 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			type: 'POST',
 			dataType: 'json',
 			success: function(data) {
+				var newOption = new Option(data.ADDRDT, data.ADDRNO, true, true);
+				$('#add_addrno').empty().append(newOption).trigger('change');	
+				
 				if(data.GRADE == "F" || data.GRADE == "FF"){
 					Lobibox.notify('error', {
 						title: 'ผิดพลาด',
@@ -502,11 +605,12 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				}
 			}
 		});
-	});
+	}); */
 	
 	$('#add_strno').change(function(){
 		dataToPost = new Object();
 		dataToPost.strno = (typeof $(this).find(':selected').val() === 'undefined' ? '' : $(this).find(':selected').val());
+		dataToPost.sdate = $('#add_sdate').val();
 		
 		$.ajax({
 			url:'../SYS04/Sell/strnoChanged',
@@ -514,15 +618,31 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			type: 'POST',
 			dataType: 'json',
 			success: function(data) {
-				$('#add_stdprc').val(data.STDPRC);
-				$('#add_inprc').val(data.STDPRC);
+				if(data.error){
+					Lobibox.notify('warning', {
+						title: 'ผิดพลาด',
+						size: 'mini',
+						closeOnClick: false,
+						delay: 5000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						msg: data.msg
+					});
+				}
+				
+				$('#add_stdprc').val(data.html.price);
+				$('#add_inprc').val(data.html.price);
 			}
 		});
 	});
 	
-	$('#add_resvno').change(function(){
+	//$('#add_resvno').change(function(){
+	$('#add_resvno').on('select2:select', function (e) {	
 		dataToPost = new Object();
 		dataToPost.resvno = (typeof $(this).find(':selected').val() === 'undefined' ? '' : $(this).find(':selected').val());
+		dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
 		
 		$.ajax({
 			url:'../SYS04/Leasing/resvnoChanged',
@@ -531,12 +651,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			dataType: 'json',
 			success: function(data) {
 				if(data.SMCHQ > 0 || data.msg != ""){
-					$('#add_cuscod').select2({
-						dropdownParent: true,
-						disabled: true,
-						width:'100%'
-					});
-					$('#add_cuscod').empty().trigger('change');
+					$('#add_cuscod').attr('CUSCOD','');
+					$('#add_cuscod').val('');
 					$('#add_addrno').empty().trigger('change');
 					
 					$('#add_strno').select2({
@@ -557,75 +673,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						messageHeight: '90vh',
 						msg: data.msg
 					});
-				}else if(data.RESVNO == ""){
-					$('#add_cuscod').select2({
-						placeholder: 'เลือก',
-						ajax: {
-							url: '../Cselect2/getCUSTOMERS',
-							data: function (params) {
-								dataToPost = new Object();
-								dataToPost.now = $('#add_cuscod').find(':selected').val();
-								dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-								
-								return dataToPost;				
-							},
-							dataType: 'json',
-							delay: 1000,
-							processResults: function (data) {
-								return {
-									results: data
-								};
-							},
-							cache: true
-						},
-						allowClear: false,
-						multiple: false,
-						dropdownParent: $("#wizard-sell"),
-						disabled: false,
-						//theme: 'classic',
-						width: '100%'
-					});
-					$('#add_cuscod').empty().trigger('change');
-					$('#add_addrno').empty().trigger('change');
-					
-					$('#add_strno').select2({ 
-						placeholder: 'เลือก',
-						ajax: {
-							url: '../Cselect2/getSTRNO',
-							data: function (params) {
-								dataToPost = new Object();
-								dataToPost.now = $('#add_strno').find(':selected').val();
-								dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-								dataToPost.locat = $('#add_locat').find(':selected').val();
-								
-								return dataToPost;				
-							},
-							dataType: 'json',
-							delay: 1000,
-							processResults: function (data) {
-								return {					
-									results: data
-								};
-							},
-							cache: true
-						},
-						allowClear: false,
-						multiple: false,
-						dropdownParent: $("#wizard-sell"),
-						disabled: false,
-						//theme: 'classic',
-						width: '100%'
-					});
-					$('#add_strno').empty().trigger('change');
 				}else{
-					$('#add_cuscod').select2({
-						dropdownParent: true,
-						disabled: true,
-						width:'100%'
-					});
-					var newOption = new Option(data.CUSNAME, data.CUSCOD, true, true);
-					$('#add_cuscod').empty().append(newOption).trigger('change');
-					$('#add_addrno').empty().trigger('change');
+					$('#add_cuscod').attr('CUSCOD',data.CUSCOD);
+					$('#add_cuscod').attr('disabled',true);
+					$('#add_cuscod').val(data.CUSNAME);
+					//$('#add_addrno').empty().trigger('change');
+					var newOption = new Option(data.ADDRDES, data.ADDRNO, true, true);
+					$('#add_addrno').empty().append(newOption).trigger('change');
 					
 					$('#add_strno').select2({
 						dropdownParent: true,
@@ -637,6 +691,43 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				}
 			}
 		});
+	});
+	
+	$('#add_resvno').on('select2:unselect', function (e) {
+		$('#add_cuscod').attr('CUSCOD','');
+		$('#add_cuscod').attr('disabled',false);
+		$('#add_cuscod').val('');
+		$('#add_addrno').empty().trigger('change');
+		
+		$('#add_strno').select2({ 
+			placeholder: 'เลือก',
+			ajax: {
+				url: '../Cselect2/getSTRNO',
+				data: function (params) {
+					dataToPost = new Object();
+					dataToPost.now = $('#add_strno').find(':selected').val();
+					dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+					dataToPost.locat = $('#add_locat').find(':selected').val();
+					
+					return dataToPost;				
+				},
+				dataType: 'json',
+				delay: 1000,
+				processResults: function (data) {
+					return {					
+						results: data
+					};
+				},
+				cache: true
+			},
+			allowClear: false,
+			multiple: false,
+			dropdownParent: $("#wizard-sell"),
+			disabled: false,
+			//theme: 'classic',
+			width: '100%'
+		});
+		$('#add_strno').empty().trigger('change');
 	});
 	
 	document.getElementById("dataTable-fixed-inopt").addEventListener("scroll", function(){
@@ -841,6 +932,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
+	/*
 	$('#add_recomcod').select2({ 
 		placeholder: 'เลือก',
         ajax: {
@@ -867,6 +959,82 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		//disabled: true,
 		//theme: 'classic',
 		width: '100%'
+	});
+	*/
+	
+	$('#add_recomcod').click(function(){
+		$('#loadding').fadeIn(200);
+		
+		$.ajax({
+			url:'../Cselect2/getfromCUSTOMER',
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				$('#add_cuscod').attr('disabled',true);
+				$('#add_recomcod').attr('disabled',true);
+				$('#add_save').attr('disabled',true);
+				
+				Lobibox.window({
+					title: 'FORM CUSTOMER',
+					//width: $(window).width(),
+					//height: $(window).height(),
+					content: data.html,
+					draggable: false,
+					closeOnEsc: true,
+					shown: function($thisCUS){
+						var jd_cus_search = null;
+						$('#cus_fname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_lname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_idno').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_search').click(function(){ fnResultCUSTOMER(); });
+						
+						function fnResultCUSTOMER(){
+							data = new Object();
+							data.fname = $('#cus_fname').val();
+							data.lname = $('#cus_lname').val();
+							data.idno = $('#cus_idno').val();
+							
+							$('#loadding').fadeIn(200);
+							jd_cus_search = $.ajax({
+								url:'../Cselect2/getResultCUSTOMER',
+								data:data,
+								type: 'POST',
+								dataType: 'json',
+								success: function(data){
+									$('#cus_result').html(data.html);
+									
+									$('.CUSDetails').unbind('click');
+									$('.CUSDetails').click(function(){
+										dtp = new Object();
+										dtp.cuscod  = $(this).attr('CUSCOD');
+										dtp.cusname = $(this).attr('CUSNAMES');
+										
+										$('#add_recomcod').attr('CUSCOD',dtp.cuscod);
+										$('#add_recomcod').val(dtp.cusname);										
+										
+										$thisCUS.destroy();
+									});
+									
+									$('#loadding').fadeOut(200);
+									jd_cus_search = null;
+								},
+								beforeSend: function(){
+									if(jd_cus_search !== null){ jd_cus_search.abort(); }
+								}
+							});
+						}
+						
+					},
+					beforeClose : function(){
+						$('#add_cuscod').attr('disabled',false);
+						$('#add_recomcod').attr('disabled',false);
+						$('#add_save').attr('disabled',false);
+					}
+				});
+				
+				$('#loadding').fadeOut(200);
+			}
+		});
 	});
 	
 	$('#add_acticod').select2({ 
@@ -948,18 +1116,18 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			callback: function(lobibox, type){
 				if (type === 'ok'){
 					dataToPost = new Object();
-					dataToPost.contno = $('#add_contno').val();
-					dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '':$('#add_locat').find(':selected').val() );
-					dataToPost.sdate = $('#add_sdate').val();
-					dataToPost.resvno = (typeof $('#add_resvno').find(':selected').val() === 'undefined' ? '':$('#add_resvno').find(':selected').val() );
-					dataToPost.approve = $('#add_approve').val();
-					dataToPost.cuscod = (typeof $('#add_cuscod').find(':selected').val() === 'undefined' ? '':$('#add_cuscod').find(':selected').val() );
-					dataToPost.inclvat = (typeof $('#add_inclvat').find(':selected').val() === 'undefined' ? '':$('#add_inclvat').find(':selected').val() );
-					dataToPost.vatrt  = $('#add_vatrt').val();
-					dataToPost.addrno = $('#add_addrno').val();
-					dataToPost.strno = $('#add_strno').val();
-					dataToPost.reg = $('#add_reg').val();
-					dataToPost.paydue = $('#add_paydue').val();
+					dataToPost.contno 	= $('#add_contno').val();
+					dataToPost.locat 	= (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '':$('#add_locat').find(':selected').val() );
+					dataToPost.sdate 	= $('#add_sdate').val();
+					dataToPost.resvno 	= (typeof $('#add_resvno').find(':selected').val() === 'undefined' ? '':$('#add_resvno').find(':selected').val() );
+					dataToPost.approve 	= $('#add_approve').val();
+					dataToPost.cuscod 	= $('#add_cuscod').attr('CUSCOD');
+					dataToPost.inclvat 	= (typeof $('#add_inclvat').find(':selected').val() === 'undefined' ? '':$('#add_inclvat').find(':selected').val() );
+					dataToPost.vatrt  	= $('#add_vatrt').val();
+					dataToPost.addrno 	= $('#add_addrno').val();
+					dataToPost.strno 	= $('#add_strno').val();
+					dataToPost.reg 		= $('#add_reg').val();
+					dataToPost.paydue 	= $('#add_paydue').val();
 					
 					var inopt = [];
 					$('.inoptTab2').each(function(){
@@ -991,7 +1159,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					dataToPost.issuno 	= $('#add_issuno').val();
 					dataToPost.issudt 	= $('#add_issudt').val();
 					
-					dataToPost.recomcod = (typeof $('#add_recomcod').find(':selected').val() === 'undefined' ? '':$('#add_recomcod').find(':selected').val() );
+					dataToPost.recomcod = $('#add_recomcod').attr('CUSCOD');
 					dataToPost.acticod 	= (typeof $('#add_acticod').find(':selected').val() === 'undefined' ? '':$('#add_acticod').find(':selected').val() );
 					dataToPost.commission = $('#add_commission').val();
 					dataToPost.free 	= $('#add_free').val();
@@ -1166,9 +1334,11 @@ function fn_billdasActive(rank){
 		
 			$('.add_billdas').each(function(){								
 				if(size > 1){
-					$(this).select2('destroy');
-					$(this).remove();
-					size -= 1;
+					if(typeof $(this).find(':selected').val() === 'undefined'){ 
+						$(this).select2('destroy');
+						$(this).remove();
+						size -= 1;
+					}
 				}
 			});
 		}
@@ -1189,8 +1359,12 @@ function permission($dataLoad,$thisWindowLeasing){
 	var newOption = new Option($dataLoad.RESVNO, $dataLoad.RESVNO, true, true);
 	$('#add_resvno').empty().append(newOption).trigger('change');
 	$('#add_approve').val($dataLoad.APPVNO);
-	var newOption = new Option($dataLoad.CUSNAME, $dataLoad.CUSCOD, true, true);
-	$('#add_cuscod').empty().append(newOption).trigger('change');
+	//var newOption = new Option($dataLoad.CUSNAME, $dataLoad.CUSCOD, true, true);
+	//$('#add_cuscod').empty().append(newOption).trigger('change');
+	$('#add_cuscod').attr('CUSCOD',$dataLoad.CUSCOD);
+	$('#add_cuscod').attr('disabled',true);
+	$('#add_cuscod').val($dataLoad.CUSNAME);
+					
 	$('#add_inclvat').val($dataLoad.INCLVAT).trigger('change');
 	$('#add_vatrt').val($dataLoad.VATRT);
 	var newOption = new Option($dataLoad.ADDRDetail, $dataLoad.ADDRNO, true, true);
@@ -1247,7 +1421,7 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_resvno').select2({ dropdownParent: true,disabled: true,width:'100%' });
 	$('#add_approve').attr('disabled',true);
 	
-	$('#add_cuscod').select2({ dropdownParent: true,disabled: true,width:'100%' });
+	$('#add_cuscod').attr('disabled',true);
 	$('#add_inclvat').select2({ dropdownParent: true,disabled: true,width:'100%' });
 	$('#add_vatrt').attr('disabled',true);
 	$('#add_addrno').select2({ dropdownParent: true,disabled: true,width:'100%' });
@@ -1326,7 +1500,7 @@ function btnOther($thisWindowLeasing){
 					$('#loadding').show();
 					
 					$.ajax({
-						url:'../SYS04/Leasing/deleteContno',
+						url:'../SYS04/Sell/deleteContno',
 						data:dataToPost,
 						type:'POST',
 						dataType:'json',

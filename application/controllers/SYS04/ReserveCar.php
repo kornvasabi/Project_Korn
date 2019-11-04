@@ -41,7 +41,7 @@ class ReserveCar extends MY_Controller {
 						<div class='col-xs-2 col-sm-2'>	
 							<div class='form-group'>
 								วันที่จอง
-								<input type='text' id='SRESVDT' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonth')."'>
+								<input type='text' id='SRESVDT' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonthB1')."'>
 							</div>
 						</div>	
 						<div class='col-xs-2 col-sm-2'>	
@@ -175,7 +175,7 @@ class ReserveCar extends MY_Controller {
 							<th style='vertical-align:middle;'>วันที่ทำรายการ</th>
 						</tr>
 					</thead>	
-					<tbody>						
+					<tbody>
 						".$html."
 					</tbody>
 				</table>

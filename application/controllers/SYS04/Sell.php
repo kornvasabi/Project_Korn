@@ -28,8 +28,8 @@ class Sell extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div class='col-sm-12' style='overflow:auto;'>					
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+				<div class='col-sm-12'>
 					<div class='row'>
 						<div class=' col-sm-2'>	
 							<div class='form-group'>
@@ -40,7 +40,7 @@ class Sell extends MY_Controller {
 						<div class=' col-sm-2'>	
 							<div class='form-group'>
 								วันที่ทำสัญญา
-								<input type='text' id='SDATEFRM' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonth')."'>
+								<input type='text' id='SDATEFRM' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonthB1')."'>
 							</div>
 						</div>	
 						<div class=' col-sm-2'>	
@@ -71,15 +71,18 @@ class Sell extends MY_Controller {
 					<div class='row'>
 						<div class=' col-sm-6'>	
 							<div class='form-group'>
-								<input type='button' id='btnt1sell' class='btn btn-cyan btn-sm' value='ขายสด' style='width:100%'>
+								<button id='btnt1sell' class='btn btn-cyan btn-block'><span class='glyphicon glyphicon-pencil'> ขายสด</span></button>
 							</div>
 						</div>
 						<div class=' col-sm-6'>	
 							<div class='form-group'>
-								<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+								<button id='btnt1search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 							</div>
 						</div>
-					</div>		
+					</div>	
+					<div class='row'>
+						<div id='jd_result' class='col-sm-12'></div>
+					</div>
 				</div>
 			</div>
 		";
@@ -189,26 +192,8 @@ class Sell extends MY_Controller {
 					</tbody>
 				</table>
 			</div>
-			<div>
-				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-sellCar', 'exporttoexcell');\" style='width:25px;height:25px;cursor:pointer;'/>
-			</div>
 		";
-		
-		/*
-		$html = "
-			<div class='panel panel-default'>
-				<div class='panel-heading'>
-					<div class='panel-title'>
-						<h4>Panel title</h4>
-					</div>
-				</div>
-				<div class='panel-body'>
-					".$html."
-				</div>
-			</div>
-		";
-		*/
-		
+				
 		$response = array("html"=>$html,"status"=>true);
 		echo json_encode($response);
 	}
@@ -408,6 +393,18 @@ class Sell extends MY_Controller {
 		$data["CALINT"] = $row->CALINT;
 		$data["DISC_FM"] = $row->DISC_FM;
 		
+		$sql = "select top 1 PAYCODE,'('+PAYCODE+') '+PAYDESC PAYDESC from {$this->MAuth->getdb('PAYDUE')} order by PAYCODE";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$data["PAYCODE"] = str_replace(chr(0),'',$row->PAYCODE);
+		$data["PAYDESC"] = str_replace(chr(0),'',$row->PAYDESC);
+		
+		$sql = "select top 1 ACTICOD,'('+ACTICOD+') '+ACTIDES as ACTIDES from {$this->MAuth->getdb('SETACTI')} order by ACTICOD";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$data["ACTICOD"] = str_replace(chr(0),'',$row->ACTICOD);
+		$data["ACTIDES"] = str_replace(chr(0),'',$row->ACTIDES);
+		
 		$html = "
 			<div id='wizard-sell' class='wizard-wrapper'>    
 				<div class='wizard'>
@@ -434,9 +431,9 @@ class Sell extends MY_Controller {
 							
 						</ul>
 						<div class='tab-content bg-white'>
-							".$this->getfromLeasingTab11($data)."
-							".$this->getfromLeasingTab22($data)."
-							".$this->getfromLeasingTab33($data)."							
+							".$this->getfromSellTab11($data)."
+							".$this->getfromSellTab22($data)."
+							".$this->getfromSellTab33($data)."							
 							
 							<!-- ul class='pager'>
 								<li class='previous first disabled' style='display:none;'><a href='javascript:void(0)'>First</a></li>
@@ -467,7 +464,7 @@ class Sell extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	private function getfromLeasingTab11($data){
+	private function getfromSellTab11($data){
 		$html = "
 			<div class='tab-pane active' name='tab11' style='height:calc(100vh - 260px);overflow:auto;'>
 				<fieldset style='height:100%'>
@@ -511,7 +508,7 @@ class Sell extends MY_Controller {
 								<div class='col-sm-4'>	
 									<div class='form-group'>
 										ลูกค้า
-										<select id='add_cuscod' class='form-control input-sm' data-placeholder='ลูกค้า'></select>
+										<input type='text' id='add_cuscod' CUSCOD='' class='form-control input-sm' placeholder='ลูกค้า' >
 									</div>
 								</div>
 							</div>
@@ -554,10 +551,20 @@ class Sell extends MY_Controller {
 								<div class='col-sm-4'>	
 									<div class='form-group'>
 										วิธีชำระค่างวด
-										<select id='add_paydue' class='form-control input-sm' data-placeholder='วิธีชำระค่างวด'></select>
+										<select id='add_paydue' class='form-control input-sm' data-placeholder='วิธีชำระค่างวด'>
+											<option value='".$data["PAYCODE"]."' selected>".$data["PAYDESC"]."</option>
+										</select>
 									</div>
 								</div>
 							</div>
+							<div class='row'>
+								<div class=' col-sm-4'>	
+									<div class='form-group'>
+										กิจกรรมการขาย
+										<select id='add_acticod' class='form-control input-sm' data-placeholder='กิจกรรมการขาย'></select>
+									</div>
+								</div>
+							</div>	
 						</div>
 					</div>
 				</fieldset>
@@ -566,7 +573,7 @@ class Sell extends MY_Controller {
 		return $html;
 	}
 	
-	private function getfromLeasingTab22($data){
+	private function getfromSellTab22($data){
 		$html = "
 			<div class='tab-pane' name='tab22' style='height:calc(100vh - 260px);overflow:auto;'>
 				<fieldset style='height:100%'>
@@ -696,26 +703,20 @@ class Sell extends MY_Controller {
 		return $html;
 	}
 	
-	private function getfromLeasingTab33($data){
+	private function getfromSellTab33($data){
 		$html = "
 			<div class='tab-pane' name='tab33' style='height:calc(100vh - 260px);overflow:auto;'>
 				<fieldset style='height:100%'>
 					<div style='float:left;' class='col-sm-8 '>
 						<div class='row'>
-							<div class=' col-sm-6'>	
+							<div class=' col-sm-4'>	
 								<div class='form-group'>
 									ผู้แนะนำการซื้อ
-									<select id='add_recomcod' class='form-control input-sm' data-placeholder='ผู้แนะนำการซื้อ'></select>
+									<input type='text' id='add_recomcod' CUSCOD='' class='form-control input-sm' placeholder='ผู้แนะนำการซื้อ' >
 								</div>
 							</div>
-							
-							<div class=' col-sm-6'>	
-								<div class='form-group'>
-									กิจกรรมการขาย
-									<select id='add_acticod' class='form-control input-sm' data-placeholder='กิจกรรมการขาย'></select>
-								</div>
-							</div>
-							
+						</div>
+						<div class='row'>
 							<div class='col-sm-4'>	
 								<div class='form-group'>
 									ค่าคอมบุคคลนอก
@@ -743,7 +744,7 @@ class Sell extends MY_Controller {
 									<input type='text' id='add_crdtxno' class='form-control input-sm' placeholder='เลขที่ใบลดหนี้' >
 								</div>
 							</div>
-							<div class='col-sm-4'>	
+							<div class='col-sm-4 col-sm-offset-4'>	
 								<div class='form-group'>
 									จำนวนเงินที่ลดหนี้
 									<input type='text' id='add_crdamt' class='form-control input-sm' placeholder='จำนวนเงินที่ลดหนี้' value='0.00'>
@@ -754,7 +755,7 @@ class Sell extends MY_Controller {
 							<div class='2 col-sm-12'>	
 								<div class='form-group'>
 									หมายเหตุ
-									<textarea type='text' id='add_memo1' class='form-control input-sm' placeholder='หมายเหตุ' ></textarea>
+									<textarea type='text' id='add_memo1' class='form-control input-sm' placeholder='หมายเหตุ'  rows=4 style='resize:vertical;'></textarea>
 								</div>
 							</div>
 						</div>
@@ -776,19 +777,141 @@ class Sell extends MY_Controller {
 	}
 	
 	function strnoChanged(){
-		$strno = $_REQUEST['strno'];
-		$sql = "select STDPRC from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$strno."'";
-		$query = $this->db->query($sql);
+		$response = array("html"=>"","error"=>false,"msg"=>"");
+		$strno 	  = $_REQUEST['strno'];
+		$sdate 	  = $this->Convertdate(1,$_REQUEST['sdate']);
+		$acticod  = '';
 		
-		$response = array();
-		if($query->row()){
-			foreach($query->result() as $row){
-				$response["STDPRC"]  = number_format($row->STDPRC,2);
-			}
-		}else{
-			$response["STDPRC"]  = '0.00';
+		if($sdate == ""){
+			$response["error"] = true;
+			$response["msg"] = "ผิดพลาด :: โปรดระบุวันที่ทำสัญญาก่อนครับ";
+			echo json_encode($response); exit;
 		}
 		
+		
+		$sql = "select * from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$strno."'";
+		$query = $this->db->query($sql);
+		
+		$data = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				foreach($row as $key => $val){
+					$data[$key] = $val;
+				}
+			}
+		}
+		
+		if($data['STAT'] == 'N'){
+			$sql = "
+				if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
+				end 
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
+				end
+				else if exists(
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
+				)
+				begin 
+					select * from {$this->MAuth->getdb('std_vehicles')} a
+					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
+					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
+				end
+			";
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$data["stdid"] = $row->id;
+					$data["stdplrank"] = $row->plrank;
+					$data["price"] = $row->price;
+				}
+			}else{
+				$response["error"] = true;
+				$response["msg"] = "
+					ผิดพลาด ไม่พบราคาขายรถใหม่ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+					รุ่น :: ".$data["MODEL"]."<br>
+					แบบ :: ".$data["BAAB"]."<br>
+					สี :: ".$data["COLOR"]."<br>
+					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$sdate)."
+				";
+				echo json_encode($response); exit;
+			}
+			
+			/*
+			$sql = "
+				select * from {$this->MAuth->getdb('std_down')} a
+				where id='".$data["stdid"]."' and plrank='".$data["stdplrank"]."' and '".$dwnAmt."' between dwnrate_s and isnull(dwnrate_e,'".$data["price"]."')
+			";
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$data["interest_rate"] 	= $row->interest_rate;
+					$data["interest_rate2"]	= $row->interest_rate2;
+				}
+			}else{
+				$response["error"] = true;
+				$response["msg"] = "
+					ผิดพลาด ไม่พบขั้นเงินดาวน์ที่ระบุมา โปรดตรวจสอบข้อมูลใหม่อีกครั้ง<br><br>
+					รุ่น :: ".$data["MODEL"]."<br>
+					แบบ :: ".$data["BAAB"]."<br>
+					สี :: ".$data["COLOR"]."<br>
+					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
+				";
+				echo json_encode($response); exit;
+			}
+			*/
+		}
+		
+		$response = array();
+		$response["html"] = $data;
 		echo json_encode($response);
 	}
 	
@@ -1103,7 +1226,7 @@ class Sell extends MY_Controller {
 			echo json_encode($response); exit; 
 		}
 		
-		$arrs["billdas"] = $_REQUEST["billdas"];
+		$arrs["billdas"] = (!isset($_REQUEST["billdas"]) ? array():$_REQUEST["billdas"]);
 		$dasSize = sizeof($arrs["billdas"]);
 		$mapMEMO1 = "";
 		for($i=0;$i<$dasSize;$i++){
@@ -1348,12 +1471,23 @@ class Sell extends MY_Controller {
 		$contno = $_REQUEST['contno'];
 		
 		$sql = "
-			if OBJECT_ID('tempdb..#leasingTemp') is not null drop table #leasingTemp;
-			create table #leasingTemp (id varchar(20),contno varchar(20),msg varchar(max));
+			if OBJECT_ID('tempdb..#sellTemp') is not null drop table #sellTemp;
+			create table #sellTemp (id varchar(20),contno varchar(20),msg varchar(max));
 			
-			begin tran leasingTran
+			begin tran sellTran
 			begin try
 				declare @CONTNO varchar(20) = '".$contno."';
+				
+				if exists(
+					select * from {$this->MAuth->getdb('CHQTRAN')} 
+					where PAYFOR='001' and FLAG!='C' and CONTNO=@CONTNO
+				)
+				begin 
+					rollback tran sellTran;
+					insert into #sellTemp select 'E','','ผิดพลาด มีการรับชำระค่ารถเงินสดแล้ว ไม่สามารถลบรายการขายได้ครับ';
+					return;
+				end
+				
 				
 				update {$this->MAuth->getdb('INVTRAN')} 
 				set SDATE=null,PRICE=null,CONTNO=null,FLAG='D'
@@ -1369,33 +1503,31 @@ class Sell extends MY_Controller {
 				where CONTNO=@CONTNO
 				
 				delete from {$this->MAuth->getdb('TAXTRAN')}  
-				where TAXNO=(select TAXNO from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO)
-				
-				delete from {$this->MAuth->getdb('ARPAY')} where CONTNO=@CONTNO
+				where TAXNO=(select TAXNO from {$this->MAuth->getdb('ARCRED')} where CONTNO=@CONTNO)
 				
 				update {$this->MAuth->getdb('ARRESV')}
 				set ISSUNO	= '',
 					RECVDT	= null,
 					SDATE	= null
-				where RESVNO=(select RESVNO from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO)
+				where RESVNO=(select RESVNO from {$this->MAuth->getdb('ARCRED')} where CONTNO=@CONTNO)
 				
-				delete from {$this->MAuth->getdb('ARMAST')}
+				delete from {$this->MAuth->getdb('ARCRED')}
 				where CONTNO=@CONTNO
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-				values ('".$this->sess["IDNo"]."','SYS04::ลบการขายผ่อน',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				values ('".$this->sess["IDNo"]."','SYS04::ลบการขายสด',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 
-				insert into #leasingTemp select 'S',@CONTNO,'ลบรายการขาย เลขที่สัญญา '+@CONTNO+' แล้ว';
-				commit tran leasingTran;
+				insert into #sellTemp select 'S',@CONTNO,'ลบรายการขาย เลขที่สัญญา '+@CONTNO+' แล้ว';
+				commit tran sellTran;
 			end try
 			begin catch
-				rollback tran leasingTran;
-				insert into #leasingTemp select 'E','',ERROR_MESSAGE();
+				rollback tran sellTran;
+				insert into #sellTemp select 'E','',ERROR_MESSAGE();
 			end catch
 		";
 		//echo $sql; exit;
 		$this->db->query($sql);
-		$sql = "select * from #leasingTemp";
+		$sql = "select * from #sellTemp";
 		$query = $this->db->query($sql);
 	  
 		if($query->row()){
@@ -1760,6 +1892,7 @@ class Sell extends MY_Controller {
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
 		$mpdf->Output();
 	}
+	
 }
 
 

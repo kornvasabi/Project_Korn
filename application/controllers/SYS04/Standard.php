@@ -9,7 +9,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                           _ _/ /
                          /___ /
 ********************************************************/
-class Standart extends MY_Controller {
+class Standard extends MY_Controller {
 	private $sess = array(); 
 	
 	function __construct(){
@@ -91,7 +91,7 @@ class Standart extends MY_Controller {
 			</div>
 		";
 		
-		$html.= "<script src='".base_url('public/js/SYS04/Standart.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/SYS04/Standard.js')."'></script>";
 		echo $html;
 	}
 	
@@ -1163,7 +1163,7 @@ class Standart extends MY_Controller {
 								<thead>	
 									<tr align='center'>
 										<th colspan='9' style='vertical-align:middle;background-color:#c8e6b7;'>
-											Standart การดาวน์รถ
+											Standard การดาวน์รถ
 										</th>
 									</tr>
 									<tr align='center'>
@@ -1208,7 +1208,7 @@ class Standart extends MY_Controller {
 								<thead>
 									<tr align='center'>
 										<th colspan='5' style='vertical-align:middle;background-color:#c8e6b7;'>
-											Standart ของแถม
+											Standard ของแถม
 										</th>
 									</tr>
 									<tr align='center'>
@@ -1369,7 +1369,7 @@ class Standart extends MY_Controller {
 								<thead>	
 									<tr align='center'>
 										<th colspan='8' style='vertical-align:middle;background-color:#c8e6b7;'>
-											Standart การดาวน์รถ
+											Standard การดาวน์รถ
 										</th>
 									</tr>
 									<tr align='center'>
@@ -1412,7 +1412,7 @@ class Standart extends MY_Controller {
 								<thead>
 									<tr align='center'>
 										<th colspan='6' style='vertical-align:middle;background-color:#c8e6b7;'>
-											Standart ของแถม
+											Standard ของแถม
 										</th>
 									</tr>
 									<tr align='center'>
@@ -1444,7 +1444,15 @@ class Standart extends MY_Controller {
 					
 					<div class='col-sm-12'>
 						<br>
-						<div class='col-sm-2 col-sm-offset-10'>	
+						<div class='col-sm-4'>	
+							<button id='btnUpload' class='btn btn-warning'><span class='glyphicon glyphicon-upload'> Upload</span></button>
+							
+							<a id='btnDownload' class='btn btn-info' href='".base_url()."public/FileStandard.xlsx'>
+								<span class='glyphicon glyphicon-download'> Download</span>
+							</a>
+						</div>
+						
+						<div class='col-sm-2 col-sm-offset-6'>	
 							<button id='btnSave' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
 						</div>
 						<br>
@@ -1455,6 +1463,75 @@ class Standart extends MY_Controller {
 		
 		$response = array("html"=>$html);
 		echo json_encode($response);
+	}
+	
+	function getFormUPLOAD(){
+		$html = "
+			<div id='fileupload'></div>
+		";
+		
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	
+	function getDataINFile(){
+		$this->load->library('excel');
+		
+		$file = $_FILES["myfile"]["tmp_name"];
+		
+		//read file from path
+		$objPHPExcel = PHPExcel_IOFactory::load($file);
+		
+		//X ตรวจสอบว่ามีกี่ sheet
+		//X $sheetCount = $objPHPExcel->getSheetCount();
+		//X จะดึงข้อมูลแค่ sheet 1 เท่านั้น
+		$sheetCount = 1; 
+		for($sheetIndex=0;$sheetIndex<$sheetCount;$sheetIndex++){
+			$objPHPExcel->setActiveSheetIndex($sheetIndex);
+			//get only the Cell Collection
+			$cell_collection = $objPHPExcel->getActiveSheet()->getCellCollection();
+			 
+			$arrs = array("now"=>1,"old"=>1); 
+			//extract to a PHP readable array format			
+			foreach ($cell_collection as $cell) {
+				$column = $objPHPExcel->getActiveSheet()->getCell($cell)->getColumn();
+				$row = $objPHPExcel->getActiveSheet()->getCell($cell)->getRow();
+				$data_value = $objPHPExcel->getActiveSheet()->getCell($cell)->getValue();
+				
+				if($arrs["old"] == 1){
+					$arrs["now"] = 1;
+				}else if($arrs["old"] == $row){
+					$arrs["now"] = $arrs["now"];
+				}else{
+					$arrs["now"] += 1;
+				}
+				//The header will/should be in row 1 only. of course, this can be modified to suit your need.
+				if ($row == 1 and $sheetIndex == 0) {
+					$header[$row][$column] = $data_value;
+				} else {
+					switch($column){
+						case 'G': $arr_data[$arrs["now"]][$column] = $this->Convertdate(2,$data_value); break;
+						case 'H': $arr_data[$arrs["now"]][$column] = $this->Convertdate(2,$data_value); break;
+						default: $arr_data[$arrs["now"]][$column] = $data_value; break;
+					}
+				}
+				
+				
+				$arrs["old"] = $row;
+			}
+		}
+		
+		$arrs = array("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z");
+		$datasize = sizeof($arr_data);
+		for($i=1;$i<=$datasize;$i++){
+			foreach($arrs as $key => $val){
+				if(!isset($arr_data[$i][$val])){
+					$arr_data[$i][$val] = '';
+				}
+			}
+		}
+		
+		echo json_encode($arr_data); 
 	}
 	
 	function dataResv(){
@@ -2192,13 +2269,13 @@ class Standart extends MY_Controller {
 		
 		if(@$_POST["STDDWN"] == ""){
 			$response["error"] = true;
-			$response["msg"] = 'โปรดระบุ Standart การดาวน์รถก่อนครับ';
+			$response["msg"] = 'โปรดระบุ Standard การดาวน์รถก่อนครับ';
 			echo json_encode($response); exit;
 		}
 		
 		if(@$_POST["STDFREE"] == ""){
 			$response["error"] = true;
-			$response["msg"] = 'โปรดระบุ Standart ของแถมก่อนครับ';
+			$response["msg"] = 'โปรดระบุ Standard ของแถมก่อนครับ';
 			echo json_encode($response); exit;
 		}
 		
@@ -2376,7 +2453,7 @@ class Standart extends MY_Controller {
 				begin 
 					set @id = 'PL'+CONVERT(varchar(8),GETDATE(),112)+'%'
 					set @id = isnull((
-						select left(id,10)+right(right(id,5) + 100001,5) from {$this->MAuth->getdb('std_vehicles')}
+						select left(max(id),10)+right(right(max(id),5) + 100001,5) from {$this->MAuth->getdb('std_vehicles')}
 						where id like @id
 					),left(@id,10)+'00001');					
 					set @plrank = 1;
