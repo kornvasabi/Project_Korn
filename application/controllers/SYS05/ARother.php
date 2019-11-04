@@ -95,13 +95,13 @@ class ARother extends MY_Controller {
 		$data["vatrt"] = number_format($row->VATRT,2);
 
 		$html = "
-			<div class='b_add_arother' style='width:100%;height:calc(100vh - 132px);overflow:auto;background-color:white;'>
+			<div class='b_add_arother' style='width:100%;height:calc(100vh - 85px);overflow:auto;background-color:white;'>
 				<div style='float:left;height:100%;overflow:auto;' class='col-sm-6 col-sm-offset-3'>					
-					<div class='row'>
+					<div class='row' style='height:85%;'>
 						<div class='col-sm-12 col-xs-12' >	
 							<div class='form-group'>
 								เงื่อนไขการรับรู้
-								<table style='height:33px;width:100%;border-right:1px solid #ddd;border-left:1px solid #ddd;border-top:1px solid #ddd;border-bottom:1px solid #ddd;'>
+								<table style='height:33px;width:100%;border:1px solid #ddd;'>
 								<tr>
 								<td style='width:50%;'><input type= 'radio' id='Products' name='revenue' style='width:30px;'>1. รับรู้รายได้ทันที (สินค้า)</td>
 								<td style='width:50%;'><input type= 'radio' id='Services' name='revenue' style='width:30px;'>2. เมื่อรับเงิน (บริการ)</td>
@@ -177,41 +177,50 @@ class ARother extends MY_Controller {
 								<input type='text' id='PAYMENTS' class='form-control input-sm' style='font-size:10.5pt' placeholder='0.00' disabled>
 							</div>
 						</div>
-						<div class='col-sm-4 col-xs-4 UPLOADPIC'>	
-							<div class='form-group'>
-								<span style='font-size:10.5pt;'>รูปที่ 1</span>
-								<div class='input-group'>
-									<input type='text' id='FILEPIC1' class='form-control input-sm' readonly>
-									<span id='PIC1' class='input-group-addon btn-cyan' id='fileToUpload'>เพิ่ม</span>
-								</div>
-							</div>
-						</div>
-						<div class='col-sm-4 col-xs-4 UPLOADPIC'>	
-							<div class='form-group'>
-								<span style='font-size:10.5pt;'>รูปที่ 2</span>
-								<div class='input-group'>
-									<input type='text' id='FILEPIC2' class='form-control input-sm' readonly>
-									<span id='PIC2' class='input-group-addon btn-cyan'>เพิ่ม</span>
-								</div>
-							</div>
-						</div>
-						<div class='col-sm-4 col-xs-4 UPLOADPIC'>	
-							<div class='form-group'>
-								<span style='font-size:10.5pt;'>รูปที่ 3</span>
-								<div class='input-group'>
-									<input type='text' id='FILEPIC3' class='form-control input-sm' readonly>
-									<span id='PIC3' class='input-group-addon btn-cyan'>เพิ่ม</span>
-								</div>
-							</div>
-						</div>
 						<div class=' col-sm-12 col-xs-12'>	
 							<div class='form-group'>
 								หมายเหตุ
 								<textarea type='text' id='MEMO' rows='1' cols='20' class='form-control input-sm' style='font-size:10.5pt'></textarea>
 							</div>
+						</div>
+						<div class='col-sm-4 col-xs-4 UPLOADPIC'>	
+							<div class='form-group'>
+								<span style='font-size:10.5pt;'>ใบตรวจสภาพรถ</span>
+								<div class='input-group'>
+									<input type='text' id='FILEPIC1' class='namepic form-control input-sm' pic='P1' newname='' readonly>
+									<span id='PIC1' class='addpic input-group-addon btn-default text-info' pic='P1'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+								<div id='SHOWP1' class='SHOWPIC' style='font-size:9pt;color:#999;cursor:pointer;padding:5px;' ><u>ดูภาพ</u></div>
+							</div>
+						</div>
+						<div class='col-sm-4 col-xs-4 UPLOADPIC'>	
+							<div class='form-group'>
+								<span style='font-size:10.5pt;'>ใบประเมินราคาซ่อม</span>
+								<div class='input-group'>
+									<input type='text' id='FILEPIC2' class='namepic form-control input-sm' pic='P2' newname='' readonly>
+									<span id='PIC2' class='addpic input-group-addon btn-default text-info' pic='P2'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+								<div id='SHOWP2' class='SHOWPIC' style='font-size:9pt;color:#999;cursor:pointer;padding:5px;' ><u>ดูภาพ</u></div>
+							</div>
+						</div>
+						<div class='col-sm-4 col-xs-4 UPLOADPIC'>	
+							<div class='form-group'>
+								<span style='font-size:10.5pt;'>รูปภาพรถ</span>
+								<div class='input-group'>
+									<input type='text' id='FILEPIC3' class='namepic form-control input-sm' pic='P3' newname='' readonly>
+									<span id='PIC3' class='addpic input-group-addon btn-default text-info' pic='P3'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+								<div id='SHOWP3' class='SHOWPIC' style='font-size:9pt;color:#999;cursor:pointer;padding:5px;' ><u>ดูภาพ</u></div>
+							</div>
 						</div>	
 					</div>
-					<div class='row'>
+					<div class='row' style='height:15%;'>
 						<br>
 						<div class=' col-sm-2 col-sm-offset-3'>	
 							<div class='form-group'>
@@ -234,89 +243,6 @@ class ARother extends MY_Controller {
 		";
 	
 		$response = array("html"=>$html);
-		echo json_encode($response);
-	}
-	
-	//ฟังก์ชั่นบันทึกลูกหนี้อื่น
-	function SAVE_AROTHER(){
-		$INCFL 	= $_REQUEST["INCFL"];
-		$LOCAT	= $_REQUEST["LOCAT"];
-		$ARDATE	= $this->Convertdate(1,$_REQUEST["ARDATE"]);
-		$ARCONT	= $_REQUEST["ARCONT"];
-		$TSALE	= $_REQUEST["TSALE"];
-		$CONTNO	= $_REQUEST["CONTNO"];
-		$CUSCOD	= $_REQUEST["CUSCOD"];
-		$PAYFOR	= $_REQUEST["PAYFOR"];
-		$USERID	= $this->sess["USERID"];
-		$PAYAMT	= str_replace(',','',$_REQUEST["PAYAMT"]);
-		$VATRT	= $_REQUEST["VATRT"];
-		$MEMO	= $_REQUEST["MEMO"];
-		if($VATRT == ''){
-			$VATRT = 0;
-		}else{
-			$VATRT = $VATRT;
-		}
-		if($MEMO == ''){
-			$MEMO = 'NULL';
-		}else{
-			$MEMO = "'".$MEMO."'";
-		}
-		//echo $MEMO; exit;
-
-		$sql = "
-			if OBJECT_ID('tempdb..#AddAROTHTemp') is not null drop table #AddAROTHTemp;
-			create table #AddAROTHTemp (id varchar(20),contno varchar(20),msg varchar(max));
-			
-			begin tran AddAROTHTemp
-			begin try
-			
-				declare @symbol varchar(10) = (select H_AROTH from {$this->MAuth->getdb('CONDPAY')});
-				declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) 
-				from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$LOCAT."');
-				declare @CONTNO varchar(12) = isnull((select MAX(ARCONT) 
-				from {$this->MAuth->getdb('AROTHR')} where ARCONT like ''+@rec+'%' collate thai_cs_as),@rec+'0000');
-				set @CONTNO = left(@CONTNO,8)+right(right(@CONTNO,4)+10001,4);
-				
-				if '".$CONTNO."' = ''
-					begin
-						insert into #AddAROTHTemp select 'W', '', 'กรุณาระบุสัญญา';
-					end
-				else
-					begin
-					INSERT INTO {$this->MAuth->getdb('AROTHR')} 
-					(ARCONT, TSALE, CONTNO, CUSCOD, LOCAT, PAYFOR, PAYAMT, VATRT, TAXNO, ARDATE, SMPAY, SMCHQ, BALANCE, USERID, INPDT, MEMO1, INCFL)  
-					VALUES 
-					(@CONTNO, '".$TSALE."', '".$CONTNO."', '".$CUSCOD."', '".$LOCAT."', '".$PAYFOR."', '".$PAYAMT."', ".$VATRT.", '', convert(datetime,'".$ARDATE."'), 
-					0, 0, 0, '".$USERID."', getdate(), ".$MEMO.", '".$INCFL."')
-				
-					insert into #AddAROTHTemp select 'S',@CONTNO,'บันทึกลูกหนี้อื่น เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
-					end
-					
-				commit tran AddAROTHTemp;
-			end try
-			begin catch
-				rollback tran AddAROTHTemp;
-				insert into #AddAROTHTemp select 'E','',ERROR_MESSAGE();
-			end catch
-		";
-		//echo $sql; exit;
-		
-		$this->db->query($sql);
-		$sql = "select * from #AddAROTHTemp";
-		$query = $this->db->query($sql);
-	  
-		if($query->row()){
-			foreach($query->result() as $row){
-				$response["status"] = $row->id;
-				$response["contno"] = $row->contno;
-				$response["msg"] = $row->msg;
-			}
-		}else{
-			$response["status"] = false;
-			$response["contno"] = '';
-			$response["msg"] = 'ผิดพลาดไม่สามารถบันทึกรายการลูกหนี้อื่นได้ โปรดติดต่อฝ่ายไอที';
-		}
-		
 		echo json_encode($response);
 	}
 	
@@ -440,6 +366,156 @@ class ARother extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function serchpicupload(){
+		$arcont	= $_REQUEST["arcont"];
+
+		$sql = "
+				select arcont, filePath, [1] as PIC1, [2] as PIC2, [3] as PIC3
+				from(
+					select a.arcont , a.refno, a.refname, b.filePath
+					from YTKManagement.dbo.AROTHR_UPLOAD a
+					left join YTKManagement.dbo.config_fileupload b on a.config_id = b.id 
+					where b.refno = '".$this->sess["db"]."' and a.arcont = '".$arcont."'
+				)a pivot( max(refname) for refno in ([1],[2],[3]))as data
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["up_arcont"] 	= $row->arcont;
+				$response["up_filePath"]= $row->filePath;
+				$response["up_PIC1"] 	= $row->PIC1;
+				$response["up_PIC2"] 	= $row->PIC2;
+				$response["up_PIC3"] 	= $row->PIC3;
+			}
+		}else{
+			$response["up_arcont"] 		= "";
+			$response["up_filePath"] 	= "";
+			$response["up_PIC1"] 		= "";
+			$response["up_PIC2"] 		= "";
+			$response["up_PIC3"] 		= "";
+		}
+
+		echo json_encode($response);
+	}
+	
+	//ฟังก์ชั่นบันทึกลูกหนี้อื่น
+	function SAVE_AROTHER(){
+		$INCFL 	= $_REQUEST["INCFL"];
+		$LOCAT	= $_REQUEST["LOCAT"];
+		$ARDATE	= $this->Convertdate(1,$_REQUEST["ARDATE"]);
+		$ARCONT	= $_REQUEST["ARCONT"];
+		$TSALE	= $_REQUEST["TSALE"];
+		$CONTNO	= $_REQUEST["CONTNO"];
+		$CUSCOD	= $_REQUEST["CUSCOD"];
+		$PAYFOR	= $_REQUEST["PAYFOR"];
+		$USERID	= $this->sess["USERID"];
+		$PAYAMT	= str_replace(',','',$_REQUEST["PAYAMT"]);
+		$VATRT	= $_REQUEST["VATRT"];
+		$MEMO	= $_REQUEST["MEMO"];
+				
+		if($VATRT == ''){
+			$VATRT = 0;
+		}else{
+			$VATRT = $VATRT;
+		}
+		if($MEMO == ''){
+			$MEMO = 'NULL';
+		}else{
+			$MEMO = "'".$MEMO."'";
+		}
+		//echo $this->sess["db"]; exit;
+		
+		$uploadpic = "";
+		if($PAYFOR == '188'){
+			$PIC1	= $_REQUEST["PIC1"];
+			$PIC2	= $_REQUEST["PIC2"];
+			$PIC3	= $_REQUEST["PIC3"];
+			
+			$TPIC1	= explode(".",$PIC1);
+			$TPIC1	= $TPIC1[(sizeof($TPIC1)-1)];
+			
+			$TPIC2	= explode(".",$PIC2);
+			$TPIC2	= $TPIC2[(sizeof($TPIC2)-1)];
+			
+			$TPIC3	= explode(".",$PIC3);
+			$TPIC3	= $TPIC3[(sizeof($TPIC3)-1)];
+			
+			$uploadpic = "
+				declare @config_id int = (select id from YTKManagement.dbo.config_fileupload where refno = '".$this->sess["db"]."')
+
+				insert into YTKManagement.dbo.AROTHR_UPLOAD (arcont, config_id, refno, refname, reftype, insby, insdt, updby, upddt)
+				values(@CONTNO, @config_id, 1, '".$PIC1."', '".$TPIC1."', '".$this->sess["USERID"]."', GETDATE(), null, null)
+
+				insert into YTKManagement.dbo.AROTHR_UPLOAD (arcont, config_id, refno, refname, reftype, insby, insdt, updby, upddt)
+				values(@CONTNO, @config_id, 2, '".$PIC2."', '".$TPIC2."', '".$this->sess["USERID"]."', GETDATE(), null, null)
+
+				insert into YTKManagement.dbo.AROTHR_UPLOAD (arcont, config_id, refno, refname, reftype, insby, insdt, updby, upddt)
+				values(@CONTNO, @config_id, 3, '".$PIC3."', '".$TPIC3."', '".$this->sess["USERID"]."', GETDATE(), null, null)
+			";
+		}else{
+			$uploadpic = "";
+		}
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#AddAROTHTemp') is not null drop table #AddAROTHTemp;
+			create table #AddAROTHTemp (id varchar(20),contno varchar(20),msg varchar(max));
+			
+			begin tran AddAROTHTemp
+			begin try
+			
+				declare @symbol varchar(10) = (select H_AROTH from {$this->MAuth->getdb('CONDPAY')});
+				declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) 
+				from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$LOCAT."');
+				declare @CONTNO varchar(12) = isnull((select MAX(ARCONT) 
+				from {$this->MAuth->getdb('AROTHR')} where ARCONT like ''+@rec+'%' collate thai_cs_as),@rec+'0000');
+				set @CONTNO = left(@CONTNO,8)+right(right(@CONTNO,4)+10001,4);
+				
+				if '".$CONTNO."' = ''
+					begin
+						insert into #AddAROTHTemp select 'W', '', 'กรุณาระบุสัญญา';
+					end
+				else
+					begin
+					INSERT INTO {$this->MAuth->getdb('AROTHR')} 
+					(ARCONT, TSALE, CONTNO, CUSCOD, LOCAT, PAYFOR, PAYAMT, VATRT, TAXNO, ARDATE, SMPAY, SMCHQ, BALANCE, USERID, INPDT, MEMO1, INCFL)  
+					VALUES 
+					(@CONTNO, '".$TSALE."', '".$CONTNO."', '".$CUSCOD."', '".$LOCAT."', '".$PAYFOR."', '".$PAYAMT."', ".$VATRT.", '', convert(datetime,'".$ARDATE."'), 
+					0, 0, 0, '".$USERID."', getdate(), ".$MEMO.", '".$INCFL."')
+			
+					".$uploadpic."	
+						
+					insert into #AddAROTHTemp select 'S',@CONTNO,'บันทึกลูกหนี้อื่น เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
+				end
+					
+				commit tran AddAROTHTemp;
+			end try
+			begin catch
+				rollback tran AddAROTHTemp;
+				insert into #AddAROTHTemp select 'E','',ERROR_MESSAGE();
+			end catch
+		";//echo $sql; exit;
+		
+		$this->db->query($sql);
+		$sql = "select * from #AddAROTHTemp";
+		$query = $this->db->query($sql);
+	  
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["status"] = $row->id;
+				$response["contno"] = $row->contno;
+				$response["msg"] = $row->msg;
+			}
+		}else{
+			$response["status"] = false;
+			$response["contno"] = '';
+			$response["msg"] = 'ผิดพลาดไม่สามารถบันทึกรายการลูกหนี้อื่นได้ โปรดติดต่อฝ่ายไอที';
+		}
+		
+		echo json_encode($response);
+	}
+	
 	function Edit_AROTHER(){
 		$ARCONT	= $_REQUEST["ARCONT"];
 		$CONTNO	= $_REQUEST["CONTNO"];
@@ -447,6 +523,48 @@ class ARother extends MY_Controller {
 		$PAYFOR	= $_REQUEST["PAYFOR"];
 		$PAYAMT	= str_replace(',','',$_REQUEST["PAYAMT"]);
 		$MEMO	= $_REQUEST["MEMO"];
+		
+		$uploadpic = "";
+		if($PAYFOR == '188'){
+			$PIC1	= $_REQUEST["PIC1"];
+			$PIC2	= $_REQUEST["PIC2"];
+			$PIC3	= $_REQUEST["PIC3"];
+			
+			$TPIC1	= explode(".",$PIC1);
+			$TPIC1	= $TPIC1[(sizeof($TPIC1)-1)];
+			
+			$TPIC2	= explode(".",$PIC2);
+			$TPIC2	= $TPIC2[(sizeof($TPIC2)-1)];
+			
+			$TPIC3	= explode(".",$PIC3);
+			$TPIC3	= $TPIC3[(sizeof($TPIC3)-1)];
+			
+			if($PIC1 != ""){
+				$uploadpic .= "
+					update YTKManagement.dbo.AROTHR_UPLOAD
+					set refname = '".$PIC1."', reftype = '".$TPIC1."', updby = '".$this->sess["USERID"]."', upddt = getdate()
+					where arcont = @CONTNO collate thai_cs_as and refno = 1 and config_id = @id
+				";
+			}
+			
+			if($PIC2 != ""){
+				$uploadpic .= "
+					update YTKManagement.dbo.AROTHR_UPLOAD
+					set refname = '".$PIC2."', reftype = '".$TPIC2."', updby = '".$this->sess["USERID"]."', upddt = getdate()
+					where arcont = @CONTNO collate thai_cs_as and refno = 2 and config_id = @id
+				";
+			}
+			
+			if($PIC3 != ""){
+				$uploadpic .= "
+					update YTKManagement.dbo.AROTHR_UPLOAD
+					set refname = '".$PIC3."', reftype = '".$TPIC3."', updby = '".$this->sess["USERID"]."', upddt = getdate()
+					where arcont = @CONTNO collate thai_cs_as and refno = 3 and config_id = @id
+				";
+			}
+		}else{
+			$uploadpic = "";
+		}
 		
 		$sql = "
 			if OBJECT_ID('tempdb..#EditAROYHTemp') is not null drop table #EditAROYHTemp;
@@ -456,10 +574,13 @@ class ARother extends MY_Controller {
 			begin try
 			
 				declare @CONTNO varchar(max) = '".$ARCONT."';
+				declare @id varchar(max) = (select id from YTKManagement.dbo.config_fileupload where refno = '".$this->sess["db"]."');
 				
 				update {$this->MAuth->getdb('AROTHR')}
 				set PAYFOR = '".$PAYFOR."', PAYAMT = '".$PAYAMT."', MEMO1 = '".$MEMO."'
 				where ARCONT like '%".$ARCONT."%' and CONTNO like '%".$CONTNO."%' and CUSCOD like '%".$CUSCOD."%'
+				
+				".$uploadpic."
 				
 				insert into #EditAROYHTemp select 'S',@CONTNO,'แก้ไขลูกหนี้อื่น เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 				
@@ -505,11 +626,17 @@ class ARother extends MY_Controller {
 			begin try
 			
 				declare @CONTNO varchar(max) = '".$ARCONT."';
+				declare @id varchar(max) = (select id from YTKManagement.dbo.config_fileupload where refno = '".$this->sess["db"]."');
+				
 				delete {$this->MAuth->getdb('AROTHR')}
 				where ARCONT = '".$ARCONT."' and CONTNO = '".$CONTNO."'
 				and CUSCOD = '".$CUSCOD."' and LOCAT = '".$LOCAT."'
 				
+				delete YTKManagement.dbo.AROTHR_UPLOAD
+				where config_id = @id and arcont = @CONTNO
+
 				insert into #DelAROYHTemp select 'S',@CONTNO,'ลบลูกหนี้อื่น เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
+				
 				commit tran DelAROYHTemp;
 			end try
 			begin catch
@@ -538,35 +665,181 @@ class ARother extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	function upload_SaleTarget(){
-		$TargetMonth 	= 'AA'; 
-		$TargetYear 	= 'BB';
+	function formupload(){
+		$html 	= "	
+			<div class='b_formupload' style='width:408px;height:560px;overflow:auto;background-color:white;'>
+				<div style='float:left;overflow:auto;height:100%;' class='col-sm-12 col-xs-12'>
+					<div class='row' style='height:92%;'>
+						<div id='showoldupload' style='border:5px solid white;'></div>
+					</div>
+					<div class='row'>
+						<div class=' col-sm-12'>	
+							<input type='button' id='clickup' class='btn btn-primary btn-sm' value='ตกลง' style='width:100%'>
+						</div>
+					</div>
+				</div>
+			</div>
+		";	
+		echo json_encode($html);		
+	}
+	
+	
+	function showfile(){
+		$selectpic 	= $_REQUEST["selectpic"];
 		
-		$output_dir = $_SERVER['DOCUMENT_ROOT']."/reports/test/";
-		//echo $output_dir; exit;
-		
-		if(isset($_FILES["myfile"])){
-			$error = $_FILES["myfile"]["error"];
-			if(!is_array($_FILES["myfile"]["name"])) {  //single file
-				
-				$exfile = explode(".",$_FILES["myfile"]["name"]);
-				//$fileName = $_FILES["myfile"]["name"].".".$exfile[(sizeof($exfile)-1)];
-				$fileName = $TargetMonth."_".$TargetYear.".".$exfile[(sizeof($exfile)-1)];
-				
-				$destination_file = $output_dir.$fileName;
-				$source_file	  = $_FILES["myfile"]["tmp_name"];
-				move_uploaded_file($source_file,$output_dir.$fileName);
-				
-				//$fileServer = str_replace($output_dir,"",$arrsResult['filePath']);
-				$fileServer = $output_dir;
-				$response["origin"][] = $_FILES["myfile"]["name"];
-				$response["new"][] = $fileName;
-				$response["locat"][] = $fileServer.$output_dir.$fileName;
-				//$response = array('origin'=>$_FILES["myfile"]["name"],'new'=>$fileName,'locat'=>$fileServer.$output_dir.$fileName);
-
-			}	
-			echo json_encode($response);
+		$newname = "";
+		if($selectpic == 'P1'){
+			$newname = "VIC-".date('Ymd')."-".date('His')."-".$this->sess["USERID"];
+		}else if($selectpic == 'P2'){
+			$newname = "QUT-".date('Ymd')."-".date('His')."-".$this->sess["USERID"];
+		}else if($selectpic == 'P3'){
+			$newname = "MOT-".date('Ymd')."-".date('His')."-".$this->sess["USERID"];
 		}
+		
+		$sql = "
+			select ftpserver, ftpuser, ftppass, ftpfolder, filePath
+			from YTKManagement.dbo.config_fileupload
+			where refno = '".$this->sess["db"]."' and ftpstatus = 'Y'
+		";
+		$query = $this->db->query($sql);
+		
+		$ftp_server 	= "";
+		$ftp_user_name 	= "";
+		$ftp_user_pass 	= "";
+		
+		$arrsResult =  array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				foreach($row as $key => $val){
+					$arrsResult[$key] = $val;
+				}
+			}
+		}
+		
+		$ftp_server 	= $arrsResult['ftpserver'];
+		$ftp_user_name 	= $arrsResult['ftpuser'];
+		$ftp_user_pass 	= $arrsResult['ftppass'];
+		
+		$conn_id 		= ftp_connect($ftp_server);		
+		$login_result 	= ftp_login($conn_id, $ftp_user_name, $ftp_user_pass); 
+		ftp_chdir($conn_id,$arrsResult['ftpfolder']);
+		
+		if ((!$conn_id) || (!$login_result)) {
+			$response["error"] = true;
+			$response["msg"] = "FTP connection has failed!<br/>Attempted to connect to server for user {$ftp_user_name}";
+			echo json_encode($response); exit;
+		}
+
+		$output_dir = "/".$arrsResult['ftpfolder']."/";
+		
+		$exfile = explode(".",$_FILES["myfile"]["name"]);
+		$fileName = $newname.'.'.$exfile[(sizeof($exfile)-1)];
+
+		$destination_file = $output_dir.$fileName;
+		$source_file	  = $_FILES["myfile"]["tmp_name"];
+		ftp_put($conn_id, $destination_file, $source_file, FTP_BINARY);
+		
+		$fileServer = str_replace($output_dir,"",$arrsResult['filePath']);
+		$response["origin"][] 	= $_FILES["myfile"]["name"];
+		$response["locat"][] 	= $fileServer.$output_dir.$fileName;
+		$response["newname"][] 	= $fileName;
+		
+		ftp_close($conn_id);
+			
+		echo json_encode($response);
+	}	
+	
+	function getfromshowimg(){
+		$url	= $_REQUEST["url"];
+		$pic	= $_REQUEST["pic"];
+		$ARCONT	= $_REQUEST["ARCONT"];
+		
+		if($pic != ""){
+			$html = "
+				<div class='b_HoldtoOldcar' style='width:100%;height:calc(100vh - 85px);overflow:auto;background-color:white;'>
+					<div style='height:100%;float:left;overflow:auto;' class='col-sm-12 col-xs-12'>
+						<div class='row' style='height:95%;'>
+							<div class='form-group' style='border:5px solid white;width:100%;height:100%;''>
+								<center><img src='".$url."".$pic."' style='height:600px;max-width:100%;'></ center>
+							</div>
+						</div>
+						<div class='row' style='height:5%;'>
+							<div class=' col-sm-4 col-sm-offset-4' style='text-align:center;'>".$pic."</div>
+							<div class=' col-sm-1 col-sm-offset-3 '>	
+								<button id='btnclose' class='btn btn-default btn-sm text-red' style='width:100%;font-size:10pt;'><span class='glyphicon glyphicon-remove-sign'><b> ปิด</b></span></button>
+							</div>
+						</div>
+					</div>
+				</div>
+			";
+		}else{
+			$html = "
+				<div class='b_HoldtoOldcar' style='width:100%;height:calc(100vh - 85px);overflow:auto;background-color:white;'>
+					<div style='height:100%;float:left;overflow:auto;' class='col-sm-12 col-xs-12'>
+						<div class='row' style='height:95%;'></div>
+						<div class='row' style='height:5%;'>
+							<div class=' col-sm-4 col-sm-offset-4 text-danger' style='text-align:center;'>ไม่มีรูปภาพ</div>
+							<div class=' col-sm-1 col-sm-offset-3 '>	
+								<button id='btnclose' class='btn btn-default btn-sm text-red' style='width:100%;font-size:10pt;'><span class='glyphicon glyphicon-remove-sign'><b> ปิด</b></span></button>
+							</div>
+						</div>
+					</div>
+				</div>
+			";
+		}
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	
+	function deletefile(){
+		$PIC1 	= $_REQUEST["delpic"];
+		
+		$sql = "
+			select ftpserver, ftpuser, ftppass, ftpfolder, filePath
+			from YTKManagement.dbo.config_fileupload
+			where refno = '".$this->sess["db"]."' and ftpstatus = 'Y'
+		";
+		$query = $this->db->query($sql);
+		
+		$ftp_server 	= "";
+		$ftp_user_name 	= "";
+		$ftp_user_pass 	= "";
+		
+		$arrsResult =  array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				foreach($row as $key => $val){
+					$arrsResult[$key] = $val;
+				}
+			}
+		}
+		
+		$ftp_server 	= $arrsResult['ftpserver'];
+		$ftp_user_name 	= $arrsResult['ftpuser'];
+		$ftp_user_pass 	= $arrsResult['ftppass'];
+		
+		$conn_id 		= ftp_connect($ftp_server);		
+		$login_result 	= ftp_login($conn_id, $ftp_user_name, $ftp_user_pass); 
+		ftp_chdir($conn_id,$arrsResult['ftpfolder']);
+		
+		if ((!$conn_id) || (!$login_result)) {
+			$response["error"] = true;
+			$response["msg"] = "FTP connection has failed!<br/>Attempted to connect to server for user {$ftp_user_name}";
+			echo json_encode($response); exit;
+		}
+
+		$output_dir = "/".$arrsResult['ftpfolder']."/";
+		
+		$fileName = $PIC1;
+
+		$filePath = $output_dir.$fileName;
+		//echo $filePath; exit;
+		
+		if(ftp_delete($conn_id, $filePath)){
+			ftp_close($conn_id);
+			echo json_encode("Deleted File ".$fileName);
+		}
+		
 	}
 }
 

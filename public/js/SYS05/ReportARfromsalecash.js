@@ -206,7 +206,7 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportHoldtoStock',1,290);
+			fn_datatables('table-ReportHoldtoStock',1,350);
 			//$('.dataTables_info').hide();
 			
 			$('.data-export').prepend('<img id="print-HoldtoStock" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
@@ -249,20 +249,39 @@ function printReport(){
 	}else if($("#hor").is(":checked")){
 		layout = "A4-L";
 	}
+	
 	var orderby = "";
-	if($("#strno").is(":checked")){ 
-		orderby = "a.STRNO";
+	if($("#sdate").is(":checked")){ 
+		orderby = "A.SDATE";
 	}else if($("#contno").is(":checked")){
-		orderby = "a.CONTNO";
-	}else if($("#ydate").is(":checked")){ 
-		orderby = "a.YDATE";
+		orderby = "A.CONTNO";
+	}else if($("#cuscod").is(":checked")){ 
+		orderby = "A.CUSCOD";
 	}
-
-	dataToPost.LOCAT1 = (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
-	dataToPost.FROMDATECHG 	= $('#FROMDATECHG').val();
-	dataToPost.TODATECHG 	= $('#TODATECHG').val();
-	dataToPost.layout 		= layout;
+	var vat = "";
+	if($("#showvat").is(":checked")){ 
+		vat = "showvat";
+	}else if($("#contno").is(":checked")){
+		vat = "sumvat";
+	}
+	var stat = "";
+	if($("#NEW").is(":checked")){ 
+		stat = "N";
+	}else if($("#OLD").is(":checked")){
+		stat = "O";
+	}else if($("#ALL").is(":checked")){
+		stat = "";
+	}
+	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
+	dataToPost.CONTNO1 		= (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
+	dataToPost.GCODE1 		= (typeof $('#GCODE1').find(':selected').val() === 'undefined' ? '':$('#GCODE1').find(':selected').val());
+	dataToPost.TYPE1 		= (typeof $('#TYPE1').find(':selected').val() === 'undefined' ? '':$('#TYPE1').find(':selected').val());
+	dataToPost.MODEL1 		= (typeof $('#MODEL1').find(':selected').val() === 'undefined' ? '':$('#MODEL1').find(':selected').val());
+	dataToPost.ARDATE 		= $('#ARDATE').val();
 	dataToPost.orderby 		= orderby;
+	dataToPost.vat 			= vat;
+	dataToPost.stat 		= stat;
+	dataToPost.layout 		= layout;
 	
 	$.ajax({
 		url: '../SYS05/ReportARfromsalecash/conditiontopdf',

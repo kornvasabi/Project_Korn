@@ -258,46 +258,58 @@ class ReportARfromsalecash extends MY_Controller {
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				select A.LOCAT, A.CONTNO, A.CUSCOD, A.CUSNAME, convert(nvarchar,A.SDATE,112) as SDATE, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, A.VATPRES, A.TOTPRES, A.SMPAY-isnull(B.VPY,0) as SMPAY, 
-				isnull(B.VPY,0) as VPY, A.SMPAY as TOTSMPAY, A.NPRICE-(A.SMPAY-isnull(B.VPY,0)) as ARBALANC, A.VATPRC-isnull(B.VPY,0) as ARVAT, 
-				A.TOTPRC-A.SMPAY as TOTAR, A.SMCHQ-isnull(B.VCQ,0) as SMCHQ, isnull(B.VCQ,0) as VCQ, A.SMCHQ, 
+				select A.LOCAT, A.CONTNO, A.CUSCOD, A.CUSNAME, convert(nvarchar,A.SDATE,112) as SDATE, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, 
+				A.VATPRES, A.TOTPRES, A.SMPAY-isnull(B.VPY,0) as SMPAY, isnull(B.VPY,0) as VPY, A.SMPAY as TOTSMPAY, A.NPRICE-(A.SMPAY-isnull(B.VPY,0)) as ARBALANC, 
+				A.VATPRC-isnull(B.VPY,0) as ARVAT, A.TOTPRC-A.SMPAY as TOTAR, A.SMCHQ-isnull(B.VCQ,0) as SMCHQ, isnull(B.VCQ,0) as VCQ, A.SMCHQ, 
 				A.NPRICE-(A.SMPAY-isnull(B.VPY,0))-(A.SMCHQ-isnull(B.VCQ,0)) as BALANCE, A.VATPRC-isnull(B.VPY,0)-isnull(B.VCQ,0) as VATBALNCE,
 				A.TOTPRC-A.SMPAY-A.SMCHQ as TOTBALANCE
 				from #SALE A
 				left join #VAT B on A.CONTNO = B.CONTNO
-				order by A.SDATE
+				/*union all
+				select A.LOCAT, A.CONTNO, A.CUSCOD, A.CUSNAME, convert(nvarchar,A.SDATE,112) as SDATE, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, 
+				A.VATPRES, A.TOTPRES, A.SMPAY-isnull(B.VPY,0) as SMPAY, isnull(B.VPY,0) as VPY, A.SMPAY as TOTSMPAY, A.NPRICE-(A.SMPAY-isnull(B.VPY,0)) as ARBALANC, 
+				A.VATPRC-isnull(B.VPY,0) as ARVAT, A.TOTPRC-A.SMPAY as TOTAR, A.SMCHQ-isnull(B.VCQ,0) as SMCHQ, isnull(B.VCQ,0) as VCQ, A.SMCHQ, 
+				A.NPRICE-(A.SMPAY-isnull(B.VPY,0))-(A.SMCHQ-isnull(B.VCQ,0)) as BALANCE, A.VATPRC-isnull(B.VPY,0)-isnull(B.VCQ,0) as VATBALNCE,
+				A.TOTPRC-A.SMPAY-A.SMCHQ as TOTBALANCE
+				from #SALE A
+				left join #VAT B on A.CONTNO = B.CONTNO*/
+				--order by A.SDATE
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
-		$head = ""; $html = ""; $head2 = "";  $report = ""; $i=0; 
+		$sql = "
+				select 'รวมทั้งหมด' as Total, sum(A.NPRICE) as sumNPRICE, sum(A.VATPRC) as sumVATPRC, sum(A.TOTPRC) as sumTOTPRC, sum(A.NPAYRES) as sumNPAYRES, 
+				sum(A.VATPRES) as sumVATPRES, sum(A.TOTPRES) as sumTOTPRES, sum(A.SMPAY-isnull(B.VPY,0)) as sumSMPAY, sum(isnull(B.VPY,0)) as sumVPY, 
+				sum(A.SMPAY) as sumTOTSMPAY, sum(A.NPRICE-(A.SMPAY-isnull(B.VPY,0))) as sumARBALANC, sum(A.VATPRC-isnull(B.VPY,0)) as sumARVAT, 
+				sum(A.TOTPRC-A.SMPAY) as sumTOTAR, sum(A.SMCHQ-isnull(B.VCQ,0)) as sumSMCHQ, sum(isnull(B.VCQ,0)) as sumVCQ, sum(A.SMCHQ) as sumSMCHQ, 
+				sum(A.NPRICE-(A.SMPAY-isnull(B.VPY,0))-(A.SMCHQ-isnull(B.VCQ,0))) as sumBALANCE, sum(A.VATPRC-isnull(B.VPY,0)-isnull(B.VCQ,0)) as sumVATBALNCE,
+				sum(A.TOTPRC-A.SMPAY-A.SMCHQ) as sumTOTBALANCE
+				from #SALE A
+				left join #VAT B on A.CONTNO = B.CONTNO
+		";
+		//echo $sql; exit;
+		$query2 = $this->db->query($sql);
+		
+		
+		$head = ""; $html = ""; $head2 = "";  $report = ""; $sumreport = ""; $sumreport2 = ""; $i = 0; 
 		
 		if($vat == 'showvat'){
 			$head = "<tr>
 					<th style='display:none;'>#</th>
 					<th style='vertical-align:middle;'>สาขา</th>
 					<th style='vertical-align:middle;'>เลขที่สัญญา</th>
-					<th style='vertical-align:middle;'>รหัสลูกค้า</th>
-					<th style='vertical-align:middle;'>ชื่อ - นามสกุล</th>
-					<th style='vertical-align:middle;'>วันที่ขาย</th>
-					<th style='vertical-align:middle;'>มูลค่าราคาขาย</th>
-					<th style='vertical-align:middle;'>ภาษีขาย</th>
-					<th style='vertical-align:middle;'>ราคาขาย</th>
-					<th style='vertical-align:middle;'>มูลค่าเงินจอง</th>
-					<th style='vertical-align:middle;'>ภาษีจอง</th>
-					<th style='vertical-align:middle;'>เงินจอง</th>
-					<th style='vertical-align:middle;'>มูลค่าชำระ</th>
-					<th style='vertical-align:middle;'>ภาษีชำระ</th>
-					<th style='vertical-align:middle;'>ชำระแล้ว</th>
-					<th style='vertical-align:middle;'>มูลค่าล/นคงเหลือ</th>
-					<th style='vertical-align:middle;'>ภาษีคงเหลือ</th>
-					<th style='vertical-align:middle;'>ลูกหนี้คงเหลือ</th>
-					<th style='vertical-align:middle;'>มูลค่าเช็ครอเรียกเก็บ</th>
-					<th style='vertical-align:middle;'>ภาษีเช็ค</th>
-					<th style='vertical-align:middle;'>เช็ครอเรียกเก็บ</th>
-					<th style='vertical-align:middle;'>มูลค่าล/นหักเช็ค</th>
-					<th style='vertical-align:middle;'>ภาษีล/นหักเช็ค</th>
-					<th style='vertical-align:middle;'>ล/นหักเช็ค</th>
+					<th style='vertical-align:middle;'>รหัสลูกค้า<br>ชื่อ - นามสกุล</th>
+					<th style='vertical-align:middle;'>วันที่ขาย</th> 
+					<th style='text-align:right;'>มูลค่าราคาขาย<br>มูลค่าล/นคงเหลือ</th> 
+					<th style='text-align:right;'>ภาษีขาย<br>ภาษีคงเหลือ</th>
+					<th style='text-align:right;'>ราคาขาย<br>ลูกหนี้คงเหลือ</th>
+					<th style='text-align:right;'>มูลค่าเงินจอง<br>มูลค่าเช็ค</th>
+					<th style='text-align:right;'>ภาษีจอง<br>ภาษีเช็ค</th>
+					<th style='text-align:right;'>เงินจอง<br>เช็ครอเรียกเก็บ</th>
+					<th style='text-align:right;'>มูลค่าชำระ<br>มูลค่าล/นหักเช็ค</th>
+					<th style='text-align:right;'>ภาษีชำระ<br>ภาษีล/นหักเช็ค</th>
+					<th style='text-align:right;'>ชำระแล้ว<br>ล/นหักเช็ค</th>
 					</tr>
 			";
 			
@@ -334,30 +346,20 @@ class ReportARfromsalecash extends MY_Controller {
 				foreach($query->result() as $row){$i++;
 					$html .= "
 						<tr class='trow' seq=".$NRow.">
-							<td seq=".$NRow++." style='display:none;'></td>
-							<td>".$row->LOCAT."</td>
-							<td>".$row->CONTNO."</td>
-							<td>".$row->CUSCOD."</td>
-							<td>".$row->CUSNAME."</td>
-							<td>".$this->Convertdate(2,$row->SDATE)."</td>
-							<td align='right'>".number_format($row->NPRICE,2)."</td>
-							<td align='right'>".number_format($row->VATPRC,2)."</td>
-							<td align='right'>".number_format($row->TOTPRC,2)."</td>
-							<td align='right'>".number_format($row->NPAYRES,2)."</td>
-							<td align='right'>".number_format($row->VATPRES,2)."</td>
-							<td align='right'>".number_format($row->TOTPRES,2)."</td>
-							<td align='right'>".number_format($row->SMPAY,2)."</td>
-							<td align='right'>".number_format($row->VPY,2)."</td>
-							<td align='right'>".number_format($row->TOTSMPAY,2)."</td>
-							<td align='right'>".number_format($row->ARBALANC,2)."</td>
-							<td align='right'>".number_format($row->ARVAT,2)."</td>
-							<td align='right'>".number_format($row->TOTAR,2)."</td>
-							<td align='right'>".number_format($row->SMCHQ,2)."</td>
-							<td align='right'>".number_format($row->VCQ,2)."</td>
-							<td align='right'>".number_format($row->SMCHQ,2)."</td>
-							<td align='right'>".number_format($row->BALANCE,2)."</td>
-							<td align='right'>".number_format($row->VATBALNCE,2)."</td>
-							<td align='right'>".number_format($row->TOTBALANCE,2)."</td>
+						<td seq=".$NRow++." style='display:none;'></td>
+						<td>".$row->LOCAT."</td>
+						<td>".$row->CONTNO."</td>
+						<td>".$row->CUSCOD."<br>".$row->CUSNAME."</td>
+						<td>".$this->Convertdate(2,$row->SDATE)."</td>
+						<td align='right'>".number_format($row->NPRICE,2)."<br>".number_format($row->ARBALANC,2)."</td>
+						<td align='right'>".number_format($row->VATPRC,2)."<br>".number_format($row->ARVAT,2)."</td>
+						<td align='right'>".number_format($row->TOTPRC,2)."<br>".number_format($row->TOTAR,2)."</td>
+						<td align='right'>".number_format($row->NPAYRES,2)."<br>".number_format($row->SMCHQ,2)."</td>
+						<td align='right'>".number_format($row->VATPRES,2)."<br>".number_format($row->VCQ,2)."</td>
+						<td align='right'>".number_format($row->TOTPRES,2)."<br>".number_format($row->SMCHQ,2)."</td>
+						<td align='right'>".number_format($row->SMPAY,2)."<br>".number_format($row->BALANCE,2)."</td>
+						<td align='right'>".number_format($row->VPY,2)."<br>".number_format($row->VATBALNCE,2)."</td>
+						<td align='right'>".number_format($row->TOTSMPAY,2)."<br>".number_format($row->TOTBALANCE,2)."</td>
 						</tr>
 					";	
 				}
@@ -396,6 +398,54 @@ class ReportARfromsalecash extends MY_Controller {
 					";	
 				}
 			}
+			
+			if($query2->row()){
+				foreach($query2->result() as $row){
+					$sumreport = "
+						<tr>
+							<th colspan='4' style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:center;'>".$row->Total."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumNPRICE,2)."<br>".number_format($row->sumARBALANC,2)."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumVATPRC,2)."<br>".number_format($row->sumARVAT,2)."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumTOTPRC,2)."<br>".number_format($row->sumTOTAR,2)."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumNPAYRES,2)."<br>".number_format($row->sumSMCHQ,2)."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumVATPRES,2)."<br>".number_format($row->sumVCQ,2)."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumTOTPRES,2)."<br>".number_format($row->sumSMCHQ,2)."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumSMPAY,2)."<br>".number_format($row->sumBALANCE,2)."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumVPY,2)."<br>".number_format($row->sumVATBALNCE,2)."</th>
+							<th style='border:0px;text-align:right;'>".number_format($row->sumTOTSMPAY,2)."<br>".number_format($row->sumTOTBALANCE,2)."</th>
+						
+						</tr>
+					";	
+				}
+			}
+			
+			if($query2->row()){
+				foreach($query2->result() as $row){
+					$sumreport2 = "
+						<tr class='trow'>
+							<td style='mso-number-format:\"\@\";text-align:center;' colspan='6'>".$row->Total."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumNPRICE,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumVATPRC,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumTOTPRC,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumNPAYRES,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumVATPRES,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumTOTPRES,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumSMPAY,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumVPY,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumTOTSMPAY,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumARBALANC,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumARVAT,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumTOTAR,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumSMCHQ,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumVCQ,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumSMCHQ,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumBALANCE,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumVATBALNCE,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumTOTBALANCE,2)."</td>
+						</tr>
+					";	
+				}
+			}
 		}
 		
 		if($i>0){
@@ -414,6 +464,9 @@ class ReportARfromsalecash extends MY_Controller {
 						<tbody style='height: 10px !important; overflow: scroll;'>
 						".$html."
 						</tbody>	
+						<tfoot>
+						".$sumreport."
+						</tfoot>
 					</table>
 				</div>
 			";
@@ -435,6 +488,7 @@ class ReportARfromsalecash extends MY_Controller {
 					</thead>	
 					<tbody>
 						".$report."
+						".$sumreport2."
 					</tbody>
 				</table>
 			</div>
@@ -445,8 +499,9 @@ class ReportARfromsalecash extends MY_Controller {
 	}
 	
 	function conditiontopdf(){
-		$data = array();
-		$data[] = urlencode($_REQUEST["LOCAT1"].'||'.$_REQUEST["FROMDATECHG"].'||'.$_REQUEST["TODATECHG"].'||'.$_REQUEST["orderby"].'||'.$_REQUEST["layout"]);
+		$data 	= 	array();
+		$data[] = 	urlencode($_REQUEST["LOCAT1"].'||'.$_REQUEST["CONTNO1"].'||'.$_REQUEST["GCODE1"].'||'.$_REQUEST["TYPE1"].'||'.$_REQUEST["MODEL1"]
+					.'||'.$_REQUEST["ARDATE"].'||'.$_REQUEST["orderby"].'||'.$_REQUEST["vat"].'||'.$_REQUEST["stat"].'||'.$_REQUEST["layout"]);
 		echo json_encode($this->generateData($data,"encode"));
 	}
 	
@@ -457,50 +512,120 @@ class ReportARfromsalecash extends MY_Controller {
 		$arrs[0] = urldecode($arrs[0]);
 
 		$tx = explode("||",$arrs[0]);
-		$locat = $tx[0];
-		$fromdate = $tx[1];
-		$todate = $tx[2];
-		$orderby = $tx[3];
-		$layout = $tx[4];
+		$LOCAT1 	= $tx[0];
+		$CONTNO1 	= $tx[1];
+		$GCODE1 	= $tx[2];
+		$TYPE1 		= $tx[3];
+		$MODEL1 	= $tx[4];
+		$ARDATE 	= $tx[5];
+		$orderby 	= $tx[6];
+		$vat 		= $tx[7];
+		$stat 		= $tx[8];
+		$layout 	= $tx[9];
 
-		$cond = "";
-		$rpcond = "";
+		$cond = ""; $rpcond = "";
 		
-		if($locat != ""){
-			$cond .= " and a.LOCAT = '".$locat."'";
-			$rpcond .= "  สาขา ".$locat;
+		if($LOCAT1 != ""){
+			$cond .= " AND (A.LOCAT LIKE '%".$LOCAT1."%')";
+			$rpcond .= "  สาขา ".$LOCAT1;
 		}
 		
-		if($fromdate != ""){
-			$cond .= " and a.YDATE >= '".$this->Convertdate(1,$fromdate)."'";
-			$rpcond .= "  วันที่ยึดรถ ".$fromdate;
+		if($CONTNO1 != ""){
+			$cond .= " AND (A.CONTNO LIKE '%".$CONTNO1."%' )";
+			$rpcond .= "  เลขที่สัญญา ".$CONTNO1;
 		}
 		
-		if($todate != ""){
-			$cond .= " and a.YDATE <= '".$this->Convertdate(1,$todate)."'";
-			$rpcond .= "  ถึงวันที่ ".$todate;
+		$ARDATES = "";
+		if($ARDATE != ""){
+			$ARDATES = $this->Convertdate(1,$ARDATE);
+			$rpcond .= "  ลูกหนี้ ณ วันที่ ".$ARDATE;
+		}
+		
+		if($stat == "N"){
+			$rpcond .= "  ประเภทสินค้า รถใหม่ ";
+		}else if($stat == "O"){
+			$rpcond .= "  ประเภทสินค้า รถมือสอง ";
+		}
+		
+		if($TYPE1 != ""){
+			$cond .= " AND (C.TYPE  LIKE '%".$TYPE1."%')";
+			$rpcond .= "  ยี่ห้อสินค้า ".$TYPE1;
+		}
+		
+		if($MODEL1 != ""){
+			$cond .= " AND (C.MODEL LIKE '%".$MODEL1."%')";
+			$rpcond .= "  รุ่น ".$MODEL1;
+		}
+		
+		$GCODES = "";
+		if($GCODE1 != ""){
+			$GCODES = $GCODE1;
+			$rpcond .= "  สถานะสินค้า ".$MODEL1;
 		}
 		
 		$sql = "
-				select a.LOCAT, a.CONTNO, a.CUSCOD, b.SNAM, b.NAME1, b.NAME2, a.STRNO, a.SMPAY, convert(nvarchar,DATEADD(year,543,a.SDATE),103) as SDATE, 
-				a.KEYINPRC, a.TOTPRC, a.EXP_PRD, a.EXP_AMT, convert(nvarchar,DATEADD(year,543,a.YDATE),103) as YDATES, a.CHECKER, a.BILLCOLL, c.CRLOCAT
-				from  {$this->MAuth->getdb('ARMAST')} a
-				left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD = b.CUSCOD
-				left join {$this->MAuth->getdb('INVTRAN')} c on a.STRNO = c.STRNO
-				where a.YSTAT = 'Y' ".$cond."
-				order by ".$orderby."
+				IF OBJECT_ID('tempdb..#SALE') IS NOT NULL DROP TABLE #SALE
+				select *
+				into #SALE
+				from(
+					select A.LOCAT, A.CONTNO, A.CUSCOD, A.SDATE, B.SNAM+B.NAME1+'  '+B.NAME2 as CUSNAME, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, A.VATPRES, 
+					A.TOTPRES, A.SMPAY, A.SMCHQ
+					from {$this->MAuth->getdb('ARCRED')} A
+					left join CUSTMAST B on A.CUSCOD = B.CUSCOD
+					left join INVTRAN C on A.STRNO = C.STRNO
+					where (A.SDATE <= '".$ARDATES."') AND (C.GCODE LIKE '%".$GCODES."%' OR C.GCODE IS NULL ) AND (C.STAT LIKE '%".$stat."%' OR C.STAT IS NULL ) 
+					AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYDT > '".$ARDATES."')) ".$cond."
+					union
+					select A.LOCAT, A.CONTNO, A.CUSCOD, A.SDATE, B.SNAM+B.NAME1+'  '+B.NAME2 as CUSNAME, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, A.VATPRES, 
+					A.TOTPRES, A.SMPAY, A.SMCHQ
+					from {$this->MAuth->getdb('HARCRED')} A
+					left join CUSTMAST B on A.CUSCOD = B.CUSCOD
+					left join HINVTRAN C on A.STRNO = C.STRNO
+					where (A.SDATE <= '".$ARDATES."') AND (C.GCODE LIKE '%".$GCODES."%' OR C.GCODE IS NULL ) AND (C.STAT LIKE '%".$stat."%' OR C.STAT IS NULL ) 
+					AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYDT > '".$ARDATES."')) ".$cond."
+				)SALE
+		";
+		//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#VAT') IS NOT NULL DROP TABLE #VAT
+				select *
+				into #VAT
+				from(
+					select A.CONTNO, 
+					sum(CASE WHEN (A.PAYDT <= '".$ARDATES."') THEN  A.PAYAMT ELSE 0 END) AS SNETP  ,
+					sum(CASE WHEN ((A.PAYDT > '".$ARDATES."' OR A.PAYDT IS NULL) AND A.PAYTYP = '02' AND A.TMBILDT <= '".$ARDATES."') THEN  A.PAYAMT ELSE 0 END) AS SNETP1,
+					sum(CASE WHEN (A.PAYDT <= '".$ARDATES."') THEN  A.PAYAMT_V ELSE 0 END) AS VPY  ,
+					sum(CASE WHEN ((A.PAYDT > '".$ARDATES."' OR A.PAYDT IS NULL) AND A.PAYTYP = '02' AND A.TMBILDT <= '".$ARDATES."') THEN  A.PAYAMT_V ELSE 0 END) AS VCQ  
+					from CHQTRAN A
+					where  A.FLAG != 'C' AND A.CONTNO in (select CONTNO from #SALE)
+					group by A.CONTNO
+				)VAT
+		";
+		//echo $sql;
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				select A.LOCAT, A.CONTNO, A.CUSCOD, A.CUSNAME, convert(nvarchar,A.SDATE,112) as SDATE, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, 
+				A.VATPRES, A.TOTPRES, A.SMPAY-isnull(B.VPY,0) as SMPAY, isnull(B.VPY,0) as VPY, A.SMPAY as TOTSMPAY, A.NPRICE-(A.SMPAY-isnull(B.VPY,0)) as ARBALANC, 
+				A.VATPRC-isnull(B.VPY,0) as ARVAT, A.TOTPRC-A.SMPAY as TOTAR, A.SMCHQ-isnull(B.VCQ,0) as SMCHQ, isnull(B.VCQ,0) as VCQ, A.SMCHQ, 
+				A.NPRICE-(A.SMPAY-isnull(B.VPY,0))-(A.SMCHQ-isnull(B.VCQ,0)) as BALANCE, A.VATPRC-isnull(B.VPY,0)-isnull(B.VCQ,0) as VATBALNCE,
+				A.TOTPRC-A.SMPAY-A.SMCHQ as TOTBALANCE
+				from #SALE A
+				left join #VAT B on A.CONTNO = B.CONTNO
+				--order by A.SDATE
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				select 'รวมทั้งหมด' as TOTAL, 
-				sum(A.NPRICE) as NPRICE, sum(A.VATPRC) as VATPRC, sum(A.TOTPRC) as TOTPRC, sum(A.NPAYRES) as NPAYRES, sum(A.VATPRES) as VATPRES, 
-				sum(A.TOTPRES) as TOTPRES, sum(A.SMPAY-isnull(B.VPY,0)) as SMPAY, sum(isnull(B.VPY,0)) as VPY, sum(A.SMPAY) as TOTSMPAY, 
-				sum(A.NPRICE-(A.SMPAY-isnull(B.VPY,0))) as ARBALANC, sum(A.VATPRC-isnull(B.VPY,0)) as ARVAT, 
-				sum(A.TOTPRC-A.SMPAY) as TOTAR, sum(A.SMCHQ-isnull(B.VCQ,0)) as SMCHQ, sum(isnull(B.VCQ,0)) as VCQ, sum(A.SMCHQ) as SMCHQ, 
-				sum(A.NPRICE-(A.SMPAY-isnull(B.VPY,0))-(A.SMCHQ-isnull(B.VCQ,0))) as BALANCE, sum(A.VATPRC-isnull(B.VPY,0)-isnull(B.VCQ,0)) as VATBALNCE,
-				sum(A.TOTPRC-A.SMPAY-A.SMCHQ) as TOTBALANCE
+				select 'รวมทั้งหมด' as Total, sum(A.NPRICE) as sumNPRICE, sum(A.VATPRC) as sumVATPRC, sum(A.TOTPRC) as sumTOTPRC, sum(A.NPAYRES) as sumNPAYRES, 
+				sum(A.VATPRES) as sumVATPRES, sum(A.TOTPRES) as sumTOTPRES, sum(A.SMPAY-isnull(B.VPY,0)) as sumSMPAY, sum(isnull(B.VPY,0)) as sumVPY, 
+				sum(A.SMPAY) as sumTOTSMPAY, sum(A.NPRICE-(A.SMPAY-isnull(B.VPY,0))) as sumARBALANC, sum(A.VATPRC-isnull(B.VPY,0)) as sumARVAT, 
+				sum(A.TOTPRC-A.SMPAY) as sumTOTAR, sum(A.SMCHQ-isnull(B.VCQ,0)) as sumSMCHQ, sum(isnull(B.VCQ,0)) as sumVCQ, sum(A.SMCHQ) as sumSMCHQ, 
+				sum(A.NPRICE-(A.SMPAY-isnull(B.VPY,0))-(A.SMCHQ-isnull(B.VCQ,0))) as sumBALANCE, sum(A.VATPRC-isnull(B.VPY,0)-isnull(B.VCQ,0)) as sumVATBALNCE,
+				sum(A.TOTPRC-A.SMPAY-A.SMCHQ) as sumTOTBALANCE
 				from #SALE A
 				left join #VAT B on A.CONTNO = B.CONTNO
 		";
@@ -510,21 +635,21 @@ class ReportARfromsalecash extends MY_Controller {
 		$head = ""; $html = ""; $i=0; 
 	
 		$head = "
-				<tr >
-				<th style='border-bottom:0.1px solid black;text-align:left;'>#</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'>สาขา</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'>เลขที่สัญญา</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'>ชื่อ - นามสกุล</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'>เลขตัวถัง</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'>วันทำสัญญา</th>
-				<th style='border-bottom:0.1px solid black;text-align:right;'>ราคาขาย</th>
-				<th style='border-bottom:0.1px solid black;text-align:right;'>ชำระแล้ว</th>
-				<th style='border-bottom:0.1px solid black;text-align:right;'>ค้างชำระ<br>(บาท)</th>
-				<th style='border-bottom:0.1px solid black;text-align:right;'>ค้างชำระ<br>(งวด)</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'>วันที่ยึด</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'>สาขาที่เก็บ</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'>Billcoll</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'>Checker</th>
+				<tr>
+					<th style='border-bottom:0.1px solid black;text-align:left;'>#</th>
+					<th style='border-bottom:0.1px solid black;text-align:left;'>สาขา</th>
+					<th style='border-bottom:0.1px solid black;text-align:left;'>เลขที่สัญญา</th>
+					<th style='border-bottom:0.1px solid black;text-align:left;'>รหัสลูกค้า<br>ชื่อ - นามสกุล</th>
+					<th style='border-bottom:0.1px solid black;text-align:left;'>วันที่ขาย</th> 
+					<th style='border-bottom:0.1px solid black;text-align:right;'>มูลค่าราคาขาย<br>มูลค่าล/นคงเหลือ</th> 
+					<th style='border-bottom:0.1px solid black;text-align:right;'>ภาษีขาย<br>ภาษีคงเหลือ</th>
+					<th style='border-bottom:0.1px solid black;text-align:right;'>ราคาขาย<br>ลูกหนี้คงเหลือ</th>
+					<th style='border-bottom:0.1px solid black;text-align:right;'>มูลค่าเงินจอง<br>มูลค่าเช็ค</th>
+					<th style='border-bottom:0.1px solid black;text-align:right;'>ภาษีจอง<br>ภาษีเช็ค</th>
+					<th style='border-bottom:0.1px solid black;text-align:right;'>เงินจอง<br>เช็ครอเรียกเก็บ</th>
+					<th style='border-bottom:0.1px solid black;text-align:right;'>มูลค่าชำระ<br>มูลค่าล/นหักเช็ค</th>
+					<th style='border-bottom:0.1px solid black;text-align:right;'>ภาษีชำระ<br>ภาษีล/นหักเช็ค</th>
+					<th style='border-bottom:0.1px solid black;text-align:right;'>ชำระแล้ว<br>ล/นหักเช็ค</th>
 				</tr>
 		";
 		
@@ -533,20 +658,20 @@ class ReportARfromsalecash extends MY_Controller {
 			foreach($query->result() as $row){	
 				$html .= "
 					<tr class='trow' seq=".$No.">
-						<td style='width:30px;'>".$No++."</td>
-						<td	style='width:40px;'>".$row->LOCAT."</td>
-						<td style='width:80px;'>".$row->CONTNO."</td>
-						<td style='width:200px;'>".($row->SNAM.$row->NAME1.' '.$row->NAME2.' ('.$row->CUSCOD.')')."</td>
-						<td style='width:125px;'>".$row->STRNO."</td>
-						<td style='width:70px;'>".$row->SDATE."</td>
-						<td style='width:75px;' align='right'>".number_format($row->TOTPRC,2)."</td>
-						<td style='width:75px;' align='right'>".number_format($row->SMPAY,2)."</td>
-						<td style='width:75px;' align='right'>".number_format($row->EXP_AMT,2)."</td>
-						<td style='width:60px;' align='right'>".number_format($row->EXP_PRD)."&nbsp;</td>
-						<td style='width:70px;'>".$row->YDATES."</td>
-						<td style='width:50px;'>".$row->CRLOCAT."</td>
-						<td style='width:45px;'>".$row->BILLCOLL."</td>
-						<td style='width:45px;'>".$row->CHECKER."</td>
+						<td style='width:25px;'>".$No++."</td>
+						<td style='width:40px;'>".$row->LOCAT."</td>
+						<td style='width:75px;'>".$row->CONTNO."</td>
+						<td >".$row->CUSCOD."<br>".$row->CUSNAME."</td>
+						<td style='width:65px;'>".$this->Convertdate(2,$row->SDATE)."</td>
+						<td style='width:85px;' align='right'>".number_format($row->NPRICE,2)."<br>".number_format($row->ARBALANC,2)."</td>
+						<td style='width:70px;' align='right'>".number_format($row->VATPRC,2)."<br>".number_format($row->ARVAT,2)."</td>
+						<td style='width:70px;' align='right'>".number_format($row->TOTPRC,2)."<br>".number_format($row->TOTAR,2)."</td>
+						<td style='width:70px;' align='right'>".number_format($row->NPAYRES,2)."<br>".number_format($row->SMCHQ,2)."</td>
+						<td style='width:60px;' align='right'>".number_format($row->VATPRES,2)."<br>".number_format($row->VCQ,2)."</td>
+						<td style='width:78px;' align='right'>".number_format($row->TOTPRES,2)."<br>".number_format($row->SMCHQ,2)."</td>
+						<td style='width:80px;' align='right'>".number_format($row->SMPAY,2)."<br>".number_format($row->BALANCE,2)."</td>
+						<td style='width:78px;' align='right'>".number_format($row->VPY,2)."<br>".number_format($row->VATBALNCE,2)."</td>
+						<td style='width:70px;' align='right'>".number_format($row->TOTSMPAY,2)."<br>".number_format($row->TOTBALANCE,2)."</td>
 					</tr>
 				";	
 			}
