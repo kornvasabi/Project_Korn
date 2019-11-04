@@ -677,6 +677,25 @@ class ReportARfromsalecash extends MY_Controller {
 			}
 		}
 		
+		if($query2->row()){
+			foreach($query2->result() as $row){	
+				$html .= "
+					<tr class='trow bor' style='background-color:#ebebeb;'>
+						<td colspan='5' style='text-align:center;'>".$row->Total."</td>
+						<td style='text-align:right;'>".number_format($row->NPRICE,2)."<br>".number_format($row->ARBALANC,2)."</td>
+						<td style='text-align:right;'>".number_format($row->VATPRC,2)."<br>".number_format($row->ARVAT,2)."</td>
+						<td style='text-align:right;'>".number_format($row->TOTPRC,2)."<br>".number_format($row->TOTAR,2)."</td>
+						<td style='text-align:right;'>".number_format($row->NPAYRES,2)."<br>".number_format($row->SMCHQ,2)."</td>
+						<td style='text-align:right;'>".number_format($row->VATPRES,2)."<br>".number_format($row->VCQ,2)."</td>
+						<td style='text-align:right;'>".number_format($row->TOTPRES,2)."<br>".number_format($row->SMCHQ,2)."</td>
+						<td style='text-align:right;'>".number_format($row->SMPAY,2)."<br>".number_format($row->BALANCE,2)."</td>
+						<td style='text-align:right;'>".number_format($row->VPY,2)."<br>".number_format($row->VATBALNCE,2)."</td>
+						<td style='text-align:right;'>".number_format($row->TOTSMPAY,2)."<br>".number_format($row->TOTBALANCE,2)."</td>
+					</tr>
+				";	
+			}
+		}
+		
 		$mpdf = new \Mpdf\Mpdf([
 			'mode' => 'utf-8', 
 			'format' => $layout,

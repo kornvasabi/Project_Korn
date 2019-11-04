@@ -582,6 +582,9 @@ class ARother extends MY_Controller {
 				
 				".$uploadpic."
 				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS05::บันทึกลูกหนี้อื่น (แก้ไข)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
 				insert into #EditAROYHTemp select 'S',@CONTNO,'แก้ไขลูกหนี้อื่น เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 				
 				commit tran EditAROYHTemp;
