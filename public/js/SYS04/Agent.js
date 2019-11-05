@@ -700,7 +700,7 @@ function fnDocumentAction(){
 		var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 		
 		Lobibox.window({
-			title: 'ใบอนุมัติขาย',
+			title: $type,
 			width: $(window).width(),
 			height: $(window).height(),
 			content: content,

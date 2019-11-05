@@ -192,9 +192,9 @@ class Leasing extends MY_Controller {
 					</tbody>
 				</table>
 			</div>
-			<div>
+			<!-- div>
 				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-LeasingCar', 'exporttoexcell');\" style='width:25px;height:25px;cursor:pointer;'/>
-			</div>
+			</div -->
 		";
 		
 		/*

@@ -459,6 +459,11 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		});
 	});
 	
+	$('#add_cuscod_removed').click(function(){
+		$('#add_cuscod').attr('CUSCOD','');
+		$('#add_cuscod').val('');
+	});
+	
 	$('#add_inclvat').select2({ 
 		dropdownParent: $("#wizard-sell"), 
 		minimumResultsForSearch: -1,
@@ -1037,6 +1042,11 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		});
 	});
 	
+	$('#add_recomcod_removed').click(function(){
+		$('#add_recomcod').attr('CUSCOD','');
+		$('#add_recomcod').val('');
+	});
+	
 	$('#add_acticod').select2({ 
 		placeholder: 'เลือก',
         ajax: {
@@ -1422,6 +1432,7 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_approve').attr('disabled',true);
 	
 	$('#add_cuscod').attr('disabled',true);
+	$('#add_cuscod_removed').attr('disabled',true);
 	$('#add_inclvat').select2({ dropdownParent: true,disabled: true,width:'100%' });
 	$('#add_vatrt').attr('disabled',true);
 	$('#add_addrno').select2({ dropdownParent: true,disabled: true,width:'100%' });

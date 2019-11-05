@@ -668,7 +668,8 @@ class Cselect2 extends MY_Controller {
 			union
 			select ID,ANSTAT
 			from {$this->MAuth->getdb('ARANALYZE')}
-			where 1=1 and ID like '%".$dataSearch."%' collate Thai_CI_AS and LOCAT='".$locat."'
+			where 1=1 and ID like '%".$dataSearch."%' collate Thai_CI_AS 
+				and LOCAT='".$locat."' and isnull(CONTNO,'')=''
 			order by ID
 		";
 		//echo $sql; exit;

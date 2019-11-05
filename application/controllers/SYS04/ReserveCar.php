@@ -146,7 +146,7 @@ class ReserveCar extends MY_Controller {
 						<td>".$this->Convertdate(2,$row->RESVDT)."</td>
 						<td>".$row->NAME."</td>
 						<td>".number_format($row->RESPAY,2)."</td>
-						<td>".number_format($row->CWO,2)."</td>
+						<td ".($row->CWO == 0 ? "":"style='color:red;'").">".number_format($row->CWO,2)."</td>
 						<td>".$this->Convertdate(2,$row->INPDT)." ".$row->INPTM."</td>
 					</tr>
 				";

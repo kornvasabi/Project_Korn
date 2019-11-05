@@ -1577,8 +1577,9 @@ class Agent extends MY_Controller {
 					) AS D  
 				) AS E  
 			) AS H ON  A.CUSCOD=H.CUSCOD   
-			WHERE (A.CONTNO = '".$contno."') AND (A.TSALE='A')
+			WHERE (A.CONTNO = '".$contno."') --AND (A.TSALE='A')
 		";
+		//echo md5(base64_encode($sql)); exit;
 		$query = $this->db->query($sql);
 		
 		$top = 305;
