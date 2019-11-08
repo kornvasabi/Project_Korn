@@ -521,7 +521,7 @@ class ARother extends MY_Controller {
 		$CONTNO	= $_REQUEST["CONTNO"];
 		$CUSCOD	= $_REQUEST["CUSCOD"];
 		$PAYFOR	= $_REQUEST["PAYFOR"];
-		$PAYAMT	= str_replace(',','',$_REQUEST["PAYAMT"]);
+		//$PAYAMT	= str_replace(',','',$_REQUEST["PAYAMT"]);
 		$MEMO	= $_REQUEST["MEMO"];
 		
 		$uploadpic = "";
@@ -577,7 +577,7 @@ class ARother extends MY_Controller {
 				declare @id varchar(max) = (select id from YTKManagement.dbo.config_fileupload where refno = '".$this->sess["db"]."');
 				
 				update {$this->MAuth->getdb('AROTHR')}
-				set PAYFOR = '".$PAYFOR."', PAYAMT = '".$PAYAMT."', MEMO1 = '".$MEMO."'
+				set PAYFOR = '".$PAYFOR."', MEMO1 = '".$MEMO."'
 				where ARCONT like '%".$ARCONT."%' and CONTNO like '%".$CONTNO."%' and CUSCOD like '%".$CUSCOD."%'
 				
 				".$uploadpic."

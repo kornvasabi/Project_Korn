@@ -64,6 +64,62 @@ $(function(){
 		width: '100%'
 	});
 	
+	$('#BILLCOL1').select2({
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2b/getOFFICER',
+			data: function (params) {
+				dataToPost = new Object();
+				//dataToPost.now = $('#add_cuscod').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: true,
+		multiple: false,
+		dropdownParent: $(".b_tab1"),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
+	$('#CONTSTAT1').select2({
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2b/getTYPCONT',
+			data: function (params) {
+				dataToPost = new Object();
+				//dataToPost.now = $('#add_cuscod').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: true,
+		multiple: false,
+		dropdownParent: $(".b_tab1"),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
 	$('#GCODE1').select2({
 		placeholder: 'เลือก',
         ajax: {
@@ -159,12 +215,15 @@ function search(){
 	dataToPost = new Object();
 	var orderby = "";
 	if($("#sdate").is(":checked")){ 
-		orderby = "A.SDATE";
+		orderby = "SDATE";
 	}else if($("#contno").is(":checked")){
-		orderby = "A.CONTNO";
+		orderby = "CONTNO";
 	}else if($("#cuscod").is(":checked")){ 
-		orderby = "A.CUSCOD";
+		orderby = "CUSCOD";
+	}else if($("#type").is(":checked")){ 
+		orderby = "TYPE";
 	}
+	
 	var vat = "";
 	if($("#showvat").is(":checked")){ 
 		vat = "showvat";
@@ -181,9 +240,11 @@ function search(){
 	}
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
 	dataToPost.CONTNO1 		= (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.GCODE1 		= (typeof $('#GCODE1').find(':selected').val() === 'undefined' ? '':$('#GCODE1').find(':selected').val());
+	ataToPost.BILLCOL1 		= (typeof $('#BILLCOL1').find(':selected').val() === 'undefined' ? '':$('#BILLCOL1').find(':selected').val());
 	dataToPost.TYPE1 		= (typeof $('#TYPE1').find(':selected').val() === 'undefined' ? '':$('#TYPE1').find(':selected').val());
 	dataToPost.MODEL1 		= (typeof $('#MODEL1').find(':selected').val() === 'undefined' ? '':$('#MODEL1').find(':selected').val());
+	dataToPost.CONTSTAT1 	= (typeof $('#CONTSTAT1').find(':selected').val() === 'undefined' ? '':$('#CONTSTAT1').find(':selected').val());
+	dataToPost.GCODE1 		= (typeof $('#GCODE1').find(':selected').val() === 'undefined' ? '':$('#GCODE1').find(':selected').val());
 	dataToPost.ARDATE 		= $('#ARDATE').val();
 	dataToPost.orderby 		= orderby;
 	dataToPost.vat 			= vat;
@@ -191,14 +252,14 @@ function search(){
 	
 	$('#loadding').show();
 	reportsearch = $.ajax({
-		url: '../SYS05/ReportARfromsalecash/search',
+		url: '../SYS05/ReportARfromsaleinstalment/search',
 		data: dataToPost,
 		Type: 'POST',
 		dataType:'json',
 		success: function(data){	
 			$('#loadding').hide();	
 			Lobibox.window({
-				title: 'รายงานลูกหนี้คงเหลือจากการขายสด',
+				title: 'รายงานลูกหนี้คงเหลือจากการขายผ่อน',
 				content: data.html,
 				height: $(window).height(),
 				width: $(window).width(),
@@ -284,14 +345,14 @@ function printReport(){
 	dataToPost.layout 		= layout;
 	
 	$.ajax({
-		url: '../SYS05/ReportARfromsalecash/conditiontopdf',
+		url: '../SYS05/ReportARfromsaleinstalment/conditiontopdf',
 		data: dataToPost,
 		type:'POST',
 		dataType: 'json',
 		success: function(data){
 			//alert(data[0]);
 			var baseUrl = $('body').attr('baseUrl');
-			var url = baseUrl+'SYS05/ReportARfromsalecash/pdf?condpdf='+data[0];
+			var url = baseUrl+'SYS05/ReportARfromsaleinstalment/pdf?condpdf='+data[0];
 			var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 			Lobibox.window({
 				title: 'พิมพ์รายงาน',
