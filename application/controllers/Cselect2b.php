@@ -463,7 +463,8 @@ class Cselect2b extends MY_Controller {
 		$dataSearch = trim($_GET['q']);
 		
 		$sql = "
-			select top 10 FORCODE, FORCODE+' - '+FORDESC as FORDESC
+			select top 10 FORCODE, FORCODE+' - '+FORDESC as FORDESC, 
+			case when FORCODE = '102' then 'disabled' else '' end as disabled
 			from {$this->MAuth->getdb('PAYFOR')} 
 			where FORCODE not like '0%' and (FORCODE like '".$dataSearch."%' or FORDESC like '%".$dataSearch."%')
 			order by FORCODE
@@ -474,7 +475,7 @@ class Cselect2b extends MY_Controller {
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
-				$json[] = ['id'=>$row->FORCODE, 'text'=>$row->FORDESC];
+				$json[] = ['id'=>$row->FORCODE, 'text'=>$row->FORDESC, 'disabled'=>$row->disabled];
 			}
 		}
 		
@@ -1161,6 +1162,28 @@ class Cselect2b extends MY_Controller {
 			}
 		}
 		
+		echo json_encode($json);
+	}
+	
+	function getTYPCONT(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select CONTTYP, CONTTYP+' - '+CONTDESC as CONTDESC
+			from {$this->MAuth->getdb('TYPCONT')}
+			where CONTTYP like '%".$dataSearch."%' collate Thai_CI_AS
+				or CONTDESC like '%".$dataSearch."%' collate Thai_CI_AS
+			order by CONTTYP
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTTYP, 'text'=>$row->CONTDESC];
+			}
+		}
 		echo json_encode($json);
 	}
 	
