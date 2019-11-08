@@ -294,10 +294,8 @@ class ReportARfromsaleinstalment extends MY_Controller {
 							from chqtran 
 							group by contno,locatpay
 						) as f on a.contno = f.contno and a.locat = f.locatpay 
-						where (A.LOCAT LIKE '%%') AND (A.CONTNO LIKE '%%') AND (A.SDATE <= '20191107') AND (D.GCODE LIKE '%%' OR D.GCODE IS NULL ) AND 
-						(D.TYPE  LIKE '%%' OR D.TYPE IS NULL ) AND (D.MODEL LIKE '%%' OR D.MODEL IS NULL) AND (D.STAT LIKE '%%'  OR D.STAT IS NULL) AND        
-						(A.BILLCOLL LIKE '%%' OR A.BILLCOLL IS NULL) AND (A.CONTSTAT LIKE '%%' OR A.CONTSTAT IS NULL) AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY 
-						OR (A.TOTPRC = A.SMPAY AND A.LPAYD > '20191107'))  
+						
+						where (A.SDATE <= '20191107') AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYD > '20191107')) 
 
 						union 
 
@@ -330,7 +328,7 @@ class ReportARfromsaleinstalment extends MY_Controller {
 						where (A.LOCAT LIKE '%%') AND (A.CONTNO LIKE '%%') AND (A.SDATE <= '20191107') AND (D.GCODE LIKE '%%' OR D.GCODE IS NULL )AND 
 						(D.TYPE  LIKE '%%' OR D.TYPE IS NULL ) AND (D.MODEL LIKE '%%' OR D.MODEL IS NULL ) AND (D.STAT LIKE '%%'  OR D.STAT IS NULL)AND       
 						(A.BILLCOLL LIKE '%%' OR A.BILLCOLL IS NULL) AND (A.CONTSTAT LIKE '%%' OR A.CONTSTAT IS NULL) AND A.TOTPRC > 0 AND 
-						(A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYD > '20191107')) and b.date1> '20191107'  
+						(A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYD > '20191107')) and b.date1 > '20191107'  
 					 ) as d 
 				)main
 		";
