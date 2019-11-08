@@ -63,34 +63,17 @@ $('#btnt1search').click(function(){
 		success: function(data){
 			$('#jd_result').html(data.html);
 			
-			//$('#table-ReserveCar').on('draw.dt',function(){ redraw(); });
-			//fn_datatables('table-ReserveCar',1,250);
-			$('.leasingDetails').click(function(){
-				leasingDetails($(this).attr('contno'),'search');
-			});
+			$('#table-LeasingCar').on('draw.dt',function(){ redraw(); });
+			fn_datatables('table-LeasingCar',1,250);
+			
+			function redraw(){
+				$('.leasingDetails').unbind('click');
+				$('.leasingDetails').click(function(){
+					leasingDetails($(this).attr('contno'),'search');
+				});
+			}
 			
 			$('#loadding').hide();
-			
-			/*
-			Lobibox.window({
-				title: 'รายการเช่าซื้อ',
-				width: $(window).width(),
-				height: $(window).height(),
-				content: data.html,
-				draggable: false,
-				closeOnEsc: false,
-				shown: function($this){
-					//$this.destroy();
-					//wizard();		
-					$('.leasingDetails').click(function(){
-						leasingDetails($(this).attr('contno'),'search');
-					});
-				},
-				beforeClose : function(){
-					$('#btnt1search').attr('disabled',false);
-				}
-			});
-			*/
 			jd_btnt1search = null;
 		},
 		error: function (x,c,b){
@@ -632,6 +615,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					$('#add_strno').attr('disabled',true);
 					$('#add_strno').empty().append(newOption).trigger('change');
 				}
+				
+				$('#add_cuscod').trigger('select2:select');
 			}
 		});
 	});
@@ -2396,9 +2381,11 @@ function fn_billdasActive(rank){
 		
 			$('.add_billdas').each(function(){								
 				if(size > 1){
-					$(this).select2('destroy');
-					$(this).remove();
-					size -= 1;
+					if(typeof $(this).find(':selected').val() === 'undefined'){ 
+						$(this).select2('destroy');
+						$(this).remove();
+						size -= 1;
+					}
 				}
 			});
 		}
@@ -2797,6 +2784,7 @@ function btnOther($thisWindowLeasing){
 	});
 	
 	$('#btnSend').click(function(){
+		/*
 		Lobibox.notify('info', {
 			title: 'info',
 			size: 'mini',
@@ -2808,7 +2796,29 @@ function btnOther($thisWindowLeasing){
 			messageHeight: '90vh',
 			msg: 'feature นี้ยังไม่สามารถใช้งานได้ครับ'
 		});
+		*/
+		
+		documents('ใบส่งมอบสินค้า');
 	});	
+	
+	function documents($type){
+		$contno = $("#add_contno").val();
+		var baseUrl = $('body').attr('baseUrl');
+		var url = baseUrl+'SYS04/Agent/sendpdf?contno='+$contno+'&document='+$type;
+		var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
+		
+		Lobibox.window({
+			title: $type,
+			width: $(window).width(),
+			height: $(window).height(),
+			content: content,
+			draggable: false,
+			closeOnEsc: true,			
+			beforeClose : function(){
+				$('#btnApproveSell').attr('disabled',false);
+			}
+		});
+	}
 	
 	$('#btnTax').click(function(){
 		Lobibox.notify('info', {

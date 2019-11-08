@@ -40,7 +40,7 @@ class Leasing extends MY_Controller {
 						<div class=' col-sm-2'>	
 							<div class='form-group'>
 								วันที่ทำสัญญา
-								<input type='text' id='SDATEFRM' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonth')."'>
+								<input type='text' id='SDATEFRM' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonthB1')."'>
 							</div>
 						</div>	
 						<div class=' col-sm-2'>	
@@ -192,9 +192,9 @@ class Leasing extends MY_Controller {
 					</tbody>
 				</table>
 			</div>
-			<div>
+			<!-- div>
 				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-LeasingCar', 'exporttoexcell');\" style='width:25px;height:25px;cursor:pointer;'/>
-			</div>
+			</div -->
 		";
 		
 		/*
@@ -1035,7 +1035,7 @@ class Leasing extends MY_Controller {
 							<div class='2 col-sm-12'>	
 								<div class='form-group'>
 									หมายเหตุ
-									<textarea type='text' id='add_comments' class='form-control input-sm' placeholder='หมายเหตุ' ></textarea>
+									<textarea type='text' id='add_comments' class='form-control input-sm' placeholder='หมายเหตุ'  rows=4 style='resize:vertical;'></textarea>
 								</div>
 							</div>
 						</div>
@@ -1507,6 +1507,15 @@ class Leasing extends MY_Controller {
 				,a.RESPAY
 				,a.SMPAY
 				,c.CRLOCAT
+				,1 as ADDRNO
+				,(
+					select '('+aa.ADDRNO+') '+aa.ADDR1+' '+aa.ADDR2+' ต.'+aa.TUMB
+						+' อ.'+bb.AUMPDES+' จ.'+cc.PROVDES+' '+aa.ZIP as ADDRNODetails 			
+					from {$this->MAuth->getdb('CUSTADDR')} aa
+					left join {$this->MAuth->getdb('SETAUMP')} bb on aa.AUMPCOD=bb.AUMPCOD
+					left join {$this->MAuth->getdb('SETPROV')} cc on bb.PROVCOD=cc.PROVCOD
+					where aa.CUSCOD=a.CUSCOD and aa.ADDRNO=1
+				) as ADDRDES
 			from {$this->MAuth->getdb('ARRESV')} a
 			left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD
 			left join {$this->MAuth->getdb('INVTRAN')} c on a.STRNO=c.STRNO and c.FLAG='D'
@@ -1521,6 +1530,8 @@ class Leasing extends MY_Controller {
 				$response["LOCAT"]   = $row->LOCAT;
 				$response["CUSCOD"]  = $row->CUSCOD;
 				$response["CUSNAME"] = $row->CUSNAME;
+				$response["ADDRNO"]  = $row->ADDRNO;
+				$response["ADDRDES"] = $row->ADDRDES;
 				$response["GRADE"]   = $row->GRADE;
 				$response["STRNO"]   = $row->STRNO;
 				$response["SMCHQ"]   = str_replace(",","",number_format($row->SMCHQ,2));
@@ -1531,6 +1542,8 @@ class Leasing extends MY_Controller {
 			$response["LOCAT"]   = "";
 			$response["CUSCOD"]  = "";
 			$response["CUSNAME"] = "";
+			$response["ADDRNO"]  = "";
+			$response["ADDRDES"] = "";
 			$response["GRADE"] 	 = "";
 			$response["STRNO"] 	 = "";
 			$response["SMCHQ"]   = "";
