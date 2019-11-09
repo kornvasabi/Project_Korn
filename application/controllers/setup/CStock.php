@@ -54,6 +54,7 @@ class CStock extends MY_Controller {
 					</div>
 				</div>
 			</div>
+			
 			<div id='setgroupResult' class='col-sm-12 tab1' style='height:calc(100vh - 197px);overflow:auto;background-color:#;'></div>
 			
 			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
