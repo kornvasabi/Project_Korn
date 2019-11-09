@@ -30,9 +30,14 @@ $('#btnt1RpGroup').click(function(){
 		success: function(data){
 			$('#result').html(data.html);
 			
-			
-			//$('#table-agent').on('draw.dt',function(){ redraw(); });
+			//$('#table-reportgroup').on('draw.dt',function(){ redraw(); });
 			fn_datatables('table-reportgroup',1,320);
+			
+			// Export data to Excel
+			$('.data-export').prepend('<img id="table-reportgroup-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
+			$("#table-reportgroup-excel").click(function(){ 	
+				tableToExcel_Export(data.html,"รายงานการเปลี่ยนกลุ่มรถ","reportgroup"); 
+			});
 			
 			jd_btnt1RpGroup = null;
 			$('#loadding').fadeOut(200);
@@ -42,3 +47,17 @@ $('#btnt1RpGroup').click(function(){
 		}
 	});
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -719,7 +719,7 @@ class Sell extends MY_Controller {
 								<div class='form-group'>
 									ผู้แนะนำการซื้อ
 									<div class='input-group'>
-										<input type='text' id='add_recomcod' CUSCOD='' class='form-control input-sm' placeholder='ลูกค้า' >
+										<input type='text' id='add_recomcod' CUSCOD='' class='form-control input-sm' placeholder='ผู้แนะนำการซื้อ' >
 										<span class='input-group-btn'>
 										<button id='add_recomcod_removed' class='btn btn-danger btn-sm' type='button'>
 											<span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button>

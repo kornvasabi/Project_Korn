@@ -195,9 +195,11 @@ class ReserveCar extends MY_Controller {
 		$arrs["fRESVDT"] 	= $this->today('today');
 		$arrs["fLOCAT"] 	= "<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>";
 		$arrs["fCUSCOD"] 	= "";
+		$arrs["CUSCOD"] 	= "";
+		$arrs["CUSNAME"] 	= "";
 		$arrs["fRECVCD"] 	= "<option value='".$this->sess["USERID"]."'>".$this->sess["name"]." (".$this->sess["USERID"].")</option>";
 		$arrs["fSALCOD"] 	= "<option value='".$this->sess["USERID"]."'>".$this->sess["name"]." (".$this->sess["USERID"].")</option>";
-		$arrs["fVATRT"] 	= "";
+		$arrs["fVATRT"] 	= "0.00";
 		$arrs["fTAXNO"] 	= "";
 		$arrs["fTAXDT"] 	= "";
 		$arrs["fSTRNO"] 	= "";
@@ -252,6 +254,8 @@ class ReserveCar extends MY_Controller {
 				$arrs["fRESVDT"] 	= $this->Convertdate(2,$row->RESVDT);
 				$arrs["fLOCAT"]  	= "<option value='".$row->LOCAT."'>".$row->LOCAT."</option>";
 				$arrs["fCUSCOD"] 	= "<option value='".$row->CUSCOD."'>".$row->CUSNAME."</option>";
+				$arrs["CUSCOD"] 	= $row->CUSCOD;
+				$arrs["CUSNAME"] 	= $row->CUSNAME;
 				$arrs["fRECVCD"] 	= "<option value='".$row->RECVCD."'>".$row->RECVCDNAME."</option>";
 				$arrs["fSALCOD"] 	= "<option value='".$row->SALCOD."'>".$row->SALCODNAME."</option>";
 				$arrs["fVATRT"]  	= number_format($row->VATRT,2);
@@ -278,7 +282,23 @@ class ReserveCar extends MY_Controller {
 				$arrs["fMEMO1"]  	= $row->MEMO1;				
 			}
 		}
-			
+		/*
+		else{
+			$sql = "
+				select top 1 * from {$this->MAuth->getdb('VATMAST')} 
+				where getdate() between FRMDATE and TODATE
+				order by FRMDATE desc
+			";
+			$query = $this->db->query($sql);
+		
+			if($query->row()){
+				foreach($query->result() as $row){
+					$arrs["fVATRT"] = number_format($row->VATRT,2);
+				}
+			}
+		}
+		*/
+		
 		$html = "
 			<h3 class='text-primary'>ผู้เช่าซื้อ</h3>
 			<div class='row col-sm-12' style='border:1px dotted #aaa;'>
@@ -305,9 +325,14 @@ class ReserveCar extends MY_Controller {
 				<div class='col-sm-3'>	
 					<div class='form-group'>
 						ชื่อสกุล-ลูกค้า
-						<select id='fCUSCOD' class='form-control input-sm'>
-							{$arrs["fCUSCOD"]}
-						</select>
+						<!-- select id='fCUSCOD' class='form-control input-sm'>{$arrs["fCUSCOD"]}</select -->
+						<div class='input-group'>
+						   <input type='text' id='fCUSCOD' CUSCOD='{$arrs["CUSCOD"]}' class='form-control input-sm' placeholder='ลูกค้า'  value='{$arrs["CUSNAME"]}'>
+						   <span class='input-group-btn'>
+						   <button id='fCUSCOD_removed' class='btn btn-danger btn-sm' type='button'>
+								<span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button>
+						   </span>
+						</div>
 					</div>
 				</div>
 				<div class='col-sm-3'>	
