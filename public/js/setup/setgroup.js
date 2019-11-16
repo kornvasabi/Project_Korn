@@ -54,7 +54,7 @@ $('#add_group').click(function(){
 	
 	$('.tab1').hide();
 	$('.tab2').show();		
-	
+	dataToPost = new Object();
 	$.ajax({
 		url: '../setup/CStock/groupGetFormAE',
 		data:dataToPost,
