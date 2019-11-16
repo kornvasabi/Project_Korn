@@ -30,7 +30,7 @@ class ReserveCar extends MY_Controller {
 		//style='height:calc(100vh - 132px);overflow:auto;background-color:white;'
 		$html = "
 			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
-				<div class='divcondition col-sm-12' style='overflow:auto;'>					
+				<div>
 					<div class='row'>
 						<div class='col-xs-2 col-sm-2'>	
 							<div class='form-group'>

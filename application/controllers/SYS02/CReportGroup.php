@@ -139,7 +139,7 @@ class CReportGroup extends MY_Controller {
 		//echo $sql; //exit;
 		$this->db->query($sql);
 		$sql = "
-			select top 5000 a.*,c.GDESC from #tempstr a 
+			select top 5000 ROW_NUMBER() over(partition by a.STRNO order by a.STRNO,a.dt,a.tm) r,a.*,c.GDESC from #tempstr a 
 			inner join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO collate thai_cs_as
 			left join {$this->MAuth->getdb('SETGROUP')} c on a.GCODE=c.GCODE collate thai_cs_as
 			where 1=1 ".$cond."
@@ -154,6 +154,7 @@ class CReportGroup extends MY_Controller {
 				$html .= "
 					<tr>
 						<td>".$row->STRNO."</td>
+						<td>".$row->r."</td>
 						<td>".$row->GCODE." ".$row->GDESC."</td>
 						<td>".$row->username."</td>
 						<td>".$row->userId."</td>
@@ -163,12 +164,6 @@ class CReportGroup extends MY_Controller {
 					</tr>
 				";
 			}
-		}else{
-			$html .= "
-				<tr>
-					<td class='text-center' colspan='14'>ไม่พบข้อมูลตามเงื่อนไข</td>
-				</tr>
-			";
 		}
 		
 		$html = "
@@ -176,22 +171,23 @@ class CReportGroup extends MY_Controller {
 				<table id='table-reportgroup' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 						<tr>
-							<th colspan='7' class='text-center' style='font-size:12pt;border:0px;'> 
+							<th colspan='8' class='text-center' style='font-size:12pt;border:0px;'> 
 								รายงานการเปลี่ยนกลุ่มรถ
 							</th>
 						</tr>
 						<tr>
-							<th colspan='7' class='text-center' style='border:0px;'>
+							<th colspan='8' class='text-center' style='border:0px;'>
 								ออกรายงานโดย ".$this->sess["name"]." &emsp; ณ วันที่ ".$this->MDATA->sysdt()."
 							</th>
 						</tr>
 						<tr>
-							<th colspan='7' class='text-center' style='border:0px;color:#666;'>
+							<th colspan='8' class='text-center' style='border:0px;color:#666;'>
 								เงื่อนไข :: ".$condDesc."
 							</th>
 						</tr>
 						<tr>
 							<th style='vertical-align:middle;border:0px;'>เลขตัวถัง</th>
+							<th style='vertical-align:middle;border:0px;'>ครั้งที่</th>
 							<th style='vertical-align:middle;border:0px;'>กลุ่ม</th>
 							<th style='vertical-align:middle;border:0px;'>ผู้ทำรายการ</th>
 							<th style='vertical-align:middle;border:0px;'>เลข ปชช.</th>

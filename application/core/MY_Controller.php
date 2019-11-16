@@ -187,7 +187,8 @@ class MY_Controller extends CI_Controller {
 	
 	public function today($param){
 		$sql = "
-			select 	convert(varchar(8),(convert(varchar(6),dateadd(month,-1,getdate()),112)+'01'),112) as startofmonthB1
+			select 	cast(year(getdate()) as varchar(4))+'0101' as startinyear
+				,convert(varchar(8),(convert(varchar(6),dateadd(month,-1,getdate()),112)+'01'),112) as startofmonthB1
 				,convert(varchar(8),(convert(varchar(6),getdate(),112)+'01'),112) as startofmonth
 				,convert(varchar(8),getdate(),112) as today
 				,convert(varchar(8),(dateadd(day,-1,convert(varchar(6),dateadd(month,1,getdate()),112)+'01')),112) as endofmonth
@@ -198,6 +199,7 @@ class MY_Controller extends CI_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				switch($param){
+					case 'startinyear': return $this->Convertdate(2,$row->startinyear); break;
 					case 'startofmonthB1': return $this->Convertdate(2,$row->startofmonthB1); break;
 					case 'startofmonth': return $this->Convertdate(2,$row->startofmonth); break;
 					case 'today': return $this->Convertdate(2,$row->today); break;

@@ -839,6 +839,88 @@ class Cselect2 extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function getGROUPCUS(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select ARGCOD,'('+ARGCOD+') '+ARGDES ARGDES from {$this->MAuth->getdb('ARGROUP')}
+			where 1=1 and ARGCOD='".$dataNow."' collate Thai_CI_AS
+				
+			union
+			select top 20 ARGCOD,'('+ARGCOD+') '+ARGDES ARGDES from {$this->MAuth->getdb('ARGROUP')}
+			where 1=1 and '('+ARGCOD+') '+ARGDES like '".$dataSearch."%' collate Thai_CI_AS 
+			order by ARGCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->ARGCOD), 'text'=>str_replace(chr(0),'',$row->ARGDES)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getAUMP(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$PROVCOD = (!isset($_REQUEST["PROVCOD"]) ? "" : $_REQUEST["PROVCOD"]);
+		
+		$sql = "
+			select AUMPCOD,'('+AUMPCOD+') '+AUMPDES AUMPDES from {$this->MAuth->getdb('SETAUMP')}
+			where 1=1 and AUMPCOD='".$dataNow."' collate Thai_CI_AS
+				
+			union
+			select top 20 AUMPCOD,'('+AUMPCOD+') '+AUMPDES AUMPDES from {$this->MAuth->getdb('SETAUMP')}
+			where 1=1 and '('+AUMPCOD+') '+AUMPDES like '%".$dataSearch."%' collate Thai_CI_AS 
+				".($PROVCOD == ""?"":" and PROVCOD='".$PROVCOD."'")."
+			order by AUMPCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->AUMPCOD), 'text'=>str_replace(chr(0),'',$row->AUMPDES)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getPROV(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select PROVCOD,'('+PROVCOD+') '+PROVDES PROVDES from {$this->MAuth->getdb('SETPROV')}
+			where 1=1 and PROVCOD='".$dataNow."' collate Thai_CI_AS
+				
+			union
+			select top 20 PROVCOD,'('+PROVCOD+') '+PROVDES as PROVDES from {$this->MAuth->getdb('SETPROV')}
+			where 1=1 and '('+PROVCOD+') '+PROVDES like '%".$dataSearch."%' collate Thai_CI_AS 
+			order by PROVCOD
+		";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->PROVCOD), 'text'=>str_replace(chr(0),'',$row->PROVDES)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
 }
 
 

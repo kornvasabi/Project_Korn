@@ -1618,6 +1618,7 @@ class Analyze extends MY_Controller {
 					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
 				end
 			";
+			//echo $sql; exit;
 			$query = $this->db->query($sql);
 			
 			if($query->row()){
@@ -1635,6 +1636,7 @@ class Analyze extends MY_Controller {
 					สี :: ".$data["COLOR"]."<br>
 					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
 				";
+				echo json_encode($response); exit;
 			}
 			
 			$sql = "
@@ -1657,6 +1659,8 @@ class Analyze extends MY_Controller {
 					สี :: ".$data["COLOR"]."<br>
 					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
 				";
+				
+				echo json_encode($response); exit;
 			}
 		}
 		

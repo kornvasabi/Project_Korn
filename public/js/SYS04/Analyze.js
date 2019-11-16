@@ -839,22 +839,24 @@ function fnload($thisForm){
 					$('#idnoAge').attr("disabled",true);
 				}
 				
-				if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
-					resvnull();
-					Lobibox.notify('error', {
-						title: 'แจ้งเตือน',
-						size: 'mini',
-						closeOnClick: false,
-						delay: false,
-						pauseDelayOnHover: true,
-						continueDelayOnInactiveTab: false,
-						icon: true,
-						messageHeight: '90vh',
-						msg: $("#cuscod").find(':selected').text()+"<br>ผู้เช่าซื้ออยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
-					});
+			
+				// กรณีติด F ให้บันทึกข้อมูลมาได้ แต่ฝ่ายวิเคราะห์ จะมีหน้าที่ตรวจสอบอีกทีว่าจะอนุมัติขายหรือไม่
+				// if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
+					// resvnull();
+					// Lobibox.notify('error', {
+						// title: 'แจ้งเตือน',
+						// size: 'mini',
+						// closeOnClick: false,
+						// delay: false,
+						// pauseDelayOnHover: true,
+						// continueDelayOnInactiveTab: false,
+						// icon: true,
+						// messageHeight: '90vh',
+						// msg: $("#cuscod").find(':selected').text()+"<br>ผู้เช่าซื้ออยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
+					// });
 					
-					$('#cuscod').val(null).trigger('change');
-				}
+					// $('#cuscod').val(null).trigger('change');
+				// }
 				
 				//เช่าซื้อภายใน 7 วัน
 				if(data.html["ARM"] > 0){
@@ -959,25 +961,26 @@ function fnload($thisForm){
 						$('#is1_idnoAge').attr("disabled",true);
 					}
 					
-					if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
-						$msg = $("#is1_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 1 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์";
-						clearIS1_CUSCOD($msg,$obj);	
-						/*
-						Lobibox.notify('error', {
-							title: 'แจ้งเตือน',
-							size: 'mini',
-							closeOnClick: false,
-							delay: false,
-							pauseDelayOnHover: true,
-							continueDelayOnInactiveTab: false,
-							icon: true,
-							messageHeight: '90vh',
-							msg: $("#is1_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 1 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
-						});
+					//กรณีติด F ให้บันทึกข้อมูลมาได้ แต่ฝ่ายวิเคราะห์ จะมีหน้าที่ตรวจสอบอีกทีว่าจะอนุมัติขายหรือไม่
+					// if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
+						// $msg = $("#is1_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 1 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์";
+						// clearIS1_CUSCOD($msg,$obj);	
+						// /*
+						// Lobibox.notify('error', {
+							// title: 'แจ้งเตือน',
+							// size: 'mini',
+							// closeOnClick: false,
+							// delay: false,
+							// pauseDelayOnHover: true,
+							// continueDelayOnInactiveTab: false,
+							// icon: true,
+							// messageHeight: '90vh',
+							// msg: $("#is1_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 1 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
+						// });
 						
-						$('#is1_cuscod').val(null).trigger('change');
-						*/
-					}
+						// $('#is1_cuscod').val(null).trigger('change');
+						// */
+					// }
 					
 					JDis1_cuscod = null;
 				},
@@ -1078,27 +1081,28 @@ function fnload($thisForm){
 						$('#is2_idnoAge').attr("disabled",true);
 					}
 					
-					if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
+					//กรณีติด F ให้บันทึกข้อมูลมาได้ แต่ฝ่ายวิเคราะห์ จะมีหน้าที่ตรวจสอบอีกทีว่าจะอนุมัติขายหรือไม่
+					// if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
 						
-						$msg = $("#is2_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 2 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์";
-						clearIS2_CUSCOD($msg,$obj);	
+						// $msg = $("#is2_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 2 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์";
+						// clearIS2_CUSCOD($msg,$obj);	
 						
-						/*
-						Lobibox.notify('error', {
-							title: 'แจ้งเตือน',
-							size: 'mini',
-							closeOnClick: false,
-							delay: false,
-							pauseDelayOnHover: true,
-							continueDelayOnInactiveTab: false,
-							icon: true,
-							messageHeight: '90vh',
-							msg: $("#is2_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 2 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
-						});
+						// /*
+						// Lobibox.notify('error', {
+							// title: 'แจ้งเตือน',
+							// size: 'mini',
+							// closeOnClick: false,
+							// delay: false,
+							// pauseDelayOnHover: true,
+							// continueDelayOnInactiveTab: false,
+							// icon: true,
+							// messageHeight: '90vh',
+							// msg: $("#is2_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 2 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
+						// });
 						
-						$('#is2_cuscod').val(null).trigger('change');
-						*/
-					}
+						// $('#is2_cuscod').val(null).trigger('change');
+						// */
+					// }
 					
 					JDis2_cuscod = null;
 				},
