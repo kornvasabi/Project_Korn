@@ -70,7 +70,7 @@ $('#btnt1search').click(function(){
 			$("#result").html(data.html);
 			
 			$('#table-ReserveCar').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-ReserveCar',1,250);
+			fn_datatables('table-ReserveCar',1,350);
 			
 			// Export data to Excel
 			$('.data-export').prepend('<img id="table-ReserveCar-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
@@ -82,6 +82,14 @@ $('#btnt1search').click(function(){
 				$('.resvnoClick').unbind('click');
 				$('.resvnoClick').click(function(){
 					fn_load_formResv($(this),'edit');
+				});
+				
+				$('.getit').hover(function(){
+					$(this).css({'background-color':'yellow'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#f9f9a9'});
+				},function(){
+					$(this).css({'background-color':'white'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
 				});
 			}
 			
@@ -128,7 +136,6 @@ function fn_load_formResv($this,$event){
 function fn_loadPropoties($thisWindow,$EVENT){
 	//$('#fRESVNO').attr('disabled',true);
 	//$('#fRESVNO').val('Auto Genarate');
-	
 	$('#fLOCAT').select2({
 		placeholder: 'เลือก',
         ajax: {
@@ -156,7 +163,6 @@ function fn_loadPropoties($thisWindow,$EVENT){
 		//theme: 'classic',
 		width: '100%'
 	});
-	
 	
 	$('#fCUSCOD_removed').click(function(){
 		$('#fCUSCOD').attr('CUSCOD','');
@@ -397,21 +403,19 @@ function fn_loadPropoties($thisWindow,$EVENT){
 		width: '100%'
 	});
 	
-	$('#fACTICOD').on("select2:select",function(){
+	$('#fACTICOD').on("select2:select",function(){ restd(); });
+	
+	function restd(){
 		$('#fSTAT').trigger('select2:select');
-		
-		setTimeout(function(){
-			fn_balance();
-		},250);
-	});
+		setTimeout(function(){ fn_balance(); },250);
+	}
 	
 	$('#fACTICOD').on("select2:unselect",function(){
 		$('#fPRICE').attr('stdid','');
 		$('#fPRICE').attr('stdplrank','');
 		$('#fPRICE').val('');
 		
-		fn_balance();
-		//$('#fSTAT').trigger('select2:select');
+		setTimeout(function(){ fn_balance(); },250);
 	});
 		
 	$('#fGRPCOD').select2({
@@ -738,8 +742,10 @@ function fn_loadPropoties($thisWindow,$EVENT){
 	if($EVENT == 'add'){
 		$('#fCC').val(null).trigger('change');
 		$('#fSTAT').val(null).trigger('change');
-		$('#btnDelete').hide();
+		$('#btnDelete').hide(0);
+		$('#btnClear').show(0);
 	}else{
+		$('#btnClear').hide(0);
 		if(_level == 1){
 			$('#fRESVDT').attr('disabled',false);
 			$('#fCUSCOD').attr('disabled',false);
@@ -776,13 +782,31 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			$('#btnSave').attr('disabled',true);
 		}
 		
-		$('#btnDelete').show();
+		$('#btnDelete').show(0);
 		if(_delete == 'T'){
 			$('#btnDelete').attr('disabled',false);
 		}else{
 			$('#btnDelete').attr('disabled',true);
 		}
 	}
+	
+	
+	$('#btnClear').click(function(){
+		$('#fCUSCOD').attr('CUSCOD','');
+		$('#fCUSCOD').val('');
+		$('#fSTRNO').empty().trigger('change');
+		$('#fACTICOD').empty().trigger('change');
+		$('#fGRPCOD').empty().trigger('change');
+		$('#fMODEL').empty().trigger('change');
+		$('#fBAAB').empty().trigger('change');
+		$('#fCOLOR').empty().trigger('change');
+		$('#fCC').empty().trigger('change');
+		$('#fSTAT').val('').trigger('change');
+		$('#fPRICE').val();
+		$('#fRESPAY').val();
+		$('#fBALANCE').val();
+		$('#fRECVDUE').val();
+	});
 
 	var jd_btnDelete = null;
 	$('#btnDelete').click(function(){

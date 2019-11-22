@@ -194,9 +194,9 @@ class ReportSell extends MY_Controller {
 		$arrs['action']   = $_POST['action'];
 		
 		if($arrs['action'] == "AUD" && $arrs['REPORT'] == 1){ $this->getAUDSELL($arrs); }
-		else if($arrs['action'] == "AUD" && $arrs['REPORT'] == 2){ $this->getAUDSELL($arrs); }
-		else if($arrs['action'] == "AUD" && $arrs['REPORT'] == 3){ $this->getAUDSELL($arrs); }
-		else if($arrs['action'] == "AUD" && $arrs['REPORT'] == 4){ $this->getAUDSELL($arrs); }
+		else if($arrs['action'] == "AUD" && $arrs['REPORT'] == 2){ $this->getAUDLEASING($arrs); }
+		else if($arrs['action'] == "AUD" && $arrs['REPORT'] == 3){ $this->getAUDFINANCE($arrs); }
+		else if($arrs['action'] == "AUD" && $arrs['REPORT'] == 4){ $this->getAUDAGENT($arrs); }
 		
 		else if($arrs['action'] == "ACC" && $arrs['REPORT'] == 1){ $this->getACCSELL($arrs); }
 		else if($arrs['action'] == "ACC" && $arrs['REPORT'] == 2){ $this->getACCLEASING($arrs); }
@@ -342,23 +342,51 @@ class ReportSell extends MY_Controller {
 		
 		$html = "";
 		$NRow = 1;
+		$data_sum = array();
 		if($query->row()){
 			foreach($query->result() as $row){
 				if($arrs['RPT'] == 1){
+					$ARINOPT = $this->checkINOPT($row->CONTNO);
 					$html .= "
 						<tr>
-							<td>".$row->LOCAT."</td>
-							<td>".$row->CONTNO."<br>".$row->RESVNO."</td>
-							<td>".$row->CUSCOD."<br>".$row->CUSNAME."</td>							
-							<td style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->SDATE)."</td>
-							<td>".$row->STRNO."<br>".$row->COLOR."</td>
+							<td>
+								".$row->LOCAT."
+								<br>&emsp;
+								".($ARINOPT["TOPIC"] == "" ? "" : "<br>".$ARINOPT["TOPIC"])."
+							</td>
+							<td>
+								".$row->CONTNO."<br>".$row->RESVNO."
+								".($ARINOPT["OPTCODE"] == "" ? "" : "<br>".$ARINOPT["OPTCODE"])."
+							</td>
+							<td>".$row->CUSCOD."<br>".$row->CUSNAME."
+								".($ARINOPT["SIZE"] == "" ? "" : "<br>".$ARINOPT["SIZE"])."
+							</td>							
+							<td style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->SDATE)."
+								<br>&emsp;
+								".($ARINOPT["QTY"] == "" ? "" : "<br>".$ARINOPT["QTY"])."
+							</td>
+							<td>".$row->STRNO."<br>".$row->COLOR."
+								".($ARINOPT["UM"] == "" ? "" : "<br>".$ARINOPT["UM"])."
+							</td>
 							
-							<td class='text-right'>".($row->STAT == "N"?"รถใหม่":"รถเก่า")."<br>".number_format($row->COMITN,2)."</td>
-							<td class='text-right'>".$row->TAXNO."<br>".number_format($row->COMEXT,2)."</td>
-							<td class='text-right'>".$row->SALCOD."<br>".number_format($row->COMOPT,2)."</td>
-							<td class='text-right'>".number_format($row->TOTPRC,2)."<br>".number_format($row->COMOTH,2)."</td>
-							<td class='text-right'>".number_format($row->TOTPRES,2)."<br>".$row->PAYTYP."</td>
-							<td class='text-right'>".number_format($row->CRDAMT,2)."<br>".$row->ACTICOD."</td>
+							<td class='text-right'>".($row->STAT == "N"?"รถใหม่":"รถเก่า")."<br>".number_format($row->COMITN,2)."
+								".($ARINOPT["TUPRICE"] == "" ? "" : "<br>".$ARINOPT["TUPRICE"])."
+							</td>
+							<td class='text-right'>".$row->TAXNO."<br>".number_format($row->COMEXT,2)."
+								".($ARINOPT["UPRICE"] == "" ? "" : "<br>".$ARINOPT["UPRICE"])."
+							</td>
+							<td class='text-right'>".$row->SALCOD."<br>".number_format($row->COMOPT,2)."
+								".($ARINOPT["UPRICE_UM"] == "" ? "" : "<br>".$ARINOPT["UPRICE_UM"])."
+							</td>
+							<td class='text-right'>".number_format($row->TOTPRC,2)."<br>".number_format($row->COMOTH,2)."
+								".($ARINOPT["TTOTPRC"] == "" ? "" : "<br>".$ARINOPT["TTOTPRC"])."
+							</td>
+							<td class='text-right'>".number_format($row->TOTPRES,2)."<br>".$row->PAYTYP."
+								".($ARINOPT["TOTPRC"] == "" ? "" : "<br>".$ARINOPT["TOTPRC"])."
+							</td>
+							<td class='text-right'>".number_format($row->CRDAMT,2)."<br>".$row->ACTICOD."
+								".($ARINOPT["TOTPRC_UM"] == "" ? "" : "<br>".$ARINOPT["TOTPRC_UM"])."
+							</td>
 							<td class='text-right'>".number_format($row->TKANG,2)."<br>".$row->RECOMNAM."</td>
 						</tr>
 					";
@@ -378,14 +406,21 @@ class ReportSell extends MY_Controller {
 					";
 				}
 				
+				foreach($row as $key => $val){
+					if(is_numeric($val)){
+						$data_sum[$key] = (isset($data_sum[$key]) ? $data_sum[$key]: 0)+$val;
+					}
+				}
 				
 				$NRow++;
 			}
 		}
 		
-		$head = "";
 		$headcs = 0;
+		$head 	= "";
+		$foot 	= "";
 		if($arrs['RPT'] == 1){
+			$headcs = 12;
 			$head = "
 				<tr>
 					<th>สาขา</th>
@@ -402,8 +437,26 @@ class ReportSell extends MY_Controller {
 					<th>ยอดคงเหลือ<br>ผู้แนะนำ</th>
 				</tr>
 			";
-			$headcs = 12;
+			
+			$foot .= "
+				<tr>
+					<th>รวม</th>
+					<th>".--$NRow."</th>
+					<th>รายการ</th>	
+					<th style='mso-number-format:\"\@\";'></th>
+					<th></th>
+					
+					<th class='text-right'>&emsp;<br>".number_format($data_sum["COMITN"],2)."</th>
+					<th class='text-right'>&emsp;<br>".number_format($data_sum["COMEXT"],2)."</th>
+					<th class='text-right'>&emsp;<br>".number_format($data_sum["COMOPT"],2)."</th>
+					<th class='text-right'>".number_format($data_sum["TOTPRC"],2)."<br>".number_format($data_sum["COMOTH"],2)."</th>
+					<th class='text-right'>".number_format($data_sum["TOTPRES"],2)."<br>&emsp;</th>
+					<th class='text-right'>".number_format($data_sum["CRDAMT"],2)."<br>&emsp;</th>
+					<th class='text-right'>".number_format($data_sum["TKANG"],2)."<br>&emsp;</th>
+				</tr>
+			";
 		}else{
+			$headcs = 9;
 			$head = "
 				<tr>
 					<th>ลำดับ</th>
@@ -417,7 +470,427 @@ class ReportSell extends MY_Controller {
 					<th>เลขตัวถัง</th>
 				</tr>
 			";
-			$headcs = 9;
+			$foot .= "
+				<tr>
+					<th>รวม</th>
+					<th>".--$NRow."</th>
+					<th>รายการ</th>
+					<th></th>
+					<th style='mso-number-format:\"\@\";'>เป็นเงิน ===></th>
+					<th class='text-right'>".number_format($data_sum["TOTPRC"],2)."</th>
+					<th></th>
+					<th></th>
+					<th></th>
+				</tr>
+			";
+		}
+		
+		$html = "
+			<div id='table-fixed-RPSellCar' class='col-sm-12' style='height:calc(100% - 0px);width:100%;overflow:auto;font-size:8pt;'>
+				<table id='table-RPSellCar' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
+					<thead style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
+						<tr style='line-height:20px;'>
+							<th style='vertical-align:middle;text-align:center;font-size:12pt;' colspan='{$headcs}'>
+								{$company}<br><span style='font-size:10pt;'>{$reportName}</span>
+							</th>
+						</tr>
+						<tr style='line-height:20px;'> 
+							<th style='vertical-align:middle;text-align:center;font-size:8pt;' colspan='{$headcs}'>
+								เงื่อนไข {$condDesc}
+							</th>
+						</tr>
+						{$head}
+					</thead>	
+					<tbody>{$html}</tbody>
+					<tfoot style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png&#39;) repeat scroll 0% 0%;'>
+						{$foot}
+					</tfoot>
+				</table>
+			</div>
+		";
+		
+		$response = array("html"=>$html,"status"=>true);
+		echo json_encode($response);
+	}
+	
+	function getAUDLEASING($arrs){
+		$cond = "";
+		$condDesc = "";
+		$reportName = "";
+		if($arrs['REPORT'] == 1){
+			$reportName = " รายงานการขายสดเพื่อแผนกตรวจสอบ";
+		}else if($arrs['REPORT'] == 2){
+			$reportName = " รายงานการขายผ่อนเพื่อแผนกตรวจสอบ";
+		}else if($arrs['REPORT'] == 3){
+			$cond .= " and A.SDATE is null";
+			$reportName = " รายงานการขายไฟแนนท์เพื่อแผนกตรวจสอบ";
+		}else if($arrs['REPORT'] == 4){
+			$cond .= " and A.SDATE is not null";
+			$reportName = " รายงานการขายส่งเอเย่นต์เพื่อแผนกตรวจสอบ";
+		}
+		
+		if($arrs['locat'] != ""){
+			$cond .= " and A.LOCAT like '".$arrs['locat']."%'";
+			$condDesc .= "สาขา ".$arrs['locat'];
+		}
+		
+		if($arrs['sSDATE'] != "" and $arrs['eSDATE'] != ""){
+			$cond .= " and convert(varchar(8),A.SDATE,112) between '".$arrs['sSDATE']."' and '".$arrs['eSDATE']."' ";
+			$condDesc .= " วันที่ทำสัญญา จากวันที่  ".$_POST['sSDATE']." - ".$_POST['eSDATE'];
+		}else if($arrs['sSDATE'] != "" and $arrs['eSDATE'] == ""){
+			$cond .= " and convert(varchar(8),A.SDATE,112) = '".$arrs['sSDATE']."'";
+			$condDesc .= " วันที่ทำสัญญา  ".$_POST['sSDATE'];
+		}else if($arrs['sSDATE'] == "" and $arrs['eSDATE'] != ""){
+			$cond .= " and convert(varchar(8),A.SDATE,112) = '".$arrs['eSDATE']."'";
+			$condDesc .= " วันที่ทำสัญญา  ".$_POST['eSDATE'];
+		}
+		
+		if($arrs['MODEL'] != ""){
+			$cond .= " and I.MODEL like '".$arrs['MODEL']."%'";
+			$condDesc .= " รุ่น  ".$_POST['MODEL'];
+		}
+		
+		if($arrs['BAAB'] != ""){
+			$cond .= " and I.BAAB like '".$arrs['BAAB']."%'";
+			$condDesc .= " แบบ ".$_POST['BAAB'];
+		}
+		
+		if($arrs['COLOR'] != ""){
+			$cond .= " and I.COLOR like '".$arrs['COLOR']."%'";
+			$condDesc .= " สี ".$_POST['COLOR'];
+		}
+		
+		if($arrs['STAT'] != "A"){
+			$cond .= " and I.STAT like '".$arrs['STAT']."%'";
+			$condDesc .= " สถานะรถ ".$_POST['STAT'];
+		}
+		
+		if($arrs['GROUPCUS'] != ""){
+			$cond .= " and C.GROUP1 like '".$arrs['GROUPCUS']."%'";
+			$condDesc .= " กลุ่มลูกหนี้ ".$_POST['GROUPCUS'];
+		}
+		
+		if($arrs['GCODE'] != ""){
+			$cond .= " and G.GCODE like '".$arrs['GCODE']."%'";
+			$condDesc .= " กลุ่มรถ ".$_POST['GCODE'];
+		}
+		
+		if($arrs['SALCOD'] != ""){
+			$cond .= " and A.SALCOD like '".$arrs['SALCOD']."'";
+			$condDesc .= " พนักงานขาย ".$_POST['SALCOD'];
+		}
+		
+		if($arrs['AUMPCOD'] != ""){
+			$cond .= " and D.AUMPCOD like '".$arrs['AUMPCOD']."'";
+			$condDesc .= " อำเภอ ".$_POST['AUMPCOD'];
+		}
+		
+		if($arrs['PROVCOD'] != ""){
+			$cond .= " and D.PROVCOD like '".$arrs['PROVCOD']."'";
+			$condDesc .= " อำเภอ ".$_POST['PROVCOD'];
+		}
+		
+		if($arrs['PAYTYP'] != ""){
+			$cond .= " and A.PAYTYP like '".$arrs['PAYTYP']."'";
+			$condDesc .= " ประเภทการชำระ ".$_POST['PAYTYP'];
+		}
+		
+		$sort = "";
+		if($arrs['SORT'] == 1){ $sort = "order by SDATE"; }
+		else if($arrs['SORT'] == 2){ $sort = "order by A.LOCAT"; }
+		else if($arrs['SORT'] == 3){ $sort = "order by A.SALCOD"; }
+		else if($arrs['SORT'] == 4){ $sort = "order by CONTNO"; }
+		
+		$sql = "select COMP_NM from {$this->MAuth->getdb('CONDPAY')}";
+		$query = $this->db->query($sql);
+		$company = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$company = $row->COMP_NM;
+			}
+		}
+		
+		$sql = "
+			select A.LOCAT,A.TSALE,A.CONTNO,A.CUSCOD,A.RESVNO,A.STRNO
+				, convert(varchar(8),A.SDATE,112) as SDATE
+				, A.NPRICE,A.VATPRC,A.NPAYRES,A.VATPRES,A.BALANC
+				, A.NKANG,A.VKANG,A.NDAWN,A.VATDWN,A.NCSHPRC,A.VCSHPRC
+				, convert(varchar(8),A.FDATE,112) as FDATE,A.NPROFIT
+				, convert(varchar(8),A.LDATE,112) as LDATE
+				, A.N_FUPAY,A.V_FUPAY,A.N_UPAY,A.V_UPAY,A.N_LUPAY,A.V_LUPAY
+				, A.TAXNO,convert(varchar(8),A.TAXDT,112) as TAXDT,A.BILLCOLL,A.CHECKER
+				, A.DELYRT,A.DLDAY,A.T_NOPAY,A.T_UPAY,A.OPTCST,A.OPTCVT,A.OPTCTOT,A.OPTPRC
+				, A.OPTPVT,A.OPTPTOT,A.NCARCST,A.VCARCST,A.SALCOD,A.COMITN,A.FLCANCL
+				, A.TOTPRC,A.TCSHPRC,A.TOTPRES,A.TOTDWN,A.TKANG,A.TOT_UPAY,A.T_FUPAY
+				, T_LUPAY,A.NPRICE - A.NCSHPRC AS VAR1,I.STAT,I.COLOR
+				, C.SNAM+C.NAME1+' '+C.NAME2 as CUSNAME,G.GDESC
+				, (select rc.SNAM+rc.NAME1+' '+rc.NAME2 from {$this->MAuth->getdb('CUSTMAST')} rc 
+					where rc.CUSCOD=A.RECOMCOD) as RECOMCOD
+				, A.ACTICOD,A.COMEXT,A.COMOPT,A.COMOTH ,A.INTRT
+			FROM {$this->MAuth->getdb('ARMAST')} A  
+			LEFT OUTER JOIN {$this->MAuth->getdb('CUSTMAST')} C ON C.CUSCOD = A.CUSCOD 
+			LEFT OUTER JOIN {$this->MAuth->getdb('CUSTADDR')} D ON D.CUSCOD=C.CUSCOD AND (C.ADDRNO = D.ADDRNO) 
+			LEFT OUTER JOIN {$this->MAuth->getdb('INVTRAN')} I ON A.STRNO = I.STRNO AND (A.CONTNO=I.CONTNO)
+			LEFT OUTER JOIN {$this->MAuth->getdb('SETGROUP')} G ON G.GCODE = I.GCODE 
+			WHERE 1=1 {$cond}
+			
+			UNION
+			select A.LOCAT,A.TSALE,A.CONTNO,A.CUSCOD,A.RESVNO,A.STRNO
+				, convert(varchar(8),A.SDATE,112) as SDATE
+				, A.NPRICE,A.VATPRC,A.NPAYRES,A.VATPRES,A.BALANC
+				, A.NKANG,A.VKANG,A.NDAWN,A.VATDWN,A.NCSHPRC,A.VCSHPRC
+				, convert(varchar(8),A.FDATE,112) as FDATE,A.NPROFIT
+				, convert(varchar(8),A.LDATE,112) as LDATE
+				, A.N_FUPAY,A.V_FUPAY,A.N_UPAY,A.V_UPAY,A.N_LUPAY,A.V_LUPAY
+				, A.TAXNO,convert(varchar(8),A.TAXDT,112) as TAXDT,A.BILLCOLL,A.CHECKER
+				, A.DELYRT,A.DLDAY,A.T_NOPAY,A.T_UPAY,A.OPTCST,A.OPTCVT,A.OPTCTOT,A.OPTPRC
+				, A.OPTPVT,A.OPTPTOT,A.NCARCST,A.VCARCST,A.SALCOD,A.COMITN,A.FLCANCL
+				, A.TOTPRC,A.TCSHPRC,A.TOTPRES,A.TOTDWN,A.TKANG,A.TOT_UPAY,A.T_FUPAY
+				, T_LUPAY,A.NPRICE - A.NCSHPRC AS VAR1,I.STAT,I.COLOR
+				, C.SNAM+C.NAME1+' '+C.NAME2 as CUSNAME,G.GDESC
+				, (select rc.SNAM+rc.NAME1+' '+rc.NAME2 from {$this->MAuth->getdb('CUSTMAST')} rc 
+					where rc.CUSCOD=A.RECOMCOD) as RECOMCOD
+				, A.ACTICOD,A.COMEXT,A.COMOPT,A.COMOTH ,A.INTRT
+			FROM {$this->MAuth->getdb('HARMAST')} A  
+			LEFT OUTER JOIN {$this->MAuth->getdb('CUSTMAST')} C ON C.CUSCOD = A.CUSCOD 
+			LEFT OUTER JOIN {$this->MAuth->getdb('CUSTADDR')} D ON D.CUSCOD=C.CUSCOD AND (C.ADDRNO = D.ADDRNO) 
+			LEFT OUTER JOIN {$this->MAuth->getdb('HINVTRAN')} I ON A.STRNO = I.STRNO AND (A.CONTNO=I.CONTNO)
+			LEFT OUTER JOIN {$this->MAuth->getdb('SETGROUP')} G ON G.GCODE = I.GCODE 
+			WHERE 1=1 {$cond}
+			{$sort}
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				if($arrs['RPT'] == 1){
+					$ARINOPT = $this->checkINOPT($row->CONTNO);
+					$html .= "
+						<tr>
+							<td>".$row->LOCAT."
+								<br>&emsp;
+								<br>&emsp;
+								
+							</td>
+							<td>".$row->CONTNO."<br>".$row->CUSNAME."<br>".$row->STRNO."
+								".($ARINOPT["TOPIC"] == "" ? "" : "<br>".$ARINOPT["TOPIC"])."
+								
+							</td>
+							<td>".$row->CUSCOD."
+								<br>&emsp;
+								<br>&emsp;
+								".($ARINOPT["OPTCODE"] == "" ? "" : "<br>".$ARINOPT["OPTCODE"])."
+							</td>
+							<td>
+								<span style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->SDATE)."</span>
+								<br><span style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->TAXDT)."</span>
+								<br><span style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->FDATE)."</span>
+								".($ARINOPT["SIZE"] == "" ? "" : "<br>".$ARINOPT["SIZE"])."
+							</td>
+							<td class='text-right'>
+								".$row->RESVNO."
+								<br>".$row->TAXNO."
+								<br>".number_format($row->T_UPAY,0)."
+								".($ARINOPT["QTY"] == "" ? "" : "<br>".$ARINOPT["QTY"])."
+							</td>
+							<td class='text-right'>
+								".number_format($row->DLDAY,0)."
+								<br>".number_format($row->DELYRT,2)."
+								<br>".number_format($row->T_NOPAY,0)."
+								".($ARINOPT["UM"] == "" ? "" : "<br>".$ARINOPT["UM"])."
+							</td>
+							<td class='text-right'>
+								".($row->SALCOD)."
+								<br>".($row->BILLCOLL)."
+								<br>".($row->CHECKER)."
+								".($ARINOPT["TUPRICE"] == "" ? "" : "<br>".$ARINOPT["TUPRICE"])."
+							</td>
+							<td class='text-right'>
+								".number_format($row->TOTPRC,2)."
+								<br>".number_format($row->T_FUPAY,2)."
+								<br>".number_format($row->COMITN,2)."
+								".($ARINOPT["TUPRICE"] == "" ? "" : "<br>".$ARINOPT["UPRICE"])."
+							</td>
+							<td class='text-right'>
+								".number_format($row->TOTPRES,2)."
+								<br>".number_format($row->T_UPAY,2)."
+								<br>".number_format($row->COMEXT,2)."
+								".($ARINOPT["TUPRICE"] == "" ? "" : "<br>".$ARINOPT["UPRICE_UM"])."
+							</td>
+							<td class='text-right'>
+								".number_format($row->BALANC,2)."
+								<br>".number_format($row->T_LUPAY,2)."
+								<br>".number_format($row->COMOPT,2)."
+								".($ARINOPT["TTOTPRC"] == "" ? "" : "<br>".$ARINOPT["TTOTPRC"])."
+							</td>
+							
+							<td class='text-right'>
+								".number_format($row->TOTDWN,2)."
+								<br>".number_format($row->NPROFIT,2)."
+								<br>".number_format($row->COMOTH,2)."
+								".($ARINOPT["TOTPRC"] == "" ? "" : "<br>".$ARINOPT["TOTPRC"])."
+							</td>
+							<td class='text-right'>
+								".number_format($row->TKANG,2)."
+								<br>".($row->ACTICOD)."
+								<br>".($row->RECOMCOD)."
+								".($ARINOPT["TOTPRC_UM"] == "" ? "" : "<br>".$ARINOPT["TOTPRC_UM"])."
+							</td>
+							<td class='text-right'>
+								".number_format($row->TCSHPRC,2)."
+								<br>".($row->STAT)."
+								<br>".($row->COLOR)."
+							</td>							
+						</tr>
+					";
+				}else{
+					$html .= "
+						<tr>
+							<td>".$NRow."</td>
+							<td>".$row->LOCAT."</td>
+							<td>".$row->CONTNO."</td>
+							<td>".$row->CUSNAME."</td>
+							<td style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->SDATE)."</td>
+							<td style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->FDATE)."</td>							
+							<td align='right'>".number_format($row->TOTPRC,2)."</td>
+							<td align='right'>".number_format($row->TOTDWN,2)."</td>
+							<td align='right'>".number_format($row->TKANG,2)."</td>
+							<td align='right'>".number_format($row->T_NOPAY,2)."</td>
+							<td align='right'>".number_format($row->T_UPAY,2)."</td>
+							<td style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->LDATE)."</td>							
+							<td>".($row->SALCOD)."</td>
+							<td align='right'>".number_format($row->VAR1,2)."</td>
+							<td align='right'>".number_format($row->INTRT,2)."</td>
+							<td>".($row->ACTICOD)."</td>
+							<td>".($row->STRNO)."</td>
+							<td>".($row->COLOR)."</td>
+						</tr>
+					";
+				}
+				
+				foreach($row as $key => $val){
+					if(is_numeric($val)){
+						$data_sum[$key] = (isset($data_sum[$key]) ? $data_sum[$key]: 0)+$val;
+					}
+				}
+				
+				$NRow++;
+			}
+		}
+		
+		$headcs = 0;
+		$head 	= "";
+		$foot 	= "";
+		if($arrs['RPT'] == 1){
+			$headcs = 13;
+			$head = "
+				<tr>
+					<th>สาขา<br>&emsp;<br>&emsp;</th>
+					<th>เลขที่สัญญา<br>ชื่อ-สกุลลูกค้า<br>เลขตัวถัง</th>
+					<th>รหัสลูกค้า<br>&emsp;<br>&emsp;</th>
+					<th>วันที่ทำสัญญา<br>วันที่ใบกำกับ<br>วันดิวงวดแรก</th>
+					<th>เลขที่บิลจอง<br>เลขที่ใบกำกับ<br>ผ่อน(เดือนงวด)</th>
+					<th>ล่าช้าได้ไม่เกิน<br>เบี้ยปรับ(%)<br>ผ่อนจำนวน(งวด)</th>
+					<th>พนักงานขาย<br>BILLCOLL<br>CHECKER</th>
+					<th>ราคาขาย<br>ค่างวดแรก<br>คอมมิชชั่น</th>
+					<th>เงินจอง<br>ค่างวดถัดไป<br>ค่าคอมบุคคลนอก</th>
+					<th>ยอดคงเหลือ<br>ค่างวดสุดท้าย<br>ค่าของแถม</th>
+					<th>เงินดาวน์<br>ดอกผลเช่าซื้อ<br>คชจ.อื่นๆ</th>
+					<th>ตั้งลูกหนี้<br>กิจกรรมการขาย<br>ผู้แนะนำ</th>
+					<th>ราคาขายสด<br>สถานะภาพรถ<br>สีรถ</th>
+				</tr>
+			";
+			
+			$foot = "
+				<tr>
+					<th>รวม</th>
+					<th>".--$NRow."</th>
+					<th>รายการ</th>
+					<th></th>
+					<th class='text-right'>เป็นเงิน </th>
+					<th class='text-right'>====></th>
+					<th class='text-right'></th>
+					<th class='text-right'>
+						".number_format($data_sum["TOTPRC"],2)."
+						<br>&emsp;
+						<br>".number_format($data_sum["COMITN"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["TOTPRES"],2)."
+						<br>&emsp;
+						<br>".number_format($data_sum["COMEXT"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["BALANC"],2)."
+						<br>&emsp;
+						<br>".number_format($data_sum["COMOPT"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["TOTDWN"],2)."
+						<br>".number_format($data_sum["NPROFIT"],2)."
+						<br>".number_format($data_sum["COMOTH"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["TKANG"],2)."
+						<br>&emsp;
+						<br>&emsp;
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["TCSHPRC"],2)."
+						<br>&emsp;
+						<br>&emsp;
+					</th>							
+				</tr>
+			";
+		}else{
+			$headcs = 18;
+			$head = "
+				<tr>
+					<th>ลำดับ</th>
+					<th>สาขา</th>
+					<th>เลขที่สัญญา</th>
+					<th>ชื่อ-สกุล</th>
+					<th>วันที่ทำสัญญา</th>
+					<th>วันดิวงวดแรก</th>
+					<th>ราคาขาย</th>
+					<th>เงินดาวน์</th>
+					<th>ยอดลดหนี้</th>
+					<th>จำนวนงวด</th>
+					<th>ค่างวดถัดไป</th>
+					<th>ดิวงวดสุดท้าย</th>
+					<th>พนักงานขาย</th>
+					<th>ดอกผลทั้งสัญญา</th>
+					<th>อัตราดอกเบี้ย</th>
+					<th>กิจกรรมการขาย</th>
+					<th>เลขตัวถัง</th>
+					<th>สีรถ</th>
+				</tr>
+			";
+			$foot = "
+				<tr>
+					<th>รวมทั้งสิ้น</th>
+					<th>".--$NRow."</th>
+					<th>รายการ</th>
+					<th>เป็นเงิน</th>
+					<th>====></th>
+					<th></th>
+					<th align='right'>".number_format($data_sum["TOTPRC"],2)."</th>
+					<th align='right'>".number_format($data_sum["TOTDWN"],2)."</th>
+					<th align='right'>".number_format($data_sum["TKANG"],2)."</th>
+					<th></th>
+					<th></th>
+					<th></th>
+					<th></th>
+					<th align='right'>".number_format($data_sum["VAR1"],2)."</th>
+					<th></th>
+					<th></th>
+					<th></th>
+					<th></th>
+				</tr>
+			";
 		}
 		
 		$html = "
@@ -439,6 +912,9 @@ class ReportSell extends MY_Controller {
 					<tbody>
 						{$html}
 					</tbody>
+					<tfoot style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png&#39;) repeat scroll 0% 0%;'>
+						{$foot}
+					</tfoot>
 				</table>
 			</div>
 		";
@@ -605,13 +1081,46 @@ class ReportSell extends MY_Controller {
 					";
 				}
 				
+				$data_sum["NKEYIN"]  = (isset($data_sum["NKEYIN"]) ? $data_sum["NKEYIN"]:0) + $row->NKEYIN;
+				$data_sum["VKEYIN"]  = (isset($data_sum["VKEYIN"]) ? $data_sum["VKEYIN"]:0) + $row->VKEYIN;
+				$data_sum["TKEYIN"]  = (isset($data_sum["TKEYIN"]) ? $data_sum["TKEYIN"]:0) + $row->TKEYIN;
+				$data_sum["NPAYRES"] = (isset($data_sum["NPAYRES"]) ? $data_sum["NPAYRES"]:0) + $row->NPAYRES;
+				$data_sum["VATPRES"] = (isset($data_sum["VATPRES"]) ? $data_sum["VATPRES"]:0) + $row->VATPRES;
+				$data_sum["TOTPRES"] = (isset($data_sum["TOTPRES"]) ? $data_sum["TOTPRES"]:0) + $row->TOTPRES;
+				$data_sum["NKANG"]   = (isset($data_sum["NKANG"]) ? $data_sum["NKANG"]:0) + $row->NKANG;
+				$data_sum["VKANG"]   = (isset($data_sum["VKANG"]) ? $data_sum["VKANG"]:0) + $row->VKANG;
+				$data_sum["TKANG"]   = (isset($data_sum["TKANG"]) ? $data_sum["TKANG"]:0) + $row->TKANG;
+				
+				$data_sum["TADDCOST"] = (isset($data_sum["TADDCOST"]) ? $data_sum["TADDCOST"]:0) + $row->TADDCOST;
+				$data_sum["CRDAMT"]  = (isset($data_sum["CRDAMT"]) ? $data_sum["CRDAMT"]:0) + $row->CRDAMT;
+				$data_sum["VAR1"]  	 = (isset($data_sum["VAR1"]) ? $data_sum["VAR1"]:0) + $row->VAR1;
+				$data_sum["OPTPRC"]  = (isset($data_sum["OPTPRC"]) ? $data_sum["OPTPRC"]:0) + $row->OPTPRC;
+				$data_sum["OPTPVT"]  = (isset($data_sum["OPTPVT"]) ? $data_sum["OPTPVT"]:0) + $row->OPTPVT;
+				$data_sum["OPTPTOT"] = (isset($data_sum["OPTPTOT"]) ? $data_sum["OPTPTOT"]:0) + $row->OPTPTOT;
+				$data_sum["VAR4"]  	 = (isset($data_sum["VAR4"]) ? $data_sum["VAR4"]:0) + $row->VAR4;
+				$data_sum["VAR5"]  	 = (isset($data_sum["VAR5"]) ? $data_sum["VAR5"]:0) + $row->VAR5;
+				$data_sum["VAR6"]  	 = (isset($data_sum["VAR6"]) ? $data_sum["VAR6"]:0) + $row->VAR6;
+				
+				
+				$data_sum["NCARCST"] = (isset($data_sum["NCARCST"]) ? $data_sum["NCARCST"]:0) + $row->NCARCST;
+				$data_sum["VCARCST"] = (isset($data_sum["VCARCST"]) ? $data_sum["VCARCST"]:0) + $row->VCARCST;
+				$data_sum["TCARCST"] = (isset($data_sum["TCARCST"]) ? $data_sum["TCARCST"]:0) + $row->TCARCST;
+				$data_sum["OPTCST"]  = (isset($data_sum["OPTCST"]) ? $data_sum["OPTCST"]:0) + $row->OPTCST;
+				$data_sum["OPTCVT"]  =  (isset($data_sum["OPTCVT"]) ? $data_sum["OPTCVT"]:0) + $row->OPTCVT;
+				$data_sum["OPTCTOT"] = (isset($data_sum["OPTCTOT"]) ? $data_sum["OPTCTOT"]:0) + $row->OPTCTOT;
+				$data_sum["VAR7"] 	 = (isset($data_sum["VAR7"]) ? $data_sum["VAR7"]:0) + $row->VAR7;
+				$data_sum["VAR8"] 	 = (isset($data_sum["VAR8"]) ? $data_sum["VAR8"]:0) + $row->VAR8;
+				$data_sum["VAR9"] 	 = (isset($data_sum["VAR9"]) ? $data_sum["VAR9"]:0) + $row->VAR9;
+				
 				$NRow++;
 			}
 		}
 		
-		$head = "";
 		$headcs = 0;
+		$head 	= "";
+		$foot 	= "";
 		if($arrs['RPT'] == 1){
+			$headcs = 13;
 			$head = "
 				<tr>
 					<th>สาขา<br>&emsp;<br>&emsp;</th>
@@ -630,7 +1139,23 @@ class ReportSell extends MY_Controller {
 					<th>ล/น.คงเหลือรวมภาษี<br>ราคาขายรถรวมภาษี<br>ราคาทุนรวมภาษี</th>
 				</tr>
 			";
-			$headcs = 13;
+			$foot = "
+				<tr>
+					<th>รวม</th>
+					<th>".--$NRow."</th>
+					<th>รายการ</th>
+					<th></th>
+					<th class='text-right'>".number_format($data_sum["NKEYIN"],2)."<br>".number_format($data_sum["TADDCOST"],2)."<br>".number_format($data_sum["NCARCST"],2)."</th>
+					<th class='text-right'>".number_format($data_sum["VKEYIN"],2)."<br>".number_format($data_sum["CRDAMT"],2)."<br>".number_format($data_sum["VCARCST"],2)."</th>
+					<th class='text-right'>".number_format($data_sum["TKEYIN"],2)."<br>".number_format($data_sum["VAR1"],2)."<br>".number_format($data_sum["TCARCST"],2)."</th>
+					<th class='text-right'>".number_format($data_sum["NPAYRES"],2)."<br>".number_format($data_sum["OPTPRC"],2)."<br>".number_format($data_sum["OPTCST"],2)."</th>
+					<th class='text-right'>".number_format($data_sum["VATPRES"],2)."<br>".number_format($data_sum["OPTPVT"],2)."<br>".number_format($data_sum["OPTCVT"],2)."</th>
+					<th class='text-right'>".number_format($data_sum["TOTPRES"],2)."<br>".number_format($data_sum["OPTPTOT"],2)."<br>".number_format($data_sum["OPTCTOT"],2)."</th>
+					<th class='text-right'>".number_format($data_sum["NKANG"],2)."<br>".number_format($data_sum["VAR4"],2)."<br>".number_format($data_sum["VAR7"],2)."</th>
+					<th class='text-right'>".number_format($data_sum["VKANG"],2)."<br>".number_format($data_sum["VAR5"],2)."<br>".number_format($data_sum["VAR8"],2)."</th>
+					<th class='text-right'>".number_format($data_sum["TKANG"],2)."<br>".number_format($data_sum["VAR6"],2)."<br>".number_format($data_sum["VAR9"],2)."</th>
+				</tr>
+			";
 		}
 		
 		$html = "
@@ -652,6 +1177,9 @@ class ReportSell extends MY_Controller {
 					<tbody>
 						{$html}
 					</tbody>
+					<tfoot style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png&#39;) repeat scroll 0% 0%;'>
+						{$foot}
+					</tfoot>
 				</table>
 			</div>
 		";
@@ -890,13 +1418,21 @@ class ReportSell extends MY_Controller {
 					";
 				}
 				
+				foreach($row as $key => $val){
+					if(is_numeric($val)){
+						$data_sum[$key] = (isset($data_sum[$key]) ? $data_sum[$key]: 0)+$val;
+					}
+				}
+				
 				$NRow++;
 			}
 		}
 		
-		$head = "";
 		$headcs = 0;
+		$head 	= "";
+		$foot	= "";
 		if($arrs['RPT'] == 1){
+			$headcs = 13;
 			$head = "
 				<tr>
 					<th>สาขา<br>&emsp;<br>&emsp;<br>&emsp;<br>&emsp;</th>
@@ -914,7 +1450,83 @@ class ReportSell extends MY_Controller {
 					<th>ราคาตัวรถรวมภาษี<br>ยอดขายหักจองรวมภาษ๊<br>ราคาทุนรวมภาษี<br>ค่างวดสุดท้ายรวมภาษี<br>ยอดตั้งลูกหนี้รวมภาษี</th>
 				</tr>
 			";
-			$headcs = 13;
+			$foot = "
+				<tr>
+					<th>รวม</th>
+					<th>".--$NRow."</th>
+					<th>รายการ</th>
+					<th>
+						<span style='mso-number-format:\"\@\";'></span>
+						<br>&emsp;
+						<br>&emsp;
+						<br>".number_format($data_sum["TADDCOST"],2)."
+						<br>&emsp;
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["NPRICE"],2)."
+						<br>".number_format($data_sum["NPAYRES"],2)."
+						<br>".number_format($data_sum["NETCOST"],2)."
+						<br>".number_format($data_sum["N_FUPAY"],2)."
+						<br>".number_format($data_sum["NCSHPRC"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["VATPRC"],2)."
+						<br>".number_format($data_sum["VATPRES"],2)."
+						<br>".number_format($data_sum["CRVAT"],2)."
+						<br>".number_format($data_sum["V_FUPAY"],2)."
+						<br>".number_format($data_sum["VCSHPRC"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["TOTPRC"],2)."
+						<br>".number_format($data_sum["TOTPRES"],2)."
+						<br>".number_format($data_sum["TOTCOST"],2)."
+						<br>".number_format($data_sum["T_FUPAY"],2)."
+						<br>".number_format($data_sum["TCSHPRC"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["OPTPRC"],2)."
+						<br>".number_format($data_sum["NDAWN"],2)."
+						<br>".number_format($data_sum["OPTCST"],2)."
+						<br>".number_format($data_sum["N_UPAY"],2)."
+						<br>".number_format($data_sum["NPROFIT"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["OPTPVT"],2)."
+						<br>".number_format($data_sum["VATDWN"],2)."
+						<br>".number_format($data_sum["OPTCVT"],2)."
+						<br>".number_format($data_sum["V_UPAY"],2)."
+						<br>".number_format($data_sum["VAR7"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["OPTPTOT"],2)."
+						<br>".number_format($data_sum["TOTDWN"],2)."
+						<br>".number_format($data_sum["OPTCTOT"],2)."
+						<br>".number_format($data_sum["TOT_UPAY"],2)."
+						<br>".number_format($data_sum["VAR11"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["VAR8"],2)."
+						<br>".number_format($data_sum["VAR1"],2)."
+						<br>".number_format($data_sum["VAR4"],2)."
+						<br>".number_format($data_sum["N_LUPAY"],2)."
+						<br>".number_format($data_sum["NKANG"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["VAR9"],2)."
+						<br>".number_format($data_sum["VAR2"],2)."
+						<br>".number_format($data_sum["VAR5"],2)."
+						<br>".number_format($data_sum["V_LUPAY"],2)."
+						<br>".number_format($data_sum["VKANG"],2)."
+					</th>
+					<th class='text-right'>
+						".number_format($data_sum["VAR10"],2)."
+						<br>".number_format($data_sum["VAR3"],2)."
+						<br>".number_format($data_sum["VAR6"],2)."
+						<br>".number_format($data_sum["T_LUPAY"],2)."
+						<br>".number_format($data_sum["TKANG"],2)."
+					</th>							
+				</tr>
+			";
 		}
 		
 		$html = "
@@ -936,6 +1548,9 @@ class ReportSell extends MY_Controller {
 					<tbody>
 						{$html}
 					</tbody>
+					<tfoot style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png&#39;) repeat scroll 0% 0%;'>
+						{$foot}
+					</tfoot>
 				</table>
 			</div>
 		";
@@ -1418,6 +2033,47 @@ class ReportSell extends MY_Controller {
 		
 		$response = array("html"=>$html,"status"=>true);
 		echo json_encode($response);
+	}
+	
+	function checkINOPT($contno){
+		$sql = "
+			select * from {$this->MAuth->getdb('ARINOPT')} 
+			where CONTNO='".$contno."'
+			order by OPTCODE
+		";
+		$q = $this->db->query($sql);
+		$ARINOPT = array("TOPIC"=>"","OPTCODE"=>"","SIZE"=>"","QTY"=>"","UM"=>"","TUPRICE"=>"","UPRICE"=>"","UPRICE_UM"=>"","TTOTPRC"=>"","TOTPRC"=>"","TOTPRC_UM"=>"");
+		if($q->row()){
+			$ARINOPT_R = 0;
+			foreach($q->result() as $r){
+				if($ARINOPT_R++ != 0){
+					$ARINOPT["TOPIC"] 	.= "<br>";
+					$ARINOPT["OPTCODE"] .= "<br>";
+					$ARINOPT["SIZE"] .= "<br>";
+					$ARINOPT["QTY"] .= "<br>";
+					$ARINOPT["UM"] .= "<br>";
+					$ARINOPT["TUPRICE"] .= "<br>";
+					$ARINOPT["UPRICE"] .= "<br>";
+					$ARINOPT["UPRICE_UM"] .= "<br>";
+					$ARINOPT["TTOTPRC"] .= "<br>";
+					$ARINOPT["TOTPRC"] .= "<br>";
+					$ARINOPT["TOTPRC_UM"] .= "<br>";
+				}
+				$ARINOPT["TOPIC"] 	.= "รหัสอุปกรณ์เสริม";
+				$ARINOPT["OPTCODE"] .= $r->OPTCODE;
+				$ARINOPT["SIZE"] .= "จำนวน";
+				$ARINOPT["QTY"] .= $r->QTY;
+				$ARINOPT["UM"] .=  "ชิ้น";
+				$ARINOPT["TUPRICE"] .= "ราคาต่อหน่วย";
+				$ARINOPT["UPRICE"] .= number_format($r->UPRICE,2);
+				$ARINOPT["UPRICE_UM"] .= "บาท";
+				$ARINOPT["TTOTPRC"] .= "ราคาขาย(รวมภาษี)";
+				$ARINOPT["TOTPRC"] .= number_format($r->TOTPRC,2);
+				$ARINOPT["TOTPRC_UM"] .= "บาท";
+			}
+		}
+		
+		return $ARINOPT;
 	}
 	
 	function loadding(){

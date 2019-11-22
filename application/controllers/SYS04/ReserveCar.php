@@ -25,9 +25,8 @@ class ReserveCar extends MY_Controller {
 	
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
-		//print_r($claim); exit;
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
-		//style='height:calc(100vh - 132px);overflow:auto;background-color:white;'
+		
 		$html = "
 			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
 				<div>
@@ -137,10 +136,11 @@ class ReserveCar extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$html .= "
-					<tr>
-						<td>
+					<tr class='trow' seq=".$NRow.">
+						<td class='getit resvnoClick' seq=".$NRow++."  RESVNO='".$row->RESVNO."' style='cursor: pointer; text-align: center; background-color: rgb(255, 255, 255);'><b>รายละเอียด</b></td>
+						<!--td>
 							<i class='resvnoClick btn btn-xs btn-success glyphicon glyphicon-zoom-in' RESVNO='".$row->RESVNO."' style='cursor:pointer;'> รายละเอียด  </i>
-						</td>
+						</td -->
 						<td>".$row->RESVNO."</td>
 						<td>".$row->STRNO."</td>
 						<td>".$this->Convertdate(2,$row->RESVDT)."</td>
@@ -376,14 +376,6 @@ class ReserveCar extends MY_Controller {
 			<div id='datepkposition' class='row col-sm-12' style='border:1px dotted #aaa;'>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
-						เลขตัวถัง
-						<select id='fSTRNO' class='form-control input-sm'>
-							{$arrs["fSTRNO"]}
-						</select>
-					</div>
-				</div>
-				<div class='col-sm-3'>	
-					<div class='form-group'>
 						กิจกรรมการขาย
 						<select id='fACTICOD' class='form-control input-sm'>
 							{$arrs["fACTICOD"]}
@@ -489,18 +481,38 @@ class ReserveCar extends MY_Controller {
 						<input type='text' id='fSMOWE' class='form-control input-sm jzAllowNumber' value='{$arrs["fSMOWE"]}' disabled>
 					</div>
 				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						เลขตัวถัง
+						<select id='fSTRNO' class='form-control input-sm'>
+							{$arrs["fSTRNO"]}
+						</select>
+					</div>
+				</div>
+				
 				<div class='col-sm-6'>	
 					<div class='form-group'>
 						หมายเหตุ
 						<textarea id='fMEMO1' class='form-control input-sm' rows='3' style='resize:vertical;'>{$arrs["fMEMO1"]}</textarea>
 					</div>
 				</div>
+				
+				<div class='col-sm-3 col-sm-offset-3'>	
+					<div class='form-group'>
+						หมายเหตุ
+						<textarea id='fMEMO1' class='form-control input-sm' rows='3' style='resize:vertical;'>{$arrs["fMEMO1"]}</textarea>
+					</div>
+				</div>
+				
 			</div>
 			
 			<div class='col-sm-2 col-sm-offset-8'>
 				<br/><br/>
 				<button id='btnDelete' class='btn btn-danger btn-block'>
 					<span class='glyphicon glyphicon-trash'> ลบ</span>
+				</button>
+				<button id='btnClear' class='btn btn-defualt btn-block'>
+					<span class='glyphicon glyphicon-refresh'> clear</span>
 				</button>
 				<br/>
 			</div>

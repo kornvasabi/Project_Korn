@@ -502,8 +502,8 @@ class Cselect2 extends MY_Controller {
 			select STRNO from {$this->MAuth->getdb('INVTRAN')}
 			where CRLOCAT = '".$locat."' collate Thai_CI_AS 
 				and STRNO='".$dataNow."' collate Thai_CI_AS
-				and FLAG='D' and isnull(CONTNO,'')='' and SDATE is null 
-				and isnull(RESVNO,'')=''
+				--and FLAG='D' and isnull(CONTNO,'')='' and SDATE is null 
+				--and isnull(RESVNO,'')=''
 			union
 			select top 20 STRNO from {$this->MAuth->getdb('INVTRAN')}
 			where CRLOCAT = '".$locat."' collate Thai_CI_AS 

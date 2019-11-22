@@ -348,13 +348,21 @@ function fnsearch($action){
 					//$('#table-RPSellCar').on('draw.dt',function(){ redraw(); });
 					let width = 0;
 					if($('input:radio[name=REPORT]:checked').val() == 1){
-						width = 325;
+						if($('input:radio[name=RPT]:checked').val() == 1){
+							width = ($action == "AUD" ? 365:395);
+						}else{
+							width = ($action == "AUD" ? 330:395);
+						}
 					}else if($('input:radio[name=REPORT]:checked').val() == 2){
-						width = 360;
+						if($('input:radio[name=RPT]:checked').val() == 1){
+							width = ($action == "AUD" ? 400:460);
+						}else{
+							width = ($action == "AUD" ? 330:460);
+						}
 					}else if($('input:radio[name=REPORT]:checked').val() == 3){
-						width = 360;
+						width = ($action == "AUD" ? 290:360);
 					}else if($('input:radio[name=REPORT]:checked').val() == 4){
-						width = 315;
+						width = ($action == "AUD" ? 290:315);
 					}
 					fn_datatables('table-RPSellCar',1,width);
 					$('.data-export').prepend('<img id="table-RPSellCar-print" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;margin-left:10px;">');
@@ -363,6 +371,7 @@ function fnsearch($action){
 						tableToExcel_Export(data.html,$('input:radio[name=REPORT]:checked').text(),"RPSellCar"); 
 					});
 					$("#table-RPSellCar-print").click(function(){ 	
+						/*
 						var baseUrl = $('body').attr('baseUrl');
 						var url 	= baseUrl+'SYS04/ReportSell/pdf';
 						var content = ""
@@ -395,6 +404,18 @@ function fnsearch($action){
 							height: $(window).height(),
 							width: $(window).width(),
 							shown: function($thisPDF){ document.getElementById("formpdf").submit(); }
+						});
+						*/
+						Lobibox.notify('info', {
+							title: 'info',
+							size: 'mini',
+							closeOnClick: false,
+							delay: 3000,
+							pauseDelayOnHover: true,
+							continueDelayOnInactiveTab: false,
+							icon: true,
+							messageHeight: '90vh',
+							msg: 'feature นี้ยังไม่สามารถใช้งานได้ครับ'
 						});
 					});	
 					

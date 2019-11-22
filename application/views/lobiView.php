@@ -27,6 +27,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		select {
 			background: transparent;
 		}
+		
+		.table > tbody > tr > td
+		, .table > tbody > tr > th
+		, .table > tfoot > tr > td
+		, .table > tfoot > tr > th
+		, .table > thead > tr > td
+		, .table > thead > tr > th {
+			padding: 2px;
+			line-height: 1;
+			vertical-align: text-bottom;
+			//border-top: 1px solid #ddd;
+		}
 	</style>
 </head>
 <!-- style='background: rgba(0, 0, 0, 0) url("../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png") repeat scroll 0% 0%;' -->
