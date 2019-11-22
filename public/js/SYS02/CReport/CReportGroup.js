@@ -31,7 +31,7 @@ $('#btnt1RpGroup').click(function(){
 			$('#result').html(data.html);
 			
 			//$('#table-reportgroup').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-reportgroup',1,320);
+			fn_datatables('table-reportgroup',1,390);
 			
 			// Export data to Excel
 			$('.data-export').prepend('<img id="table-reportgroup-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');

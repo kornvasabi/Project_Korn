@@ -84,33 +84,33 @@ class CReportGroup extends MY_Controller {
 		$condDesc = "";
 		if($arrs["STRNO"] != ""){
 			$condDesc .= " เลขตัวถัง ".$arrs["STRNO"];
-			$cond .= " and a.STRNO like '".$arrs["STRNO"]."%'  collate thai_cs_as ";
+			$cond .= " and data.STRNO like '".$arrs["STRNO"]."%'  collate thai_cs_as ";
 		}else{
 			$condDesc .= " เลขตัวถัง ทั้งหมด";
 		}
 		
 		if($arrs["SDATE"] != "" and $arrs["TDATE"] != ""){
 			$condDesc .= " วันที่เปลี่ยนกลุ่มรถ ระหว่างวันที่ ".$this->Convertdate(2,$arrs["SDATE"])." ถึงวันที่ ".$this->Convertdate(2,$arrs["TDATE"]);
-			$cond .= " and a.dt between '".$arrs["SDATE"]."' and '".$arrs["TDATE"]."' ";
+			$cond .= " and data.insdt between '".$arrs["SDATE"]."' and '".$arrs["TDATE"]."' ";
 		}else if($arrs["SDATE"] != "" and $arrs["TDATE"] == ""){
 			$condDesc .= " วันที่เปลี่ยนกลุ่มรถ วันที่ ".$this->Convertdate(2,$arrs["SDATE"]);
-			$cond .= " and a.dt = '".$arrs["SDATE"]."' ";
+			$cond .= " and data.insdt = '".$arrs["SDATE"]."' ";
 		}else if($arrs["SDATE"] == "" and $arrs["TDATE"] != ""){
 			$condDesc .= " วันที่เปลี่ยนกลุ่มรถ วันที่ ".$this->Convertdate(2,$arrs["SDATE"]);
-			$cond .= " and a.dt = '".$arrs["TDATE"]."' ";
+			$cond .= " and data.insdt = '".$arrs["TDATE"]."' ";
 		}else{
 			$condDesc .= " วันที่เปลี่ยนกลุ่มรถ ทั้งหมด";
 		}
 		
 		if($arrs["USERS"] != ""){
 			$condDesc .= " ผู้ทำรายการ ".$arrs["USERS"];
-			$cond .= " and a.username like '%".$arrs["USERS"]."%'";
+			$cond .= " and us.firstName+' '+us.lastName like '%".$arrs["USERS"]."%'";
 		}else{
 			$condDesc .= " ผู้ทำรายการ ทั้งหมด";
 		}
 		
 		$condDesc .= ($cond == "" ? " แสดงรายการ 5,000 อันดับแรก":"");
-		
+		/* 
 		$sql = "
 			if OBJECT_ID('tempdb..#tempstr') is not null drop table #tempstr;
 
@@ -136,12 +136,28 @@ class CReportGroup extends MY_Controller {
 			left join {$this->MAuth->getdb('hp_vusers_all')} us on data.userId=us.IDNo 			
 			order by STRNO asc,dateTimeTried asc
 		";
-		//echo $sql; //exit;
+		// echo $sql; //exit;
 		$this->db->query($sql);
 		$sql = "
 			select top 5000 ROW_NUMBER() over(partition by a.STRNO order by a.STRNO,a.dt,a.tm) r,a.*,c.GDESC from #tempstr a 
 			inner join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO collate thai_cs_as
 			left join {$this->MAuth->getdb('SETGROUP')} c on a.GCODE=c.GCODE collate thai_cs_as
+			where 1=1 ".$cond."
+		";
+		// echo $sql; exit;
+		$query = $this->db->query($sql);
+		*/
+		
+		$sql = "
+			select top 5000 ROW_NUMBER() over(partition by data.STRNO order by data.STRNO,data.insdt) r
+				,data.STRNO,data.GCODE,data.GCODENew
+				,'คุณ'+us.firstName+' '+us.lastName username
+				,insby as userId
+				,convert(varchar(8),data.insdt,112) as dt
+				,convert(varchar(5),data.insdt,108) as tm
+				,data.ipAddress,us.positionName 
+			from {$this->MAuth->getdb('INVTRANGCODE')} as data
+			left join {$this->MAuth->getdb('hp_vusers_all')} as us on data.insby=us.IDNo collate thai_cs_as
 			where 1=1 ".$cond."
 		";
 		//echo $sql; exit;
@@ -155,7 +171,8 @@ class CReportGroup extends MY_Controller {
 					<tr>
 						<td>".$row->STRNO."</td>
 						<td>".$row->r."</td>
-						<td>".$row->GCODE." ".$row->GDESC."</td>
+						<td>".$row->GCODE."</td>
+						<td>".$row->GCODENew."</td>
 						<td>".$row->username."</td>
 						<td>".$row->userId."</td>
 						<td>".$row->positionName."</td>
@@ -171,24 +188,25 @@ class CReportGroup extends MY_Controller {
 				<table id='table-reportgroup' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 						<tr>
-							<th colspan='8' class='text-center' style='font-size:12pt;border:0px;'> 
+							<th colspan='9' class='text-center' style='font-size:12pt;border:0px;'> 
 								รายงานการเปลี่ยนกลุ่มรถ
 							</th>
 						</tr>
 						<tr>
-							<th colspan='8' class='text-center' style='border:0px;'>
+							<th colspan='9' class='text-center' style='border:0px;'>
 								ออกรายงานโดย ".$this->sess["name"]." &emsp; ณ วันที่ ".$this->MDATA->sysdt()."
 							</th>
 						</tr>
 						<tr>
-							<th colspan='8' class='text-center' style='border:0px;color:#666;'>
+							<th colspan='9' class='text-center' style='border:0px;color:#666;'>
 								เงื่อนไข :: ".$condDesc."
 							</th>
 						</tr>
 						<tr>
 							<th style='vertical-align:middle;border:0px;'>เลขตัวถัง</th>
-							<th style='vertical-align:middle;border:0px;'>ครั้งที่</th>
-							<th style='vertical-align:middle;border:0px;'>กลุ่ม</th>
+							<th style='vertical-align:middle;border:0px;'>ลำดับ</th>
+							<th style='vertical-align:middle;border:0px;'>จากกลุ่ม</th>
+							<th style='vertical-align:middle;border:0px;'>เปลี่ยนเป็น</th>
 							<th style='vertical-align:middle;border:0px;'>ผู้ทำรายการ</th>
 							<th style='vertical-align:middle;border:0px;'>เลข ปชช.</th>
 							<th style='vertical-align:middle;border:0px;'>ตำแหน่ง</th>
