@@ -100,11 +100,11 @@ class Cselect2b extends MY_Controller {
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		
 		$sql = "
-			select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+'-'+GRADE as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
+			select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+' - '+GRADE as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
 			where CUSCOD = '".$dataNow."' collate Thai_CI_AS 			
 			
 			union
-			select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+'-'+GRADE as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
+			select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+' - '+GRADE as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
 			where CUSCOD like '%".$dataSearch."%' collate Thai_CI_AS 
 				or NAME1+' '+NAME2 like '%".$dataSearch."%' collate Thai_CI_AS
 				or IDNO like '%".$dataSearch."%' collate Thai_CI_AS
@@ -463,7 +463,8 @@ class Cselect2b extends MY_Controller {
 		$dataSearch = trim($_GET['q']);
 		
 		$sql = "
-			select top 10 FORCODE, FORCODE+' - '+FORDESC as FORDESC
+			select top 10 FORCODE, FORCODE+' - '+FORDESC as FORDESC, 
+			case when FORCODE = '102' then 'disabled' else '' end as disabled
 			from {$this->MAuth->getdb('PAYFOR')} 
 			where FORCODE not like '0%' and (FORCODE like '".$dataSearch."%' or FORDESC like '%".$dataSearch."%')
 			order by FORCODE
@@ -474,7 +475,7 @@ class Cselect2b extends MY_Controller {
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
-				$json[] = ['id'=>$row->FORCODE, 'text'=>$row->FORDESC];
+				$json[] = ['id'=>$row->FORCODE, 'text'=>$row->FORDESC, 'disabled'=>$row->disabled];
 			}
 		}
 		
@@ -569,7 +570,7 @@ class Cselect2b extends MY_Controller {
 		//$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 
 		$sql = "
-				select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+'-'+GRADE as CUSNAME
+				select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+' - '+GRADE as CUSNAME
 				from {$this->MAuth->getdb('CUSTMAST')}
 				where CUSCOD like '%".$dataSearch."%' collate Thai_CI_AS 
 					or NAME1+' '+NAME2 like '%".$dataSearch."%' collate Thai_CI_AS
@@ -591,7 +592,7 @@ class Cselect2b extends MY_Controller {
 		$contno = $_REQUEST["contno"];
 		
 		$sql = "
-			select top 20 a.CUSCOD, SNAM + NAME1 +' '+ NAME2 +' ('+a.CUSCOD+')'+'-'+ GRADE as CUSNAME 
+			select top 20 a.CUSCOD, SNAM + NAME1 +' '+ NAME2 +' ('+a.CUSCOD+')'+' - '+ GRADE as CUSNAME 
 			from (
 				select distinct CONTNO, CUSCOD from {$this->MAuth->getdb('ARMAST')} where CONTNO = '".$contno."' collate thai_cs_as
 				union
@@ -648,7 +649,7 @@ class Cselect2b extends MY_Controller {
 
 		$sql = "
 				select top 20 CONTNO, CUSCOD from {$this->MAuth->getdb('ARMAST')}
-				where CONTNO like '%".$dataSearch."%' collate Thai_CI_AS
+				where YSTAT != 'Y' and TOTPRC-SMPAY-SMCHQ >0 and CONTNO like '%".$dataSearch."%' 
 		";//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
@@ -662,7 +663,33 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($json);
 	}
 	
-	function getGCode_typecar(){ //หน้าค้นหา
+
+	function getGCode_ExchangCar(){
+		//กลุ่มสินค้า
+		$sess = $this->session->userdata('cbjsess001');
+		$GCODEold = $_REQUEST["GCODEold"];
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select GCODE,'('+GCODE+') '+GDESC as GDESC,  case when GCODE = '".$GCODEold."' then 'disabled' else '' end as disabled
+			from {$this->MAuth->getdb('SETGROUP')}
+			where GCODE like '%".$dataSearch."%' collate Thai_CI_AS
+				or GDESC like '%".$dataSearch."%' collate Thai_CI_AS
+			order by GCODE
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->GCODE, 'text'=>$row->GDESC, 'disabled'=>$row->disabled];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getGCode_typecar(){
 		//กลุ่มสินค้า
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
@@ -728,25 +755,436 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getTYPLOST(){
+		//ประเภทการขาย
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		
+		$sql = "
+			select LOSTCOD, LOSTCOD+' - '+LOSTESC as LOSTESC
+			from {$this->MAuth->getdb('TYPLOST')} 
+			where LOSTCOD like '".$dataSearch."%' or LOSTESC like '%".$dataSearch."%'
+			order by LOSTCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->LOSTCOD, 'text'=>$row->LOSTESC];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_DoubtfulAcc(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		//$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+
+		$sql = "
+				select top 20 CONTNO, CUSCOD from {$this->MAuth->getdb('ARMAST')}
+				where YSTAT != 'Y' and TOTPRC-SMPAY-SMCHQ >0 and CONTNO like '%".$dataSearch."%' 
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_ChangeContstat(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20 CONTNO from {$this->MAuth->getdb('ARMAST')}
+				where CONTNO like '%".$dataSearch."%'
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getTYPCONT_ChangeContstat(){
+		$sess = $this->session->userdata('cbjsess001');
+		$TYPCONTold = $_REQUEST["TYPCONTold"];
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select CONTTYP, CONTTYP+' - '+CONTDESC as CONTDESC, case when CONTTYP = '".$TYPCONTold."' then 'disabled' else '' end as disabled
+			from {$this->MAuth->getdb('TYPCONT')}
+			where CONTTYP like '%".$dataSearch."%' collate Thai_CI_AS
+				or CONTDESC like '%".$dataSearch."%' collate Thai_CI_AS
+			order by CONTTYP
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTTYP, 'text'=>$row->CONTDESC, 'disabled'=>$row->disabled];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function getAUMPHUR(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$dataSearch = trim($_GET['q']);
+		if($dataNow != ""){
+			$sql = "
+				select 	PROVCOD, AUMPCOD, AUMPDES from {$this->MAuth->getdb('SETAUMP')}
+				where 	PROVCOD like '%".$dataNow."%' collate Thai_CI_AS
+				order by PROVCOD, AUMPDES
+			"; 
+		}else{
+			$sql = "
+				select 	top 20 PROVCOD, AUMPCOD, AUMPDES from {$this->MAuth->getdb('SETAUMP')}
+				where 	AUMPCOD like '%".$dataSearch."%' collate Thai_CI_AS
+						or AUMPDES like '%".$dataSearch."%' collate Thai_CI_AS
+				order by PROVCOD, AUMPDES
+			"; 	
+		}
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->AUMPCOD, 'text'=>$row->AUMPDES];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function getPROVINCE(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select 	top 20 PROVCOD, PROVDES from {$this->MAuth->getdb('SETPROV')}
+			where 	PROVCOD like '%".$dataSearch."%' collate Thai_CI_AS
+					or PROVDES like '%".$dataSearch."%' collate Thai_CI_AS
+			order by PROVDES
+		";
+		
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->PROVCOD, 'text'=>$row->PROVDES];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function getPROVINCEbyAUMPHUR(){
+		$sess = $this->session->userdata('cbjsess001');
+		//$dataSearch = trim($_GET['q']);
+		$aumphur = $_REQUEST["aumphur"];
+		$sql = "
+			select  a.PROVCOD, b.PROVDES, a.AUMPCOD, a.AUMPDES
+			from SETAUMP a
+			left join SETPROV b on a.PROVCOD = b.PROVCOD
+			where a.AUMPCOD = '".$aumphur."'
+		";
+		
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$response = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["PROVCOD"] = $row->PROVCOD;
+				$response["PROVDES"] = $row->PROVDES;
+			}
+		}
+		echo json_encode($response);
+	}
+	
+	function getOFFICER(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		
+		$sql = "
+			select  top 20 CODE, NAME+' ('+CODE +')'  as NAME, DEPCODE from {$this->MAuth->getdb('OFFICER')}
+			where 	CODE like '%".$dataSearch."%' collate Thai_CI_AS 
+					or NAME like '%".$dataSearch."%' collate Thai_CI_AS
+		";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CODE, 'text'=>$row->NAME];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_HoldtoStock(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20 CONTNO from {$this->MAuth->getdb('ARMAST')}
+				where TOTPRC > SMPAY and CONTNO like '%".$dataSearch."%'
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+
+	function getTYPHOLD(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		//$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+
+		$sql = "
+				select HOLDCOD, '('+HOLDCOD+') '+HOLDESC as HOLDESC from {$this->MAuth->getdb('TYPHOLD')}
+				where HOLDCOD like '%".$dataSearch."%' or HOLDESC like '%".$dataSearch."%'
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->HOLDCOD, 'text'=>$row->HOLDESC];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_HOLDTOOLDCAR(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20 CONTNO from {$this->MAuth->getdb('ARMAST')}
+				where YSTAT='Y' and Totprc > smpay and CONTNO not in(SELECT CONTNO FROM {$this->MAuth->getdb('ARHOLD')})
+				and CONTNO like '%".$dataSearch."%'
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_ARHOLD(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20 CONTNO from {$this->MAuth->getdb('ARHOLD')}
+				where CONTNO like '%".$dataSearch."%'
+				order by YDATE desc
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_AlertMsg(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20 CONTNO from {$this->MAuth->getdb('INVTRAN')}
+				where CONTNO != '' and CONTNO is not null and CONTNO like '%".$dataSearch."%'
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCUSTOMERSALL(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')' as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
+			where CUSCOD = '".$dataNow."' collate Thai_CI_AS 			
+			union
+			select top 20 CUSCOD,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')' as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
+			where CUSCOD like '%".$dataSearch."%' collate Thai_CI_AS 
+				or NAME1+' '+NAME2 like '%".$dataSearch."%' collate Thai_CI_AS
+				or IDNO like '%".$dataSearch."%' collate Thai_CI_AS
+			order by CUSCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CUSCOD, 'text'=>$row->CUSNAME];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNOALL(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20 CONTNO
+				from(
+					select CONTNO from {$this->MAuth->getdb('INVTRAN')}
+					where CONTNO != '' and CONTNO is not null and CONTNO like '%".$dataSearch."%'
+					union
+					select CONTNO from {$this->MAuth->getdb('HINVTRAN')}
+					where CONTNO != '' and CONTNO is not null and CONTNO like '%".$dataSearch."%'
+				)A
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_C(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select CONTNO from {$this->MAuth->getdb('ARCRED')}
+				where CONTNO like '%".$dataSearch."%'
+	
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getTYPECOD(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select TYPECOD from {$this->MAuth->getdb('SETTYPE')} 
+				where TYPECOD like '%".$dataSearch."%' 
+				order by TYPECOD
+	
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->TYPECOD, 'text'=>$row->TYPECOD];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getMODELS(){
+		//รุ่นรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		
+		$sql = "
+			select MODELCOD from {$this->MAuth->getdb('SETMODEL')}
+			where MODELCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by MODELCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
+				$json[] = array('id'=>$row->MODELCOD, 'text'=>$row->MODELCOD);
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getTYPCONT(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select CONTTYP, CONTTYP+' - '+CONTDESC as CONTDESC
+			from {$this->MAuth->getdb('TYPCONT')}
+			where CONTTYP like '%".$dataSearch."%' collate Thai_CI_AS
+				or CONTDESC like '%".$dataSearch."%' collate Thai_CI_AS
+			order by CONTTYP
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTTYP, 'text'=>$row->CONTDESC];
+			}
+		}
+		echo json_encode($json);
+	}
+	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

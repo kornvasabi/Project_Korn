@@ -71,12 +71,12 @@ class Finance extends MY_Controller {
 					<div class='row'>
 						<div class=' col-sm-6'>	
 							<div class='form-group'>
-								<input type='button' id='btnt1finance' class='btn btn-cyan btn-sm' value='ขายไฟแนนซ์' style='width:100%'>
+								<button id='btnt1finance' class='btn btn-cyan btn-block'><span class='glyphicon glyphicon-pencil'> ขายส่งไฟแนนซ์</span></button>
 							</div>
 						</div>
 						<div class=' col-sm-6'>	
 							<div class='form-group'>
-								<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+								<button id='btnt1search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 							</div>
 						</div>
 					</div>		
@@ -480,7 +480,8 @@ class Finance extends MY_Controller {
 		echo json_encode(array("html"=>$html));
 	}
 		
-	function getfromAgent(){
+	//function getfromAgent(){
+	function getfromFinance(){	
 		$data = array();
 		
 		$sql = "
@@ -525,9 +526,9 @@ class Finance extends MY_Controller {
 							
 						</ul>
 						<div class='tab-content bg-white'>
-							".$this->getfromLeasingTab11($data)."
-							".$this->getfromLeasingTab22($data)."
-							".$this->getfromLeasingTab33($data)."							
+							".$this->getfromFinanceTab11($data)."
+							".$this->getfromFinanceTab22($data)."
+							".$this->getfromFinanceTab33($data)."							
 							
 							<!-- ul class='pager'>
 								<li class='previous first disabled' style='display:none;'><a href='javascript:void(0)'>First</a></li>
@@ -541,13 +542,10 @@ class Finance extends MY_Controller {
 			</div>
 			<div>
 				<div class='col-sm-6 text-left'>
-					<input type='button' id='btnArpay' class='btn btn-xs btn-info' style='width:100px;' value='ตาราง' disabled>
-					<input type='button' id='btnSend' class='btn btn-xs btn-info' style='width:100px;' value='ใบส่งมอบ' disabled>
-					<input type='button' id='btnTax' class='btn btn-xs btn-info' style='width:100px;' value='ใบกำกับ' disabled>
 					<br>
+					<input type='button' id='btnTax' class='btn btn-xs btn-info' style='width:100px;' value='ใบกำกับ' disabled>
+					<input type='button' id='btnSend' class='btn btn-xs btn-info' style='width:100px;' value='ใบส่งมอบ' disabled>
 					<input type='button' id='btnApproveSell' class='btn btn-xs btn-info' style='width:100px;' value='ใบอนุมัติขาย' disabled>
-					<input type='button' id='btnContno' class='btn btn-xs btn-info' style='width:100px;' value='สัญญา' disabled>
-					<input type='button' id='btnLock' class='btn btn-xs btn-info' style='width:100px;' value='Lock สัญญา' disabled>
 				</div>
 				<div class='col-sm-6 text-right'>
 					<input type='button' id='add_save' class='btn btn-xs btn-primary right' style='width:100px;' value='บันทึก' >
@@ -561,7 +559,7 @@ class Finance extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	private function getfromLeasingTab11($data){
+	private function getfromFinanceTab11($data){
 		$html = "
 			<div class='tab-pane active' name='tab11' style='height:calc(100vh - 260px);overflow:auto;'>
 				<fieldset style='height:100%'>
@@ -605,7 +603,7 @@ class Finance extends MY_Controller {
 								<div class='col-sm-4'>	
 									<div class='form-group'>
 										ลูกค้า
-										<select id='add_cuscod' class='form-control input-sm' data-placeholder='ลูกค้า'></select>
+										<input type='text' id='add_cuscod' CUSCOD='' class='form-control input-sm' placeholder='ลูกค้า'  readonly>
 									</div>
 								</div>
 							</div>
@@ -645,10 +643,10 @@ class Finance extends MY_Controller {
 										<input type='text' id='add_reg' class='form-control input-sm' placeholder='ทะเบียน' >
 									</div>
 								</div>
-								<div class='col-sm-4'>	
+								<div class=' col-sm-4'>	
 									<div class='form-group'>
-										วิธีชำระค่างวด
-										<select id='add_paydue' class='form-control input-sm' data-placeholder='วิธีชำระค่างวด'></select>
+										กิจกรรมการขาย
+										<select id='add_acticod' class='form-control input-sm' data-placeholder='กิจกรรมการขาย'></select>
 									</div>
 								</div>
 							</div>
@@ -660,7 +658,7 @@ class Finance extends MY_Controller {
 		return $html;
 	}
 	
-	private function getfromLeasingTab22($data){
+	private function getfromFinanceTab22($data){
 		$html = "
 			<div class='tab-pane' name='tab22' style='height:calc(100vh - 260px);overflow:auto;'>
 				<fieldset style='height:100%'>
@@ -713,11 +711,11 @@ class Finance extends MY_Controller {
 						<div style='float:left;background-color:white;';' class='col-sm-3'>
 							<div class='col-sm-12 col-lg-6'>	
 								<div class='form-group'>
-									ราคาขายผ่อน
+									ราคาขาย
 									<div class='form-group'>
 										<label class='input'>
 											<span id='add_inprcCal' class='input-icon input-icon-append glyphicon glyphicon-info-sign'></span>
-											<input type='text' id='add_inprc' class='form-control input-sm' placeholder='ราคาขายผ่อน' >
+											<input type='text' id='add_inprc' class='form-control input-sm' placeholder='ราคาขาย' >
 										</label>
 									</div>
 								</div>
@@ -728,6 +726,42 @@ class Finance extends MY_Controller {
 									<input type='text' id='add_indwn' class='form-control input-sm' placeholder='เงินดาวน์' >
 								</div>
 							</div>
+							<div class='col-sm-12 col-lg-6'>	
+								<div class='form-group'>
+									ราคาขายหน้าร้าน
+									<input type='text' id='add_dwninv' class='form-control input-sm' placeholder='ราคาขายหน้าร้าน' >
+								</div>
+							</div>
+							
+							<div class='col-sm-12 col-lg-6'>	
+								<div class='form-group'>
+									ส่วนลด
+									<input type='text' id='add_dwninvDt' class='form-control input-sm' placeholder='ส่วนลด'>
+								</div>
+							</div>
+							
+							<div class='col-sm-12 col-lg-6'>	
+								รหัสบริษัทไฟแนนท์
+								<div class='input-group'>
+									<input type='text' id='add_nopay' class='form-control input-sm' placeholder='จำนวนงวดที่ผ่อน' >
+									<span class='input-group-addon'>งวด</span>
+								</div>
+							</div>
+							<div class='col-sm-12 col-lg-6'>	
+								ค่าคอมไฟแนนท์
+								<input type='text' id='add_commission' class='form-control input-sm' placeholder='ค่าคอมไฟแนนท์'>
+							</div>
+							
+							<div class='col-sm-12 col-lg-6'>	
+								พนักงานขาย
+								<!-- input type='text' id='add_salcod' class='form-control input-sm' placeholder='พนักงานขาย' -->
+								<select id='add_salcod' class='form-control input-sm' placeholder='พนักงานขาย'></select>
+							</div>
+							<div class='col-sm-12 col-lg-6'>	
+								ค่านายหน้าขาย
+								<input type='text' id='add_facesale' class='form-control input-sm' placeholder='ค่านายหน้าขาย'>
+							</div>
+							
 							<div class='col-sm-12 col-lg-6'>	
 								<div class='form-group'>
 									ใบกำกับเงินดาวน์
@@ -743,17 +777,15 @@ class Finance extends MY_Controller {
 							</div>
 							
 							<div class='col-sm-12 col-lg-6'>	
-								จำนวนงวดที่ผ่อน
-								<div class='input-group'>
-									<input type='text' id='add_nopay' class='form-control input-sm' placeholder='จำนวนงวดที่ผ่อน' >
-									<span class='input-group-addon'>งวด</span>
+								<div class='form-group'>
+									เลขที่ปล่อยรถ
+									<input type='text' id='add_issuno' class='form-control input-sm' placeholder='เลขที่ปล่อยรถ' >
 								</div>
 							</div>
 							<div class='col-sm-12 col-lg-6'>	
-								ผ่อนชำระ
-								<div class='input-group'>
-									<input type='text' id='add_upay' class='form-control input-sm' placeholder='ผ่อนชำระ' >
-									<span class='input-group-addon'>ด./งวด</span>
+								<div class='form-group'>
+									วันที่ปล่อยรถ
+									<input type='text' id='add_issudt' class='form-control input-sm' placeholder='วันที่ปล่อยรถ' data-provide='datepicker' data-date-language='th-th' value='".$this->today('today')."'>
 								</div>
 							</div>
 						</div>
@@ -764,178 +796,27 @@ class Finance extends MY_Controller {
 		return $html;
 	}
 	
-	private function getfromLeasingTab33($data){
+	private function getfromFinanceTab33($data){
 		$html = "
 			<div class='tab-pane' name='tab33' style='height:calc(100vh - 260px);overflow:auto;'>
 				<fieldset style='height:100%'>
-					<div style='float:left;background-color:#269da1;color:#efff14;' class='col-sm-8 col-sm-offset-2'>
-						<div class='col-sm-4'>	
-							<div class='form-group'>
-								ค่างวดแรก
-								<input type='text' id='add_payfirst' class='form-control input-sm' placeholder='ค่างวดแรก' >
-							</div>
-						</div>
-						<div class='col-sm-4'>	
-							<div class='form-group'>
-								ค่างวดถัดไป
-								<input type='text' id='add_paynext' class='form-control input-sm' placeholder='ค่างวดถัดไป' >
-							</div>
-						</div>
-						<div class='col-sm-4'>	
-							<div class='form-group'>
-								ค่างวดสุดท้าย + ภาษี
-								<input type='text' id='add_paylast' class='form-control input-sm' placeholder='ค่างวดสุดท้าย + ภาษี' >
-							</div>
-						</div>
-						
-						<div class='col-sm-4'>	
-							<div class='form-group'>
-								ราคาขายหน้าร้าน
-								<input type='text' id='add_sell' class='form-control input-sm' placeholder='ราคาขายหน้าร้าน' >
-							</div>
-						</div>
-						<div class='col-sm-4'>	
-							<div class='form-group'>
-								ราคาขายสดสุทธิ
-								<input type='text' id='add_totalSell' class='form-control input-sm' placeholder='ราคาขายสดสุทธิ' >
-							</div>
-						</div>
-						<div class='col-sm-4'>	
-							<div class='form-group'>
-								ดอกผลเช่าซื้อ
-								<input type='text' id='add_interest' class='form-control input-sm' placeholder='ดอกผลเช่าซื้อ' >
-							</div>
-						</div>
-						
-						<div class='col-sm-4 col-sm-offset-8'>	
-							<button id='add_detailsCond' class='btn-sm btn-inverse btn-block'>รายละเอียด</button>
-						</div>
-					</div>
-					
-					<div style='float:left;' class='col-sm-8 col-sm-offset-2'>
-						<div class='row'>
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									วันดิวงวดแรก
-									<input type='text' id='add_duefirst' class='form-control input-sm' placeholder='วันดิวงวดแรก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('todaynextmonth')."'>
-								</div>
-							</div>
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									วันดิวงวดสุดท้าย
-									<input type='text' id='add_duelast' class='form-control input-sm' placeholder='วันดิวงวดสุดท้าย' data-provide='datepicker' data-date-language='th-th' disabled>
-								</div>
-							</div>
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									เลขที่ปล่อยรถ
-									<input type='text' id='add_release' class='form-control input-sm' placeholder='เลขที่ปล่อยรถ' >
-								</div>
-							</div>
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									วันที่ปล่อยรถ
-									<input type='text' id='add_released' class='form-control input-sm' placeholder='วันที่ปล่อยรถ' data-provide='datepicker' data-date-language='th-th' value='".$this->today('today')."'>
-								</div>
-							</div>
-							
-							<div class=' col-sm-6'>	
-								<div class='form-group'>
-									รหัสพนักงานเก็บเงิน
-									<select id='add_emp' class='form-control input-sm' data-placeholder='รหัสพนักงานเก็บเงิน'>
-										<option value='".$this->sess["USERID"]."'>".$this->sess["name"]." (".$this->sess["USERID"].")</option>
-									</select>
-								</div>
-							</div>
-							<div class=' col-sm-6'>	
-								<div class='form-group'>
-									รหัสผู้ตรวจสอบ
-									<select id='add_audit' class='form-control input-sm' data-placeholder='รหัสผู้ตรวจสอบ'>
-										<option value='".$this->sess["USERID"]."'>".$this->sess["name"]." (".$this->sess["USERID"].")</option>
-									</select>
-								</div>
-							</div>
-							
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									อัตราเบี้ยปรับล่าช้า
-									<input type='text' id='add_intRate' class='form-control input-sm' placeholder='อัตราเบี้ยปรับล่าช้า' >
-								</div>
-							</div>
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									ชำระล่าช้าได้ไม่เกิน
-									<input type='text' id='add_delay' class='form-control input-sm' placeholder='ชำระล่าช้าได้ไม่เกิน' >
-								</div>
-							</div>
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									อัตราดอกเบี้ยทำเช่าซื้อ
-									<input type='text' id='add_interestRate' class='form-control input-sm' placeholder='อัตราดอกเบี้ยทำเช่าซื้อ' >
-								</div>
-							</div>
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									อัตราดอกเบี้ยเช่าซื้อจริง
-									<input type='text' id='add_interestRateReal' class='form-control input-sm' placeholder='อัตราดอกเบี้ยเช่าซื้อจริง' >
-								</div>
-							</div>
-							
-							<div class=' col-sm-6'>	
-								<div class='form-group'>
-									รหัสพนักงานขาย
-									<select id='add_empSell' class='form-control input-sm' data-placeholder='รหัสพนักงานขาย'>
-										<option value='".$this->sess["USERID"]."'>".$this->sess["name"]." (".$this->sess["USERID"].")</option>
-									</select>
-								</div>
-							</div>
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									ค่านายหน้าขาย
-									<input type='text' id='add_agent' class='form-control input-sm' placeholder='ค่านายหน้าขาย' >
-								</div>
-							</div>
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									กิจกรรมการขาย
-									<select id='add_acticod' class='form-control input-sm' data-placeholder='กิจกรรมการขาย'></select>
-								</div>
-							</div>
-							<div class=' col-sm-6'>	
-								<div class='form-group'>
-									<input id='add_nextlastmonth' class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' value='ต้องการให้งวดถัดไปเป็นสิ้นเดือน'  >
-									<label class='form-check-label' style='cursor:pointer;' for='add_nextlastmonth'>ต้องการให้งวดถัดไปเป็นสิ้นเดือน</label>
-								</div>
-							</div>
-						</div>
-					</div>									
-				</fieldset>
-			</div>
-		";
-		return $html;
-	}
-	
-	private function getfromLeasingTab44($data){
-		$html = "
-			<div class='tab-pane' name='tab44' style='height:calc(100vh - 260px);overflow:auto;'>
-				<fieldset style='height:100%'>
 					<div style='float:left;' class='col-sm-8 '>
 						<div class='row'>
-							<div class=' col-sm-6'>	
+							<div class=' col-sm-4'>	
 								<div class='form-group'>
 									ผู้แนะนำการซื้อ
-									<select id='add_advisor' class='form-control input-sm' data-placeholder='ผู้แนะนำการซื้อ'></select>
+									<input type='text' id='add_recomcod' CUSCOD='' class='form-control input-sm' placeholder='ผู้แนะนำการซื้อ' >
 								</div>
 							</div>
 							
-							<div class=' col-sm-3'>	
+							<div class='col-sm-4'>	
 								<div class='form-group'>
 									ชำระเงินดาวน์แล้ว
 									<input type='text' id='add_paydown' class='form-control input-sm' placeholder='ชำระเงินดาวน์แล้ว' disabled>
 								</div>
 							</div>
 							
-							<div class=' col-sm-3'>	
+							<div class='col-sm-4'>	
 								<div class='form-group'>
 									รับชำระเงินแล้วทั้งหมด
 									<input type='text' id='add_payall' class='form-control input-sm' placeholder='รับชำระเงินแล้วทั้งหมด' disabled>
@@ -945,65 +826,42 @@ class Finance extends MY_Controller {
 							<div class='col-sm-4'>	
 								<div class='form-group'>
 									ค่าคอมบุคคลนอก
-									<input type='text' id='add_commission' class='form-control input-sm' placeholder='ค่าคอมบุคคลนอก' >
+									<input type='text' id='add_commission' class='form-control input-sm' placeholder='ค่าคอมบุคคลนอก' value='0.00'>
 								</div>
 							</div>
 							
 							<div class='col-sm-4'>	
 								<div class='form-group'>
 									ค่าของแถม
-									<input type='text' id='add_free' class='form-control input-sm' placeholder='ค่าของแถม' >
+									<input type='text' id='add_free' class='form-control input-sm' placeholder='ค่าของแถม' value='0.00'>
 								</div>
 							</div>
 							
 							<div class='col-sm-4'>	
 								<div class='form-group'>
 									ค่าใช้จ่ายอื่นๆ
-									<input type='text' id='add_payother' class='form-control input-sm' placeholder='ค่าใช้จ่ายอื่นๆ' >
+									<input type='text' id='add_payother' class='form-control input-sm' placeholder='ค่าใช้จ่ายอื่นๆ' value='0.00'>
 								</div>
 							</div>
 							
-							<div class=' col-sm-6'>	
-								วิธีคำนวนเบี้ยปรับ
-								<div class='col-sm-12'>
-									<label class='radio lobiradio lobiradio-info'>
-										<input type='radio' name='CALINT' value='1' ".($data["CALINT"] == 1 ? "checked":"")."> 
-										<i></i> ตามอัตรา MRR+ค่าคงที่
-									</label>
-								</div>
-								<div class='col-sm-12'>
-									<label class='radio lobiradio lobiradio-info'>
-										<input type='radio' name='CALINT' value='2' ".($data["CALINT"] == 2 ? "checked":"").">
-										<i></i> ตามอัตราเบี้ยปรับต่อเดือน
-									</label>
+							<div class='col-sm-4'>	
+								<div class='form-group'>
+									เลขที่ใบลดหนี้
+									<input type='text' id='add_crdtxno' class='form-control input-sm' placeholder='เลขที่ใบลดหนี้' >
 								</div>
 							</div>
-							<div class=' col-sm-6'>	
-								วิธีคำนวนส่วนลดตัดสด
-								<div class='col-sm-12'>
-									<label class='radio lobiradio lobiradio-info'>
-										<input type='radio' name='DISC_FM' value='1' ".($data["DISC_FM"] == 1 ? "checked":"")."> 
-										<i></i> % ส่วนลดของดอกเบี้ยคงเหลือ(สคบ.)
-									</label>									
+							<div class='col-sm-4 col-sm-offset-4'>	
+								<div class='form-group'>
+									จำนวนเงินที่ลดหนี้
+									<input type='text' id='add_crdamt' class='form-control input-sm' placeholder='จำนวนเงินที่ลดหนี้' value='0.00'>
 								</div>
-								<div class='col-sm-12'>
-									<label class='radio lobiradio lobiradio-info'>
-										<input type='radio' name='DISC_FM' value='2' ".($data["DISC_FM"] == 2 ? "checked":"")."> 
-										<i></i> % ส่วนลดของดอกเบี้ยทั้งหมด
-									</label>
-								</div>
-								<div class='col-sm-12'>
-									<label class='radio lobiradio lobiradio-info'>
-										<input type='radio' name='DISC_FM' value='3' ".($data["DISC_FM"] == 3 ? "checked":"").">  
-										<i></i> % ส่วนลดต่อเดือน(HP DOS)
-									</label>
-								</div>
-							</div>							
+							</div>
+							
 							
 							<div class='2 col-sm-12'>	
 								<div class='form-group'>
 									หมายเหตุ
-									<textarea type='text' id='add_comments' class='form-control input-sm' placeholder='หมายเหตุ' ></textarea>
+									<textarea type='text' id='add_memo1' class='form-control input-sm' placeholder='หมายเหตุ' rows=4 style='resize:vertical;'></textarea>
 								</div>
 							</div>
 						</div>
@@ -1014,61 +872,6 @@ class Finance extends MY_Controller {
 								<div id='formBillDas' class='form-group'>
 									<span id='btn_addBillDas' class='glyphicon glyphicon-plus btn btn-xs btn-block btn-info'> บิลจาก DASI(FREE)</span>
 									<!-- select class='add_billdas form-control input-sm' use=false data-placeholder='เลขที่บิล'></select -->
-								</div>
-							</div>
-						</div>
-					</div>
-				</fieldset>
-			</div>
-		";
-		return $html;
-	}
-	
-	private function getfromLeasingTab55($data){
-		$html = "
-			<div class='tab-pane' name='tab55' style='height:calc(100vh - 260px);overflow:auto;'>
-				<fieldset style='height:100%;'>
-					<div style='float:left;height:100%;' class='col-sm-6'>						
-						<div class='row' style='width:100%;height:100%;padding-left:30px;background-color:#269da1;'>
-							<div class='form-group col-sm-12' style='height:100%;'>
-								<span style='color:#efff14;'>ผู้ค้ำประกัน</span>
-								<div id='dataTable_fixed_ARMGAR' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='max-height:calc(100% - 50px);height:calc(100% - 30px);overflow:auto;border:1px dotted black;background-color:white;'>
-									<table id='dataTable_ARMGAR' class='table table-bordered dataTable table-hover table-secondary' id='dataTables_ARMGAR' stat='' role='grid' aria-describedby='dataTable_info' style='width:100%;line-height:10px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;' cellspacing='0'>
-										<thead class='thead-dark' style='width:100%;'>
-											<tr role='row'>
-												<th style='width:40px'>
-													<i id='add_mgar' class='btn btn-xs btn-success glyphicon glyphicon-plus' style='cursor:pointer;'> เพิ่ม  </i>
-												</th>
-												<th>ลำดับที่</th>
-												<th>รหัสผู้ค้ำ</th>
-												<th>ความสัมพันธ์</th>
-											</tr>
-										</thead>
-										<tbody style='white-space: nowrap;'></tbody>
-									</table>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div style='float:left;height:100%;' class='col-sm-6'>						
-						<div class='row' style='width:100%;height:100%;padding-left:30px;background-color:#269da1;'>
-							<div class='form-group col-sm-12' style='height:100%;'>
-								<!-- span style='color:#34dfb5;'>รายการอุปกรณ์เสริม</span> &emsp;&emsp; <span style='color:#efff14;'>บันทึกอุปกรณ์เสริมเพื่อขายรวมกับตัวรถ</span -->
-								<span style='color:#efff14;'>หลักทรัพย์ค้ำประกัน</span>
-								<div id='dataTable_fixed_AROTHGAR' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='max-height:calc(100% - 50px);height:calc(100% - 30px);overflow:auto;border:1px dotted black;background-color:white;'>
-									<table id='dataTable_AROTHGAR' class='table table-bordered dataTable table-hover table-secondary' id='dataTables_AROTHGAR' stat='' role='grid' aria-describedby='dataTable_info' style='width:100%;line-height:10px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;' cellspacing='0'>
-										<thead class='thead-dark' style='width:100%;'>
-											<tr role='row'>
-												<th style='width:40px'>
-													<i id='add_othmgar' class='btn btn-xs btn-success glyphicon glyphicon-plus' style='cursor:pointer;'> เพิ่ม  </i>
-												</th>
-												<th>ลำดับที่</th>
-												<th>รหัสหลักทรัพย์</th>
-												<th>เลขที่อ้างอิง</th>
-											</tr>
-										</thead>
-										<tbody style='white-space: nowrap;'></tbody>
-									</table>
 								</div>
 							</div>
 						</div>

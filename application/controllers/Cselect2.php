@@ -459,6 +459,8 @@ class Cselect2 extends MY_Controller {
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		$locat = $_REQUEST['locat'];
 		
+		$strno = (!isset($_REQUEST['strno']) ? '':$_REQUEST['strno']);
+		
 		$GCODE = (!isset($_REQUEST["GCODE"]) ? "" : $_REQUEST["GCODE"]);
 		$TYPE = (!isset($_REQUEST["TYPE"]) ? "" : $_REQUEST["TYPE"]);
 		$MODEL = (!isset($_REQUEST["MODEL"]) ? "" : $_REQUEST["MODEL"]);
@@ -486,12 +488,22 @@ class Cselect2 extends MY_Controller {
 			$cond .= " and STAT='".$STAT."'";
 		}
 		
+		if($strno != ""){
+			$strnolength = sizeof($strno);
+			$str = "";
+			for($i=0;$i<$strnolength;$i++){
+				if($str != ""){ $str .= ","; }
+				$str.= "'".$strno[$i]["strno"]."'";
+			}
+			$cond .= " and STRNO not in (".$str.")";
+		}
+		
 		$sql = "
 			select STRNO from {$this->MAuth->getdb('INVTRAN')}
 			where CRLOCAT = '".$locat."' collate Thai_CI_AS 
 				and STRNO='".$dataNow."' collate Thai_CI_AS
-				and FLAG='D' and isnull(CONTNO,'')='' and SDATE is null 
-				and isnull(RESVNO,'')=''
+				--and FLAG='D' and isnull(CONTNO,'')='' and SDATE is null 
+				--and isnull(RESVNO,'')=''
 			union
 			select top 20 STRNO from {$this->MAuth->getdb('INVTRAN')}
 			where CRLOCAT = '".$locat."' collate Thai_CI_AS 
@@ -612,6 +624,12 @@ class Cselect2 extends MY_Controller {
 		$query = $this->db->query($sql);
 		$row = $query->row();
 		
+		/*@@@@@@@@@@@@@@@@@@@@@@@@
+			@@ RTSL ขายปลีก
+			@@ WHSL ขายส่ง
+			@@ PMSL ขายโปรโมชั่น
+			@@ SLCP ขายแคมเปญ
+		@@@@@@@@@@@@@@@@@@@@@@@@*/
 		$sql = "
 			select SaleNo from DBFREE.dbo.SPSale 
 			where cast(left(SaleDate,4)-543 as varchar(4))+CAST(replace(right(SaleDate,5),'/','') as varchar(4))='".$sdate."'
@@ -650,7 +668,8 @@ class Cselect2 extends MY_Controller {
 			union
 			select ID,ANSTAT
 			from {$this->MAuth->getdb('ARANALYZE')}
-			where 1=1 and ID like '%".$dataSearch."%' collate Thai_CI_AS and LOCAT='".$locat."'
+			where 1=1 and ID like '%".$dataSearch."%' collate Thai_CI_AS 
+				and LOCAT='".$locat."' and isnull(CONTNO,'')=''
 			order by ID
 		";
 		//echo $sql; exit;
@@ -702,7 +721,205 @@ class Cselect2 extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getfromCUSTOMER(){
+		$html = "
+			<div class='row'>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						ชื่อ
+						<input type='text' id='cus_fname' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						สกุล
+						<input type='text' id='cus_lname' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						หมายเลขบัตร
+						<input type='text' id='cus_idno' class='form-control'>
+					</div>
+				</div>
+				
+				<div class='col-sm-12'>
+					<button id='cus_search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
+				</div>
+				
+				<div id='cus_result' class='col-sm-12'></div>
+			</div>
+		";
+		
+		echo json_encode(array("html"=>$html));
+	}
 	
+	function getResultCUSTOMER(){
+		$fname = $_POST['fname'];
+		$lname = $_POST['lname'];
+		$idno  = $_POST['idno'];
+		
+		$cond = "";
+		if($fname != ""){
+			$cond .= " and a.NAME1 like '%".$fname."%'";
+		}
+		if($lname != ""){
+			$cond .= " and a.NAME2 like '%".$lname."%'";
+		}
+		if($idno != ""){
+			$cond .= " and a.IDNo like '%".$idno."%'";
+		}
+		
+		
+		$sql = "
+			select top 100 a.CUSCOD,a.SNAM+a.NAME1+' '+a.NAME2 as CUSNAME,a.GRADE
+				,case when a.GRADE in ('F','FF') then 'F' 
+					when a.GRADE not in (select GRDCOD from SETGRADCUS) then 'F'
+					else '' end GRADESTAT
+				,a.SNAM+a.NAME1+' '+a.NAME2+' ('+a.CUSCOD+')'+'-'+a.GRADE as CUSNAMES
+				,1 as ADDRNO
+				,(
+					select '('+aa.ADDRNO+') '+aa.ADDR1+' '+aa.ADDR2+' ต.'+aa.TUMB
+						+' อ.'+bb.AUMPDES+' จ.'+cc.PROVDES+' '+aa.ZIP as ADDRNODetails 			
+					from {$this->MAuth->getdb('CUSTADDR')} aa
+					left join {$this->MAuth->getdb('SETAUMP')} bb on aa.AUMPCOD=bb.AUMPCOD
+					left join {$this->MAuth->getdb('SETPROV')} cc on bb.PROVCOD=cc.PROVCOD
+					where aa.CUSCOD=a.CUSCOD and aa.ADDRNO=1
+				) as ADDRDES
+			from {$this->MAuth->getdb('CUSTMAST')} a 
+			where 1=1 ".$cond."
+			order by CUSCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .= "
+					<tr style='".($row->GRADESTAT == 'F' ? "color:#aaa;":"")."'>
+						<td style='width:40px;'>
+							<i class='
+								".($row->GRADESTAT == 'F' ? "":"CUSDetails")."
+								".($row->GRADESTAT == 'F' ? "btn-default":"btn-warning")."
+								btn btn-xs glyphicon glyphicon-zoom-in' 
+								CUSCOD='".$row->CUSCOD."'
+								CUSNAMES='".$row->CUSNAMES."' 
+								ADDRNO='".$row->ADDRNO."' 
+								ADDRDES='".$row->ADDRDES."' 
+								style='cursor:pointer;".($row->GRADESTAT == 'F' ? "color:#ddd;":"")."'> เลือก  </i>
+						</td>
+						<td style='vertical-align:middle;'>".$row->CUSCOD."</td>
+						<td style='vertical-align:middle;'>".$row->CUSNAME."</td>
+						<td style='vertical-align:middle;'>".$row->GRADE."</td>
+					</tr>
+				";
+			}
+		}
+		
+		$html = "
+			<div>
+				<table class='table'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>รหัสลูกค้า</th>
+							<th>ชื่อ-สกุล</th>
+							<th>เกรด</th>
+						</tr>
+					</thead>
+					<tbody>
+						".$html."
+					</tbody>
+				</table>
+			</div>
+		";
+		
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	
+	function getGROUPCUS(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select ARGCOD,'('+ARGCOD+') '+ARGDES ARGDES from {$this->MAuth->getdb('ARGROUP')}
+			where 1=1 and ARGCOD='".$dataNow."' collate Thai_CI_AS
+				
+			union
+			select top 20 ARGCOD,'('+ARGCOD+') '+ARGDES ARGDES from {$this->MAuth->getdb('ARGROUP')}
+			where 1=1 and '('+ARGCOD+') '+ARGDES like '".$dataSearch."%' collate Thai_CI_AS 
+			order by ARGCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->ARGCOD), 'text'=>str_replace(chr(0),'',$row->ARGDES)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getAUMP(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$PROVCOD = (!isset($_REQUEST["PROVCOD"]) ? "" : $_REQUEST["PROVCOD"]);
+		
+		$sql = "
+			select AUMPCOD,'('+AUMPCOD+') '+AUMPDES AUMPDES from {$this->MAuth->getdb('SETAUMP')}
+			where 1=1 and AUMPCOD='".$dataNow."' collate Thai_CI_AS
+				
+			union
+			select top 20 AUMPCOD,'('+AUMPCOD+') '+AUMPDES AUMPDES from {$this->MAuth->getdb('SETAUMP')}
+			where 1=1 and '('+AUMPCOD+') '+AUMPDES like '%".$dataSearch."%' collate Thai_CI_AS 
+				".($PROVCOD == ""?"":" and PROVCOD='".$PROVCOD."'")."
+			order by AUMPCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->AUMPCOD), 'text'=>str_replace(chr(0),'',$row->AUMPDES)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getPROV(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select PROVCOD,'('+PROVCOD+') '+PROVDES PROVDES from {$this->MAuth->getdb('SETPROV')}
+			where 1=1 and PROVCOD='".$dataNow."' collate Thai_CI_AS
+				
+			union
+			select top 20 PROVCOD,'('+PROVCOD+') '+PROVDES as PROVDES from {$this->MAuth->getdb('SETPROV')}
+			where 1=1 and '('+PROVCOD+') '+PROVDES like '%".$dataSearch."%' collate Thai_CI_AS 
+			order by PROVCOD
+		";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->PROVCOD), 'text'=>str_replace(chr(0),'',$row->PROVDES)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
 	
 }
 

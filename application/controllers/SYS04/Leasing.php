@@ -40,7 +40,7 @@ class Leasing extends MY_Controller {
 						<div class=' col-sm-2'>	
 							<div class='form-group'>
 								วันที่ทำสัญญา
-								<input type='text' id='SDATEFRM' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonth')."'>
+								<input type='text' id='SDATEFRM' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonthB1')."'>
 							</div>
 						</div>	
 						<div class=' col-sm-2'>	
@@ -192,9 +192,9 @@ class Leasing extends MY_Controller {
 					</tbody>
 				</table>
 			</div>
-			<div>
+			<!-- div>
 				<img src='".base_url("/public/images/excel.png")."'  onclick=\"tableToExcel('table-LeasingCar', 'exporttoexcell');\" style='width:25px;height:25px;cursor:pointer;'/>
-			</div>
+			</div -->
 		";
 		
 		/*
@@ -577,9 +577,9 @@ class Leasing extends MY_Controller {
 					<input type='button' id='btnLock' class='btn btn-xs btn-info' style='width:100px;' value='Lock สัญญา' disabled>
 				</div>
 				<div class='col-sm-6 text-right'>
-					<button id='add_save' class='btn btn-xs btn-primary' style='width:100px;'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
 					<br>
 					<button id='add_delete' class='btn btn-xs btn-danger' style='width:100px;'><span class='glyphicon glyphicon-trash'> ลบ</span></button>
+					<button id='add_save' class='btn btn-xs btn-primary' style='width:100px;'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
 				</div>
 			</div>
 		";
@@ -678,6 +678,16 @@ class Leasing extends MY_Controller {
 										วิธีชำระค่างวด
 										<select id='add_paydue' class='form-control input-sm' data-placeholder='วิธีชำระค่างวด'>
 											<option value='".$data["PAYCODE"]."' selected>".$data["PAYDESC"]."</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<div class='row'>	
+								<div class=' col-sm-4'>	
+									<div class='form-group'>
+										กิจกรรมการขาย
+										<select id='add_acticod' class='form-control input-sm' data-placeholder='กิจกรรมการขาย'>
+											<option value='".$data["ACTICOD"]."' selected>".$data["ACTIDES"]."</option>
 										</select>
 									</div>
 								</div>
@@ -925,14 +935,6 @@ class Leasing extends MY_Controller {
 									<input type='text' id='add_agent' class='form-control input-sm' placeholder='ค่านายหน้าขาย' >
 								</div>
 							</div>
-							<div class=' col-sm-3'>	
-								<div class='form-group'>
-									กิจกรรมการขาย
-									<select id='add_acticod' class='form-control input-sm' data-placeholder='กิจกรรมการขาย'>
-										<option value='".$data["ACTICOD"]."' selected>".$data["ACTIDES"]."</option>
-									</select>
-								</div>
-							</div>
 							<div class='add_nextlastmonth' class=' col-sm-6'>	
 								<div class='form-group'>
 									<input id='add_nextlastmonth' class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' value='ต้องการให้งวดถัดไปเป็นสิ้นเดือน'  >
@@ -1035,7 +1037,7 @@ class Leasing extends MY_Controller {
 							<div class='2 col-sm-12'>	
 								<div class='form-group'>
 									หมายเหตุ
-									<textarea type='text' id='add_comments' class='form-control input-sm' placeholder='หมายเหตุ' ></textarea>
+									<textarea type='text' id='add_comments' class='form-control input-sm' placeholder='หมายเหตุ'  rows=4 style='resize:vertical;'></textarea>
 								</div>
 							</div>
 						</div>
@@ -1507,6 +1509,15 @@ class Leasing extends MY_Controller {
 				,a.RESPAY
 				,a.SMPAY
 				,c.CRLOCAT
+				,1 as ADDRNO
+				,(
+					select '('+aa.ADDRNO+') '+aa.ADDR1+' '+aa.ADDR2+' ต.'+aa.TUMB
+						+' อ.'+bb.AUMPDES+' จ.'+cc.PROVDES+' '+aa.ZIP as ADDRNODetails 			
+					from {$this->MAuth->getdb('CUSTADDR')} aa
+					left join {$this->MAuth->getdb('SETAUMP')} bb on aa.AUMPCOD=bb.AUMPCOD
+					left join {$this->MAuth->getdb('SETPROV')} cc on bb.PROVCOD=cc.PROVCOD
+					where aa.CUSCOD=a.CUSCOD and aa.ADDRNO=1
+				) as ADDRDES
 			from {$this->MAuth->getdb('ARRESV')} a
 			left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD
 			left join {$this->MAuth->getdb('INVTRAN')} c on a.STRNO=c.STRNO and c.FLAG='D'
@@ -1521,6 +1532,8 @@ class Leasing extends MY_Controller {
 				$response["LOCAT"]   = $row->LOCAT;
 				$response["CUSCOD"]  = $row->CUSCOD;
 				$response["CUSNAME"] = $row->CUSNAME;
+				$response["ADDRNO"]  = $row->ADDRNO;
+				$response["ADDRDES"] = $row->ADDRDES;
 				$response["GRADE"]   = $row->GRADE;
 				$response["STRNO"]   = $row->STRNO;
 				$response["SMCHQ"]   = str_replace(",","",number_format($row->SMCHQ,2));
@@ -1531,6 +1544,8 @@ class Leasing extends MY_Controller {
 			$response["LOCAT"]   = "";
 			$response["CUSCOD"]  = "";
 			$response["CUSNAME"] = "";
+			$response["ADDRNO"]  = "";
+			$response["ADDRDES"] = "";
 			$response["GRADE"] 	 = "";
 			$response["STRNO"] 	 = "";
 			$response["SMCHQ"]   = "";
@@ -3406,70 +3421,6 @@ class Leasing extends MY_Controller {
 					insert into #leasingTemp select 'E' as id,'','บันทึกไม่สำเร็จ เนื่องจากเลขที่สัญญา '+@CONTNO+' มีการบันทึก '+@FORDESC+' แล้ว กรณีมีการคำนวนค่างวดใหม่จะต้องไม่มีการรับชำระค่าใดๆ ทั้งสิ้น' as msg;
 					return;
 				end
-				else
-				begin 
-					update {$this->MAuth->getdb('ARMAST')}
-					set 
-					where CONTNO=@CONTNO
-					
-					insert into {$this->MAuth->getdb('ARMAST')} (
-					
-					[STDPRC],[DSCPRC],[KEYINPRC],[NPRICE]
-					,[VATPRC],[TOTPRC],[NPAYRES],[VATPRES],[TOTPRES]
-					,[BALANC],[KEYINDWN],[NDAWN],[VATDWN],[TOTDWN]
-					,[NKANG],[VKANG],[TKANG],[PAYDWN],[SMPAY]
-					,[SMCHQ],[NCARCST]
-					
-					,[VCARCST],[TCARCST],[TAXNO],[TAXDT],[EXP_PRD]
-					,[EXP_AMT],[EXP_FRM],[EXP_TO],[LPAYD],[LPAYA]
-					,[YSTAT],[YDATE],[T_NOPAY],[T_UPAY],[KEYINFUPAY]
-					,[N_FUPAY],[V_FUPAY],[T_FUPAY],[KEYINUPAY],[N_UPAY]
-					,[V_UPAY],[TOT_UPAY],[LPAYTOT],[N_LUPAY],[V_LUPAY]
-					,[T_LUPAY],[FDATE],[LDATE],[CLOSAR],[ISSUNO]
-					,[ISSUDT],[KEYINCSHPRC],[NCSHPRC],[VCSHPRC],[TCSHPRC]
-					,[NPROFIT],[CHECKER],[BILLCOLL],[HLDNO],[INTRT]
-					,[EFRATE],[DELYRT],[DLDAY],[FLRATE],[FLSTOPV]
-					,[DTSTOPV],[CONFIR],[CONFIRID],[CONFIRDT],[MEMO1]
-					,[FLCANCL],[USERID],[INPDT],[DELID],[DELDT]
-					,[POSTDT],[PAYTYP],[CALINT],[CALDSC],[APPVNO]
-					,[LUPDINT],[COMEXT],[COMOPT],[COMOTH],[GRDCOD]
-					,[RECOMCOD],[ACTICOD],[CLOSDT],[EXP_DAY],[PROF_METHOD]
-					,[EFFRT_AFADJ],[STOPPROF_DT],[NETFREE],[VATFREE],[TOTFREE]
-					,[ITEMNPRC],[ITEMVPRC],[ITEMTPRC],[LIMITF],[INSUR]
-					,[ACT],[CAMPCODE]
-				) values (
-					
-					
-					".$arrs['stdprc'].",".$arrs["dscprc"].",".$arrs['keyinprc'].",".$arrs['nprice']."
-					,".$arrs["vatprc"].",".$arrs["totprc"].",".$arrs["npayres"].",".$arrs["vatpres"].",".$arrs["totpres"]."
-					,".$arrs["balanc"].",".$arrs["keyindwn"].",".$arrs["ndawn"].",".$arrs["vatdwn"].",".$arrs["totdwn"]."
-					,".$arrs["nkang"].",".$arrs["vkang"].",".$arrs["tkang"].",".$arrs["paydwn"].",".$arrs["smpay"]."
-					,".$arrs["smchq"].",".$arrs["ncarcst"]."
-					
-					,".$arrs["vcarcst"].",".$arrs["tcarcst"].",@TAXNO,@TAXDT,0
-					,0,0,0,'".$arrs['sdate']."',0
-					,'N',null,".$arrs['nopay'].",".$arrs['upay'].",".$arrs["keyinfupay"]."
-					,".$arrs["n_fupay"].",".$arrs["v_fupay"].",".$arrs["t_fupay"].",".$arrs["keyinupay"].",".$arrs["n_upay"]."
-					,".$arrs["v_upay"].",".$arrs["tot_upay"].",".$arrs["lpaytot"].",".$arrs["n_lupay"].",".$arrs["v_lupay"]."
-					,".$arrs["t_lupay"].",'".$arrs["duefirst"]."','".$arrs["duelast"]."','','".$arrs["release"]."'
-					,'".$arrs['released']."',".$arrs["keyincshprc"].",".$arrs["ncshprc"].",".$arrs["vcshprc"].",".$arrs["tcshprc"]."
-					,".$arrs["interest"].",'".$arrs['checker']."','".$arrs['billcoll']."',0,".$arrs["intrt"]."
-					,".$arrs["efrate"].",".$arrs["delyrt"].",".$arrs["dlday"].",0.0000,''
-					,null,'','',null,'".$arrs["comments"]."'
-					,'','".$this->sess["USERID"]."',getdate(),'',null
-					,null,'".$arrs["paydue"]."',".$arrs["calint"].",".$arrs["discfm"].",'".$arrs["approve"]."'
-					,null,".$arrs["comext"].",".$arrs["comopt"].",".$arrs["comoth"].",''
-					,'".$arrs["recomcod"]."','".$arrs["acticod"]."',null,0,''
-					,'0.000000',null,0.00,0.00,0.00
-					,0.00,0.00,0.00,0.00,'N'
-					,'N',''
-				);
-					
-					/* ตารางผ่อน  ARPAY */
-					delete from {$this->MAuth->getdb('ARPAY')} where CONTNO=@CONTNO
-					".$arrs["insertARPAY"]."
-				end
-				
 				
 				update {$this->MAuth->getdb('ARMAST')}
 				set PAYTYP='".$arrs["paydue"]."'
@@ -3487,35 +3438,26 @@ class Leasing extends MY_Controller {
 					,CALINT='".$arrs["calint"]."'
 					,CALDSC='".$arrs["discfm"]."'
 					,MEMO1='".$arrs["comments"]."'
+				where CONTNO=@CONTNO;
+				
+				/*อุปกรณ์เสริมรวมราคารถ ARINOPT */
+				DISABLE Trigger ALL ON {$this->MAuth->getdb('ARINOPT')};
+				update b 
+				set b.ONHAND = b.ONHAND+a.QTY
+				from {$this->MAuth->getdb('ARINOPT')} a
+				left join {$this->MAuth->getdb('OPTMAST')} b on a.LOCAT=b.LOCAT and a.OPTCODE=b.OPTCODE
 				where CONTNO=@CONTNO
 				
-				/* คนค้ำประกัน  ARMGAR */
-					delete {$this->MAuth->getdb('ARMGAR')} where CONTNO=@CONTNO;
-					".$arrs["insertARMGAR"]."
-					
-				/* หลักทรัพย์ประกัน  AROTHGAR */
-					delete {$this->MAuth->getdb('AROTHGAR')} where CONTNO=@CONTNO;
-					".$arrs["insertAROTHGAR"]."	
-					
-					
-				/*อุปกรณ์เสริมรวมราคารถ ARINOPT */
-					DISABLE Trigger ALL ON {$this->MAuth->getdb('ARINOPT')};
-					update b 
-					set b.ONHAND = b.ONHAND+a.QTY
-					from {$this->MAuth->getdb('ARINOPT')} a
-					left join {$this->MAuth->getdb('OPTMAST')} b on a.LOCAT=b.LOCAT and a.OPTCODE=b.OPTCODE
-					where CONTNO=@CONTNO
-					
-					delete from {$this->MAuth->getdb('ARINOPT')} where CONTNO=@CONTNO;
-					
-					".$arrs['insertOpt']."					
-					ENABLE Trigger ALL ON {$this->MAuth->getdb('ARINOPT')};
+				delete from {$this->MAuth->getdb('ARINOPT')} where CONTNO=@CONTNO;
+				
+				".$arrs['insertOpt']."					
+				ENABLE Trigger ALL ON {$this->MAuth->getdb('ARINOPT')};
 					
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','SYS04::บันทึกขายผ่อน (แก้ไข)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 
-				insert into #leasingTemp select 'S',@CONTNO,'บันทึกรายการขายสำเร็จ เลขที่สัญญา '+@CONTNO;
+				insert into #leasingTemp select 'S',@CONTNO,'แก้ไขรายการขายสำเร็จ เลขที่สัญญา '+@CONTNO;
 				commit tran leasingTran;
 			end try
 			begin catch
@@ -4294,6 +4236,7 @@ class Leasing extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				foreach($row as $key => $val){
+					$data["das"] = "";
 					switch($key){
 						case 'SDATE': $data[$key] = $this->Convertdate(2,$val); break;
 						case 'SMPAY': $data[$key] = number_format($val,2); break;

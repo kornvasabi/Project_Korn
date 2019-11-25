@@ -25,12 +25,11 @@ class ReserveCar extends MY_Controller {
 	
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
-		//print_r($claim); exit;
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
-		//style='height:calc(100vh - 132px);overflow:auto;background-color:white;'
+		
 		$html = "
 			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
-				<div class='divcondition col-sm-12' style='overflow:auto;'>					
+				<div>
 					<div class='row'>
 						<div class='col-xs-2 col-sm-2'>	
 							<div class='form-group'>
@@ -41,7 +40,7 @@ class ReserveCar extends MY_Controller {
 						<div class='col-xs-2 col-sm-2'>	
 							<div class='form-group'>
 								วันที่จอง
-								<input type='text' id='SRESVDT' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonth')."'>
+								<input type='text' id='SRESVDT' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonthB1')."'>
 							</div>
 						</div>	
 						<div class='col-xs-2 col-sm-2'>	
@@ -137,16 +136,17 @@ class ReserveCar extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$html .= "
-					<tr>
-						<td>
+					<tr class='trow' seq=".$NRow.">
+						<td class='getit resvnoClick' seq=".$NRow++."  RESVNO='".$row->RESVNO."' style='cursor: pointer; text-align: center; background-color: rgb(255, 255, 255);'><b>รายละเอียด</b></td>
+						<!--td>
 							<i class='resvnoClick btn btn-xs btn-success glyphicon glyphicon-zoom-in' RESVNO='".$row->RESVNO."' style='cursor:pointer;'> รายละเอียด  </i>
-						</td>
+						</td -->
 						<td>".$row->RESVNO."</td>
 						<td>".$row->STRNO."</td>
 						<td>".$this->Convertdate(2,$row->RESVDT)."</td>
 						<td>".$row->NAME."</td>
 						<td>".number_format($row->RESPAY,2)."</td>
-						<td>".number_format($row->CWO,2)."</td>
+						<td ".($row->CWO == 0 ? "":"style='color:red;'").">".number_format($row->CWO,2)."</td>
 						<td>".$this->Convertdate(2,$row->INPDT)." ".$row->INPTM."</td>
 					</tr>
 				";
@@ -175,7 +175,7 @@ class ReserveCar extends MY_Controller {
 							<th style='vertical-align:middle;'>วันที่ทำรายการ</th>
 						</tr>
 					</thead>	
-					<tbody>						
+					<tbody>
 						".$html."
 					</tbody>
 				</table>
@@ -195,9 +195,11 @@ class ReserveCar extends MY_Controller {
 		$arrs["fRESVDT"] 	= $this->today('today');
 		$arrs["fLOCAT"] 	= "<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>";
 		$arrs["fCUSCOD"] 	= "";
+		$arrs["CUSCOD"] 	= "";
+		$arrs["CUSNAME"] 	= "";
 		$arrs["fRECVCD"] 	= "<option value='".$this->sess["USERID"]."'>".$this->sess["name"]." (".$this->sess["USERID"].")</option>";
 		$arrs["fSALCOD"] 	= "<option value='".$this->sess["USERID"]."'>".$this->sess["name"]." (".$this->sess["USERID"].")</option>";
-		$arrs["fVATRT"] 	= "";
+		$arrs["fVATRT"] 	= "0.00";
 		$arrs["fTAXNO"] 	= "";
 		$arrs["fTAXDT"] 	= "";
 		$arrs["fSTRNO"] 	= "";
@@ -252,6 +254,8 @@ class ReserveCar extends MY_Controller {
 				$arrs["fRESVDT"] 	= $this->Convertdate(2,$row->RESVDT);
 				$arrs["fLOCAT"]  	= "<option value='".$row->LOCAT."'>".$row->LOCAT."</option>";
 				$arrs["fCUSCOD"] 	= "<option value='".$row->CUSCOD."'>".$row->CUSNAME."</option>";
+				$arrs["CUSCOD"] 	= $row->CUSCOD;
+				$arrs["CUSNAME"] 	= $row->CUSNAME;
 				$arrs["fRECVCD"] 	= "<option value='".$row->RECVCD."'>".$row->RECVCDNAME."</option>";
 				$arrs["fSALCOD"] 	= "<option value='".$row->SALCOD."'>".$row->SALCODNAME."</option>";
 				$arrs["fVATRT"]  	= number_format($row->VATRT,2);
@@ -278,7 +282,23 @@ class ReserveCar extends MY_Controller {
 				$arrs["fMEMO1"]  	= $row->MEMO1;				
 			}
 		}
-			
+		/*
+		else{
+			$sql = "
+				select top 1 * from {$this->MAuth->getdb('VATMAST')} 
+				where getdate() between FRMDATE and TODATE
+				order by FRMDATE desc
+			";
+			$query = $this->db->query($sql);
+		
+			if($query->row()){
+				foreach($query->result() as $row){
+					$arrs["fVATRT"] = number_format($row->VATRT,2);
+				}
+			}
+		}
+		*/
+		
 		$html = "
 			<h3 class='text-primary'>ผู้เช่าซื้อ</h3>
 			<div class='row col-sm-12' style='border:1px dotted #aaa;'>
@@ -305,9 +325,14 @@ class ReserveCar extends MY_Controller {
 				<div class='col-sm-3'>	
 					<div class='form-group'>
 						ชื่อสกุล-ลูกค้า
-						<select id='fCUSCOD' class='form-control input-sm'>
-							{$arrs["fCUSCOD"]}
-						</select>
+						<!-- select id='fCUSCOD' class='form-control input-sm'>{$arrs["fCUSCOD"]}</select -->
+						<div class='input-group'>
+						   <input type='text' id='fCUSCOD' CUSCOD='{$arrs["CUSCOD"]}' class='form-control input-sm' placeholder='ลูกค้า'  value='{$arrs["CUSNAME"]}'>
+						   <span class='input-group-btn'>
+						   <button id='fCUSCOD_removed' class='btn btn-danger btn-sm' type='button'>
+								<span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button>
+						   </span>
+						</div>
 					</div>
 				</div>
 				<div class='col-sm-3'>	
@@ -349,14 +374,6 @@ class ReserveCar extends MY_Controller {
 			
 			<h3 class='text-primary'>ข้อมูลรถ</h3>
 			<div id='datepkposition' class='row col-sm-12' style='border:1px dotted #aaa;'>
-				<div class='col-sm-3'>	
-					<div class='form-group'>
-						เลขตัวถัง
-						<select id='fSTRNO' class='form-control input-sm'>
-							{$arrs["fSTRNO"]}
-						</select>
-					</div>
-				</div>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
 						กิจกรรมการขาย
@@ -464,18 +481,38 @@ class ReserveCar extends MY_Controller {
 						<input type='text' id='fSMOWE' class='form-control input-sm jzAllowNumber' value='{$arrs["fSMOWE"]}' disabled>
 					</div>
 				</div>
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						เลขตัวถัง
+						<select id='fSTRNO' class='form-control input-sm'>
+							{$arrs["fSTRNO"]}
+						</select>
+					</div>
+				</div>
+				
 				<div class='col-sm-6'>	
 					<div class='form-group'>
 						หมายเหตุ
 						<textarea id='fMEMO1' class='form-control input-sm' rows='3' style='resize:vertical;'>{$arrs["fMEMO1"]}</textarea>
 					</div>
 				</div>
+				
+				<div class='col-sm-3 col-sm-offset-3'>	
+					<div class='form-group'>
+						หมายเหตุ
+						<textarea id='fMEMO1' class='form-control input-sm' rows='3' style='resize:vertical;'>{$arrs["fMEMO1"]}</textarea>
+					</div>
+				</div>
+				
 			</div>
 			
 			<div class='col-sm-2 col-sm-offset-8'>
 				<br/><br/>
 				<button id='btnDelete' class='btn btn-danger btn-block'>
 					<span class='glyphicon glyphicon-trash'> ลบ</span>
+				</button>
+				<button id='btnClear' class='btn btn-defualt btn-block'>
+					<span class='glyphicon glyphicon-refresh'> clear</span>
 				</button>
 				<br/>
 			</div>

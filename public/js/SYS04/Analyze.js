@@ -106,109 +106,142 @@ $("#btnt1search").click(function(){
 								$("#approve").hide();
 							}
 							
+							$('.cushistory').click(function(){
+								dataToPost = new Object();
+								dataToPost.cuscod = $(this).attr('cuscod');
+								
+								$.ajax({
+									url:'../SYS04/Analyze/getCusHistory',
+									data: dataToPost,
+									type: 'POST',
+									dataType: 'json',
+									beforeSend: function(){
+										$("#approve").attr("disabled",true);
+										$("#back").attr("disabled",true);
+									},
+									success: function(data){
+										Lobibox.window({
+											title: 'ประวัติ',
+											width: 700,
+											//height: $(window).height(),
+											content: data.html,
+											draggable: true,
+											closeOnEsc: true,
+											shown:function(){
+												fn_datatables(data.tableName,1,100,'YES');
+											}
+										});
+									}
+								});
+							});
+							
 							var JDapprove = null;
 							$("#approve").click(function(){
-								var __form = '<div class="row"><div class="col-sm-12"><div class="form-group">';
-								__form += 'รายการอนุมัติ <select id="APPTYPE" class="form-control"><option value="A">อนุมัติ</option><option value="N">ไม่อนุมัติ</option></select>';
-								__form += 'ผลการวิเคราะห์ <textarea id="APPCOMMENT" class="form-control" rows="10" style="color:green;"></textarea>';
-								__form += '</div></div></div>';
-								
-								$("#approve").attr("disabled",true);
-								$("#back").attr("disabled",true);
-								
-								Lobibox.confirm({
-									title: 'ยืนยันการทำรายการ',
-									draggable: true,
-									iconClass: false,
-									closeOnEsc: false,
-									closeButton: false,
-									msg: __form,
-									buttons: {
-										ok : {
-											'class': 'btn btn-primary glyphicon glyphicon-ok',
-											text: ' ยืนยันการทำรายการ',
-											closeOnClick: false,
-										},
-										cancel : {
-											'class': 'btn btn-danger glyphicon glyphicon-remove',
-											text: ' ยกเลิก',
-											closeOnClick: true
-										},
+								$.ajax({
+									url:'../SYS04/Analyze/formApproved',
+									data:'',
+									type:'POST',
+									dataType:'json',
+									beforeSend: function(){
+										$("#approve").attr("disabled",true);
+										$("#back").attr("disabled",true);
 									},
-									shown: function($this){
-										$(this).css({
-											'background': 'rgba(0, 0, 0, 0) url("../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png") repeat scroll 0% 0%'
-										});
-										
-										$("#APPTYPE").select2({ 
-											placeholder: 'เลือก',
-											width:'100%',
-											dropdownParent: $('#APPTYPE').parent().parent(),
-											minimumResultsForSearch: -1
-										});
-										
-										$("#APPTYPE").on("select2:select",function(){
-											if($(this).find(":selected").val() == "A"){
-												$("#APPTYPE ,#APPCOMMENT").css({
-													'color':'green'
-												});
-											}else{
-												$("#APPTYPE ,#APPCOMMENT").css({
-													'color':'red'
-												});
-											}
-										});	
-									},
-									callback: function(lobibox, type){
-										if (type === 'ok'){
-											if($("#APPTYPE").find(":selected").val() == ""){
-												Lobibox.notify('warning', {
-													title: 'แจ้งเตือน',
-													size: 'mini',
+									success: function(data){
+										Lobibox.confirm({
+											title: 'ยืนยันการทำรายการ',
+											draggable: true,
+											iconClass: false,
+											closeOnEsc: false,
+											closeButton: false,
+											msg: data.html,
+											buttons: {
+												ok : {
+													'class': 'btn btn-primary glyphicon glyphicon-ok',
+													text: ' ยืนยันการทำรายการ',
 													closeOnClick: false,
-													delay: 5000,
-													pauseDelayOnHover: true,
-													continueDelayOnInactiveTab: false,
-													icon: true,
-													messageHeight: '90vh',
-													msg: "คุณยังไม่ได้ระบุรายการอนุมัติ"
+												},
+												cancel : {
+													'class': 'btn btn-danger glyphicon glyphicon-remove',
+													text: ' ยกเลิก',
+													closeOnClick: true
+												},
+											},
+											shown: function($this){
+												$(this).css({
+													'background': 'rgba(0, 0, 0, 0) url("../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png") repeat scroll 0% 0%'
 												});
-											}else if($("#APPCOMMENT").val() == ""){
-												Lobibox.notify('warning', {
-													title: 'แจ้งเตือน',
-													size: 'mini',
-													closeOnClick: false,
-													delay: 5000,
-													pauseDelayOnHover: true,
-													continueDelayOnInactiveTab: false,
-													icon: true,
-													messageHeight: '90vh',
-													msg: "คุณยังไม่ได้ระบุผลการวิเคราห์"
-												});
-											}else{
-												dataToPost.apptype = $("#APPTYPE").find(":selected").val();
-												dataToPost.comment = $("#APPCOMMENT").val();
 												
-												$('#loadding').fadeIn(500);
-												JDapprove = $.ajax({
-													url:'../SYS04/Analyze/approved',
-													data: dataToPost,
-													type: 'POST',
-													dataType: 'json',
-													success: function(data){
-														JDapprove = null;
-														$('#loadding').fadeOut(200);
-														lobibox.destroy();
-													},
-													beforeSend: function(){
-														if(JDapprove !== null){ JDapprove.abort(); }
-													}
+												$("#APPTYPE").select2({ 
+													placeholder: 'เลือก',
+													width:'100%',
+													dropdownParent: $('#APPTYPE').parent().parent(),
+													minimumResultsForSearch: -1
 												});
+												
+												$("#APPTYPE").on("select2:select",function(){
+													if($(this).find(":selected").val() == "A"){
+														$("#APPTYPE ,#APPCOMMENT").css({
+															'color':'green'
+														});
+													}else{
+														$("#APPTYPE ,#APPCOMMENT").css({
+															'color':'red'
+														});
+													}
+												});	
+											},
+											callback: function(lobibox, type){
+												if (type === 'ok'){
+													if($("#APPTYPE").find(":selected").val() == ""){
+														Lobibox.notify('warning', {
+															title: 'แจ้งเตือน',
+															size: 'mini',
+															closeOnClick: false,
+															delay: 5000,
+															pauseDelayOnHover: true,
+															continueDelayOnInactiveTab: false,
+															icon: true,
+															messageHeight: '90vh',
+															msg: "คุณยังไม่ได้ระบุรายการอนุมัติ"
+														});
+													}else if($("#APPCOMMENT").val() == ""){
+														Lobibox.notify('warning', {
+															title: 'แจ้งเตือน',
+															size: 'mini',
+															closeOnClick: false,
+															delay: 5000,
+															pauseDelayOnHover: true,
+															continueDelayOnInactiveTab: false,
+															icon: true,
+															messageHeight: '90vh',
+															msg: "คุณยังไม่ได้ระบุผลการวิเคราห์"
+														});
+													}else{
+														dataToPost.apptype = $("#APPTYPE").find(":selected").val();
+														dataToPost.comment = $("#APPCOMMENT").val();
+														
+														$('#loadding').fadeIn(500);
+														JDapprove = $.ajax({
+															url:'../SYS04/Analyze/approved',
+															data: dataToPost,
+															type: 'POST',
+															dataType: 'json',
+															success: function(data){
+																JDapprove = null;
+																$('#loadding').fadeOut(200);
+																lobibox.destroy();
+															},
+															beforeSend: function(){
+																if(JDapprove !== null){ JDapprove.abort(); }
+															}
+														});
+													}
+												}else{
+													$("#approve").attr("disabled",false);
+													$("#back").attr("disabled",false);
+												}
 											}
-										}else{
-											$("#approve").attr("disabled",false);
-											$("#back").attr("disabled",false);
-										}
+										});
 									}
 								});
 							});
@@ -839,22 +872,24 @@ function fnload($thisForm){
 					$('#idnoAge').attr("disabled",true);
 				}
 				
-				if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
-					resvnull();
-					Lobibox.notify('error', {
-						title: 'แจ้งเตือน',
-						size: 'mini',
-						closeOnClick: false,
-						delay: false,
-						pauseDelayOnHover: true,
-						continueDelayOnInactiveTab: false,
-						icon: true,
-						messageHeight: '90vh',
-						msg: $("#cuscod").find(':selected').text()+"<br>ผู้เช่าซื้ออยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
-					});
+			
+				// กรณีติด F ให้บันทึกข้อมูลมาได้ แต่ฝ่ายวิเคราะห์ จะมีหน้าที่ตรวจสอบอีกทีว่าจะอนุมัติขายหรือไม่
+				// if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
+					// resvnull();
+					// Lobibox.notify('error', {
+						// title: 'แจ้งเตือน',
+						// size: 'mini',
+						// closeOnClick: false,
+						// delay: false,
+						// pauseDelayOnHover: true,
+						// continueDelayOnInactiveTab: false,
+						// icon: true,
+						// messageHeight: '90vh',
+						// msg: $("#cuscod").find(':selected').text()+"<br>ผู้เช่าซื้ออยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
+					// });
 					
-					$('#cuscod').val(null).trigger('change');
-				}
+					// $('#cuscod').val(null).trigger('change');
+				// }
 				
 				//เช่าซื้อภายใน 7 วัน
 				if(data.html["ARM"] > 0){
@@ -959,25 +994,26 @@ function fnload($thisForm){
 						$('#is1_idnoAge').attr("disabled",true);
 					}
 					
-					if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
-						$msg = $("#is1_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 1 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์";
-						clearIS1_CUSCOD($msg,$obj);	
-						/*
-						Lobibox.notify('error', {
-							title: 'แจ้งเตือน',
-							size: 'mini',
-							closeOnClick: false,
-							delay: false,
-							pauseDelayOnHover: true,
-							continueDelayOnInactiveTab: false,
-							icon: true,
-							messageHeight: '90vh',
-							msg: $("#is1_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 1 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
-						});
+					//กรณีติด F ให้บันทึกข้อมูลมาได้ แต่ฝ่ายวิเคราะห์ จะมีหน้าที่ตรวจสอบอีกทีว่าจะอนุมัติขายหรือไม่
+					// if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
+						// $msg = $("#is1_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 1 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์";
+						// clearIS1_CUSCOD($msg,$obj);	
+						// /*
+						// Lobibox.notify('error', {
+							// title: 'แจ้งเตือน',
+							// size: 'mini',
+							// closeOnClick: false,
+							// delay: false,
+							// pauseDelayOnHover: true,
+							// continueDelayOnInactiveTab: false,
+							// icon: true,
+							// messageHeight: '90vh',
+							// msg: $("#is1_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 1 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
+						// });
 						
-						$('#is1_cuscod').val(null).trigger('change');
-						*/
-					}
+						// $('#is1_cuscod').val(null).trigger('change');
+						// */
+					// }
 					
 					JDis1_cuscod = null;
 				},
@@ -1078,27 +1114,28 @@ function fnload($thisForm){
 						$('#is2_idnoAge').attr("disabled",true);
 					}
 					
-					if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
+					//กรณีติด F ให้บันทึกข้อมูลมาได้ แต่ฝ่ายวิเคราะห์ จะมีหน้าที่ตรวจสอบอีกทีว่าจะอนุมัติขายหรือไม่
+					// if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
 						
-						$msg = $("#is2_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 2 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์";
-						clearIS2_CUSCOD($msg,$obj);	
+						// $msg = $("#is2_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 2 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์";
+						// clearIS2_CUSCOD($msg,$obj);	
 						
-						/*
-						Lobibox.notify('error', {
-							title: 'แจ้งเตือน',
-							size: 'mini',
-							closeOnClick: false,
-							delay: false,
-							pauseDelayOnHover: true,
-							continueDelayOnInactiveTab: false,
-							icon: true,
-							messageHeight: '90vh',
-							msg: $("#is2_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 2 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
-						});
+						// /*
+						// Lobibox.notify('error', {
+							// title: 'แจ้งเตือน',
+							// size: 'mini',
+							// closeOnClick: false,
+							// delay: false,
+							// pauseDelayOnHover: true,
+							// continueDelayOnInactiveTab: false,
+							// icon: true,
+							// messageHeight: '90vh',
+							// msg: $("#is2_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 2 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
+						// });
 						
-						$('#is2_cuscod').val(null).trigger('change');
-						*/
-					}
+						// $('#is2_cuscod').val(null).trigger('change');
+						// */
+					// }
 					
 					JDis2_cuscod = null;
 				},
