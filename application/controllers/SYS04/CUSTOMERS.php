@@ -18,14 +18,12 @@ class CUSTOMERS extends MY_Controller {
             }
 		}
 	}
-	
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
-		
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div class='col-sm-12' style='overflow:auto;'>					
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+				<div class='col-sm-12'>					
 					<div class='row'>
 						<div class=' col-sm-2'>	
 							<div class='form-group'>
@@ -48,7 +46,7 @@ class CUSTOMERS extends MY_Controller {
 						<div class=' col-sm-2'>	
 							<div class='form-group'>
 								<br>
-								<input type='button' id='add_custmast' class='btn btn-primary btn-sm' value='เพิ่มประวัติลูกค้า' style='width:100%'>
+								<input type='button' id='add_custmast' class='btn btn-primary btn-sm' value='เพิ่ม' style='width:100%'>
 							</div>
 						</div>
 						<div id='setgroupResult' class='col-sm-12 tab1' style='height:calc(100vh - 197px);overflow:auto;background-color:#;'></div>
@@ -91,13 +89,13 @@ class CUSTOMERS extends MY_Controller {
 			foreach($query->result() as $row){
 				$html .= "
 					<tr>
-						<td><input type='button' value='รายละเอียด' class='btnDetail btn btn-xs btn-info glyphicon glyphicon-zoom-in' CUSCOD ='".str_replace(chr(0),'',$row->CUSCOD)."' style='cursor:pointer;'></td>
-						<td>".str_replace(chr(0),'',$row->CUSCOD)."</td>
-						<td>".str_replace(chr(0),'',$row->NAME1)." ".str_replace(chr(0),'',$row->NAME2)."</td>
-						<td>".str_replace(chr(0),'',$row->BIRTHDT)."</td>
-						<td>".str_replace(chr(0),'',$row->AGE)."</td>
-						<td>".str_replace(chr(0),'',$row->OCCUP)."</td>
-						<td><input type='button' class='btn btn-primary btn-sm btnshow_Addr' CUSCOD='".str_replace(chr(0),'',$row->CUSCOD)."'  value='แสดงที่อยู่'  style='width:100%'></td>
+						<td><input type='button' value='รายละเอียด' class='btnDetail btn btn-xs btn-info btn btn-cyan' CUSCOD ='".$row->CUSCOD."' style='width:100%'></td>
+						<td>".$row->CUSCOD."</td>
+						<td>".$row->NAME1." ".$row->NAME2."</td>
+						<td>".$this->dateselectshow($row->BIRTHDT)."</td>
+						<td>".$row->AGE."</td>
+						<td>".$row->OCCUP."</td>
+						<td><input type='button' class='btnshow_Addr btn btn-xs btn-info' CUSCOD='".$row->CUSCOD."'  value='แสดงที่อยู่'  style='width:100%'></td>
 					</tr>
 				";
 			}
@@ -120,7 +118,7 @@ class CUSTOMERS extends MY_Controller {
 							<th>วัน-เดือน-ปี เกิด</th>	
 							<th>อายุ</th>	
 							<th>อาชีพ</th>	
-							<th>ที่อยู่</th>	
+							<th>ที่อยู่</th>
 						</tr>
 					</thead>	
 					<tbody>
@@ -136,18 +134,22 @@ class CUSTOMERS extends MY_Controller {
 	}
 	function groupShowca(){
 		$arrs = array();
-		$arrs['CUSCOD'] = !isset($_REQUEST['CUSCOD']) ? '' : $_REQUEST['CUSCOD'];
+		$arrs['CUSCOD'] = $_POST['CUSCOD'];
+		
 		$sql ="
-            select * from {$this->MAuth->getdb('CUSTADDR')} A
-            inner join {$this->MAuth->getdb('SETAUMP')} B on A.AUMPCOD = B.AUMPCOD 
-            inner join {$this->MAuth->getdb('SETPROV')} C on B.PROVCOD = C.PROVCOD
-            where CUSCOD ='".$arrs['CUSCOD']."'
-            order by ADDRNO";
+            select A.CUSCOD,A.ADDRNO,A.ADDR1,A.ADDR2,A.TUMB
+			,A.AUMPCOD,A.PROVCOD,A.ZIP,A.TELP,A.MEMO1,A.ACPDT
+			,A.USERID,A.PICT1,A.MOOBAN,A.SOI,B.PROVCOD,B.AUMPCOD,B.AUMPDES
+			,C.PROVCOD,C.PROVDES from {$this->MAuth->getdb('CUSTADDR')} A
+			left join {$this->MAuth->getdb('SETAUMP')} B on A.AUMPCOD=B.AUMPCOD 
+			left join {$this->MAuth->getdb('SETPROV')} C on B.PROVCOD=C.PROVCOD
+			where CUSCOD='".$arrs['CUSCOD']."'
+			order by ADDRNO";
 			
 		//echo $sql ; exit;
         $query = $this->db->query($sql);
-		
 		$html = "";
+		
 		if($query->row()){
 			foreach($query->result() as $row){
 				$html .= "
@@ -171,7 +173,7 @@ class CUSTOMERS extends MY_Controller {
 		}
 		
 		$html = "
-			<div id='tbScroll' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+			<div id='tbScroll' class='col-sm-12'>
 				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered table-hover' cellspacing='0' width='100%'>
 					<thead>
 						<!-- tr>
@@ -229,29 +231,17 @@ class CUSTOMERS extends MY_Controller {
 		$arrs['ADDRNO3']    = "";
 		$arrs['MEMOADD']   	= "";
 		
-		$arrs["ADDRNO"]	  = "";
-        $arrs["ADDR1"] 	  = "";
-        $arrs["SOI"] 	  = "";
-        $arrs["ADDR2"] 	  = "";
-        $arrs["MOOBAN"]   = "";
-        $arrs["TUMB"] 	  = "";
-        $arrs["AUMPCOD"]  = "";
-        $arrs["PROVCOD"]  = "";
-        $arrs["AUMPDES"]  = "";
-        $arrs["PROVDES"]  = "";
-        $arrs["ZIP"] 	  = "";
-        $arrs["TELP"] 	  = "";
-        $arrs["MEMO2"] 	  = "";
 		
-		$sql = "select * from CUSTMAST where CUSCOD = '".$CUSCOD."' ";
+		
+		$sql = "
+			select * from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD = '".$CUSCOD."'
+		";
         $query = $this->db->query($sql);
 		
 		if($query->row()){
 			foreach($query->result() as $row){
 				$arrs['CUSCOD']     = $row->CUSCOD;
-				//$arrs['GROUP1']     = $row->GROUP1;
-				//$arrs['GRADE']      = $row->GRADE;
-				//$arrs['SNAM']       = $row->SNAM;
+				$arrs['SNAM']		= $row->SNAM;
 				$arrs['NAME1']      = $row->NAME1;
 				$arrs['NAME2']      = $row->NAME2;
 				$arrs['NICKNM']     = $row->NICKNM;
@@ -278,93 +268,97 @@ class CUSTOMERS extends MY_Controller {
 		}
 		//print_r($arrs); exit;
 		//select2 กลุ่มลูกค้า
-		$sql = "
-			select * from CUSTMAST A
-            left join ARGROUP B on A.GROUP1=B.ARGCOD where A.CUSCOD = '".$CUSCOD."' 
+		$sqlA = "
+			select * from {$this->MAuth->getdb('CUSTMAST')} A
+            left join {$this->MAuth->getdb('ARGROUP')} B on A.GROUP1=B.ARGCOD where A.CUSCOD = '".$CUSCOD."' 
 			";
-        $query = $this->db->query($sql);
-        if($query->row()){
-			foreach($query->result() as $row){
-				$arrs['GROUP1'] = "<option value='".str_replace(chr(0),"",$row->ARGCOD)."'>".str_replace(chr(0),"",$row->ARGDES)."</option>";
+        $queryA = $this->db->query($sqlA);
+        if($queryA->row()){
+			foreach($queryA->result() as $rowA){
+				$arrs['GROUP1'] = "<option value='".str_replace(chr(0),"",$rowA->ARGCOD)."'>".str_replace(chr(0),"",$rowA->ARGDES)."</option>";
 			}
 		}
 		
-		$sql ="
-			select * from CUSTMAST A
-            left join SETGRADCUS B on A.GRADE=B.GRDCOD where A.CUSCOD ='".$CUSCOD."'
+		$sqlB ="
+			select * from {$this->MAuth->getdb('CUSTMAST')} A
+            left join {$this->MAuth->getdb('SETGRADCUS')} B on A.GRADE=B.GRDCOD where A.CUSCOD ='".$CUSCOD."'
 		";
-		$query = $this->db->query($sql);
-		if($query->row()){
-			foreach($query->result() as $row){
-				$arrs['GRADE'] = "<option value='".str_replace(chr(0),"",$row->GRDCOD)."'>".str_replace(chr(0),"",$row->GRDCOD)." ".str_replace(chr(0),"",$row->GRDDES)."</option>";
+		$queryB = $this->db->query($sqlB);
+		if($queryB->row()){
+			foreach($queryB->result() as $rowB){
+				$arrs['GRADE'] = "<option value='".str_replace(chr(0),"",$rowB->GRDCOD)."'>".str_replace(chr(0),"",$rowB->GRDCOD)." ".str_replace(chr(0),"",$rowB->GRDDES)."</option>";
 			}
 		}
-		
-		$sql ="
-			select * from CUSTMAST A 
-            left join SIRNAM B on A.SNAM=B.SIRCOD where A.CUSCOD ='".$CUSCOD."' 
+		/*
+		$sqlC ="
+			select * from {$this->MAuth->getdb('CUSTMAST')} A 
+            left join {$this->MAuth->getdb('SIRNAM')} B on A.SNAM=B.SIRCOD where A.CUSCOD ='".$CUSCOD."' 
 		";
-		$query = $this->db->query($sql);
-		if($query->row()){
-			foreach($query->result() as $row){
-				$arrs['SNAM'] = "<option value='".str_replace(chr(0),"",$row->SIRCOD)."'>".str_replace(chr(0),"",$row->SIRNAM)."</option>";
+		$queryC = $this->db->query($sqlC);
+		if($queryC->row()){
+			foreach($queryC->result() as $rowC){
+				$arrs['SNAM'] = "<option value='".str_replace(chr(0),"",$rowC->SIRCOD)."'>".str_replace(chr(0),"",$rowC->SIRNAM)."</option>";
 			}
 		}
-		
-		$sql = "
-			select * from CUSTADDR A
-			inner join SETAUMP B on A.AUMPCOD=B.AUMPCOD
-			inner join SETPROV C on B.PROVCOD=C.PROVCOD
-			where CUSCOD = '".$CUSCOD."' order by ADDRNO
+		*/
+		$sqlD = "
+			select A.CUSCOD,A.ADDRNO,A.ADDR1,A.ADDR2,A.TUMB
+			,A.AUMPCOD,A.PROVCOD,A.ZIP,A.TELP,A.MEMO1,A.ACPDT
+			,A.USERID,A.PICT1,A.MOOBAN,A.SOI,B.PROVCOD,B.AUMPCOD,B.AUMPDES
+			,C.PROVCOD,C.PROVDES from {$this->MAuth->getdb('CUSTADDR')} A
+			left join {$this->MAuth->getdb('SETAUMP')} B on A.AUMPCOD=B.AUMPCOD 
+			left join {$this->MAuth->getdb('SETPROV')} C on B.PROVCOD=C.PROVCOD
+			where CUSCOD='".$CUSCOD."'
+			order by ADDRNO
 		";
-		
-		$query = $this->db->query($sql);
-		if($query->row()){
-			foreach($query->result() as $row){
-				$arrs["ADDRNO"]	  = $row->ADDRNO;
-				$arrs["ADDR1"] 	  = $row->ADDR1;
-				$arrs["SOI"] 	  = $row->SOI;
-				$arrs["ADDR2"] 	  = $row->ADDR2;
-				$arrs["MOOBAN"]   = $row->MOOBAN;
-				$arrs["TUMB"] 	  = $row->TUMB;
-				$arrs["AUMPCOD"]  = $row->AUMPCOD;
-				$arrs["PROVCOD"]  = $row->PROVCOD;
-				$arrs["AUMPDES"]  = $row->AUMPDES;
-				$arrs["PROVDES"]  = $row->PROVDES;
-				$arrs["ZIP"] 	  = $row->ZIP;
-				$arrs["TELP"] 	  = $row->TELP;
-				$arrs["MEMO2"]= $row->MEMO1;
-				
-				$arrs["addrno1"]  ="<option value='".$row->ADDRNO."'>".$row->ADDRNO."</option>";
-				$arrs["addrno2"]  ="<option value='".$row->ADDRNO."'>".$row->ADDRNO."</option>";
-				$arrs["addrno3"]  ="<option value='".$row->ADDRNO."'>".$row->ADDRNO."</option>";
+		$tbody ="";
+		$addrno1="";
+		$addrno2="";
+		$addrno3="";
+		$queryD = $this->db->query($sqlD);
+		if($queryD->row()){
+			foreach($queryD->result() as $row){
+				$tbody .= "
+					<tr>
+						<td><button class='btnEditAddrTable btn btn-sm btn-warning fa fa-edit' 
+							ADDRNO  = '".str_replace(chr(0),'',$row->ADDRNO)."'
+							ADDR1   = '".str_replace(chr(0),'',$row->ADDR1)."'
+							SOI     = '".str_replace(chr(0),'',$row->SOI)."'
+							ADDR2   = '".str_replace(chr(0),'',$row->ADDR2)."'
+							MOOBAN  = '".str_replace(chr(0),'',$row->MOOBAN)."'
+							TUMB    = '".str_replace(chr(0),'',$row->TUMB)."'
+							AUMPCOD = '".str_replace(chr(0),'',$row->AUMPCOD)."'
+							PROVCOD = '".str_replace(chr(0),'',$row->PROVCOD)."'
+							AUMPDES = '".str_replace(chr(0),'',$row->AUMPDES)."'
+							PROVDES = '".str_replace(chr(0),'',$row->PROVDES)."'
+							ZIP     = '".str_replace(chr(0),'',$row->ZIP)."'
+							TELP    = '".str_replace(chr(0),'',$row->TELP)."'
+							MEMO1   = '".str_replace(chr(0),'',$row->MEMO1)."'
+							>แก้ไข</button>
+						</td>
+						<td>".str_replace(chr(0),'',$row->ADDRNO)."</td>
+						<td>
+							บ้านเลขที่ ".str_replace(chr(0),'',$row->ADDR1)."
+							ซอย ".str_replace(chr(0),'',$row->SOI)."
+							ถนน ".str_replace(chr(0),'',$row->ADDR2)."
+							หมู่บ้าน ".str_replace(chr(0),'',$row->MOOBAN)."
+							ตำบล".str_replace(chr(0),'',$row->TUMB)."
+							อำเภอ".str_replace(chr(0),'',$row->AUMPDES)."
+							จังหวัด".str_replace(chr(0),'',$row->PROVDES)."
+							รหัสไปรษณีย์ ".str_replace(chr(0),'',$row->ZIP)."
+						</td>
+						<td>".str_replace(chr(0),'',$row->TELP)."</td>
+						<td>".str_replace(chr(0),'',$row->MEMO1)."</td>
+						<td>
+							<button class='btnDelAddrTable btn btn-sm btn-danger fa fa-trash'>ลบ</button>
+						</td>
+					</tr>
+				";
+				$addrno1 .= "<option value='".str_replace(chr(0),'',$row->ADDRNO)."'>".str_replace(chr(0),'',$row->ADDRNO)."</option>";
+				$addrno2 .= "<option value='".str_replace(chr(0),'',$row->ADDRNO)."'>".str_replace(chr(0),'',$row->ADDRNO)."</option>";
+				$addrno3 .= "<option value='".str_replace(chr(0),'',$row->ADDRNO)."'>".str_replace(chr(0),'',$row->ADDRNO)."</option>";
 			}
 		}
-		$tbody_db = "";
-		$tbody_db = "
-			<tr>
-				<td>".$arrs["ADDRNO"]."</td>
-				<td>บ้านเลขที่ ".$arrs["ADDR1"]." ซอย ".$arrs["SOI"]." ถนน ".$arrs["ADDR2"]." หมู่บ้าน ".$arrs["MOOBAN"]." ตำบล ".$arrs["TUMB"]." อำเภอ ".$arrs['AUMPDES']." จังหวัด ".$arrs['PROVDES']." รหัสไปรษณีย์ ".$arrs['ZIP']."</td>
-				<td>".$arrs['TELP']."</td>
-				<td>".$arrs['MEMO2']."</td>
-				<td><button class='btnEditAddrTable btn btn-sm btn-warning fa fa-edit' 
-					ADDRNO  = ".$arrs['ADDRNO']."
-					ADDR1   = ".$arrs['ADDR1']."
-					SOI     = ".$arrs['SOI']."
-					ADDR2   = ".$arrs['ADDR2']."
-					MOOBAN  = ".$arrs['MOOBAN']."
-					TUMB    = ".$arrs['TUMB']."
-					AUMPCOD = ".$arrs['AUMPCOD']."
-					PROVCOD = ".$arrs['PROVCOD']."
-					AUMPDES = ".$arrs['AUMPDES']."
-					PROVDES = ".$arrs['PROVDES']."
-					ZIP     = ".$arrs['ZIP']."
-					TELP    = ".$arrs['TELP']."
-					MEMO1   = ".$arrs['MEMO2']."
-					>แก้ไข</button></td>
-				<td><button class='DelTableAddr btn btn-sm btn-danger fa fa-trash'>ลบ</button><td>
-			</tr>
-		";
 		$html ="
 			<div class='col-sm-10 col-sm-offset-1'>
 				<div class='row'>
@@ -401,7 +395,7 @@ class CUSTOMERS extends MY_Controller {
 					<div class='col-sm-4'>
 						คำนำหน้า
 						<select type='text' class='form-control' id='SNAM'>
-						{$arrs['SNAM']}
+							<option value='".$arrs['SNAM']."'>".$arrs['SNAM']."</option>
 						</select>
 					</div>
 					<div class='col-sm-4'>
@@ -422,18 +416,18 @@ class CUSTOMERS extends MY_Controller {
 					</div>
 					<div class='col-sm-4'>
 						วัน/เดือน/ปี เกิด
-						<input type='text' class='form-control input-sm checkvalue' id='BIRTHDT' data-date-format= 'yyyy-mm-dd' value='{$arrs['BIRTHDT']}'>
+						<input type='text' id='BIRTHDT' class='form-control input-sm' placeholder='วว/ดด/ปป' data-provide='datepicker' data-date-language='th-th' value='".$this->dateselectshow($arrs['BIRTHDT'])."'>
 					</div>
 					<div class='col-sm-4'>
 						ประเภทบัตรประจำตัว
 						<select type='text' class='form-control input-sm' id='IDCARD' >
-							<option value='{$arrs['IDCARD']}'>{$arrs['IDCARD']}</option>
-							<option value='บัตรประชาชน'>บัตรประชาชน</option>
-							<option value='บัตรข้าราชการ/รัฐวิสาหกิจ'>บัตรข้าราชการ/รัฐวิสาหกิจ</option>
-							<option value='ทะเบียนการค้า'>ทะเบียนการค้า</option>
-							<option value='บัตรต่างด้าว'>บัตรต่างด้าว</option>
-							<option value='ไม่ระบุ'>ไม่ระบุ</option>
-							<option value='อื่นๆ'>อื่นๆ</option>
+							<option></option>
+							<option value='บัตรประชาชน' ".($arrs['IDCARD'] == 'บัตรประชาชน' ? "selected":"").">บัตรประชาชน</option>
+							<option value='บัตรข้าราชการ/รัฐวิสาหกิจ' ".($arrs['IDCARD'] == 'บัตรข้าราชการ/รัฐวิสาหกิจ' ? "selected":"").">บัตรข้าราชการ/รัฐวิสาหกิจ</option>
+							<option value='ทะเบียนการค้า' ".($arrs['IDCARD'] == 'ทะเบียนการค้า' ? "selected":"").">ทะเบียนการค้า</option>
+							<option value='บัตรต่างด้าว' ".($arrs['IDCARD'] == 'บัตรต่างด้าว' ? "selected":"").">บัตรต่างด้าว</option>
+							<option value='ไม่ระบุ' ".($arrs['IDCARD'] == 'ไม่ระบุ' ? "selected":"").">ไม่ระบุ</option>
+							<option value='อื่นๆ' ".($arrs['IDCARD'] == 'อื่นๆ' ? "selected":"").">อื่นๆ</option>
 						</select>
 					</div>
 				</div>
@@ -442,7 +436,7 @@ class CUSTOMERS extends MY_Controller {
 				<div class='row'>
 					<div class='col-sm-4'>
 						เลขที่
-						<input type='text' class='form-control input-sm checkvalue' id='IDNO' value='{$arrs['IDNO']}'>
+						<input type='text' maxlength='13' class='form-control input-sm checkvalue' id='IDNO' value='{$arrs['IDNO']}'>
 					</div>
 					<div class='col-sm-4'>
 						ออกโดย
@@ -450,7 +444,7 @@ class CUSTOMERS extends MY_Controller {
 					</div>
 					<div class='col-sm-4'>
 						วัน/เดือน/ปี ที่ออกบัตร
-						<input type='text' class='form-control input-sm checkvalue' id='ISSUDT' data-date-format= 'yyyy-mm-dd' value='{$arrs['ISSUDT']}'>
+						<input type='text' id='ISSUDT' class='form-control input-sm' placeholder='วว/ดด/ปป' data-provide='datepicker' data-date-language='th-th' value='".$this->dateselectshow($arrs['ISSUDT'])."'>
 					</div>    
 				</div>
 			</div>
@@ -458,22 +452,22 @@ class CUSTOMERS extends MY_Controller {
 				<div class='row'>
 					<div class='col-sm-4'>
 						วัน/เดือน/ปี บัตรหมดอายุ
-						<input type='text' class='form-control input-sm checkvalue' id='EXPDT' data-date-format= 'yyyy-mm-dd' value='{$arrs['EXPDT']}'>
+						<input type='text' id='EXPDT' class='form-control input-sm' placeholder='วว/ดด/ปป' data-provide='datepicker' data-date-language='th-th' value='".$this->dateselectshow($arrs['EXPDT'])."'>
 					</div>
 					<div class='col-sm-4'>
 						อายุ
-						<input type='number' class='form-control input-sm checkvalue' id='AGE' value='{$arrs['AGE']}'>
+						<input type='text' class='form-control input-sm checkvalue' id='AGE' value='{$arrs['AGE']}'>
 					</div>
 					<div class='col-sm-4'>
 						สัญชาติ
 						<select type='text' class='form-control input-sm' id='NATION' >
-							<option value='{$arrs['NATION']}'>{$arrs['NATION']}</option>
-							<option value='ไทย'>ไทย</option>
-							<option value='จีน'>จีน</option>
-							<option value='ลาว'>ลาว</option>
-							<option value='เขมร'>เขมร</option>
-							<option value='มาเลเซีย'>มาเลเซีย</option>
-							<option value='พม่า'>พม่า</option>
+							<option></option>
+							<option value='ไทย' ".($arrs['NATION'] == 'ไทย' ? "selected":"").">ไทย</option>
+							<option value='จีน' ".($arrs['NATION'] == 'จีน' ? "selected":"").">จีน</option>
+							<option value='ลาว' ".($arrs['NATION'] == 'ลาว' ? "selected":"").">ลาว</option>
+							<option value='เขมร' ".($arrs['NATION'] == 'เขมร' ? "selected":"").">เขมร</option>
+							<option value='มาเลเซีย' ".($arrs['NATION'] == 'มาเลเซีย' ? "selected":"").">มาเลเซีย</option>
+							<option value='พม่า' ".($arrs['NATION'] == 'พม่า' ? "selected":"").">พม่า</option>
 						</select>
 					</div>
 				</div>
@@ -506,7 +500,7 @@ class CUSTOMERS extends MY_Controller {
 					</div>
 					<div class='col-sm-4'>
 						เบอร์โทร
-						<input type='text' class='form-control input-sm checkvalue' id='MOBILENO' maxlength='10' value='{$arrs['MOBILENO']}'>
+						<input type='text' maxlength='10' class='form-control input-sm checkvalue' id='MOBILENO' maxlength='10' value='{$arrs['MOBILENO']}'>
 					</div>
 				</div>
 			</div>
@@ -517,80 +511,48 @@ class CUSTOMERS extends MY_Controller {
 						<input type='email' class='form-control input-sm checkvalue' id='EMAIL1' value='{$arrs['EMAIL1']}'><br>
 					</div>
 				</div>
-			</div>";    
-			if($EVENT == 'add'){
-				$html .="<div class='col-sm-10 col-sm-offset-1'>
-					<div class='row'>
-						<table id = 'data-table-address' class='col-sm-12 display table table-striped table-bordered table-hover' cellspacing='0' width='100%' id='dataAddress'>
-							<thead>
-								<tr>
-									<th>ลำดับ</th>
-									<th>ที่อยู่</th>
-									<th>เบอร์ติดต่อ</th>
-									<th>หมายเหตุ</th>
-									<th>แก้ไข</th>
-									<th>ลบ</th>
-								</tr>
-							</thead>
-							<tbody id='AA'>
-							
-							</tbody>
-							<tfoot>
-								<tr>
-									<td colspan='6'>
-										<button id='btnAddAddressFirst' class='btn btn-sm btn-cyan btn-block glyphicon glyphicon-plus'>เพิ่มที่อยู่</button>
-									</td>	
-								</tr>
-							</tfoot>
-						</table>
-					</div>    
-				</div>";
-			}else{
-				$html .="<div class='col-sm-10 col-sm-offset-1'>
-					<div class='row'>
-						<table id = 'data-table-address' class='col-sm-12 display table table-striped table-bordered table-hover' cellspacing='0' width='100%' id='dataAddress'>
-							<thead>
-								<tr>
-									<th>ลำดับ</th>
-									<th>ที่อยู่</th>
-									<th>เบอร์ติดต่อ</th>
-									<th>หมายเหตุ</th>
-									<th>แก้ไข</th>
-									<th>ลบ</th>
-								</tr>
-							</thead>
-							<tbody id='AA'>
-								".$tbody_db."
-							</tbody>
-							<tfoot>
-								<tr>
-									<td colspan='6'>
-										<button id='btnAddAddressFirst' class='btn btn-sm btn-cyan btn-block glyphicon glyphicon-plus'>เพิ่มที่อยู่</button>
-									</td>	
-								</tr>
-							</tfoot>
-						</table>
-					</div>    
-				</div>";
-			}	
-			$html .="<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
+			</div>
+			<div class='col-sm-10 col-sm-offset-1'>
+				<h3 class='text-primary'>เพิ่มที่อยู่ลูกค้า</h3>
+				<div class='row' style='border:1px dotted #aaa; height:100%;overflow:auto;'>
+					<table id = 'data-table-address' class='col-sm-12 display table table-striped table-bordered table-hover' cellspacing='0' width='100%'>
+						<thead>
+							<tr>
+								<th><center>#</center></th>
+								<th>ลำดับ</th>
+								<th>ที่อยู่</th>
+								<th>เบอร์ติดต่อ</th>
+								<th>หมายเหตุ</th>
+								<th>ลบ</th>
+							</tr>
+						</thead>
+						<tbody id='tableaddr'>
+							".$tbody."
+						</tbody>
+						<tfoot>
+							<tr>
+								<td colspan='6'>
+									<button id='btnAddAddressFirst' class='btn btn-sm btn-cyan btn-block fa fa-plus-square'>เพิ่มที่อยู่</button>
+								</td>	
+							</tr>
+						</tfoot>
+					</table>
 					<div class='col-sm-4'>
 						ที่อยู่ตามทะเบียนบ้าน
 						<select type='text' class='form-control' id='addrno1'>
-						
+							".$addrno1."
 						</select>
 					</div>
 					<div class='col-sm-4'>
 						ที่อยู่ปัจจุบัน
 						<select type='text' class='form-control' id='addrno2'>
-						
+							".$addrno2."
 						</select>
 					</div>
 					<div class='col-sm-4'>
 						ที่อยู่ที่อยู่ที่ส่งจดหมาย
 						<select type='text' class='form-control' id='addrno3'>
-						
+							".$addrno3."
 						</select>
 					</div>
 				</div>
@@ -603,26 +565,41 @@ class CUSTOMERS extends MY_Controller {
 					</div>
 				</div>
 			</div>
-			
-			<div class='col-sm-10 col-sm-offset-7'>
+        ";
+		
+		if($EVENT == "add"){
+			$html .="
+				<div class='col-sm-10 col-sm-offset-9'>
 				<div class='row'><br>
 					<div class='col-sm-3'>
-						<button type='button' id='add_save' class='btn btn-sm btn-primary btn-block'>บันทึก</button>
+						<button type='button' id='add_save' class='btn btn-sm btn-primary btn-block fa fa-floppy-o'>บันทึก</button>
+					</div>
+				</div>    
+			</div>
+			";
+		}else{
+			$html .="
+				<div class='col-sm-10 col-sm-offset-7'>
+				<div class='row'><br>
+					<div class='col-sm-3'>
+						<button type='button' id='add_update' class='btn btn-sm btn-primary btn-block fa fa-floppy-o'>บันทึก</button>
 					</div>
 					<div class='col-sm-3'>
-						<button type='button' id='add_del' class='btn btn-sm btn-danger btn-block'>ลบ</button>
+						<button type='button' id='btn_Delete' class='btn btn-sm btn-danger btn-block fa fa-trash'>ลบ</button>
 					</div><br><br>
 				</div>    
 			</div>
-        ";
+			";
+		}
         $response = array("html"=>$html);
         echo json_encode($response);
 	}
+	
 	function getFormAddressCM(){
-		$arrs = array();
 		$arrs = array();
         $arrs["ADDRNO"]	  = (!isset($_POST["ADDRNO"])?  "":$_POST["ADDRNO"]);
         $arrs["ADDR1"] 	  = (!isset($_POST["ADDR1"])?   "":$_POST["ADDR1"]);
+		//$arrs["SWIN"]	  = (!isset($_POST["SWIN"])?	"":$_POST["SWIN"]);
         $arrs["SOI"] 	  = (!isset($_POST["SOI"])?     "":$_POST["SOI"]);
         $arrs["ADDR2"] 	  = (!isset($_POST["ADDR2"])?   "":$_POST["ADDR2"]);
         $arrs["MOOBAN"]   = (!isset($_POST["MOOBAN"])?  "":$_POST["MOOBAN"]);
@@ -637,17 +614,25 @@ class CUSTOMERS extends MY_Controller {
 		
 		$arrs['ACTION']   = $_POST['ACTION'];
 		
+		$DIS ="";
+		if($arrs["ADDRNO"] !== ""){
+			$DIS = "disabled";
+		}
 		$html ="
 			<div class='col-sm-10 col-sm-offset-1'>
 				<div class='row'>
 					<div class='col-sm-12'>
 						ลำดับ
-						<input type='number' class='form-control' id='ADDRNO' value='".$arrs["ADDRNO"]."'>
+						<input type='number' class='form-control' id='ADDRNO' value='".$arrs["ADDRNO"]."' ".$DIS.">
 					</div>
 					<div class='col-sm-12'>
 						บ้านเลขที่
 						<input type='text' class='form-control' id='ADDR1' value='".$arrs["ADDR1"]."'>
-					</div>    
+					</div>  
+					<!--div class='col-sm-12'>
+						หมู่ที่
+						<input type='text' class='form-control' id='SWIN' value=''>
+					</div-->
 					<div class='col-sm-12'>
 						ซอย
 						<input type='text' class='form-control' id='SOI' value='".$arrs["SOI"]."'>
@@ -697,10 +682,10 @@ class CUSTOMERS extends MY_Controller {
 			$html .="
 				<div class='row col-sm-12'>
 					<div class='col-sm-6'>
-						<button id='btnAddTableHtml' class='btn btn-block btn-primary'>เพิ่ม</button><br>					
+						<button id='btnAddTableHtml' class='btn btn-block btn-primary fa fa-check-square-o'>เพิ่ม</button><br>					
 					</div>
 					<div class='col-sm-6'>
-						<button id='btnWACloseAdd' class='btn btn-block btn-danger'>ยกเลิก</button><br>
+						<button id='btnWACloseAdd' class='btn btn-block btn-danger fa fa-remove'>ยกเลิก</button><br>
 					</div>
 				</div>
 			";
@@ -708,10 +693,10 @@ class CUSTOMERS extends MY_Controller {
 			$html .="
 				<div class='row col-sm-12'>
 					<div class='col-sm-6'>
-						<button id='btneditTableHtml' class='btn btn-block btn-warning'>แก้ไข</button><br>					
+						<button id='btneditTableHtml' class='btn btn-block btn-warning fa fa-edit'>แก้ไข</button><br>					
 					</div>
 					<div class='col-sm-6'>
-						<button id='btnWAClose' class='btn btn-block btn-danger'>ยกเลิก</button><br>
+						<button id='btnWAClose' class='btn btn-block btn-danger fa fa-remove'>ยกเลิก</button><br>
 					</div>
 				</div>
 			";
@@ -720,9 +705,11 @@ class CUSTOMERS extends MY_Controller {
         echo json_encode($response);
 	}
 	function SetAddr_TableHtml(){
+		$response = array('error'=>false,'msg'=>'');
 		$arrs = array(); 
 		$arrs["ADDRNO"]  = $_POST["ADDRNO"];
         $arrs["ADDR1"]   = $_POST["ADDR1"];
+		//$arrs["SWIN"]	 = $_POST["SWIN"];
         $arrs["SOI"] 	 = $_POST["SOI"];
         $arrs["ADDR2"] 	 = $_POST["ADDR2"];
         $arrs["MOOBAN"]  = $_POST["MOOBAN"];
@@ -735,18 +722,89 @@ class CUSTOMERS extends MY_Controller {
         $arrs["TELP"] 	 = $_POST["TELP"];
         $arrs["MEMO1"] 	 = $_POST["MEMO1"];
 		
+		if($arrs['ADDRNO'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณกรอกลำดับที่อยู่เป็นตัวเลขครับ";
+			echo json_encode ($response); exit;
+		}
+		if($arrs['ADDR1'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกบ้านเลขที่ก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		
+		/*
+		if($arrs['SWIN'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณกรอกเลขที่หมู่บ้านก่อนครับ";
+			echo json_encode ($response); exit;
+		}
+		*/
+		/*if($arrs['SOI'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกซอยก่อนครับ";
+			echo json_encode($response); exit;
+		}*/
+		/*if($arrs['ADDR2'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณกรอกถนนก่อนครับ";
+			echo json_encode ($response); exit;
+		}*/
+		/*if($arrs['MOOBAN'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกชื่อหมู่บ้านก่อนครับ";
+			echo json_encode($response); exit;
+		}*/
+		
+		if($arrs['TUMB'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณกรอกตำบลก่อนครับครับ";
+			echo json_encode ($response); exit;
+		}
+		if($arrs['AUMPDES'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกอำเภอก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		
+		if($arrs['PROVDES'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณกรอกจังหวัดก่อนครับ";
+			echo json_encode ($response); exit;
+		}
+		if($arrs['ZIP'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกรหัสไปรษณีย์ก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs['TELP'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณกรอกเบอร์โทรศัพท์ก่อนครับ";
+			echo json_encode ($response); exit;
+		}
+		/*
+		if($arrs['MEMO1'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาระบุหมายเหตุ";
+			echo json_encode($response); exit;
+		}
+		*/
+		
         $address = "";
         if($arrs["ADDR1"] != ""){
-			$address .= "บ้านเลขที่".$arrs["ADDR1"];
+			$address .= "บ้านเลขที่ ".$arrs["ADDR1"];
         }
+		/*if($arrs["SWIN"] !=""){
+			$address .= "หม่ที่".$arrs["SWIN"];
+		}*/
         if($arrs["SOI"] != ""){
-			$address .= " ซอย".$arrs["SOI"];
+			$address .= " ซอย ".$arrs["SOI"];
         }
         if($arrs["ADDR2"] != ""){
-			$address .= " ถนน".$arrs["ADDR2"];
+			$address .= " ถนน ".$arrs["ADDR2"];
         }
         if($arrs["MOOBAN"] != ""){
-			$address .= " หมู่บ้าน".$arrs["MOOBAN"];
+			$address .= " หมู่บ้าน ".$arrs["MOOBAN"];
         }
         if($arrs["TUMB"] != ""){
 			$address .= " ตำบล".$arrs["TUMB"];
@@ -758,15 +816,11 @@ class CUSTOMERS extends MY_Controller {
 			$address .= " จังหวัด".$arrs["PROVDES"];
         }
         if($arrs["ZIP"] != ""){
-			$address .= " ".$arrs["ZIP"];
+			$address .= " รหัสไปรษณีย์ ".$arrs["ZIP"];
         }
         $tbody = "
             <tr>
-                <td>".$arrs["ADDRNO"]."</td>
-                <td>".$address."</td>
-                <td>".$arrs["TELP"]."</td>
-                <td>".$arrs["MEMO1"]."</td>
-                <td>
+				<td>
                     <button class='btnEditAddrTable btn btn-sm btn-warning fa fa-edit' 
                         ADDRNO='".$arrs["ADDRNO"]."'
                         ADDR1='".$arrs["ADDR1"]."'
@@ -783,6 +837,10 @@ class CUSTOMERS extends MY_Controller {
                         MEMO1='".$arrs["MEMO1"]."'
 					>แก้ไข</button>
                 </td>
+                <td>".$arrs["ADDRNO"]."</td>
+                <td>".$address."</td>
+                <td>".$arrs["TELP"]."</td>
+                <td>".$arrs["MEMO1"]."</td>
                 <td>
                     <button ADDRNO='".$arrs["ADDRNO"]."' class='btnDelAddrTable btn btn-sm btn-danger fa fa-trash'>ลบ</button>
                 </td>
@@ -802,13 +860,13 @@ class CUSTOMERS extends MY_Controller {
         $arrs['NAME1']       = $_POST["NAME1"];
         $arrs['NAME2']       = $_POST["NAME2"];
         $arrs['NICKNM']      = $_POST["NICKNM"];
-        $arrs['BIRTHDT']     = $this->dateformatsql($_POST["BIRTHDT"]);
+        $arrs['BIRTHDT']     = $this->Convertdate(1,$_POST["BIRTHDT"]);
 		$arrs['ADDRNO']		 = $_POST["ADDRNO"];
         $arrs['IDCARD']      = $_POST["IDCARD"];
         $arrs['IDNO']        = $_POST["IDNO"];
         $arrs['ISSUBY']      = $_POST["ISSUBY"];
-        $arrs['ISSUDT']      = $this->dateformatsql($_POST["ISSUDT"]);
-        $arrs['EXPDT']       = $this->dateformatsql($_POST["EXPDT"]);
+        $arrs['ISSUDT']      = $this->Convertdate(1,$_POST["ISSUDT"]);
+        $arrs['EXPDT']       = $this->Convertdate(1,$_POST["EXPDT"]);
         $arrs['AGE']         = $_POST["AGE"];
         $arrs['NATION']      = $_POST["NATION"];
         $arrs['OCCUP']       = $_POST["OCCUP"];
@@ -821,22 +879,151 @@ class CUSTOMERS extends MY_Controller {
         $arrs['ADDRNO2']     = $_POST["ADDRNO2"];
         $arrs['ADDRNO3']     = $_POST["ADDRNO3"];
         $arrs['MEMOADD']     = $_POST["MEMOADD"];
-		//echo ($arrs); exit;
+		
+		$arrs['action']		 = $_POST["action"];	
+		
+		if(isset($_POST['ADDR'])){}else{
+			$tablehtml = "K";
+			$response = array("tablehtml"=>$tablehtml);
+			echo json_encode ($response); exit;
+		}
 		
 		$ADDR     			 = $_POST["ADDR"];
-		
 		//print_r ($ADDR); exit;
-		
-		if($arrs["NAME1"] == ""){
+		if($arrs["GROUP1"] ==""){
 			$response["error"] = true;
-			$response["msg"] = 'คุณยังไม่ได้ระบุชื่อลูกค้าเลย กรุณากรอกชื่อลูกค้าก่อนนะครับ';
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
 			echo json_encode($response); exit;
 		}
+		if($arrs["GRADE"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["SNAM"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["NAME1"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["NAME2"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["NICKNM"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["BIRTHDT"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["ADDRNO"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["IDCARD"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["IDNO"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["ISSUBY"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["ISSUDT"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["EXPDT"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["AGE"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["NATION"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["OCCUP"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["OFFIC"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["MAXCRED"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["MREVENU"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["YREVENU"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["MOBILENO"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		/*
+		if($arrs["EMAIL1"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		*/
+		if($arrs["ADDRNO2"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["ADDRNO3"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		/*if($arrs["MEMOADD"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
+		}*/
 		
 		if($arrs["MAXCRED"] == ""){$arrs["MAXCRED"] = "0.00"; }else{ $arrs["MAXCRED"] = str_replace(",","",$arrs["MAXCRED"]);}
 		
-		if($arrs["CUSCOD"] == "Auto Genarate"){
+		if($arrs['action'] == "add"){
 			$this->saveCustomerHistory($arrs,$ADDR);
+		}
+		else{
+			$this->updateCustomerHistory($arrs,$ADDR);
 		}
 	}
 	function saveCustomerHistory($arrs,$ADDR){
@@ -858,7 +1045,7 @@ class CUSTOMERS extends MY_Controller {
 		
 		$sql ="
 			if OBJECT_ID('tempdb..#custmastTemp') is not null drop table #custmastTemp;
-			create table #custmastTemp (id varchar(20),contno varchar(20),msg varchar(max));
+			create table #custmastTemp (id varchar(1),msg varchar(max));
 
 			begin tran custmastTran
 			begin try
@@ -878,70 +1065,262 @@ class CUSTOMERS extends MY_Controller {
 				declare @TAXDT datetime = (select convert(varchar(8),getdate(),112));
 				set @TAXNO = left(@TAXNO ,8)+right(right(@TAXNO ,4)+10001,4);
 				
+				declare @isval int = isnull((select count(*) from {$this->MAuth->getdb('CUSTMAST')} where IDNO='".$arrs['IDNO']."'),0);
+				
 				BEGIN
 					set @TAXNO = null;
 					set @TAXDT = null;
 				END
+				
+				if(@isval = 0)
 				begin
-				insert into {$this->MAuth->getdb('CUSTMAST')} (
-					[CUSCOD],[GROUP1],[SNAM],[NAME1],[NAME2],[NICKNM],[BIRTHDT],[ADDRNO],[IDCARD],[IDNO],[ISSUBY]
-					,[ISSUDT],[EXPDT],[AGE],[NATION],[OCCUP],[OFFIC],[BOSSNM],[GRADE],[ACPDT],[MEMO1],[USERID],[PICT1]
-					,[MINCOME],[YINCOME],[MAXCRED],[MREVENU],[YREVENU],[MEMBCOD],[MOBILENO],[APPVCODE],[SIRCOD]
-					,[CUSTTYPE],[ADDRNO2],[ADDRNO3],[EMAIL1],[EMAIL2]
-				)values(
-					@CONTNO,'".$arrs["GROUP1"]."','".$arrs["SNAM"]."','".$arrs["NAME1"]."'
-                    ,'".$arrs["NAME2"]."','".$arrs["NICKNM"]."','".$arrs["BIRTHDT"]."','".$arrs['ADDRNO']."','".$arrs["IDCARD"]."'
-                    ,'".$arrs["IDNO"]."','".$arrs["ISSUBY"]."','".$arrs["ISSUDT"]."','".$arrs["EXPDT"]."','".$arrs["AGE"]."'
-                    ,'".$arrs['NATION']."','".$arrs['OCCUP']."','".$arrs['OFFIC']."',null,'".$arrs['GRADE']."',null
-                    ,'".$arrs['MEMOADD']."',null,null,null,null,'".$arrs['MAXCRED']."','".$arrs['MREVENU']."'
-                    ,'".$arrs['YREVENU']."',null,'".$arrs['MOBILENO']."',null,null,null,'".$arrs['ADDRNO2']."'
-                    ,'".$arrs['ADDRNO3']."','".$arrs['EMAIL1']."',null
-					);
-				".$sql_addr."	
+					insert into {$this->MAuth->getdb('CUSTMAST')} (
+						[CUSCOD],[GROUP1],[SNAM],[NAME1],[NAME2],[NICKNM],[BIRTHDT],[ADDRNO],[IDCARD],[IDNO],[ISSUBY]
+						,[ISSUDT],[EXPDT],[AGE],[NATION],[OCCUP],[OFFIC],[BOSSNM],[GRADE],[ACPDT],[MEMO1],[USERID],[PICT1]
+						,[MINCOME],[YINCOME],[MAXCRED],[MREVENU],[YREVENU],[MEMBCOD],[MOBILENO],[APPVCODE],[SIRCOD]
+						,[CUSTTYPE],[ADDRNO2],[ADDRNO3],[EMAIL1],[EMAIL2]
+					)values(
+						@CONTNO,'".$arrs["GROUP1"]."','".$arrs["SNAM"]."','".$arrs["NAME1"]."'
+						,'".$arrs["NAME2"]."','".$arrs["NICKNM"]."','".$arrs["BIRTHDT"]."','".$arrs['ADDRNO']."','".$arrs["IDCARD"]."'
+						,'".$arrs["IDNO"]."','".$arrs["ISSUBY"]."','".$arrs["ISSUDT"]."','".$arrs["EXPDT"]."','".$arrs["AGE"]."'
+						,'".$arrs['NATION']."','".$arrs['OCCUP']."','".$arrs['OFFIC']."',null,'".$arrs['GRADE']."',null
+						,'".$arrs['MEMOADD']."',null,null,null,null,'".$arrs['MAXCRED']."','".$arrs['MREVENU']."'
+						,'".$arrs['YREVENU']."',null,'".$arrs['MOBILENO']."',null,null,null,'".$arrs['ADDRNO2']."'
+						,'".$arrs['ADDRNO3']."','".$arrs['EMAIL1']."',null
+						);
+					".$sql_addr."	
+					
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+					values ('".$this->sess["IDNo"]."','SYS04::บันทึกประวัติลูกค้า',@CONTNO+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				end
 				
-				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-				values ('".$this->sess["IDNo"]."','SYS04::บันทึกประวัติลูกค้า',@CONTNO+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				else
+				begin
+					rollback tran custmastTran;
+					insert into #custmastTemp select 'N' as id,'ไม่บันทึก : มีรหัสบัตรประจำตัวเลขที่ ".$arrs['IDNO']." อยู่แล้ว ' as msg;
+					return;
+				end	
 				
-				insert into #custmastTemp select 'N',@CONTNO,'บันทึกประวัติลูกค้าเลขที่ :: '+@CONTNO+' เรียบร้อยแล้ว';
-				
+				insert into #custmastTemp select 'Y' as id,'สำเร็จ บันทึกข้อมูลประวัติลูกค้าใหม่รหัสลูกค้าเลขที่ :: '+@CONTNO+' เรียบร้อยแล้ว' as msg;
 				commit tran custmastTran;
 			end try
 			begin catch
 				rollback tran custmastTran;
-				insert into #custmastTemp select 'E','',ERROR_MESSAGE();
+				insert into #custmastTemp select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+			end catch
+		";
+		
+		$this->db->query($sql);
+		$sql = "select * from #custmastTemp";
+		$query = $this->db->query($sql);
+		
+		$response = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response['stat'] = ($row->id == 'Y' ? true:false);
+				$response['msg'] = $row->msg;
+			}
+		}else{
+			$response['stat'] = false;
+			$response['msg'] = 'ผิดพลาด';
+		}
+		echo json_encode($response);
+	}
+	
+	function updateCustomerHistory($arrs,$ADDR){
+		$sql_addr = "";		//บันทึกที่อยู่ของลูกค้าเข้าฐานข้อมูล
+        $sizeArr = count($ADDR);
+        for($P=0; $P < $sizeArr; $P++){
+		$sql_addr .="
+			if exists (
+				select * from {$this->MAuth->getdb('CUSTADDR')} 
+				where CUSCOD='".$arrs['CUSCOD']."' and ADDRNO='".$ADDR[$P][0]."'
+			)
+			begin
+			update {$this->MAuth->getdb('CUSTADDR')}
+			set
+				[CUSCOD]='".$arrs['CUSCOD']."',[ADDRNO]='".$ADDR[$P][0]."'
+				,[ADDR1]='".$ADDR[$P][1]."',[ADDR2]='".$ADDR[$P][3]."'
+				,[TUMB]='".$ADDR[$P][5]."',[AUMPCOD]='".$ADDR[$P][6]."'
+				,[PROVCOD]='".$ADDR[$P][7]."',[ZIP]='".$ADDR[$P][8]."'
+				,[TELP]='".$ADDR[$P][9]."',[MEMO1]='".$ADDR[$P][10]."'
+				,[MOOBAN]='".$ADDR[$P][4]."',[SOI]='".$ADDR[$P][2]."'
+				WHERE [CUSCOD]='".$arrs['CUSCOD']."' and [ADDRNO]='".$ADDR[$P][0]."'
+			end
+			else	
+			begin
+			insert into {$this->MAuth->getdb('CUSTADDR')}(
+				[CUSCOD],[ADDRNO],[ADDR1],[ADDR2],[TUMB],[AUMPCOD],[PROVCOD]
+				,[ZIP],[TELP],[MEMO1],[ACPDT],[USERID],[PICT1],[MOOBAN],[SOI]
+			)values(
+				'".$arrs['CUSCOD']."','".$ADDR[$P][0]."','".$ADDR[$P][1]."','".$ADDR[$P][3]."'
+				,'".$ADDR[$P][5]."','".$ADDR[$P][6]."','".$ADDR[$P][7]."','".$ADDR[$P][8]."'
+				,'".$ADDR[$P][9]."','".$ADDR[$P][10]."',null,null,null,'".$ADDR[$P][4]."'
+				,'".$ADDR[$P][2]."'
+				)
+			end	
+			";
+        }
+		
+		$sql ="
+			if OBJECT_ID('tempdb..#custmastTemp') is not null drop table #custmastTemp;
+			create table #custmastTemp (id varchar(1),msg varchar(max));
+			
+			begin tran custmastTran
+			begin try
+			if exists(
+				select * from {$this->MAuth->getdb('CUSTMAST')}
+				where CUSCOD = '".$arrs['CUSCOD']."'
+			)
+			begin
+			update {$this->MAuth->getdb('CUSTMAST')}
+			set [CUSCOD]='".$arrs['CUSCOD']."',[GROUP1]='".$arrs['GROUP1']."',[SNAM]='".$arrs['SNAM']."',[NAME1]='".$arrs['NAME1']."'
+				,[NAME2]='".$arrs['NAME2']."',[NICKNM]='".$arrs['NICKNM']."',[BIRTHDT]='".$arrs['BIRTHDT']."',[ADDRNO]='".$arrs['ADDRNO']."',[IDCARD]='".$arrs['IDCARD']."'
+				,[IDNO]='".$arrs['IDNO']."',[ISSUBY]='".$arrs['ISSUBY']."',[ISSUDT]='".$arrs['ISSUDT']."',[EXPDT]='".$arrs['EXPDT']."',[AGE]='".$arrs['AGE']."'
+				,[NATION]='".$arrs['NATION']."',[OCCUP]='".$arrs['OCCUP']."',[OFFIC]='".$arrs['OFFIC']."',[GRADE]='".$arrs['GRADE']."'
+				,[MEMO1]='".$arrs['MEMOADD']."',[MAXCRED]='".$arrs['MAXCRED']."',[MREVENU]='".$arrs['MREVENU']."'
+				,[YREVENU]='".$arrs['YREVENU']."',[MOBILENO]='".$arrs['MOBILENO']."',[ADDRNO2]='".$arrs['ADDRNO2']."'
+				,[ADDRNO3]='".$arrs['ADDRNO3']."',[EMAIL1]='".$arrs['EMAIL1']."' WHERE [CUSCOD]='".$arrs['CUSCOD']."'
+				
+			".$sql_addr."
+			
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS04::แก้ไขประวัติลูกค้า','".$arrs['CUSCOD']."'+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+			end
+			
+			else
+			begin
+				rollback tran custmastTran;
+				insert into #custmastTemp select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : ไม่พบข้อมูลรหัสประวัติลูกค้า โปรดตรวจสอบข้อมูลใหม่อีกครั้ง' as msg;
+				return;
+			end
+				insert into #custmastTemp select 'Y' as id,'แก้ไขประวัติลูกค้าเลขที่ :: '+'".$arrs['CUSCOD']."'+' เรียบร้อยแล้ว' as msg;
+				commit tran custmastTran;
+				
+			end try
+			begin catch
+				rollback tran custmastTran;
+				insert into #custmastTemp select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
 			end catch
 		";
 		$this->db->query($sql);
 		$sql = "select * from #custmastTemp";
 		$query = $this->db->query($sql);
-	  
+		
+		$response = array();
 		if($query->row()){
 			foreach($query->result() as $row){
-				$response["status"] = $row->id;
-				$response["contno"] = $row->contno;
-				$response["msg"] = $row->msg;
+				$response['stat'] = ($row->id == 'Y' ? true:false);
+				$response['msg'] = $row->msg;
 			}
 		}else{
-			$response["status"] = false;
-			$response["contno"] = '';
-			$response["msg"] = 'ผิดพลาดไม่สามารถบันทึกการขายได้ โปรดติดต่อฝ่ายไอที';
+			$response['stat'] = false;
+			$response['msg'] = 'ผิดพลาด';
+		}
+		echo json_encode($response);
+	}
+	function DeletedCUSCOD(){
+		$CUSCOD = $_POST["CUSCOD"];
+		$sql ="
+			if object_id('tempdb..#temp') is not null drop table #temp;
+			select ROW_NUMBER() over(order by _table) r,* into #temp from (
+				select a.name as _table,b.name as _column from sys.tables a
+				left join sys.columns b on a.object_id=b.object_id
+			) a
+			where a._column='CUSCOD' and a._table not in ('CUSTMAST','CUSTADDR')
+
+			declare @CUSCODDEL varchar(12) = '".$CUSCOD."';
+			declare @started int = 1;
+			declare @sizeof int = (select COUNT(*) from #temp);
+			create table #has (total int);
+			
+			while @started <= @sizeof
+			begin 
+				declare @table varchar(max) = (select _table from #temp where r=@started);
+				
+				insert into #has
+				exec(N'
+					select count(*) from '+@table+'
+					where CUSCOD='''+@CUSCODDEL+'''	
+				');
+				
+				set @started = @started+1;
+			end
+			
+			create table #custmastTemp (id varchar(1),msg varchar(max));
+
+			begin tran custmastTran
+			begin try
+			
+				if((select SUM(total) from #has)>0)
+				begin
+					rollback tran custmastTran;
+					insert into #custmastTemp select 'N' as id,'ไม่สามารถลบประวัติลูกค้ารหัส : ".$CUSCOD." เพราะได้นำไปใช้งานแล้ว' as msg;
+					return;
+				end
+				else
+				begin
+					delete from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD = '".$CUSCOD."'
+					
+					delete from {$this->MAuth->getdb('CUSTADDR')} where CUSCOD = '".$CUSCOD."'
+					
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+					values ('".$this->sess["IDNo"]."','SYS04::ลบประวัติลูกค้า','".$CUSCOD."'+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				end
+				
+				insert into #custmastTemp select 'Y' as id,'ลบประวัติลูกค้าเลขที่ :: '+'".$CUSCOD."'+' เรียบร้อยแล้ว' as msg;
+				commit tran custmastTran;
+				
+			end try
+			begin catch
+				rollback tran custmastTran;
+				insert into #custmastTemp select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+			end catch
+		";
+		$this->db->query($sql);
+		$sql = "select * from #custmastTemp";
+		$query = $this->db->query($sql);
+		
+		$response = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response['stat'] = ($row->id == 'Y' ? true:false);
+				$response['msg'] = $row->msg;
+			}
+		}else{
+			$response['stat'] = false;
+			$response['msg'] = 'ผิดพลาด';
 		}
 		echo json_encode($response);
 	}
 	
-	function dateformatsql($date){
-        if($date!=""){
-            return substr($date, 6,4).substr($date, 3,2).substr($date, 0,2);
+	function dateselectshow($date){
+        if ($date!=""){
+            return substr($date,8,2)."/".substr($date,5,2)."/".(substr($date,0,4)+543);
         }
         return $date;
     }
+	/*
+    function dateformatsql($date){
+        if($date!=""){
+            return substr($date, 6,4).substr($date, 3,2).(substr($date, 0,2)-543);
+        }
+        return $date;
+    }
+	
+    function dateselectedit($date){
+        if ($date!=""){
+            return substr($date,8,2.)."/".substr($date,5,2)."/".substr($date,0,4);
+        }
+        return $date;
+    }
+	*/
 	function SetTitle(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "
-			<div class='tab1' name='home' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:65px;overflow:auto;'>
+			<div class='tab1' name='home' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
 				<div class=' col-sm-2'>	
 					<div class='form-group'>
 						รหัสคำนำหน้าชื่อ
@@ -963,7 +1342,7 @@ class CUSTOMERS extends MY_Controller {
 				<div class=' col-sm-1'>	
 					<div class='form-group'>
 						<br>
-						<input type='button' id='add_groupsn' class='btn btn-cyan btn-sm' value='เพิ่มคำนำหน้า' style='width:100%'>
+						<input type='button' id='add_groupsn' class='btn btn-cyan btn-sm' value='เพิ่ม' style='width:100%'>
 					</div>
 				</div>
 			</div>
@@ -1243,7 +1622,6 @@ class CUSTOMERS extends MY_Controller {
 			$response['stat'] = false;
 			$response['msg'] = 'ผิดพลาด';
 		}
-		
 		echo json_encode($response);
 	}
 }

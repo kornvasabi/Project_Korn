@@ -118,6 +118,13 @@ function afterSearch(){
 				}else{
 					$('#tab2del').attr('disabled',true);	
 				}
+				
+				if(_update == 'T'){
+					$('#tab2save').attr('disabled',false);	
+				}else{
+					$('#tab2save').attr('disabled',true);	
+				}
+				
 				afterSelect();
 			}
 		});
@@ -305,8 +312,8 @@ function afterSelect(){
 						continueDelayOnInactiveTab: false,
 						icon: true,
 						messageHeight: '90vh',
-						soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
-						soundExt: '.ogg',
+						//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+						//soundExt: '.ogg',
 						msg: 'ยังไม่บันทึกรายการ'
 					});
 				}
@@ -327,7 +334,7 @@ function searchcm(){
 	$('#setgroupResult').html('');
 	$('#setgroupResult').append(spinner);
 	
-	$('#loadding').fadeIn(500);
+	//$('#loadding').fadeIn(500);
 	$.ajax({
 		url: '../SYS04/CUSTOMERS/groupSearchcm',
 		data:dataToPost,
@@ -341,9 +348,9 @@ function searchcm(){
 			
 			$('.btnDetail').unbind('click');
 			$('.btnDetail').click(function(){
-				fn_load_formaddcm($(this),'edit');
+				fn_load_formeditcm($(this),'edit');
 			});
-			$('#loadding').fadeOut(100);
+			//$('#loadding').fadeOut(100);
 		}
 	});
 }
@@ -366,8 +373,7 @@ function showAddrcm(){
 	$('.btnshow_Addr').click(function(){
 		dataToPost = new Object();
 		dataToPost.CUSCOD = $(this).attr('CUSCOD');
-		$('#loadding').fadeIn(250);
-		//alert($(this).attr('CUSCOD'));
+		$('#loadding').fadeIn(500);
 		$.ajax({
 			url: '../SYS04/CUSTOMERS/groupShowca',
 			data: dataToPost,
@@ -381,7 +387,7 @@ function showAddrcm(){
 					width: 1100,
 					height: 300,
 					shown:function($this){
-						//actionWindow($this);   
+						
 					}
 				});
 			}
@@ -412,18 +418,99 @@ function fn_load_formaddcm($this,$event){
 				closeOnEsc: false,
 				shown: function($this){
 					//$this.destroy();
-					$('#add_del').attr('disabled',true);
+					
+					$('#add_save').attr('action','add');
+					$('#add_update').attr('action','edit');
+					
+					
+					/*
+					if(_insert == 'T'){
+						$('#add_save').attr('disabled',false);	
+					}else{
+						$('#add_save').attr('disabled',true);	
+					}
+					
+					if(_delete == 'T'){
+						$('#btn_Delete').attr('disabled',false);	
+					}else{
+						$('#btn_Delete').attr('disabled',true);	
+					}
+					
+					if(_update == 'T'){
+						$('#add_update').attr('disabled',false);	
+					}else{
+						$('#add_update').attr('disabled',true);	
+					}
+					*/
+					//$('#btn_Delete').attr('disabled',false);
 					
 					fn_loadPropoties($this)
 					$('#loadding').fadeOut(100);
 					
 					fn_reactive_addr();
-					
 				}
 			});
 		}
 	});
 }
+
+function fn_load_formeditcm($this,$event){
+	dataToPost = new Object();
+	dataToPost.CUSCOD = (typeof $this.attr('CUSCOD') === 'undefined' ? '':$this.attr('CUSCOD'));
+	dataToPost.EVENT = $event;
+	$('#loadding').fadeIn(250);
+	$.ajax({
+		url: '../SYS04/CUSTOMERS/groupGetFromCM',
+		data: dataToPost,
+		type: 'POST',
+		dataType: 'json',
+		success: function(data){
+			Lobibox.window({
+				title:'Form CUSTOMER',
+				width: $(window).width(),                
+				height: $(window).height(),
+				content: data.html,
+				draggable: false,
+				closeOnEsc: false,
+				shown: function($this){
+					//$this.destroy();
+					
+					$('#add_save').attr('action','add');
+					$('#add_update').attr('action','edit');
+					
+					
+					/*
+					if(_insert == 'T'){
+						$('#add_save').attr('disabled',false);	
+					}else{
+						$('#add_save').attr('disabled',true);	
+					}
+					
+					if(_delete == 'T'){
+						$('#btn_Delete').attr('disabled',false);	
+					}else{
+						$('#btn_Delete').attr('disabled',true);	
+					}
+					
+					if(_update == 'T'){
+						$('#add_update').attr('disabled',false);	
+					}else{
+						$('#add_update').attr('disabled',true);	
+					}
+					*/
+					//$('#btn_Delete').attr('disabled',false);
+					
+					fn_loadPropoties($this)
+					$('#loadding').fadeOut(100);
+					
+					fn_reactive_addr();
+				}
+			});
+		}
+	});
+}
+
+
 
 function fn_loadPropoties($window){
 	$('#add_contno').val('Auto Genarate');
@@ -539,7 +626,7 @@ function fn_loadPropoties($window){
 		width: '100%'
 	});
 	$("#IDCARD").select2({
-        placeholder: 'เลิอก',		
+        placeholder: 'เลือก',		
         minimumResultsForSearch: -1,
         dropdownParent: $("#IDCARD").parent().parent(),
         width: '100%'
@@ -550,18 +637,7 @@ function fn_loadPropoties($window){
         dropdownParent: $("#NATION").parent().parent(),
         width: '100%'
     });
-	/*$("#MREVENU").select2({
-        placeholder: 'เลิอก',		
-        minimumResultsForSearch: -1,
-        dropdownParent: $("#MREVENU").parent().parent(),
-        width: '100%'
-    });
-	$("#YREVENU").select2({
-        placeholder: 'เลิอก',		
-        minimumResultsForSearch: -1,
-        dropdownParent: $("#YREVENU").parent().parent(),
-        width: '100%'
-    });*/
+	
 	$("#addrno1").select2({
         placeholder: 'เลิอก',		
         minimumResultsForSearch: -1,
@@ -580,38 +656,12 @@ function fn_loadPropoties($window){
         dropdownParent: $('#addrno3').parent().parent(),
         width: '100%'
     });
-	//ปฏฺิทินวันที่
-	$("#BIRTHDT").datepicker({
-		dateFormat: "dd-mm-yy",
-		monthNames: ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"],
-		dayNamesMin: ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"],
-		todayBtn: true,
-		language: 'th',             //เปลี่ยน label ต่างของ ปฏิทิน ให้เป็น ภาษาไทย   (ต้องใช้ไฟล์ bootstrap-datepicker.th.min.js นี้ด้วย)
-		thaiyear: true              //Set เป็นปี พ.ศ.
-	}).datepicker();                //กำหนดเป็นวันปัจุบัน
-	$("#ISSUDT").datepicker({
-		dateFormat: "dd-mm-yy",
-		monthNames: ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"],
-		dayNamesMin: ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"],
-		todayBtn: true,
-		language: 'th',             
-		thaiyear: true              
-	}).datepicker();  
-	$("#EXPDT").datepicker({
-		dateFormat: "dd-mm-yy",
-		monthNames: ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"],
-		dayNamesMin: ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"],
-		todayBtn: true,
-		language: 'th',
-		thaiyear: true              
-	}).datepicker();  
 	
 	$('#btnAddAddressFirst').click(function(){
 		fn_loadFromADDR('add',null);
 	});
 	
 	$('#add_save').click(function(){
-		//fn_save($window);
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
 			iconClass: false,
@@ -642,8 +692,86 @@ function fn_loadPropoties($window){
 						continueDelayOnInactiveTab: false,
 						icon: true,
 						messageHeight: '90vh',
-						soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
-						soundExt: '.ogg',
+						//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+						//soundExt: '.ogg',
+						msg: 'ยังไม่บันทึกรายการ'
+					});
+				}
+			}
+		});
+	});
+	$('#add_update').click(function(){
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			iconClass: false,
+			msg: "คุณต้องการบันทึก ?",
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary',
+					text: 'ยืนยัน',
+					closeOnClick: true,
+				},
+				cancel : {
+					'class': 'btn btn-danger',
+					text: 'ยกเลิก',
+					closeOnClick: true
+				},
+			},
+			callback: function(lobibox, type){
+				var btnType;
+				if (type === 'ok'){
+					fn_update($window);
+				}else{
+					Lobibox.notify('error', {
+						title: 'แจ้งเตือน',
+						size: 'mini',
+						closeOnClick: true,
+						delay: 5000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+						//soundExt: '.ogg',
+						msg: 'ยังไม่บันทึกรายการ'
+					});
+				}
+			}
+		});
+	});
+	$('#btn_Delete').click(function(){
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			iconClass: false,
+			msg: '<span style="color:red;font-size:18pt">คุณแน่ในหรือไม่ว่าต้องการลบประวัติลูกค้ารหัส <span><br>'+$("#CUSCOD").val()+' ?',
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary',
+					text: 'ยืนยัน',
+					closeOnClick: true,
+				},
+				cancel : {
+					'class': 'btn btn-danger',
+					text: 'ยกเลิก',
+					closeOnClick: true
+				},
+			},
+			callback: function(lobibox, type){
+				var btnType;
+				if (type === 'ok'){
+					fn_delete($window);
+				}else{
+					Lobibox.notify('error', {
+						title: 'แจ้งเตือน',
+						size: 'mini',
+						closeOnClick: true,
+						delay: 5000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+						//soundExt: '.ogg',
 						msg: 'ยังไม่บันทึกรายการ'
 					});
 				}
@@ -654,9 +782,10 @@ function fn_loadPropoties($window){
 var OBJeditaddress = null;
 function fn_loadFromADDR($action,$this){ 
 	if($action == "edit"){ 						
-		dataToPost = new Object();			//---------->		---------      --from แก้ไข
+		dataToPost = new Object();			//---------->		---------      --from แก้ไขfrom
 		dataToPost.ADDRNO 	= $this.attr("ADDRNO");
 		dataToPost.ADDR1 	= $this.attr("ADDR1");
+		//dataToPost.SWIN		= $this.attr("SWIN");
 		dataToPost.SOI      = $this.attr("SOI");
 		dataToPost.ADDR2 	= $this.attr("ADDR2");
 		dataToPost.MOOBAN 	= $this.attr("MOOBAN");
@@ -669,7 +798,7 @@ function fn_loadFromADDR($action,$this){
 		dataToPost.TELP 	= $this.attr("TELP");
 		dataToPost.MEMO1 	= $this.attr("MEMO1");	
 	}else{
-		dataToPost = new Object();			//---------->		---------      --form เพิ่ม	
+		dataToPost = new Object();			//---------->		---------      --form เพิ่ม from
 	}
 	
 	dataToPost.ACTION = $action;
@@ -849,11 +978,11 @@ function fn_loadPropotiesAddr($window,$action,$this){
 	
 	var OBJbtnAddAddr = null;
 	$('#btnAddTableHtml').click(function(){		//เพิ่ม
-		//alert($(this).attr('KORN'));
         dataToPost = new Object();
         dataToPost.CUSCOD   = $("#CUSCOD").val();
         dataToPost.ADDRNO 	= $("#ADDRNO").val();
         dataToPost.ADDR1 	= $("#ADDR1").val();
+		//dataToPost.SWIN		= $("#SWIN").val();
         dataToPost.SOI      = $("#SOI").val();
         dataToPost.ADDR2 	= $("#ADDR2").val();
         dataToPost.MOOBAN 	= $("#MOOBAN").val();
@@ -872,14 +1001,26 @@ function fn_loadPropotiesAddr($window,$action,$this){
             type: 'POST',
             dataType: 'json',
             success: function(data){
-                if(!data.error){
-                    $("#data-table-address tbody").append(data.tbody);
+				if(data.error){
+					Lobibox.notify('warning', {
+						title: 'แจ้งเตือน',
+						size: 'mini',
+						closeOnClick: false,
+						delay: 5000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						msg: data.msg
+					});
+				}else{
+					$("#data-table-address tbody").append(data.tbody);
 
-                    fn_address("add");
+					fn_address("add");
 					fn_reactive_addr(); // แก้ไขข้อมูลที่อยู่พนักงาน กรณีเพิ่มที่อยู่ใหม่
 					
-                    $window.destroy();
-                }
+					$window.destroy();
+				}
                 OBJbtnAddAddr = null;
             },
             beforeSend: function(){
@@ -895,6 +1036,7 @@ function fn_loadPropotiesAddr($window,$action,$this){
 		dataToPost = new Object();
         dataToPost.CUSCOD   = $("#CUSCOD").val();
         dataToPost.ADDRNO 	= $("#ADDRNO").val();
+		//dataToPost.SWIN 	= $("#SWIN").val();
         dataToPost.ADDR1 	= $("#ADDR1").val();
         dataToPost.SOI      = $("#SOI").val();
         dataToPost.ADDR2 	= $("#ADDR2").val();
@@ -914,15 +1056,26 @@ function fn_loadPropotiesAddr($window,$action,$this){
             type: 'POST',
             dataType: 'json',
             success: function(data){				
-                if(!data.error){    
+                if(data.error){
+					Lobibox.notify('warning', {
+						title: 'แจ้งเตือน',
+						size: 'mini',
+						closeOnClick: false,
+						delay: 5000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						msg: data.msg
+					});
+				}else{
 					$("#data-table-address tbody").append(data.tbody);
-					
-					fn_address("edit");
+
+					fn_address("add");
 					fn_reactive_addr(); // แก้ไขข้อมูลที่อยู่พนักงาน กรณีเพิ่มที่อยู่ใหม่
 					
-                    $window.destroy();
-					
-                }
+					$window.destroy();
+				}
 				OBJbtneditAdrr = null;
             },
             beforeSend: function(){
@@ -943,6 +1096,7 @@ function fn_loadPropotiesAddr($window,$action,$this){
 			dataToPost = new Object();
 			dataToPost.ADDRNO 	= $this.attr("ADDRNO");
 			dataToPost.ADDR1 	= $this.attr("ADDR1");
+			//dataToPost.SWIN		= $this.attr("SWIN");
 			dataToPost.SOI     	= $this.attr("SOI");
 			dataToPost.ADDR2 	= $this.attr("ADDR2");
 			dataToPost.MOOBAN 	= $this.attr("MOOBAN");
@@ -987,18 +1141,43 @@ function fn_reactive_addr(){
 		btnthisedit.parents('tr').remove();
 		fn_loadFromADDR("edit",$(this)); //ฟอร์มกรอกที่อยู่ลูกค้า
 	});
+	$('.btnDelAddrTable').unbind("click");
 	$('.btnDelAddrTable').click(function(){  //ลบที่อยู่ในตาราง html
-		
+		var btnthisdel = $(this);
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			iconClass: false,
+			msg: "คุณต้องการลบ ?",
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary',
+					text: 'ยืนยัน',
+					closeOnClick: true,
+				},
+				cancel : {
+					'class': 'btn btn-danger',
+					text: 'ยกเลิก',
+					closeOnClick: true
+				},
+			},
+			callback: function(lobibox, type){
+				var btnType;
+				if (type === 'ok'){
+					btnthisdel.parents('tr').remove(); 
+					fn_address();
+				}
+			}
+		});
 	});
 }
 
 function CloseLobiwindow(address_ae,event){
-   //alert(address_ae.attr("ADDRNO"));
     var OBJbtncloseAddr = null;
     if(event != "cancel"){
         dataToPost = new Object();
         dataToPost.ADDRNO   = $("#ADDRNO").val();
         dataToPost.ADDR1    = $("#ADDR1").val();
+		//dataToPost.SWIN		= $("#SWIN").val();
         dataToPost.SOI      = $("#SOI").val();
         dataToPost.ADDR2    = $("#ADDR2").val();
         dataToPost.MOOBAN   = $("#MOOBAN").val();
@@ -1014,6 +1193,7 @@ function CloseLobiwindow(address_ae,event){
         dataToPost = new Object();
         dataToPost.ADDRNO 	= address_ae.attr("ADDRNO");
         dataToPost.ADDR1 	= address_ae.attr("ADDR1");
+		dataToPost.SWIN		= address_ae.attr("SWIN");
         dataToPost.SOI      = address_ae.attr("SOI");
         dataToPost.ADDR2 	= address_ae.attr("ADDR2");
         dataToPost.MOOBAN 	= address_ae.attr("MOOBAN");
@@ -1060,6 +1240,7 @@ function fn_address($action){
         $('#addrno3').append(newOption).trigger('change');
     });
 }
+
 var KB_fn_save = null;
 function fn_save($window){
 	dataToPost = new Object();
@@ -1090,6 +1271,9 @@ function fn_save($window){
 	dataToPost.ADDRNO2  = $("#addrno2").val();
 	dataToPost.ADDRNO3  = $("#addrno3").val();
 	dataToPost.MEMOADD  = $("#MEMOADD").val();
+	
+	dataToPost.action = $('#add_save').attr('action');
+	
 	var ad = [];
 	$(".btnEditAddrTable").each(function(){
 		var adr =[];   
@@ -1107,6 +1291,7 @@ function fn_save($window){
 		
 		ad.push(adr);
 	});
+	$('#loadding').fadeIn(100);
 	dataToPost.ADDR  = ad; 
 	KB_fn_save = $.ajax({
 		url:'../SYS04/CUSTOMERS/save',
@@ -1126,8 +1311,9 @@ function fn_save($window){
 					messageHeight: '90vh',
 					msg: data.msg
 				});
-			}else{
-				Lobibox.notify('success', {
+			}
+			else if(data.tablehtml == "K"){
+				Lobibox.notify('warning', {
 					title: 'แจ้งเตือน',
 					size: 'mini',
 					closeOnClick: false,
@@ -1136,13 +1322,42 @@ function fn_save($window){
 					continueDelayOnInactiveTab: false,
 					icon: true,
 					messageHeight: '90vh',
+					msg: "คุณยังไม่ได้เพิ่มที่อยู่เลย กรุณาเพิ่มที่อยู่ด้วยครับ"
+				});
+			}
+			else if(data.stat){
+				Lobibox.notify('success', {
+					title: 'สำเร็จ',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 8000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+					//soundExt: '.ogg',
 					msg: data.msg
 				});
 				
 				$window.destroy();
+				
+			}else{
+				Lobibox.notify('error', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: true,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+					//soundExt: '.ogg',
+					msg: data.msg
+				});
 			}
 			KB_fn_save = null;
-			//lobibox.destroy();
 			$('#loadding').fadeOut(100);
 		},
 		beforeSend: function(){
@@ -1153,5 +1368,199 @@ function fn_save($window){
 	});
 }
 
+
+var KB_fn_update = null;
+function fn_update($window){
+	dataToPost = new Object();
+	dataToPost.locat	= (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '':$('#add_locat').find(':selected').val());
+	dataToPost.CUSCOD   = $("#CUSCOD").val();
+	dataToPost.GROUP1   = (typeof $('#GROUP1').find(':selected').val() === 'undefined' ? '':$('#GROUP1').find(':selected').val());
+	dataToPost.GRADE    = (typeof $('#GRADE').find(':selected').val() === 'undefined' ? '':$('#GRADE').find(':selected').val());
+	dataToPost.SNAM     = (typeof $('#SNAM').find(':selected').val() === 'undefined' ? '':$('#SNAM').find(':selected').val());
+	dataToPost.NAME1    = $("#NAME1").val();
+	dataToPost.NAME2    = $("#NAME2").val();
+	dataToPost.NICKNM   = $("#NICKNM").val();
+	dataToPost.BIRTHDT  = $("#BIRTHDT").val();
+	dataToPost.ADDRNO	= $("#addrno1").val();
+	dataToPost.IDCARD   = $("#IDCARD").val();
+	dataToPost.IDNO     = $("#IDNO").val();
+	dataToPost.ISSUBY   = $("#ISSUBY").val();
+	dataToPost.ISSUDT   = $("#ISSUDT").val();
+	dataToPost.EXPDT    = $("#EXPDT").val();
+	dataToPost.AGE      = $("#AGE").val();
+	dataToPost.NATION   = $("#NATION").val();
+	dataToPost.OCCUP    = $("#OCCUP").val();
+	dataToPost.OFFIC    = $("#OFFIC").val();
+	dataToPost.MAXCRED  = $("#MAXCRED").val();
+	dataToPost.MREVENU  = $("#MREVENU").val();
+	dataToPost.YREVENU  = $("#YREVENU").val();
+	dataToPost.MOBILENO = $("#MOBILENO").val();
+	dataToPost.EMAIL1   = $("#EMAIL1").val();
+	dataToPost.ADDRNO2  = $("#addrno2").val();
+	dataToPost.ADDRNO3  = $("#addrno3").val();
+	dataToPost.MEMOADD  = $("#MEMOADD").val();
+	
+	dataToPost.action   = $("#MEMOADD").val();
+	
+	var ad = [];
+	$(".btnEditAddrTable").each(function(){
+		var adr =[];   
+		adr.push($(this).attr('ADDRNO'));
+		adr.push($(this).attr('ADDR1'));            
+		adr.push($(this).attr('SOI'));
+		adr.push($(this).attr('ADDR2'));
+		adr.push($(this).attr('MOOBAN'));
+		adr.push($(this).attr('TUMB'));
+		adr.push($(this).attr('AUMPCOD'));
+		adr.push($(this).attr('PROVCOD'));
+		adr.push($(this).attr('ZIP'));
+		adr.push($(this).attr('TELP'));
+		adr.push($(this).attr('MEMO1'));
+		
+		ad.push(adr);
+	});
+	$('#loadding').fadeIn(100);
+	dataToPost.ADDR  = ad; 
+	KB_fn_update = $.ajax({
+		url:'../SYS04/CUSTOMERS/save',
+		data:dataToPost,
+		type:"POST",
+		dataType: "json",
+		success: function(data){
+			if(data.error){
+				Lobibox.notify('warning', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					msg: data.msg
+				});
+			}
+			else if(data.tablehtml == "K"){
+				Lobibox.notify('warning', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					msg: "คุณยังไม่ได้เพิ่มที่อยู่เลย กรุณาเพิ่มที่อยู่ด้วยครับ"
+				});
+			}
+			else if(data.stat){
+				Lobibox.notify('success', {
+					title: 'สำเร็จ',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 8000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+					//soundExt: '.ogg',
+					msg: data.msg
+				});
+				$window.destroy();
+				 
+			}else{
+				Lobibox.notify('error', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: true,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+					//soundExt: '.ogg',
+					msg: data.msg
+				});
+			}
+			KB_fn_update = null;
+			$('#loadding').fadeOut(100);
+		},
+		beforeSend: function(){
+			if(KB_fn_update !== null){
+				KB_fn_update.abort();
+			}
+		}
+	});
+}
+var KB_fn_delete = null;
+var korn = $(this);
+function fn_delete($window){
+	dataToPost = new Object();
+	dataToPost.CUSCOD   = $("#CUSCOD").val();
+	$('#loadding').fadeIn(100);
+	KB_fn_delete = $.ajax({
+		url:'../SYS04/CUSTOMERS/DeletedCUSCOD',
+		data:dataToPost,
+		type:"POST",
+		dataType: "json",
+		success: function(data){
+			if(data.error){
+				Lobibox.notify('warning', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					msg: data.msg
+				});
+			}
+			else if(data.stat){
+				Lobibox.notify('success', {
+					title: 'สำเร็จ',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 8000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+					//soundExt: '.ogg',
+					msg: data.msg
+				});
+				$window.destroy();
+				searchcm();
+				//location.reload();
+				
+			}else{
+				Lobibox.notify('error', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: true,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+					//soundExt: '.ogg',
+					msg: data.msg
+				});
+			}
+			KB_fn_delete = null;
+			$('#loadding').fadeOut(100);
+		},
+		beforeSend: function(){
+			if(KB_fn_delete !== null){
+				KB_fn_delete.abort();
+			}
+		}
+	});
+}
 
 

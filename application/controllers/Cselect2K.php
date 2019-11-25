@@ -115,101 +115,13 @@ class Cselect2K extends MY_Controller {
         if($query->row()){
             foreach($query->result() as $row){
                 $json[] = array(
-                    "id" =>str_replace(chr(0),"",$row->SIRCOD),
+                    "id" =>str_replace(chr(0),"",$row->SIRNAM),
                     "text" =>str_replace(chr(0),"",$row->SIRNAM),					 
                 );
             }
         }
         echo json_encode($json);
 	}
-	/*function getAUMPCOD(){ //อำเภอ
-		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_REQUEST['q']);
-		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
-		$provcod = $_POST['provcod'];
-		$cond = "";
-		if($provcod = ""){
-			$cond = "";
-		}else{
-			$cond = "and PROVCOD = '".$provcod."' "; 
-		}
-		
-		$sql = "
-            select AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
-            where AUMPCOD = '".$dataNow."'
-
-            union
-            select AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
-            where AUMPDES like '%".$dataSearch."%' ".cond."
-            ";
-        
-        $query = $this->db->query($sql);
-
-        $json = array();
-        if($query->row()){
-            foreach($query->result() as $row){
-                $json[] = array(
-                    "id" =>str_replace(chr(0),"",$row->AUMPCOD),
-                    "text" =>str_replace(chr(0),"",$row->AUMPDES),					 
-                );
-            }
-        }
-        echo json_encode($json);
-	}
-	function getPROVCOD(){
-		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_REQUEST['q']);
-		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
-		
-		$sql = "
-            select PROVCOD,PROVDES from {$this->MAuth->getdb('SETPROV')}
-            where PROVCOD = '".$dataNow."'
-
-            union
-            select PROVCOD,PROVDES from {$this->MAuth->getdb('SETPROV')}
-            where PROVDES like '%".$dataSearch."%' 
-            ";
-        
-        $query = $this->db->query($sql);
-
-        $json = array();
-        if($query->row()){
-            foreach($query->result() as $row){
-                $json[] = array(
-                    "id" =>str_replace(chr(0),"",$row->PROVCOD),
-                    "text" =>str_replace(chr(0),"",$row->PROVDES),					 
-                );
-            }
-        }
-        echo json_encode($json);
-	}
-	function getZIP(){
-		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_REQUEST['q']);
-		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
-		
-		$sql = "
-            select PROVCOD,AUMPCOD from {$this->MAuth->getdb('SETAUMP')}
-            where PROVCOD = '".$dataNow."'
-
-            union
-            select PROVCOD,AUMPCOD from {$this->MAuth->getdb('SETAUMP')}
-            where AUMPCOD like '%".$dataSearch."%' 
-            ";
-        
-        $query = $this->db->query($sql);
-
-        $json = array();
-        if($query->row()){
-            foreach($query->result() as $row){
-                $json[] = array(
-                    "id" =>str_replace(chr(0),"",$row->PROVCOD),
-                    "text" =>str_replace(chr(0),"",$row->AUMPCOD),					 
-                );
-            }
-        }
-        echo json_encode($json);
-	}*/
 	function getAUMPCOD(){ //อำเภอ
 		$sess = $this->session->userdata('cbjsess001');
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
@@ -281,15 +193,16 @@ class Cselect2K extends MY_Controller {
         echo json_encode($json);
 	}
 	function getZIP(){		//รหัสไปรษณีย์
+		$sess = $this->session->userdata('cbjsess001');
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
         $dataSearch = trim($_REQUEST["q"]);
-        $provcod = $_REQUEST["provcod2"];
+        $provcod = $_REQUEST["provcod"];
 
         $cond = "";
         if($provcod == ""){
             $cond = "";
         }else{
-            $cond = " and b.AUMPCOD='".$provcod."'";
+            $cond = " and b.PROVCOD ='".$provcod."' ";
         }
         $sql = "
             select PROVCOD,AUMPCOD from {$this->MAuth->getdb('SETAUMP')}
