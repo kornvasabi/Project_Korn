@@ -36,7 +36,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		, .table > thead > tr > th {
 			padding: 2px;
 			line-height: 1;
-			vertical-align: text-bottom;
+			//vertical-align: text-bottom;
 			//border-top: 1px solid #ddd;
 		}
 	</style>

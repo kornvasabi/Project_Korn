@@ -182,7 +182,7 @@ class ReserveCar extends MY_Controller {
 			</div>
 		";
 		
-		$html = "<div>xxxxxxx</div>";
+		//$html = "<div>xxxxxxx</div>";
 		$response = array("html"=>$html,"status"=>true);
 		echo json_encode($response);
 	}
