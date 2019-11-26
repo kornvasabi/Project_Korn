@@ -205,7 +205,7 @@ function search(){
 	dataToPost.TRANSNO = $('#TRANSNO').val();
 	dataToPost.TRANSDT = $('#TRANSDT').val();
 	dataToPost.TRANSFM = $('#TRANSFM').val();
-	dataToPost.TRANSSTAT = $('#TRANSSTAT').val();
+	dataToPost.TRANSSTAT = $('#TRANSSTAT').find(':selected').val();
 	
 	/*
 	var spinner = $('body>.spinner').clone().removeClass('hide');
@@ -219,7 +219,7 @@ function search(){
 		type:'POST',
 		dataType:'json',
 		success:function(data){
-			$('#resultt1transfers').find('.spinner, .spinner-backdrop').remove();
+			//$('#resultt1transfers').find('.spinner, .spinner-backdrop').remove();
 			$('#resultt1transfers').html(data.html);
 			
 			/*
@@ -563,17 +563,24 @@ $('#btnt2addSTRNo').click(function(){
 						dataToPost.fCRLOCAT = $('#add_TRANSFM').val();
 						dataToPost.fGCODE	= $('#fGCODE').val();
 						
+						str = new Array();
+						$('.delSTRNO').each(function(){
+							str["strno"] = $(this).attr('strno');
+						});
+						dataToPost.strOld = (str.length == 0 ? str:'none');
+						/*
 						var spinner = $('body>.spinner').clone().removeClass('hide');
 						$('#resultSTRNO').html('');
 						$('#resultSTRNO').append(spinner);
-						
+						*/
+						$('#loadding').fadeIn(200);
 						$.ajax({
 							url: '../SYS02/Ctransferscars/getSTRNo',
 							data: dataToPost,
 							Type: 'POST',
 							dataType:'json',
 							success: function(data){
-								$('#resultSTRNO').find('.spinner, .spinner-backdrop').remove();
+								//$('#resultSTRNO').find('.spinner, .spinner-backdrop').remove();
 								$('#resultSTRNO').html(data.html);
 								
 								document.getElementById("table-fixed-getSTRNo").addEventListener("scroll", function(){
@@ -625,7 +632,7 @@ $('#btnt2addSTRNo').click(function(){
 										var valued = (typeof $('#add_EMPCARRY').find(':selected').val() === "undefined" ? "" : $('#add_EMPCARRY').find(':selected').val());	
 										
 										var row = '<tr seq="new'+generate+'">';
-										row += '<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="new'+generate+'" value="ยกเลิก"></td>';
+										row += '<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" strno="'+STRNO+'" seq="new'+generate+'" value="ยกเลิก"></td>';
 										row += '<td>'+STRNO+'</td>';
 										row += '<td>'+MODEL+'</td>';
 										row += '<td>'+BAAB+'</td>';
@@ -674,6 +681,8 @@ $('#btnt2addSTRNo').click(function(){
 									
 									$this.destroy();
 								});
+								
+								$('#loadding').fadeOut(200);
 							}
 						});
 					});

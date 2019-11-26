@@ -83,7 +83,7 @@ class Creceivedcars extends MY_Controller {
 				<div id='resultt1received' style='background-color:white;'></div>
 			</div>
 			
-			<div class='tab2' style='height:calc(100vh - 132px);width:100%;overflow:auto;background-color:white;'>
+			<div class='tab2' style='height:calc(100vh - 132px);width:100%;overflow:auto;background-color:white;' hidden>
 				<div class='col-sm-12'>
 					<div class='row'>
 						<div class='col-sm-2 col-sm-offset-2'>	
