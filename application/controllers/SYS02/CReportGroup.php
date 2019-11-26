@@ -27,6 +27,21 @@ class CReportGroup extends MY_Controller {
 	}
 	
 	function index(){
+		$db = $this->param("database");
+		$thisdb = $this->sess["db"];
+		
+		$dbgrp = "";
+		foreach($db as $key => $arr){
+			if(in_array($thisdb,$arr)){
+				foreach($arr as $k => $r){
+					if($dbgrp != ""){ $dbgrp .= ","; }
+					$dbgrp .= "'".$r."'";
+				}
+			}
+		}
+		
+		echo $dbgrp; exit;
+		print_r($db); exit;
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		

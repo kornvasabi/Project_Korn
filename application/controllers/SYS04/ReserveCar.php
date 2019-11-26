@@ -182,6 +182,7 @@ class ReserveCar extends MY_Controller {
 			</div>
 		";
 		
+		$html = "<div>xxxxxxx</div>";
 		$response = array("html"=>$html,"status"=>true);
 		echo json_encode($response);
 	}
@@ -202,6 +203,7 @@ class ReserveCar extends MY_Controller {
 		$arrs["fVATRT"] 	= "0.00";
 		$arrs["fTAXNO"] 	= "";
 		$arrs["fTAXDT"] 	= "";
+		$arrs["STRNO"] 		= "";
 		$arrs["fSTRNO"] 	= "";
 		$arrs["fACTICOD"] 	= "";
 		$arrs["fGRPCOD"]	= "";
@@ -261,6 +263,7 @@ class ReserveCar extends MY_Controller {
 				$arrs["fVATRT"]  	= number_format($row->VATRT,2);
 				$arrs["fTAXNO"]  	= $row->TAXNO;
 				$arrs["fTAXDT"]  	= $this->Convertdate(2,$row->TAXDT);
+				$arrs["STRNO"]  	= $row->STRNO;
 				$arrs["fSTRNO"] 	= "<option value='".$row->STRNO."'>".$row->STRNO."</option>";
 				$arrs["fACTICOD"] 	= "<option value='".$row->ACTICOD."'>".$row->ACTIDES."</option>";
 				$arrs["fGRPCOD"] 	= "<option value='".$row->GRPCOD."'>".$row->GRPDESC."</option>";
@@ -497,13 +500,11 @@ class ReserveCar extends MY_Controller {
 					</div>
 				</div>
 				
-				<div class='col-sm-3 col-sm-offset-3'>	
-					<div class='form-group'>
-						หมายเหตุ
-						<textarea id='fMEMO1' class='form-control input-sm' rows='3' style='resize:vertical;'>{$arrs["fMEMO1"]}</textarea>
-					</div>
+				<div class='col-sm-3 col-sm-offset-3'>
+					<button id='btncantStrno' strno='{$arrs["STRNO"]}' class='btn btn-xs btn-danger btn-block'>
+						<span class='glyphicon glyphicon-remove'> ยกเลิกเลขถัง</span>
+					</button>
 				</div>
-				
 			</div>
 			
 			<div class='col-sm-2 col-sm-offset-8'>

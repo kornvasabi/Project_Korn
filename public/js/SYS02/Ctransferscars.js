@@ -24,7 +24,8 @@ $(function(){
 	}else{
 		$('#btnt1transfers').attr('disabled',true);
 	}
-		
+	
+	$('#TRANSSTAT').select2();
 	initPage();
 });
 
@@ -194,6 +195,7 @@ $('#add_EMPCARRY').change(function(){
 	});
 });
 
+var jdsearch=null;
 $('#btnt1search').click(function(){ 
 	search();
 });
@@ -205,11 +207,13 @@ function search(){
 	dataToPost.TRANSFM = $('#TRANSFM').val();
 	dataToPost.TRANSSTAT = $('#TRANSSTAT').val();
 	
+	/*
 	var spinner = $('body>.spinner').clone().removeClass('hide');
     $('#resultt1transfers').html('');
 	$('#resultt1transfers').append(spinner);
-	
-	$.ajax({
+	*/
+	$('#loadding').fadeIn(200);
+	jdsearch = $.ajax({
 		url:'../SYS02/Ctransferscars/search',
 		data:dataToPost,
 		type:'POST',
@@ -226,7 +230,7 @@ function search(){
 			*/
 			
 			$('#table-Ctransferscars').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-Ctransferscars',1,360);
+			fn_datatables('table-Ctransferscars',1,330);
 			
 			/*
 			// Export data to Excel
@@ -252,7 +256,13 @@ function search(){
 					dataToPost.clev = _level;
 					loadData(dataToPost);
 				});
-			}		
+			}
+
+			jdsearch = null;
+			$('#loadding').fadeOut(200);	
+		},
+		beforeSend:function(){
+			if(jdsearch !== null){ jdsearch.abort(); }
 		}
 	});
 }
@@ -267,9 +277,7 @@ function loadData(dataToPost){
 		dataType:'json',
 		success:function(data){
 			$('#loadding').hide();
-
 			$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
-			
 			document.getElementById("table-fixed-STRNOTRANS").addEventListener("scroll", function(){
 				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 				this.querySelector("thead").style.transform = translate;	
@@ -414,11 +422,19 @@ function loadData(dataToPost){
 			for(var i=0;i<STRNO.length;i++){
 				$('#table-STRNOTRANS tbody').append(STRNO[i]);
 			}
+			//fn_datatables('table-STRNOTRANS',1,325);
 			
 			$('.SETEMPCARRY').select2({
 				placeholder: 'เลือก',
 				ajax: {
 					url: '../Cselect2/getVUSER',
+					data: function (params) {
+						dataToPost = new Object();
+						dataToPost.now = $(this).find(':selected').val();
+						dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+						
+						return dataToPost;				
+					},
 					dataType: 'json',
 					delay: 1000,
 					processResults: function (data) {
@@ -526,6 +542,7 @@ $('#btnt2addSTRNo').click(function(){
 	dataToPost = new Object();
 	dataToPost.locat = $('#add_TRANSFM').val();
 	
+	$('#loadding').fadeIn(200);
 	$.ajax({
 		url: '../SYS02/Ctransferscars/getSTRNoForm',
 		data: dataToPost,
@@ -634,6 +651,13 @@ $('#btnt2addSTRNo').click(function(){
 										placeholder: 'เลือก',
 										ajax: {
 											url: '../Cselect2/getVUSER',
+											data: function (params) {
+												dataToPost = new Object();
+												dataToPost.now = $(this).find(':selected').val();
+												dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+												
+												return dataToPost;				
+											},
 											dataType: 'json',
 											delay: 1000,
 											processResults: function (data) {
@@ -653,6 +677,8 @@ $('#btnt2addSTRNo').click(function(){
 							}
 						});
 					});
+					
+					$('#loadding').fadeOut(200);
 				}
 			});
 		}

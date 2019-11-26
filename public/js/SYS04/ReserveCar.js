@@ -308,7 +308,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			url: '../Cselect2/getSTRNO',
 			data: function (params) {
 				dataToPost = new Object();
-				dataToPost.now 	 = (typeof $('#fSTRNO').find(':selected').val() === 'undefined' ? '' : $('#fSTRNO').find(':selected').val());
+				dataToPost.now 	 = (typeof $('#fSTRNO').find(':selected').val() === 'undefined' ? $('#btncantStrno').attr('strno') : $('#fSTRNO').find(':selected').val());
 				dataToPost.q 	 = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = (typeof $('#fLOCAT').find(':selected').val() === 'undefined' ? '' : $('#fLOCAT').find(':selected').val());
 				
@@ -330,7 +330,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			},
 			cache: true
         },
-		allowClear: true,
+		allowClear: false,
 		multiple: false,
 		dropdownParent: $(".lobibox-body"),
 		//disabled: true,
@@ -373,6 +373,11 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				}
 			}
 		});
+	});
+	
+	var jdbtncantStrno = null;
+	$('#btncantStrno').click(function(){
+		$('#fSTRNO').empty().trigger('changed');
 	});
 	
 	$('#fACTICOD').select2({
@@ -654,7 +659,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 							$('#fRESPAY').focus();
 							$('#fBALANCE').val(data.price);
 						}else{
-							var bl = data.price - $('#fRESPAY').val();
+							var bl = data.price - ($('#fRESPAY').val()).replace(',','');
 							$('#fBALANCE').val(bl);
 						}						
 					}

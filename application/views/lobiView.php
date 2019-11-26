@@ -224,12 +224,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	</div>
 		
 	<!--Loading indicator for ajax page loading-->
-	<div class="spinner spinner-horizontal hide">
+	<!-- div class="spinner spinner-horizontal hide">
 		<span class="spinner-text">Loading...</span>
 		<div class="bounce1"></div>
 		<div class="bounce2"></div>
 		<div class="bounce3"></div>
-	</div>
+	</div -->
 	
 	<div id="loadding" hidden style="width:100vw;height:100vh;color:white;background-color:hsla(40, 14%, 21%, 0.59);position:fixed;top:0;left:0;z-index:10000;">
 		<div class="spinner spinner-horizontal">
@@ -484,7 +484,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			document.body.removeChild(link);
 		}
 	})();
-		
+	
+	var fontsize=10;
 	$('body').keyup(function(e){
 		if ( e.keyCode === 27 ) { // ESC
 			$('#loadding').hide();
@@ -617,6 +618,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 					
 				}
 			});
+		}else if(e.keyCode === 119){ //F8
+			fontsize += 2;
+			if(fontsize == 14){ fontsize = 10 }
+			$('body').css({'font-size':fontsize+'pt'});
+			$('body , .form-group,table > thead,tbody,tfoot > tr > th,td').css({'font-size':fontsize+'pt'});
 		}
 	});
 	

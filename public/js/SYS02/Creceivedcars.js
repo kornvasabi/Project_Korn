@@ -47,6 +47,7 @@ $(function(){
 	});
 	
 	initPage();
+	$('#TRANSSTAT').select2();
 });
 
 function initPage(){
@@ -157,6 +158,7 @@ function delSTRNO(){
 }
 
 var generate = 1;
+var jdbtnt2addSTRNO=null;
 $('#btnt2addSTRNO').click(function(){
 	dataToPost = new Object();
 	dataToPost.TRANSNO = $('#add_TRANSNO').val();
@@ -171,7 +173,7 @@ $('#btnt2addSTRNO').click(function(){
 	dataToPost.STRNO = $str;
 	
 	$('#loadding').show();
-	$.ajax({
+	jdbtnt2addSTRNO = $.ajax({
 		url:'../SYS02/Creceivedcars/addSTRNO',
 		data:dataToPost,
 		type:'POST',
@@ -254,10 +256,16 @@ $('#btnt2addSTRNO').click(function(){
 					});
 				}
 			});
+			
+			jdbtnt2addSTRNO = null;
+		},
+		beforeSend: function(){
+			if(jdbtnt2addSTRNO !== null){ jdbtnt2addSTRNO.abort(); }
 		}
 	});
 });
 
+var jdsearch = null;
 $('#btnt1search').click(function(){ search(); });
 
 function search(){
@@ -272,7 +280,7 @@ function search(){
     $('#resultt1received').html('');
 	$('#resultt1received').append(spinner);
 	
-	$.ajax({
+	jdsearch = $.ajax({
 		url:'../SYS02/Creceivedcars/search',
 		data:dataToPost,
 		type:'POST',
@@ -287,13 +295,14 @@ function search(){
 				this.querySelector("thead").style.transform = translate;						
 			});
 			*/
+			
 			$('#table-Creceivedcars').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-Creceivedcars',1,325);
+			fn_datatables('table-Creceivedcars',1,300);
 			
 			/*
 			// Export data to Excel
-			$('.data-export').prepend('<img id="table-Ctransferscars-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
-			$("#table-Ctransferscars-excel").click(function(){ 	
+			$('.data-export').prepend('<img id="table-Creceivedcars-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
+			$("#table-Creceivedcars-excel").click(function(){ 	
 				tableToExcel_Export(data.html,"ข้อมูลการรับโอน","Received"); 
 			});
 			*/
@@ -325,6 +334,11 @@ function search(){
 					$('.tab2').show();
 				});
 			}
+			
+			jdsearch = null;
+		},
+		beforeSend: function(){
+			if(jdsearch !== null){ jdsearch.abort(); }
 		}
 	});
 }

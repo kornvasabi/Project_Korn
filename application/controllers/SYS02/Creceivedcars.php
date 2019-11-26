@@ -28,8 +28,8 @@ class Creceivedcars extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div style='height:65px;overflow:auto;'>					
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+				<div>
 					<div class='col-sm-2'>	
 						<div class='form-group'>
 							เลขที่โอน
@@ -58,7 +58,7 @@ class Creceivedcars extends MY_Controller {
 						<div class='form-group'>
 							สถานะ
 							<select id='TRANSSTAT' class='form-control input-sm chosen-select' data-placeholder='สถานะ'>
-								<option value='' selected>ทุกสถานะ</option>
+								<option value='none' selected>ทุกสถานะ</option>
 								<option value='Sendding'>อยู่ระหว่างการโอนย้ายรถ</option>
 								<option value='Pendding'>รับโอนรถบางส่วน</option>
 								<option value='Received'>รับโอนรถครบแล้ว</option>
@@ -235,7 +235,7 @@ class Creceivedcars extends MY_Controller {
 			$cond .= " and a.TRANSTO = '".$arrs['TRANSTO']."'";
 		}
 		
-		if($arrs['TRANSSTAT'] != ""){
+		if($arrs['TRANSSTAT'] != "none"){
 			$cond .= " and a.TRANSSTAT = '".$arrs['TRANSSTAT']."'";
 		}
 		
@@ -276,18 +276,18 @@ class Creceivedcars extends MY_Controller {
 		}
 		
 		$html = "
-			<div id='table-fixed-Creceivedcars' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+			<div id='table-fixed-Creceivedcars' class='col-sm-12' style='height:100%;overflow:auto;'>
 				<table id='table-Creceivedcars' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
 						<tr>
-							<th>#</th>
-							<th>เลขที่โอน</th>
-							<th>วันที่โอน</th>
-							<th>วันที่รับ</th>
-							<th>จากสาขา</th>
-							<th>ไปสาขา</th>
-							<th>จำนวน(คัน)</th>
-							<th>สถานะ</th>
+							<th style='vertical-align:middle;'>#</th>
+							<th style='vertical-align:middle;'>เลขที่โอน</th>
+							<th style='vertical-align:middle;'>วันที่โอน</th>
+							<th style='vertical-align:middle;'>วันที่รับ</th>
+							<th style='vertical-align:middle;'>จากสาขา</th>
+							<th style='vertical-align:middle;'>ไปสาขา</th>
+							<th style='vertical-align:middle;'>จำนวน(คัน)</th>
+							<th style='vertical-align:middle;'>สถานะ</th>
 						</tr>
 					</thead>	
 					<tbody>

@@ -30,8 +30,8 @@ class Ctransferscars extends MY_Controller {
 		$diunem = $this->generateData(array($claim["menuid"]),"encode");
 
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' diunem='{$diunem[0]}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div style='height:65px;overflow:auto;'>
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' diunem='{$diunem[0]}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+				<div>
 					<div class='col-sm-2'>
 						<div class='form-group'>
 							เลขที่บิลโอน
@@ -54,7 +54,7 @@ class Ctransferscars extends MY_Controller {
 						<div class='form-group'>
 							สถานะ
 							<select id='TRANSSTAT' class='form-control selcls input-sm chosen-select' data-placeholder='สถานะ' >
-								<option value='' selected>ทุกสถานะ</option>
+								<option value='none' selected>ทุกสถานะ</option>
 								<option value='Sendding'>อยู่ระหว่างการโอนย้ายรถ</option>
 								<option value='Pendding'>รับโอนรถบางส่วน</option>
 								<option value='Received'>รับโอนรถครบแล้ว</option>
@@ -254,7 +254,7 @@ class Ctransferscars extends MY_Controller {
 			$cond .= " and a.TRANSFM = '".$arrs['TRANSFM']."'";
 		}
 
-		if($arrs['TRANSSTAT'] != ""){
+		if($arrs['TRANSSTAT'] != "none"){
 			$cond .= " and a.TRANSSTAT = '".$arrs['TRANSSTAT']."'";
 		}
 
@@ -319,14 +319,14 @@ class Ctransferscars extends MY_Controller {
 				<table id='table-Ctransferscars' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
 						<tr>
-							<th style='vertical-align:middle;'>#</th>
-							<th style='vertical-align:middle;'>เลขที่โอน</th>
-							<th style='vertical-align:middle;'>วันที่โอน</th>
-							<th style='vertical-align:middle;'>จากสาขา<br/>ไปสาขา</th>
+							<th style='vertical-align:middle;'>#<br>&emsp;<br>&emsp;</th>
+							<th style='vertical-align:middle;'>เลขที่โอน<br>&emsp;<br>&emsp;</th>
+							<th style='vertical-align:middle;'>วันที่โอน<br>&emsp;<br>&emsp;</th>
+							<th style='vertical-align:middle;'>จากสาขา<br/>ไปสาขา<br>&emsp;</th>
 
-							<th style='vertical-align:middle;'>ชื่อ พขร.</th>
-							<th style='vertical-align:middle;'>จำนวนโอน</th>
-							<th style='vertical-align:middle;'>คำอธิบาย</th>
+							<th style='vertical-align:middle;'>ชื่อ พขร.<br>&emsp;<br>&emsp;</th>
+							<th style='vertical-align:middle;'>จำนวนโอน<br>&emsp;<br>&emsp;</th>
+							<th style='vertical-align:middle;'>คำอธิบาย<br>&emsp;<br>&emsp;</th>
 							<th style='vertical-align:middle;'>ผู้ทำรายการ<br/>วันที่ทำรายการ<br/>สถานะ</th>
 						</tr>
 					</thead>
