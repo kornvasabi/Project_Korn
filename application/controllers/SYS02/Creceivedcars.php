@@ -465,6 +465,7 @@ class Creceivedcars extends MY_Controller {
 					if (1 = (select count(*) from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$arrs['STRNO'][$i][1]."' and CRLOCAT='TRANS'))
 					begin
 						set @getdt = getdate();
+						
 						update a
 						set a.CRLOCAT=b.TRANSTO
 							,a.MOVENO=b.TRANSNO 
@@ -523,10 +524,12 @@ class Creceivedcars extends MY_Controller {
 			begin try
 				if((select count(*) from {$this->MAuth->getdb('INVMOVM')} where MOVENO='".$arrs['TRANSNO']."' collate thai_cs_as ) > 0)
 				begin 
+					/* เคยรับโอนแล้วบางส่วน */
 					".$sql."
 				end
 				else 
 				begin 
+					/* ยังไม่เคยรับโอนรถสักคันที */
 					insert into {$this->MAuth->getdb('INVMOVM')}
 					select a.TRANSNO,convert(varchar(8),getdate(),112)
 						,(select USERID from YTKManagement.dbo.hp_mapusers where IDNo=a.INSERTBY and dblocat='".$this->sess["db"]."')

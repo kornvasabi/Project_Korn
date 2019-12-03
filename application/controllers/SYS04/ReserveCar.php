@@ -137,7 +137,7 @@ class ReserveCar extends MY_Controller {
 			foreach($query->result() as $row){
 				$html .= "
 					<tr class='trow' seq=".$NRow.">
-						<td class='getit resvnoClick' seq=".$NRow++."  RESVNO='".$row->RESVNO."' style='cursor: pointer; text-align: center; background-color: rgb(255, 255, 255);'><b>รายละเอียด</b></td>
+						<td class='getit resvnoClick' seq=".$NRow++."  RESVNO='".$row->RESVNO."' style='cursor: pointer; text-align: center; background-color: rgb(255, 255, 255);'><b>เลือก</b></td>
 						<!--td>
 							<i class='resvnoClick btn btn-xs btn-success glyphicon glyphicon-zoom-in' RESVNO='".$row->RESVNO."' style='cursor:pointer;'> รายละเอียด  </i>
 						</td -->
@@ -910,7 +910,13 @@ class ReserveCar extends MY_Controller {
 						end
 					end
 					else 
-					begin						
+					begin
+						update {$this->MAuth->getdb('INVTRAN')}
+						set RESVNO	= NULL,
+							RESVDT	= NULL,
+							CURSTAT	= ''
+						where STRNO=@STRNO and RESVNO='".$arrs["RESVNO"]."'
+						
 						update {$this->MAuth->getdb('INVTRAN')}
 						set RESVNO	= '".$arrs["RESVNO"]."',
 							RESVDT	= '".$arrs["RESVDT"]."',
@@ -934,7 +940,7 @@ class ReserveCar extends MY_Controller {
 				begin catch
 					rollback tran tst;
 					insert into #transaction select 'Y','',ERROR_MESSAGE();
-				end catch				
+				end catch
 			";
 		}
 		
@@ -972,7 +978,11 @@ class ReserveCar extends MY_Controller {
 					return;
 				end
 				
-				if exists (select * from {$this->MAuth->getdb('ARANALYZE')} where RESVNO='".$RESVNO."')
+				if exists (
+					select count(*) from {$this->MAuth->getdb('ARANALYZE')} where RESVNO='".$RESVNO."'
+					union
+					select count(*) from {$this->MAuth->getdb('ARMAST')} where RESVNO='".$RESVNO."'
+				)
 				begin
 					rollback tran tst;
 					insert into #transaction select 'Y' as id,'','ผิดพลาด เลขที่บิลจองถูกนำไปใช้แล้ว ไม่สามารถลบบิลจองได้' as msg;

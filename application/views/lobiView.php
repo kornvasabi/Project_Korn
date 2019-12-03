@@ -651,10 +651,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	function fn_datatables($tbname,$numbers,$usageHeight,$overHeight="NO"){
 		$dom = "";
 		$iDisplayLength = 100;
+		$ordering = true;
 		switch($numbers){
 			case 1: 
 				$dom = "<'row'<'col-sm-6 data-export'l><'col-sm-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>"; 
 				break; 
+			case 11: 
+				$iDisplayLength = -1;
+				$ordering = false;
+				$dom = "<'row'<'col-sm-6 data-export'l><'col-sm-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>"; 
+				break; 	
 			case 2: 
 				$dom = "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>"; 
 				break; 
@@ -680,7 +686,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			scrollX: true,
 			autoWidth: true,
 			responsive: false,
-			ordering: true,
+			ordering: $ordering,
 			iDisplayLength: $iDisplayLength,
 			lengthChange: false,
 			aLengthMenu: [ 50, 100, 500, 1000 ],

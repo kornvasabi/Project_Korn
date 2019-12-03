@@ -565,9 +565,10 @@ $('#btnt2addSTRNo').click(function(){
 						
 						str = new Array();
 						$('.delSTRNO').each(function(){
-							str["strno"] = $(this).attr('strno');
+							str[$(this).attr('strno')] = $(this).attr('strno');
 						});
-						dataToPost.strOld = (str.length == 0 ? str:'none');
+						alert(str.length);
+						dataToPost.strOld = (str.length > 0 ? str:'none');
 						/*
 						var spinner = $('body>.spinner').clone().removeClass('hide');
 						$('#resultSTRNO').html('');

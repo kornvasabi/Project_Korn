@@ -1649,17 +1649,14 @@ function fnload($thisForm){
 	});
 	
 	var JDsave = null;
-	$("#save5555").click(function(){
-		var test = $('#empIDNo').find(':selected').val();
-		alert(test);
-		//alert(data[0].test);
-	});
 	$("#save").click(function(){
+		
 		dataToPost = new Object();
 		dataToPost.locat 		= (typeof $('#locat').find(':selected').val() === 'undefined' ? '' : $('#locat').find(':selected').val());
 		dataToPost.resvno 		= (typeof $('#resvno').find(':selected').val() === 'undefined' ? '' : $('#resvno').find(':selected').val());
 		dataToPost.resvAmt 		= $('#resvAmt').val();
 		dataToPost.dwnAmt 		= $('#dwnAmt').val();
+		dataToPost.insuranceType = $('.insuranceType[name=insuranceType]:checked').val();
 		dataToPost.insuranceAmt = $('#insuranceAmt').val();
 		dataToPost.nopay		= $('#nopay').val();
 		dataToPost.strno 		= (typeof $('#strno').find(':selected').val() === 'undefined' ? '' : $('#strno').find(':selected').val());

@@ -276,17 +276,19 @@ function search(){
 	dataToPost.TRANSTO = $('#TRANSTO').val();
 	dataToPost.TRANSSTAT = $('#TRANSSTAT').val();
 	
+	/*
 	var spinner = $('body>.spinner').clone().removeClass('hide');
     $('#resultt1received').html('');
 	$('#resultt1received').append(spinner);
-	
+	*/
+	$('#loadding').fadeIn(200);
 	jdsearch = $.ajax({
 		url:'../SYS02/Creceivedcars/search',
 		data:dataToPost,
 		type:'POST',
 		dataType:'json',
 		success:function(data){
-			$('#resultt1received').find('.spinner, .spinner-backdrop').remove();
+			//$('#resultt1received').find('.spinner, .spinner-backdrop').remove();
 			$('#resultt1received').html(data.html);
 			
 			/*
@@ -335,6 +337,7 @@ function search(){
 				});
 			}
 			
+			$('#loadding').fadeOut(200);
 			jdsearch = null;
 		},
 		beforeSend: function(){

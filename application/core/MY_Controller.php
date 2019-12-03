@@ -192,6 +192,7 @@ class MY_Controller extends CI_Controller {
 				,convert(varchar(8),(convert(varchar(6),getdate(),112)+'01'),112) as startofmonth
 				,convert(varchar(8),getdate(),112) as today
 				,convert(varchar(8),(dateadd(day,-1,convert(varchar(6),dateadd(month,1,getdate()),112)+'01')),112) as endofmonth
+				,convert(varchar(8),dateadd(day,-1,convert(varchar(6),getdate(),112)+'01'),112) as endofmonthB1
 				,convert(varchar(8),dateadd(month,1,getdate()),112) as todaynextmonth
 		";
 		$query = $this->db->query($sql);
@@ -204,6 +205,7 @@ class MY_Controller extends CI_Controller {
 					case 'startofmonth': return $this->Convertdate(2,$row->startofmonth); break;
 					case 'today': return $this->Convertdate(2,$row->today); break;
 					case 'endofmonth': return $this->Convertdate(2,$row->endofmonth); break;
+					case 'endofmonthB1': return $this->Convertdate(2,$row->endofmonthB1); break;
 					case 'todaynextmonth': return $this->Convertdate(2,$row->todaynextmonth); break;
 				}
 			}
