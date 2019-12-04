@@ -136,14 +136,17 @@ class report extends MY_Controller {
 			declare @fmdt datetime		 = '{$arrs['SDATE']}';
 			declare @todt datetime		 = '{$arrs['EDATE']}';
 			declare @locat varchar(5)	 = ".($arrs['LOCAT'] == "" ? "'%'":"'".$arrs['LOCAT']."'").";
+			declare @type varchar(20)	 = ".($arrs['TYPE'] == "" ? "'%'":"'".$arrs['TYPE']."'").";
 			declare @model varchar(20)	 = ".($arrs['MODEL'] == "" ? "'%'":"'".$arrs['MODEL']."'").";
 			declare @stat varchar(1)	 = ".($arrs['STAT']).";
 			declare @turnover varchar(1) = '{$arrs['turnover']}';
 			
-			select seq,model,ffm,model,fmlocat,stklocat,refno
-				,convert(varchar(8),stkdate,112) as stkdate
+			select seq,model,ffm,model
+				,case when model='โอนย้ายสินค้า' then stklocat else fmlocat end fmlocat
+				,case when model='โอนย้ายสินค้า' then fmlocat else stklocat end stklocat
+				,refno,convert(varchar(8),stkdate,112) as stkdate
 				,strno,baab,color,qtyin,qtyout,total
-			from {$this->MAuth->getdb('stockcard')}(@fmdt,@todt,@locat,@model,@stat,@turnover);
+			from {$this->MAuth->getdb('stockcard')}(@fmdt,@todt,@locat,@type,@model,@stat,@turnover);
 		";
 		$query = $this->db->query($sql);
 		
@@ -280,6 +283,11 @@ class report extends MY_Controller {
 	
 	function stockcardPDF(){
 		ini_set("pcre.backtrack_limit", "5000000");
+		
+		$logDT = "";
+		$date = new DateTime();
+		$logDT .= "เริ่มต้น :: ".$date->format('Y-m-d H:i:s'); 
+
 		$arrs = array();
 		$arrs['LOCAT']	  = $_POST['LOCAT'];
 		$arrs['SDATE']    = $_POST['SDATE'];
@@ -305,13 +313,18 @@ class report extends MY_Controller {
 			declare @stat varchar(1)	 = ".($arrs['STAT']).";
 			declare @turnover varchar(1) = '{$arrs['turnover']}';
 			
-			select top 1000 seq,model,ffm,model,fmlocat,stklocat,refno
-				,convert(varchar(8),stkdate,112) as stkdate
+			select seq,model,ffm,model
+				,case when model='โอนย้ายสินค้า' then stklocat else fmlocat end fmlocat
+				,case when model='โอนย้ายสินค้า' then fmlocat else stklocat end stklocat
+				,refno,convert(varchar(8),stkdate,112) as stkdate
 				,strno,baab,color,qtyin,qtyout,total
 			from {$this->MAuth->getdb('stockcard')}(@fmdt,@todt,@locat,@type,@model,@stat,@turnover);
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
+		
+		$date = new DateTime();
+		$logDT .= "<br> โหลดข้อมูลเสร็จ :: ".$date->format('Y-m-d H:i:s'); 
 		
 		$data_sum = array();
 		$NRow = 0;
@@ -367,19 +380,19 @@ class report extends MY_Controller {
 		$bod .= "
 			<hr>
 			<div class='wf fs7'>
-				<div class='bor' style='width:50px;max-width:50px;float:left;'></div>
-				<div class='bor' style='width:170px;max-width:170px;float:left;'>รวมทั้งสิ้น</div>
-				<div class='bor' style='width:80px;max-width:80px;float:left;'>".$NRow."</div>
-				<div class='bor' style='width:70px;max-width:70px;float:left;'>รายการ</div>
-				<div class='bor' style='width:90px;max-width:90px;float:left;;float:left;'></div>
-				<div class='bor' style='width:60px;max-width:60px;float:left;'></div>
-				<div class='bor' style='width:110px;max-width:110px;float:left;'></div>
-				<div class='bor' style='width:50px;max-width:50px;float:left;'></div>
-				<div class='bor' style='width:110px;max-width:110px;float:left;'></div>
-				<div class='bor' align='right' style='width:60px;max-width:60px;float:left;'></div>
-				<div class='bor' align='right' style='width:60px;max-width:60px;float:left;'></div>
-				<div class='bor' style='width:70px;max-width:70px;float:left;'>รวมยอดยกไป</div>
-				<div class='bor' align='right' style='width:70px;max-width:70px;float:left;'>".$data_sum["turnoverSum"]."</div>
+				<div style='width:50px;max-width:50px;float:left;'>&emsp;</div>
+				<div style='width:170px;max-width:170px;float:left;'>รวมทั้งสิ้น</div>
+				<div style='width:80px;max-width:80px;float:left;'>".$NRow."</div>
+				<div style='width:70px;max-width:70px;float:left;'>รายการ</div>
+				<div style='width:90px;max-width:90px;float:left;;float:left;'>&emsp;</div>
+				<div style='width:60px;max-width:60px;float:left;'>&emsp;</div>
+				<div style='width:110px;max-width:110px;float:left;'>&emsp;</div>
+				<div style='width:50px;max-width:50px;float:left;'>&emsp;</div>
+				<div style='width:110px;max-width:110px;float:left;'>&emsp;</div>
+				<div align='right' style='width:60px;max-width:60px;float:left;'>&emsp;</div>
+				<div align='right' style='width:60px;max-width:60px;float:left;'>&emsp;</div>
+				<div style='width:70px;max-width:70px;float:left;'>รวมยอดยกไป</div>
+				<div align='right' style='width:70px;max-width:70px;float:left;'>".$data_sum["turnoverSum"]."</div>
 			</div>
 			<hr>
 		";
@@ -441,6 +454,11 @@ class report extends MY_Controller {
 		";		
 		$mpdf->SetHTMLHeader($content);
 		$mpdf->WriteHTML($bod.$stylesheet);
+		
+		$date = new DateTime();
+		$logDT .= "<br> สร้างไฟล์ PDF เสร็จ :: ".$date->format('Y-m-d H:i:s'); 
+		$mpdf->addPage();
+		$mpdf->WriteHTML($logDT);
 		//$mpdf->SetHTMLFooter("<div class='wf pf' style='top:730;left:0;font-size:6pt;width:1020px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
 		//$mpdf->Output('report.pdf', 'D');
