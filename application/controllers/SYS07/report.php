@@ -92,10 +92,17 @@ class report extends MY_Controller {
 						</div>
 					</div>
 					<div class='row'>
-						<div class='col-sm-12'>
+						<div class='col-sm-6'>
 							<div class='form-group'>
 								<button id='btnt1search' class='btn btn-primary btn-block'>
 									<span class='glyphicon glyphicon-search'> แสดง</span>
+								</button>
+							</div>
+						</div>
+						<div class='col-sm-6'>
+							<div class='form-group'>
+								<button id='btnt1PDF' class='btn btn-danger btn-block'>
+									<span class='glyphicon glyphicon-download'> Donwload PDF</span>
 								</button>
 							</div>
 						</div>
@@ -293,14 +300,15 @@ class report extends MY_Controller {
 			declare @fmdt datetime		 = '{$arrs['SDATE']}';
 			declare @todt datetime		 = '{$arrs['EDATE']}';
 			declare @locat varchar(5)	 = ".($arrs['LOCAT'] == "" ? "'%'":"'".$arrs['LOCAT']."'").";
+			declare @type varchar(20)	 = ".($arrs['TYPE'] == "" ? "'%'":"'".$arrs['TYPE']."'").";
 			declare @model varchar(20)	 = ".($arrs['MODEL'] == "" ? "'%'":"'".$arrs['MODEL']."'").";
 			declare @stat varchar(1)	 = ".($arrs['STAT']).";
 			declare @turnover varchar(1) = '{$arrs['turnover']}';
 			
-			select seq,model,ffm,model,fmlocat,stklocat,refno
+			select top 1000 seq,model,ffm,model,fmlocat,stklocat,refno
 				,convert(varchar(8),stkdate,112) as stkdate
 				,strno,baab,color,qtyin,qtyout,total
-			from {$this->MAuth->getdb('stockcard')}(@fmdt,@todt,@locat,@model,@stat,@turnover);
+			from {$this->MAuth->getdb('stockcard')}(@fmdt,@todt,@locat,@type,@model,@stat,@turnover);
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -435,6 +443,7 @@ class report extends MY_Controller {
 		$mpdf->WriteHTML($bod.$stylesheet);
 		//$mpdf->SetHTMLFooter("<div class='wf pf' style='top:730;left:0;font-size:6pt;width:1020px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
+		//$mpdf->Output('report.pdf', 'D');
 		$mpdf->Output();
 	}
 	

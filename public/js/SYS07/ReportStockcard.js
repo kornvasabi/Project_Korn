@@ -87,6 +87,20 @@
 
 var jdbtnt1search=null;
 $('#btnt1search').click(function(){ fnSearch(); });
+var JDPDF=null;
+$('#btnt1PDF').click(function(){ 
+	dataToPost = new Object();
+	dataToPost.LOCAT 	= (typeof $('#locat').find(':selected').val() === 'undefined' ? '':$('#locat').find(':selected').val());
+	dataToPost.SDATE	= $('#SDATE').val();
+	dataToPost.EDATE	= $('#EDATE').val();
+	dataToPost.TYPE 	= (typeof $('#TYPE').find(':selected').val() === 'undefined' ? '':$('#TYPE').find(':selected').val());
+	dataToPost.MODEL 	= (typeof $('#MODEL').find(':selected').val() === 'undefined' ? '':$('#MODEL').find(':selected').val());
+	dataToPost.STAT 	= (typeof $('#STAT').find(':selected').val() === 'undefined' ? '':$('#STAT').find(':selected').val());
+	dataToPost.REPORT 	= $('input:radio[name=REPORT]:checked').val();
+	dataToPost.turnover = $('input:radio[name=turnover]:checked').val();
+	
+	fnPDF(dataToPost);
+});
 
 function fnSearch(){
 	dataToPost = new Object();
@@ -116,32 +130,7 @@ function fnSearch(){
 				shown: function($this){
 					fn_datatables('table-RPstc',11,280,'NO');
 					$('.data-export').prepend('<img id="table-RPstc-print" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;margin-left:10px;">');
-					
-					var JDRPstcPrint=null;
-					$('#table-RPstc-print').click(function(){
-						JDRPstcPrint = $.ajax({
-							url:'../SYS07/report/stockcardFormPrint',
-							data: dataToPost,
-							type:'POST',
-							dataType:'json',
-							success: function(data){
-								Lobibox.window({
-									title: 'File PDF',
-									width: $(window).width(),
-									height: $(window).height(),
-									content: data.html,
-									draggable: false,
-									closeOnEsc: true,
-									shown: function($this){
-										document.getElementById("formsubmit").submit();
-									}
-								});
-								
-								JDRPstcPrint = null;
-							},
-							beforeSend: function(){ if(JDRPstcPrint !== null){ JDRPstcPrint.abort(); } }
-						});
-					});
+					$('#table-RPstc-print').click(function(){ fnPDF(dataToPost); });
 				},
 				beforeClose : function(){
 					$('#btnt1leasing').attr('disabled',false);
@@ -156,7 +145,31 @@ function fnSearch(){
 }
 
 
-
+function fnPDF(data){
+	JDPDF = $.ajax({
+		url:'../SYS07/report/stockcardFormPrint',
+		data: data,
+		type:'POST',
+		dataType:'json',
+		success: function(data){
+			Lobibox.window({
+				title: 'File PDF',
+				width: $(window).width(),
+				height: $(window).height(),
+				content: data.html,
+				draggable: false,
+				closeOnEsc: true,
+				shown: function($thisPDF){
+					setTimeout(function(){ document.getElementById("formsubmit").submit(); },500);
+					//setTimeout(function(){ $thisPDF.destroy(); },3000);
+				}
+			});
+			
+			JDPDF = null;
+		},
+		beforeSend: function(){ if(JDPDF !== null){ JDPDF.abort(); } }
+	});
+}
 
 
 
