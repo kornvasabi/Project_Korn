@@ -243,7 +243,7 @@ class ReserveCar extends MY_Controller {
 			left join {$this->MAuth->getdb('ARRESVOTH')} d on a.RESVNO=d.RESVNO collate thai_cs_as and d.REF='".strtoupper($this->sess["db"])."'
 			where a.RESVNO='{$RESVNO}'
 		";
-		//echo $sql; exit;
+		echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		if($query->row()){

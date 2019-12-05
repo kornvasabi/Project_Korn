@@ -27,6 +27,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		select {
 			background: transparent;
 		}
+		
+		.select2-container--open {
+			z-index:50000;
+		}
 	</style>
 </head>
 <!-- style='background: rgba(0, 0, 0, 0) url("../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png") repeat scroll 0% 0%;' -->

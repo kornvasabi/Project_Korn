@@ -28,27 +28,27 @@ class CreceiveStock extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div style='height:65px;overflow:auto;'>					
-					<div class='col-xs-2 col-sm-2'>	
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+				<div>
+					<div class='col-sm-2'>	
 						<div class='form-group'>
 							เลขที่บิลโอน
 							<input type='text' id='TRANSNO' class='form-control input-sm' placeholder='เลขที่โอน'>
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-2'>	
+					<div class='col-sm-2'>	
 						<div class='form-group'>
 							วันที่บิลโอน
 							<input type='text' id='TRANSDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน'>
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-1'>	
+					<div class='col-sm-2'>	
 						<div class='form-group'>
 							สาขาต้นทาง
 							<input type='text' id='TRANSFM' class='form-control input-sm' placeholder='สาขาต้นทาง' value='".$this->sess['branch']."'>
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-2'>	
+					<div class='col-sm-2'>	
 						<div class='form-group'>
 							สถานะ
 							<select id='TRANSSTAT' class='form-control selcls input-sm chosen-select' data-placeholder='สถานะ' >
@@ -60,150 +60,15 @@ class CreceiveStock extends MY_Controller {
 							</select>
 						</div>
 					</div>
-					<div class='col-xs-2 col-sm-1'>	
-						<div class='form-group'>
-							<br>
-							<input type='button' id='btnt1search' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
-						</div>
+					<div class='col-sm-6'>	
+						<button id='btnt1search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 					</div>
-					<div class='col-xs-2 col-sm-1 col-sm-offset-3'>	
-						<div class='form-group'>
-							<br>
-							<input type='button' id='btnt1transfers' class='btn btn-cyan btn-sm' value='โอนย้ายรถ' style='width:100%'>
-						</div>
+					<div class='col-sm-6'>	
+						<button id='btnt1receiveStock' class='btn btn-cyan btn-block'><span class='glyphicon glyphicon-pencil'> รับรถเข้าสต๊อค</span></button>
 					</div>
 				</div>
-				<div id='resultt1transfers' style='height:calc(100% - 65px);overflow:auto;background-color:white;'></div>
-			</div>
-			<div class='tab2' style='height:calc(100vh - 132px);width:100%;overflow:auto;background-color:white;'>
 				<div class='col-sm-12'>
-					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-2'>	
-							<div class='form-group'>
-								เลขที่บิลโอน
-								<input type='text' id='add_TRANSNO' class='form-control input-sm' placeholder='เลขที่โอน'>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								วันที่บิลโอน
-								<input type='text' id='add_TRANSDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่โอน' >
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								สาขาต้นทาง
-								<select id='add_TRANSFM' class='form-control input-sm'><option value='".$this->sess['branch']."'>".$this->sess['branch']."</option></select>
-							</div>
-						</div>
-
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								สาขาปลายทาง
-								<select id='add_TRANSTO' class='form-control input-sm'></select>
-							</div>
-						</div>
-					</div>
-				
-					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-2'>	
-							<div class='form-group'>
-								พขร.
-								<!-- input type='text' id='add_EMPCARRY' class='form-control input-sm' placeholder='พขร.' -->
-								<select id='add_EMPCARRY' class='form-control input-sm' placeholder='พขร.'></select>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								ผู้อนุมัติ
-								<select id='add_APPROVED' class='form-control input-sm'></select>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								สถานะบิล
-								<select id='add_TRANSSTAT' class='form-control input-sm chosen-select' data-placeholder='สถานะ'>
-									<option value='Sendding' selected>อยู่ระหว่างการโอนย้ายรถ</option>
-									<option value='Pendding'>รับโอนรถบางส่วน</option>
-									<option value='Received'>รับโอนรถครบแล้ว</option>
-									<option value='Cancel'>ยกเลิกบิลโอน</option>
-								</select>
-							</div>
-						</div>
-
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								หมายเหตุ
-								<input type='text' id='add_MEMO1' class='form-control input-sm' placeholder='หมายเหตุ'>
-							</div>
-						</div>
-					</div>
-					
-					<div class='row'>
-						<div class='col-sm-1'>	
-							<div class='form-group'>
-								<br>
-								<input type='button' id='btnt2addSTRNo' class='btn btn-primary btn-sm' value='เพิ่มเลขตัวถัง' style='width:100%'>
-							</div>
-						</div>
-						<div class='col-sm-2 col-sm-offset-9'>	
-							<div class='form-group'>
-								<br>
-								<input type='button' id='btnt1transfers' class='btn btn-primary btn-sm' value='&#9776;&emsp; ดูลำดับการโอนรถ' style='width:100%'>
-							</div>
-						</div>
-					</div>
-					<div class='row'>
-						<div class='col-sm-12'>	
-							<div id='table-fixed-STRNOTRANS' class='col-sm-12' style='height:calc(100vh - 400px);width:100%;overflow:auto;background-color:white;'>
-								<table id='table-STRNOTRANS' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
-									<thead>
-										<tr>
-											<th>#</th>
-											<th>เลขตัวถัง</th>
-											<th>รุ่น</th>
-											<th>แบบ</th>
-											<th>สี</th>
-											<th>กลุ่มรถ</th>
-											<th>สถานะการโอน</th>
-											<th>วันที่โอนย้าย</th>
-											<th>พขร.</th>
-										</tr>
-									</thead>
-									<tbody></tbody>
-								</table>
-							</div>	
-						</div>
-					</div>
-					
-					<div class='row'>
-						<div class='col-sm-1'>	
-							<div class='form-group'>
-								<br>
-								<input type='button' id='btnt2home' class='btn btn-inverse btn-sm' value='หน้าแรก' style='width:100%'>
-							</div>
-						</div>
-						<div class='col-sm-1'>	
-							<div class='form-group'>
-								<br>
-								<input type='button' id='btnt2bill' class='btn btn-primary btn-sm' value='บิลโอน' style='width:100%'>
-							</div>
-						</div>
-						
-						<div class='col-sm-1 col-sm-offset-8'>	
-							<div class='form-group'>
-								<br>
-								<input type='button' id='btnt2del' class='btn btn-danger btn-sm' value='ยกเลิกบิลโอน' style='width:100%'>
-							</div>
-						</div>
-						
-						<div class='col-sm-1'>	
-							<div class='form-group'>
-								<br>
-								<input type='button' id='btnt2save' class='btn btn-primary btn-sm' value='บันทึก' style='width:100%'>
-							</div>
-						</div>
-					</div>
+					<div id='resultt1receiveStock'></div>
 				</div>
 			</div>
 		";
@@ -214,6 +79,7 @@ class CreceiveStock extends MY_Controller {
 	
 	function search(){
 		$arrs = array();
+		/*
 		$arrs['TRANSNO'] = $_REQUEST['TRANSNO'];
 		$arrs['TRANSDT'] = $_REQUEST['TRANSDT'];
 		$arrs['TRANSFM'] = $_REQUEST['TRANSFM'];
@@ -236,32 +102,12 @@ class CreceiveStock extends MY_Controller {
 		if($arrs['TRANSSTAT'] != ""){
 			$cond .= " and a.TRANSSTAT = '".$arrs['TRANSSTAT']."'";
 		}
+		*/
+		$cond = "";
 		
 		$sql = "
-			select ".($cond == "" ? "top 20":"")." a.TRANSNO,convert(varchar(8),a.TRANSDT,112) as TRANSDT
-				,a.TRANSFM,a.TRANSTO,c.USERNAME as EMPCARRY,a.TRANSQTY,a.TRANSSTAT
-				,case when a.TRANSSTAT='Sendding' then 'อยู่ระหว่างการโอนย้ายรถ'
-					when a.TRANSSTAT='Pendding' then 'รับโอนรถบางส่วน'
-					when a.TRANSSTAT='Received' then 'รับโอนรถครบแล้ว'
-					when a.TRANSSTAT='Cancel' then 'ยกเลิกบิลโอน' end as TRANSSTATDesc
-				,a.MEMO1
-				,b.USERNAME
-				,convert(varchar(8),a.INSERTDT,112) as INSERTDT
-			from {$this->MAuth->getdb('INVTransfers')} a
-			left join (
-				select IDNo collate Thai_CS_AS USERID
-					,employeeCode collate Thai_CS_AS employeeCode
-					,titleName+firstName+' '+lastName+' ('+positionName+')' collate Thai_CS_AS USERNAME  
-				from {$this->MAuth->getdb('hp_vusers')}
-			) b on a.INSERTBY=b.USERID
-			left join (
-				select IDNo collate Thai_CS_AS USERID
-					,employeeCode collate Thai_CS_AS employeeCode
-					,titleName+firstName+' '+lastName collate Thai_CS_AS USERNAME  
-				from {$this->MAuth->getdb('hp_vusers')}
-			) c on a.EMPCARRY=c.USERID
-			where 1=1 ".$cond."
-			order by a.TRANSNO desc
+			select ".($cond == "" ? "top 20":"")." *
+			from {$this->MAuth->getdb('INVTRAN')} 
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -270,32 +116,27 @@ class CreceiveStock extends MY_Controller {
 		$NRow = 1;
 		if($query->row()){
 			foreach($query->result() as $row){
-				$bgcolor="";
-				if($row->TRANSSTAT == "Cancel"){
-					$bgcolor = "color:red";
-				}
-				
 				$html .= "
-					<tr class='trow' seq=".$NRow." style='".$bgcolor."'>
-						<td class='getit' seq=".$NRow++." TRANSNO='".$row->TRANSNO."' style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
-						<td>".$row->TRANSNO."</td>
-						<td>".$this->Convertdate(2,$row->TRANSDT)."</td>
+					<tr class='trow' seq=".$NRow." >
+						<td class='getit' seq=".$NRow++." RECVNO='".$row->RECVNO."' STRNO='".$row->STRNO."' style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
+						<td>".$row->RECVNO."</td>
+						<td>".$this->Convertdate(2,$row->RECVDT)."</td>
 						<td>
-							".$row->TRANSFM."<br/>
-							".$row->TRANSTO."						
+							".$row->STRNO."<br/>
+							".$row->ENGNO."						
 						</td>
-						<td>".$row->EMPCARRY."</td>
-						<td align='center'>".$row->TRANSQTY."</td>			
-						<td>".$row->MEMO1."</td>			
-						<td>".$row->USERNAME."<br/>".$this->Convertdate(2,$row->INSERTDT)."<br/><span style='color:".($row->TRANSSTAT == 'Sendding' ? 'black' : ($row->TRANSSTAT == 'Pendding' ? 'blue' : ($row->TRANSSTAT == 'Cancel' ? 'red' : 'green'))).";'>".$row->TRANSSTATDesc."</span></td>
+						<td>".$row->MODEL."</td>
+						<td>".$row->BAAB."</td>
+						<td>".$row->COLOR."</td>
+						<td>".$row->STAT."</td>
 					</tr>
 				";
 			}
 		}
 		
 		$html = "
-			<div id='table-fixed-Ctransferscars' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
-				<table id='table-Ctransferscars' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+			<div id='table-fixed-receiveStock' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+				<table id='table-receiveStock' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
 					<thead>
 						<tr>
 							<th style='vertical-align:middle;'>#</th>
@@ -436,139 +277,448 @@ class CreceiveStock extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	function getSTRNoForm(){
+	function getfromReceived(){
 		$html = "
-			<div style='width:100%;height:60px;background-color:white;'>
-				<div class='row'>	
-					<div class='col-sm-2'>	
-						<div class='form-group'>
-							เลขตัวถัง
-							<input type='text' id='fSTRNO' class='form-control input-sm' placeholder='เลขตัวถัง'>
-						</div>
+			<div class='row'>	
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						เลขที่บิลรับรถ
+						<input type='text' id='fa_recvno' class='form-control input-sm' placeholder='เลขที่บิลรับรถ'>
 					</div>
-					<div class='col-sm-2'>
-						<div class='form-group'>
-							รุ่น
-							<input type='text' id='fMODEL' class='form-control input-sm' placeholder='รุ่น'>
-						</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						วันที่รับรถ
+						<input type='text' id='fa_recvdt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่รับรถ' value='".$this->today('today')."'>
 					</div>
-					<!-- div class='col-sm-2'>	
-						<div class='form-group'>
-							ที่อยู่รถ
-							<select id='fCRLOCAT' class='form-control input-sm'><option value='".$_REQUEST['locat']."'>".$_REQUEST['locat']."</option></select>
-						</div>
-					</div -->
-					<div class='col-sm-2'>
-						<div class='form-group'>
-							กลุ่มรถ
-							<input type='text' id='fGCODE' class='form-control input-sm' placeholder='กลุ่มรถ'>
-						</div>
+				</div>
+				
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						สาขาที่รับ
+						<select id='fa_locat' class='form-control input-sm' data-placeholder='ทำสัญญาขายที่สาขา'>
+							<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>
+						</select>
 					</div>
-					<div class='col-sm-2'>
-						<div class='form-group'>
-							<br>
-							<input type='button' id='STRNOSearch' class='btn btn-primary btn-sm' value='แสดง' style='width:100%'>
+				</div>
+				
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						เจ้าหนี้
+						<select id='fa_apmast' class='form-control input-sm' data-placeholder='เจ้าหนี้'></select>
+					</div>
+				</div>
+				
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						เลขที่ใบส่งสินค้า
+						<input type='text' id='fa_invno' class='form-control input-sm' placeholder='เลขที่บิลรับรถ'>
+					</div>
+				</div>
+				
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						วันที่ส่งสินค้า
+						<input type='text' id='fa_invdt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่รับรถ' value='".$this->today('today')."'>
+					</div>
+				</div>
+			</div>
+			<div class='row'>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						เลขที่ใบกำกับ
+						<input type='text' id='fa_taxno' class='form-control input-sm' placeholder='เลขที่ใบกำกับ' disabled>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						วันที่ใบกำกับ
+						<input type='text' id='fa_taxdt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่ใบกำกับ'  disabled>
+					</div>
+				</div>
+				<div class='col-sm-1'>
+					<div class='form-group'>
+						จำนวนเครดิต
+						<input type='text' id='fa_credtm' class='form-control input-sm' placeholder='เลขที่บิลรับรถ'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						วันครบดิว
+						<input type='text' id='fa_duedt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่รับรถ' value='".$this->today('today')."'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						คำอธิบายรายการ
+						<input type='text' id='fa_descp' class='form-control input-sm' placeholder='เลขที่บิลรับรถ'>
+					</div>
+				</div>
+				<div class='col-sm-1'>
+					<div class='form-group'>
+						อัตราภาษี
+						<input type='text' id='fa_vatrt' class='form-control input-sm' placeholder='เลขที่บิลรับรถ'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						<br>
+						<div class='checkbox'>
+						  <label><input type='checkbox' id='fa_fltax' value=''> เป็นใบกำกับภาษียื่นเพิ่มเติม</label>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div id='resultSTRNO' style='width:100%;height:calc(100% - 60px);background-color:white;'></div>
+			
+			<div class='row'>
+				<div class='col-sm-12'>
+					<div class='form-group'>
+						หมายเหตุ
+						<textarea type='text' id='fa_memo1' class='form-control input-sm' placeholder='หมายเหตุ'  rows=4 style='resize:vertical;'></textarea>
+					</div>
+				</div>
+			</div>
+			
+			<div class='row'>
+				<div style='float:left;height:100%;overflow:none;' class='col-sm-12'>
+					<div class='row' style='width:100%;height:100%;padding-left:30px;background-color:#269da1;'>
+						<div class='form-group col-sm-12' style='height:100%;'>
+							<span style='color:#efff14;'>รายการเลขถัง</span>
+							<div id='table-fixed-newstock' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='max-height:calc(100% - 130px);height:calc(100% - 130px);overflow-x:hidden;overflow-y:auto;border:1px dotted black;background-color:#eee;'>
+								<table id='table-newstock' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' style='width:100%;line-height:10px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;' cellspacing='0'>
+									<thead>
+										<tr role='row'>
+											<th style='width:40px'>
+												<i id='add_newcar' class='btn btn-xs btn-success glyphicon glyphicon-plus' style='cursor:pointer;'> เพิ่ม  </i>
+											</th>
+											<th>ยี่ห้อ</th>
+											<th>รุ่น</th>
+											<th>แบบ</th>
+											<th>สี</th>
+											<th>ขนาด</th>
+											<th>เลขตัวถัง</th>
+											<th>เลขเครื่อง</th>
+											<th>เลขกุญแจ</th>
+											<th>ผู้รับรถ</th>
+											<th>สถานที่รับรถ</th>
+											<th>เลขที่อ้างอิง</th>
+											<th>เลขไมล์</th>
+											<th>ราคาขายหน้าร้าน+VAT</th>
+											<th>ราคาต้นทุน</th>
+											<th>ส่วนลด</th>
+											<th>คงเหลือ</th>
+											<th>อัตราภาษี</th>
+											<th>ภาษีมูลค่าเพิ่ม</th>
+											<th>ยอดคงเหลือสุทธิ</th>
+											<th>กลุ่มรถ</th>
+											<th>ปีผลิต</th>
+											<th>ค่าส่งเสริมการขาย</th>
+											<th>สถานภาพรถ</th>
+											<th>หมายเหตุ</th>
+										</tr>
+									</thead>
+									<tbody style='white-space: nowrap;'></tbody>
+								</table>
+								
+							</div>
+								<div class='row' style='width:100%;padding-left:30px;background-color:#269da1;'>
+									<div style='float:left;height:100%;overflow:auto;' class='col-sm-8 col-sm-offset-2'>
+										<div class='form-group col-sm-4'>
+											<label class='jzfs10' for='aaaaaaa' style='color:#efff14;'>ต้นทุนรวม</label>
+											<input type='text' id='aaaaaaa' class='form-control input-sm text-right' value='' disabled>
+											<span id='error_add2_optcost' class='error text-danger jzError'></span>		
+										</div>
+										
+										<div class='form-group col-sm-4'>
+											<label class='jzfs10' for='aaa' style='color:#efff14;'>ต้นทุนรวม</label>
+											<input type='text' id='aaa' class='form-control input-sm text-right' value='' disabled>
+											<span id='error_add2_optcost' class='error text-danger jzError'></span>		
+										</div>
+										
+										<div class='form-group col-sm-4'>
+											<label class='jzfs10' for='aaaa' style='color:#efff14;'>ราคาขาย</label>
+											<input type='text' id='aaaa' class='form-control input-sm text-right' value='' disabled>
+											<span id='error_add2_optsell' class='error text-danger jzError'></span>		
+										</div>												
+									</div>
+								</div>
+							</div>	
+						</div>
+					</div>
+				</div>
+			</div>
+			<hr>
+			<div>
+				<div class='col-sm-6 text-left'>
+					<input type='button' id='btnArpay' class='btn btn-xs btn-info' style='width:100px;' value='ตาราง' disabled>
+					<input type='button' id='btnSend' class='btn btn-xs btn-info' style='width:100px;' value='ใบส่งมอบ' disabled>
+					<input type='button' id='btnTax' class='btn btn-xs btn-info' style='width:100px;' value='ใบกำกับ' disabled>
+					<br>
+					<input type='button' id='btnApproveSell' class='btn btn-xs btn-info' style='width:100px;' value='ใบอนุมัติขาย' disabled>
+					<input type='button' id='btnContno' class='btn btn-xs btn-info' style='width:100px;' value='สัญญา' disabled>
+					<input type='button' id='btnLock' class='btn btn-xs btn-info' style='width:100px;' value='Lock สัญญา' disabled>
+				</div>
+				<div class='col-sm-6 text-right'>
+					<button id='add_delete' class='btn btn-xs btn-danger' style='width:100px;'><span class='glyphicon glyphicon-trash'> ลบ</span></button>
+					<button id='add_save' class='btn btn-xs btn-primary' style='width:100px;'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
+				</div>
+			</div>
 		";
 		
 		$response = array("html"=>$html);
 		echo json_encode($response);
 	}
 	
-	function getSTRNo(){
-		$arrs = array();
-		$arrs['fSTRNO'] = $_REQUEST['fSTRNO'];
-		$arrs['fMODEL'] = $_REQUEST['fMODEL'];
-		$arrs['fCRLOCAT'] = $_REQUEST['fCRLOCAT'];
-		$arrs['fGCODE'] = $_REQUEST['fGCODE'];
-		
-		$cond = "";
-		if($arrs['fSTRNO'] != ''){
-			$cond .= " and STRNO like '".$arrs['fSTRNO']."%'";
-		}
-		
-		if($arrs['fMODEL'] != ''){
-			$cond .= " and MODEL like '".$arrs['fMODEL']."%'";
-		}
-		
-		if($arrs['fCRLOCAT'] != ''){
-			$cond .= " and CRLOCAT like '".$arrs['fCRLOCAT']."'";
-		}
-		
-		if($arrs['fGCODE'] != ''){
-			$cond .= " and GCODE like '".$arrs['fGCODE']."'";
-		}
-		
-		$sql = "
-			select STRNO,TYPE,MODEL,BAAB,COLOR,CC,CRLOCAT,GCODE
-			from {$this->MAuth->getdb('INVTRAN')}
-			where isnull(SDATE,'')='' and isnull(TSALE,'') = '' and isnull(RESVNO,'') = ''
-				and isnull(RESVDT,'') = '' and FLAG='D' ".$cond."
-		";
-		//echo $sql; exit;
-		$query = $this->db->query($sql);
-		
-		$html = "";
-		$NRow = 1;
-		if($query->row()){
-			foreach($query->result() as $row){
-				$html .= "
-					<tr class='trow' seq=".$NRow.">
-						<td class='getit' seq=".$NRow++." 
-							STRNO='".$row->STRNO."' 
-							TYPE='".$row->TYPE."' 
-							MODEL='".$row->MODEL."' 
-							BAAB='".$row->BAAB."' 
-							COLOR='".$row->COLOR."'
-							CC='".$row->CC."'
-							GCODE='".$row->GCODE."'
-							CRLOCAT='".$row->CRLOCAT."'	style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
-						<td>".$row->STRNO."</td>
-						<td>".$row->MODEL."</td>
-						<td>".$row->BAAB."</td>
-						<td>".$row->COLOR."</td>
-						<td>".$row->GCODE."</td>
-						<!-- td>".$row->CC."</td -->
-						<td>".$row->CRLOCAT."</td>
-					</tr>
-				";
-			}
-		}else{
-			$html .= "
-				<tr>
-					<td colspan='7'>ไม่พบข้อมูลตามเงื่อนไข</td>
-				</tr>
-			";
-		}
-		
+	function getfromADDSTRNO(){
 		$html = "
-			<div id='table-fixed-getSTRNo' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
-				<table id='table-getSTRNo' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
-					<thead>
-						<tr>
-							<th>#</th>
-							<th>เลขตัวถัง</th>
-							<th>รุ่น</th>
-							<th>แบบ</th>
-							<th>สี</th>
-							<th>กลุ่มรถ</th>
-							<th>ที่อยู่รถ</th>
-						</tr>
-					</thead>	
-					<tbody>
-						".$html."
-					</tbody>
-				</table>
+			<div class='row'>
+				<div class='col-sm-2 col-sm-offset-1'>
+					<div class='form-group'>
+						ยี่ห้อ
+						<select id='fc_type' class='form-control input-sm' data-placeholder='ยี่ห้อ'>
+							<option value='HONDA'>HONDA</option>
+						</select>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						รุ่น
+						<select id='fc_model' class='form-control input-sm' data-placeholder='รุ่น'></select>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						แบบ
+						<select id='fc_baab' class='form-control input-sm' data-placeholder='แบบ'></select>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						สี
+						<select id='fc_color' class='form-control input-sm' data-placeholder='สี'></select>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						ขนาด
+						<select id='fc_cc' class='form-control input-sm' data-placeholder='ขนาด'></select>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						เลขตัวถัง
+						<input type='text' id='fc_strno' class='form-control input-sm' placeholder='เลขตัวถัง' maxlength=20>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						เลขเครื่อง
+						<input type='text' id='fc_engno' class='form-control input-sm' placeholder='เลขเครื่อง' maxlength=20>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						เลขกุญแจ
+						<input type='text' id='fc_keyno' class='form-control input-sm' placeholder='เลขกุญแจ' maxlength=20>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						ผู้รับรถ
+						<select id='fc_rvcode' class='form-control input-sm' data-placeholder='ผู้รับรถ'></select>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						สถานที่รับรถ
+						<select id='fc_rvlocat' class='form-control input-sm' data-placeholder='สถานที่รับรถ'></select>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						เลขที่อ้างอิง
+						<input type='text' id='fc_refno' class='form-control input-sm' placeholder='เลขที่อ้างอิง'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						เลขไมล์
+						<input type='number' id='fc_milert' class='form-control input-sm' placeholder='เลขไมล์' min=0>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						ราคาขายหน้าร้าน+VAT
+						<input type='text' id='fc_stdprc' class='form-control input-sm' placeholder='ราคาขายหน้าร้าน+VAT'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						ราคาต้นทุน
+						<input type='text' id='fc_crcost' class='form-control input-sm' placeholder='ราคาต้นทุน'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						ส่วนลด
+						<input type='text' id='fc_disct' class='form-control input-sm' placeholder='ส่วนลด'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						คงเหลือ
+						<input type='text' id='fc_netcost' class='form-control input-sm' placeholder='คงเหลือ'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						อัตราภาษี
+						<input type='text' id='fc_vatrt' class='form-control input-sm' placeholder='อัตราภาษี'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						ภาษีมูลค่าเพิ่ม
+						<input type='text' id='fc_crvat' class='form-control input-sm' placeholder='ภาษีมูลค่าเพิ่ม'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						ยอดคงเหลือสุทธิ
+						<input type='text' id='fc_totcost' class='form-control input-sm' placeholder='ยอดคงเหลือสุทธิ'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						กลุ่มรถ
+						<select id='fc_gcode' class='form-control input-sm' data-placeholder='กลุ่มรถ'></select>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						ปีผลิต
+						<input type='text' id='fc_menuyr' class='form-control input-sm' placeholder='ปีผลิต'  maxlength=4 min=2000 max=9999>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						ค่าส่งเสริมการขาย
+						<input type='text' id='fc_bonus' class='form-control input-sm' placeholder='ค่าส่งเสริมการขาย'>
+					</div>
+				</div>
+				<div class='col-sm-2'>
+					<div class='form-group'>
+						สถานภาพรถ
+						<select id='fc_stat' class='form-control input-sm' data-placeholder='สถานภาพรถ'>
+							<option value='N'>รถใหม่</option>
+							<option value='O'>รถเก่า</option>
+						</select>
+					</div>
+				</div>
+				<div class='col-sm-12'>
+					<div class='form-group'>
+						หมายเหตุ
+						<textarea type='text' id='fc_memo1' class='form-control input-sm' placeholder='หมายเหตุ'  rows=4 style='resize:vertical;'></textarea>
+					</div>
+				</div>
+				<div class='col-sm-2 col-sm-offset-10'><br>	
+					<button id='fc_add' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-check'> เพิ่ม</span></button>
+				</div>
 			</div>
 		";
-		
 		$response = array("html"=>$html);
 		echo json_encode($response);
 	}
+	
+	function dataSTRNO(){
+		$response = array();
+		$response["error"] = false;
+		$response["html"]  = "";
+		
+		if($_POST["model"] == ""){
+			$response["error"] = true;
+			$response["html"]  = "ไม่พบข้อมูล..รุ่น";
+			echo json_encode($response); exit;
+		}
+		if($_POST["baab"] == ""){
+			$response["error"] = true;
+			$response["html"]  = "ไม่พบข้อมูล..แบบ";
+			echo json_encode($response); exit;
+		}
+		if($_POST["color"] == ""){
+			$response["error"] = true;
+			$response["html"]  = "ไม่พบข้อมูล..สีรถ";
+			echo json_encode($response); exit;
+		}
+		if($_POST["cc"] == ""){
+			$response["error"] = true;
+			$response["html"]  = "ไม่พบข้อมูล..ขนาดรถ";
+			echo json_encode($response); exit;
+		}
+		
+		$del = "
+			<i class='del_newcar btn btn-xs btn-danger glyphicon glyphicon-minus' 
+				type	 = '".$_POST["type"]."'
+				model	 = '".$_POST["model"]."'
+				baab	 = '".$_POST["baab"]."'
+				color	 = '".$_POST["color"]."'
+				cc		 = '".$_POST["cc"]."'
+				strno	 = '".$_POST["strno"]."'
+				engno	 = '".$_POST["engno"]."'
+				keyno	 = '".$_POST["keyno"]."'
+				rvcode 	 = '".$_POST["rvcode"]."'
+				rvcodnam = '".$_POST["rvcodnam"]."'
+				rvlocat	 = '".$_POST["rvlocat"]."'
+				refno	 = '".$_POST["refno"]."'
+				milert	 = '".$_POST["milert"]."'
+				stdprc	 = '".$_POST["stdprc"]."'
+				crcost	 = '".$_POST["crcost"]."'
+				disct	 = '".$_POST["disct"]."'
+				netcost	 = '".$_POST["netcost"]."'
+				vatrt	 = '".$_POST["vatrt"]."'
+				crvat	 = '".$_POST["crvat"]."'
+				totcost	 = '".$_POST["totcost"]."'
+				gcode	 = '".$_POST["gcode"]."'
+				gdesc	 = '".$_POST["gdesc"]."'
+				menuyr	 = '".$_POST["menuyr"]."'
+				bonus	 = '".$_POST["bonus"]."'
+				stat	 = '".$_POST["stat"]."'
+				statname = '".$_POST["statname"]."'
+				memo1	 = '".$_POST["memo1"]."'
+			style='cursor:pointer;'> ลบ  </i>
+		";
+		
+		$html = array();
+		$html[0] = $del;
+		$html[1] = $_POST["type"];
+		$html[2] = $_POST["model"];
+		$html[3] = $_POST["baab"];
+		$html[4] = $_POST["color"];
+		$html[5] = $_POST["cc"];
+		$html[6] = $_POST["strno"];
+		$html[7] = $_POST["engno"];
+		$html[8] = $_POST["keyno"];
+		$html[9] = $_POST["rvcodnam"];
+		$html[10] = $_POST["rvlocat"];
+		$html[11] = $_POST["refno"];
+		$html[12] = $_POST["milert"];
+		$html[13] = $_POST["stdprc"];
+		$html[14] = $_POST["crcost"];
+		$html[15] = $_POST["disct"];
+		$html[16] = $_POST["netcost"];
+		$html[17] = $_POST["vatrt"];
+		$html[18] = $_POST["crvat"];
+		$html[19] = $_POST["totcost"];
+		$html[20] = $_POST["gdesc"];
+		$html[21] = $_POST["menuyr"];
+		$html[22] = $_POST["bonus"];
+		$html[23] = $_POST["statname"];
+		$html[24] = $_POST["memo1"];
+
+		$response["html"] = $html;
+		echo json_encode($response);
+	}
+	
 	
 	function saveTransferCAR(){
 		//print_r($_REQUEST); exit;
