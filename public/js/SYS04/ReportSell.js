@@ -428,7 +428,8 @@ function fnsearch($action){
 			
 			jdbtnt1search = null;
 		},
-		beforeSend: function(){ if(jdbtnt1search !== null){ jdbtnt1search.abort(); } }
+		beforeSend: function(){ if(jdbtnt1search !== null){ jdbtnt1search.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 

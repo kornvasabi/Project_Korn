@@ -364,12 +364,14 @@ $('#addSTRNO').click(function(){
 										msg: data.html
 									});
 								}
-							}
+							},
+							error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 						});
 					});
 				}
 			});
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -583,7 +585,8 @@ function initPage(){
 							});
 						}
 						
-					}
+					},
+					error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 				});
 			}
 		}else{
@@ -698,7 +701,9 @@ function initPage(){
 							error: function (jqXHR, exception) {
 								setTimeout(function(){
 									$('#loadding').hide();
-								},3000);	
+								},3000);
+								
+								fnAjaxERROR(jqXHR,exception);
 							}
 						});		
 						

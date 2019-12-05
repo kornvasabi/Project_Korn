@@ -76,10 +76,7 @@ function search(){
 			
 			JASOBJsearch = null;
 		},
-		beforeSend: function(){
-			if(JASOBJsearch !== null){
-				JASOBJsearch.abort();
-			}
-		}
+		beforeSend: function(){ if(JASOBJsearch !== null){ JASOBJsearch.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }

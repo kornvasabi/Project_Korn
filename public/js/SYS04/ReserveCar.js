@@ -94,7 +94,8 @@ $('#btnt1search').click(function(){
 			}
 			
 			$('#loadding').fadeOut(100);
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -128,7 +129,8 @@ function fn_load_formResv($this,$event){
 					$('#loadding').fadeOut(100);
 				}
 			});
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -230,7 +232,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 								},
 								beforeSend: function(){
 									if(jd_cus_search !== null){ jd_cus_search.abort(); }
-								}
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 							});
 						}
 						
@@ -242,7 +245,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				});
 				
 				$('#loadding').fadeOut(200);
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -371,7 +375,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				if(JDfSTRNO_select !== null){
 					JDfSTRNO_select.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -671,7 +676,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					if(JDfSTAT_select !== null){
 						JDfSTAT_select.abort();
 					}
-				}
+				},
+				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 			});
 		}else{
 			$('#fPRICE').val('');
@@ -713,7 +719,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				if(jd_fn_balance !== null){
 					jd_fn_balance.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	}
 	
@@ -951,7 +958,8 @@ function fn_save($thisWindow,lobibox){
 			if(JD_fn_save !== null){
 				JD_fn_save.abort();
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 

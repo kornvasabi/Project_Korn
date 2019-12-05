@@ -264,7 +264,8 @@ function search(){
 						data.CUSNAME,data.arothers,data.sumPAYAMT_4,data.sumSMPAY_4,data.sumBALANCE_4,data.sumSMCHQ_4,data.sumTOTAL_4);
 					}
 				});
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	}
 }
@@ -485,7 +486,8 @@ function changedata($CONTNOS,$CUSCODS,$TSALES,$CUSNAME,$arothers,$sumPAYAMT_S,$s
 					});
 				});
 			});
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 	
 }
@@ -536,7 +538,8 @@ function searcharothr(){
 				if(reportsearch !== null){
 					reportsearch.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	}
 }

@@ -9,7 +9,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                           _ _/ /
                          /___ /
 ********************************************************/
-class report extends MY_Controller {
+class Report extends MY_Controller {
 	private $sess = array(); 
 	
 	function __construct(){
@@ -281,8 +281,43 @@ class report extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function stockcardPDFx(){
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8', 
+			'format' => 'A4-L',
+			'margin_top' => 80, 	//default = 16
+			'margin_left' => 8, 	//default = 15
+			'margin_right' => 8, 	//default = 15
+			'margin_bottom' => 6, 	//default = 16
+			'margin_header' => 6, 	//default = 9
+			'margin_footer' => 9, 	//default = 9
+		]);
+		
+		$mpdf->SetImportUse();
+		$pagecount = $mpdf->SetSourceFile('x.pdf');
+		
+		for($i = 1; $i<=$pagecount;$i++){
+			if($i != 1) $mpdf->AddPage();
+			$tplId = $mpdf->ImportPage($i);
+			$mpdf->UseTemplate($tplId);
+		}
+
+		$mpdf->AddPage();
+		$mpdf->WriteHTML('Hello World');
+		$mpdf->Output();
+	}
+	
 	function stockcardPDF(){
-		ini_set("pcre.backtrack_limit", "5000000");
+		ini_set("memory_limit","-1");
+		ini_set("pcre.backtrack_limit", "100000000");
+		
+		/* declare filename start*/
+		$date = new DateTime();
+		$text = $this->sess["USERID"]." :: ".$date->format('Y-m-d H:i:s'); 
+		$data = array($text);
+		$filename = $this->generateData($data,'encode');
+		$filename = $filename[0].".pdf";
+		/* declare filename end*/
 		
 		$logDT = "";
 		$date = new DateTime();
@@ -313,52 +348,68 @@ class report extends MY_Controller {
 			declare @stat varchar(1)	 = ".($arrs['STAT']).";
 			declare @turnover varchar(1) = '{$arrs['turnover']}';
 			
-			select seq,model,ffm,model
-				,case when model='โอนย้ายสินค้า' then stklocat else fmlocat end fmlocat
-				,case when model='โอนย้ายสินค้า' then fmlocat else stklocat end stklocat
-				,refno,convert(varchar(8),stkdate,112) as stkdate
-				,strno,baab,color,qtyin,qtyout,total
-			from {$this->MAuth->getdb('stockcard')}(@fmdt,@todt,@locat,@type,@model,@stat,@turnover);
+			select * into #temp_stc from (
+				select row_number() over(order by seq) as r,seq,model,ffm
+					,case when model='โอนย้ายสินค้า' then stklocat else fmlocat end fmlocat
+					,case when model='โอนย้ายสินค้า' then fmlocat else stklocat end stklocat
+					,refno,convert(varchar(8),stkdate,112) as stkdate
+					,strno,baab,color,qtyin,qtyout,total
+				from {$this->MAuth->getdb('stockcard')}(@fmdt,@todt,@locat,@type,@model,@stat,@turnover)
+			) as data
 		";
-		//echo $sql; exit;
-		$query = $this->db->query($sql);
+		$this->db->query($sql);
+		
+		$sql 	 = "select count(*) as r from ##temp_stc";
+		$query 	 = $this->db->query($sql);
+		$row 	 = $query->row();
+		$row_all = $row->r;
 		
 		$date = new DateTime();
 		$logDT .= "<br> โหลดข้อมูลเสร็จ :: ".$date->format('Y-m-d H:i:s'); 
 		
 		$data_sum = array();
 		$NRow = 0;
-		$bod = "";		
-		if($query->row()){
-			foreach($query->result() as $row){
-				if($row->ffm == 2 and $row->model == ""){ continue; }
-				if($row->ffm == 1){
-					$data_sum["turnover"] = $row->total;
-				}else if($row->ffm == 3){
-					$data_sum["turnover"] = $row->total;
-					$data_sum["turnoverSum"] = (isset($data_sum["turnoverSum"]) ? $data_sum["turnoverSum"] : 0) + $data_sum["turnover"];
-				}else{
-					$data_sum["turnover"] = $data_sum["turnover"] + $row->total;
+		$bod = "";
+		
+		// Loop รันข้อมูลครั้งละ 3000 แถว  เนื่องจากมีข้อมูลจำนวนมาก ทำให้ PHP ไม่สามารถดึงข้อมูลมาแสดงได้ 
+		for($query_run = 1;$query_run <= $row_all; $query_run += 3000){			
+			$sql = "
+				select * from ##temp_stc
+				where 1=1 and r between ".$query_run." and ".($query_run+3000)."
+			";
+			$query 	 = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					if($row->ffm == 2 and $row->model == ""){ continue; }
+					if($row->ffm == 1){
+						$data_sum["turnover"] = $row->total;
+					}else if($row->ffm == 3){
+						$data_sum["turnover"] = $row->total;
+						$data_sum["turnoverSum"] = (isset($data_sum["turnoverSum"]) ? $data_sum["turnoverSum"] : 0) + $data_sum["turnover"];
+					}else{
+						$data_sum["turnover"] = $data_sum["turnover"] + $row->total;
+					}
+					
+					$bod .= "
+						<tr>
+							<td style='width:50px;max-width:50px;'>".($row->ffm == 1 ? ++$NRow:"")."</td>
+							<td style='width:170px;max-width:170px;'>".($row->ffm == 3 ? "":$row->model)."</td>
+							<td style='width:80px;max-width:80px;'>".$row->fmlocat."</td>
+							<td style='width:70px;max-width:70px;'>".($row->ffm != 2 ? "":$row->stklocat)."</td>
+							<td style='width:90px;max-width:90px;;'>".$row->refno."</td>
+							<td style='width:60px;max-width:60px;'>".$this->Convertdate(2,$row->stkdate)."</td>
+							<td style='width:110px;max-width:110px;'>".$row->strno."</td>
+							<td style='width:40px;max-width:40px;'>".$row->baab."</td>
+							<td style='width:120px;max-width:120px;'>".$row->color."</td>
+							<td align='right' style='width:60px;max-width:60px;'>".($row->ffm == 2 ? ($row->qtyin == 0 ? "" :$row->qtyin) : "")."</td>
+							<td align='right' style='width:60px;max-width:60px;'>".($row->ffm == 2 ? ($row->qtyout == 0 ? "" :$row->qtyout) : "")."</td>
+							<td style='width:70px;max-width:70px;'>".($row->ffm == 2 ? "":($row->ffm == 1 ? "ยอดยกมา":"ยอดยกไป"))."</td>
+							<td align='right' style='width:70px;max-width:70px;'>".$data_sum["turnover"]."</td>
+						</td>
+					";
 				}
-				
-				$bod .= "
-					<div class='wf fs7'>
-						<div class='bor' style='width:50px;max-width:50px;float:left;'>".($row->ffm == 1 ? ++$NRow:"")."</div>
-						<div class='bor' style='width:170px;max-width:170px;float:left;'>".($row->ffm == 3 ? "":$row->model)."</div>
-						<div class='bor' style='width:80px;max-width:80px;float:left;'>".$row->fmlocat."</div>
-						<div class='bor' style='width:70px;max-width:70px;float:left;'>".($row->ffm != 2 ? "":$row->stklocat)."</div>
-						<div class='bor' style='width:90px;max-width:90px;float:left;;float:left;'>".$row->refno."</div>
-						<div class='bor' style='width:60px;max-width:60px;float:left;'>".$this->Convertdate(2,$row->stkdate)."</div>
-						<div class='bor' style='width:110px;max-width:110px;float:left;'>".$row->strno."</div>
-						<div class='bor' style='width:40px;max-width:40px;float:left;'>".$row->baab."</div>
-						<div class='bor' style='width:120px;max-width:120px;float:left;'>".$row->color."</div>
-						<div class='bor' align='right' style='width:60px;max-width:60px;float:left;'>".($row->ffm == 2 ? ($row->qtyin == 0 ? "" :$row->qtyin) : "")."</div>
-						<div class='bor' align='right' style='width:60px;max-width:60px;float:left;'>".($row->ffm == 2 ? ($row->qtyout == 0 ? "" :$row->qtyout) : "")."</div>
-						<div class='bor' style='width:70px;max-width:70px;float:left;'>".($row->ffm == 2 ? "":($row->ffm == 1 ? "ยอดยกมา":"ยอดยกไป"))."</div>
-						<div class='bor' align='right' style='width:70px;max-width:70px;float:left;'>".$data_sum["turnover"]."</div>
-					</div>
-				";		
-			}
+			}			
 		}
 		
 		$sql = "select comp_nm,comp_adr1,comp_adr2,telp,taxid from {$this->MAuth->getdb('condpay')}";
@@ -377,25 +428,24 @@ class report extends MY_Controller {
 			}
 		}
 		
-		$bod .= "
-			<hr>
-			<div class='wf fs7'>
-				<div style='width:50px;max-width:50px;float:left;'>&emsp;</div>
-				<div style='width:170px;max-width:170px;float:left;'>รวมทั้งสิ้น</div>
-				<div style='width:80px;max-width:80px;float:left;'>".$NRow."</div>
-				<div style='width:70px;max-width:70px;float:left;'>รายการ</div>
-				<div style='width:90px;max-width:90px;float:left;;float:left;'>&emsp;</div>
-				<div style='width:60px;max-width:60px;float:left;'>&emsp;</div>
-				<div style='width:110px;max-width:110px;float:left;'>&emsp;</div>
-				<div style='width:50px;max-width:50px;float:left;'>&emsp;</div>
-				<div style='width:110px;max-width:110px;float:left;'>&emsp;</div>
-				<div align='right' style='width:60px;max-width:60px;float:left;'>&emsp;</div>
-				<div align='right' style='width:60px;max-width:60px;float:left;'>&emsp;</div>
-				<div style='width:70px;max-width:70px;float:left;'>รวมยอดยกไป</div>
-				<div align='right' style='width:70px;max-width:70px;float:left;'>".$data_sum["turnoverSum"]."</div>
-			</div>
-			<hr>
+		$bod .= "			
+			<tr class='wf fs7'>
+				<td class='bor3' style='width:50px;max-width:50px;'>&emsp;</td>
+				<td class='bor3' style='width:170px;max-width:170px;'>รวมทั้งสิ้น</td>
+				<td class='bor3' style='width:80px;max-width:80px;'>".$NRow."</td>
+				<td class='bor3' style='width:70px;max-width:70px;'>รายการ</td>
+				<td class='bor3' style='width:90px;max-width:90px;;'>&emsp;</td>
+				<td class='bor3' style='width:60px;max-width:60px;'>&emsp;</td>
+				<td class='bor3' style='width:110px;max-width:110px;'>&emsp;</td>
+				<td class='bor3' style='width:50px;max-width:50px;'>&emsp;</td>
+				<td class='bor3' style='width:110px;max-width:110px;'>&emsp;</td>
+				<td class='bor3' align='right' style='width:60px;max-width:60px;'>&emsp;</td>
+				<td class='bor3' align='right' style='width:60px;max-width:60px;'>&emsp;</td>
+				<td class='bor3' style='width:70px;max-width:70px;'>รวมยอดยกไป</td>
+				<td class='bor3' align='right' style='width:70px;max-width:70px;'>".$data_sum["turnoverSum"]."</td>
+			</tr>			
 		";
+		$bod = "<table class='fs7'>".$bod."</table>";
 		
 		$mpdf = new \Mpdf\Mpdf([
 			'mode' => 'utf-8', 
@@ -420,6 +470,7 @@ class report extends MY_Controller {
 				.pf { position:fixed; }
 				.bor { border:0.1px solid white; }
 				.bor2 { border:0.1px dotted black; }
+				.bor3 { border-top:0.5px solid black;border-bottom:0.5px solid black; }
 				.data { background-color:#fff;font-size:9pt; }
 			</style>
 		";
@@ -433,7 +484,7 @@ class report extends MY_Controller {
 			<div class='wf'>ชื่อสถานที่ประกอบการ : {$compadr1}</div>
 			<div class='wf'>เลขประจำตัวผู้เสียภาษี : {$comptax}</div>
 			<div style='width:50%;float:left;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>
-			<div style='width:50%;float:left;text-align:right;'>หน้าที่ : {PAGENO} &emsp;&emsp;</div>
+			<div style='width:50%;float:left;text-align:right;'>หน้าที่ : {PAGENO} / {nb} &emsp;&emsp;</div>
 			<hr>
 			<div class='wf'>
 				<div style='width:50px;float:left;'>ลำดับที่</div>
@@ -462,6 +513,7 @@ class report extends MY_Controller {
 		//$mpdf->SetHTMLFooter("<div class='wf pf' style='top:730;left:0;font-size:6pt;width:1020px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
 		//$mpdf->Output('report.pdf', 'D');
+		//$mpdf->Output('x.pdf','F');
 		$mpdf->Output();
 	}
 	
@@ -517,7 +569,7 @@ class report extends MY_Controller {
 	function loadding(){
 		$html = "
 			<div align='center' style='width:100%;'>
-				<input type='image' src='".base_url("public/images/loading-icon.gif")."'>			
+				<input type='image' src='".base_url("public/images/loading-icon.gif")."' style='width:100%;'>
 			</div>
 		";
 		echo $html;

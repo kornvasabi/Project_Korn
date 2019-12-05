@@ -41,7 +41,8 @@ function fn_search(){
 		},
 		beforeSend: function(){
 			if(jd_fn_search !== null){ jd_fn_search.abort(); }
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -96,7 +97,8 @@ function fn_aftersearch(){
 			},
 			beforeSend: function(){
 				if(jd_cusdetail !== null){ jd_cusdetail.abort(); }
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 }

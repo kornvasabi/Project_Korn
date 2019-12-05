@@ -217,7 +217,6 @@ class Creceivedcars extends MY_Controller {
 		$arrs['TRANSTO'] = $_REQUEST['TRANSTO'];
 		$arrs['TRANSSTAT'] = $_REQUEST['TRANSSTAT'];
 		
-		
 		$cond = "";
 		if($arrs['TRANSNO'] != ""){
 			$cond .= " and a.TRANSNO like '%".$arrs['TRANSNO']."%' collate thai_cs_as";
