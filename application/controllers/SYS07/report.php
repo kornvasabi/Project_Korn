@@ -524,7 +524,7 @@ class Report extends MY_Controller {
 		
 		/* declare filename start*/
 		$date = new DateTime();
-		$text = $this->sess["USERID"]."_".$date->format('Ymd_His_'); 
+		$text = $this->sess["db"]."_".$this->sess["USERID"]."_".$date->format('Ymd_His_'); 
 		$data = array($text);
 		$filename = $this->generateData($data,'encode');
 		$filename = $filename[0].".pdf";
@@ -613,7 +613,7 @@ class Report extends MY_Controller {
 			$islast 	= ($query_run == $file_all ? true:false);
 			
 			$ex = explode("_",$filename);
-			$filename_replace 	= 'public/pdffile/'.$ex[0]."_".$ex[1]."_".$ex[2]."_".$query_run.".pdf";
+			$filename_replace 	= 'public/pdffile/'.$ex[0]."_".$ex[1]."_".$ex[2]."_".$ex[3]."_".$query_run.".pdf";
 			$arrs["filename"][] = $filename_replace;
 			
 			if($query_run == 1){
