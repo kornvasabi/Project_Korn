@@ -307,7 +307,7 @@ class Report extends MY_Controller {
 		$mpdf->Output();
 	}
 	
-	function stockcardPDF(){
+	function stockcardPDF_Success(){
 		ini_set("memory_limit","-1");
 		ini_set("pcre.backtrack_limit", "100000000");
 		
@@ -515,6 +515,310 @@ class Report extends MY_Controller {
 		//$mpdf->Output('report.pdf', 'D');
 		//$mpdf->Output('x.pdf','F');
 		$mpdf->Output();
+	}
+	
+	
+	function stockcardPDF(){
+		ini_set("memory_limit","-1");
+		ini_set("pcre.backtrack_limit", "100000000");
+		
+		/* declare filename start*/
+		$date = new DateTime();
+		$text = $this->sess["USERID"]."_".$date->format('Ymd_His_'); 
+		$data = array($text);
+		$filename = $this->generateData($data,'encode');
+		$filename = $filename[0].".pdf";
+		$filename = $text.".pdf";
+		/* declare filename end*/
+		
+		$logDT = "";
+		$date = new DateTime();
+		$logDT .= "เริ่มต้น :: ".$date->format('Y-m-d H:i:s'); 
+
+		$arrs = array();
+		$arrs['LOCAT']	  = $_POST['LOCAT'];
+		$arrs['SDATE']    = $_POST['SDATE'];
+		$arrs['EDATE']    = $_POST['EDATE'];
+		$arrs['TYPE'] 	  = $_POST['TYPE'];
+		$arrs['MODEL'] 	  = $_POST['MODEL'];
+		$arrs['STAT'] 	  = $_POST['STAT'];
+		$arrs['REPORT']   = $_POST['REPORT'];
+		$arrs['turnover'] = $_POST['turnover'];
+		
+		if($arrs['STAT'] == 'A'){
+			$arrs['STAT'] = "null";
+		}else{
+			$arrs['STAT'] = "'".$arrs['STAT']."'";
+		}
+		
+		/*start header*/
+		$sql = "select comp_nm,comp_adr1,comp_adr2,telp,taxid from {$this->MAuth->getdb('condpay')}";
+		$query = $this->db->query($sql);
+		
+		
+		$arrs['company']	= '';
+		$arrs['compadr1']	= '';
+		$arrs['comptax']	= '';
+		$arrs['reportName'] = 'รายงานสินค้าและวัตถุดิบ';
+		$arrs['condDesc']	= '';
+		if($query->row()){
+			foreach($query->result() as $row){
+				$arrs['company'] = $row->comp_nm;
+				$arrs['compadr1'] = $row->comp_adr1." ".$row->comp_adr2;
+				$arrs['comptax'] = $row->taxid;
+			}
+		}
+		/*end header*/
+		
+		$sql = "
+			declare @fmdt datetime		 = '{$arrs['SDATE']}';
+			declare @todt datetime		 = '{$arrs['EDATE']}';
+			declare @locat varchar(5)	 = ".($arrs['LOCAT'] == "" ? "'%'":"'".$arrs['LOCAT']."'").";
+			declare @type varchar(20)	 = ".($arrs['TYPE'] == "" ? "'%'":"'".$arrs['TYPE']."'").";
+			declare @model varchar(20)	 = ".($arrs['MODEL'] == "" ? "'%'":"'".$arrs['MODEL']."'").";
+			declare @stat varchar(1)	 = ".($arrs['STAT']).";
+			declare @turnover varchar(1) = '{$arrs['turnover']}';
+			
+			select * into #temp_stc from (
+				select row_number() over(order by seq) as r,seq,model,ffm
+					,case when model='โอนย้ายสินค้า' then stklocat else fmlocat end fmlocat
+					,case when model='โอนย้ายสินค้า' then fmlocat else stklocat end stklocat
+					,refno,convert(varchar(8),stkdate,112) as stkdate
+					,strno,baab,color,qtyin,qtyout,total
+				from {$this->MAuth->getdb('stockcard')}(@fmdt,@todt,@locat,@type,@model,@stat,@turnover)
+			) as data
+		";
+		$this->db->query($sql);
+		
+		$date = new DateTime();
+		$logDT .= "<br> โหลดข้อมูลเสร็จ :: ".$date->format('Y-m-d H:i:s'); 
+		
+		$sql 		= "select count(*) as r from #temp_stc";
+		$query 		= $this->db->query($sql);
+		$row 	 	= $query->row();
+		$row_all 	= $row->r;
+		$_seq	 	= 3000; // จำนวนข้อมูล แต่ละรอบ
+		$file_all 	= (int) ($row_all / $_seq);
+		$file_all	= $file_all + ($row_all % $_seq == 0 ? 0 : 1);
+		
+		$data_sum 	= array();
+		$NRow 		= 0;
+		$bod 		= "";
+		$arrs["filename"] = array();
+		
+		$s = 0;
+		$e = 0;
+		// Loop รันข้อมูลครั้งละ 3000 แถว  เนื่องจากมีข้อมูลจำนวนมาก ทำให้ PHP ไม่สามารถดึงข้อมูลมาแสดงได้ 
+		for($query_run = 1;$query_run <= $file_all; $query_run++){
+			$islast 	= ($query_run == $file_all ? true:false);
+			
+			$ex = explode("_",$filename);
+			$filename_replace 	= 'public/pdffile/'.$ex[0]."_".$ex[1]."_".$ex[2]."_".$query_run.".pdf";
+			$arrs["filename"][] = $filename_replace;
+			
+			if($query_run == 1){
+				$s = 1;
+				$e = $_seq;
+			}else{
+				$s = $s+$_seq;
+				$e = $e+$_seq;
+			}
+			
+			$sql = "
+				select * from #temp_stc
+				where 1=1 and r between ".$s." and ".$e."
+			";
+			$result = $this->stockcardPDF_SAVEFILE($filename_replace,$NRow,$sql,$arrs,$data_sum,$islast);
+			//print_r($result); exit;
+			$NRow 	= $result["NRow"];
+			$data_sum["turnover"] 	 = $result["data_sum"]["turnover"];
+			$data_sum["turnoverSum"] = $result["data_sum"]["turnoverSum"];
+		}
+		
+		$date = new DateTime();
+		$logDT .= "<br> สร้างไฟล์ PDF เสร็จ :: ".$date->format('Y-m-d H:i:s'); 
+		
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8', 
+			'format' => 'A4-L',
+			'margin_top' => 80, 	//default = 16
+			'margin_left' => 8, 	//default = 15
+			'margin_right' => 8, 	//default = 15
+			'margin_bottom' => 6, 	//default = 16
+			'margin_header' => 6, 	//default = 9
+			'margin_footer' => 9, 	//default = 9
+		]);
+		
+		$pdf_all = sizeof($arrs["filename"]);
+		$pageall = 0;
+		$pagenow = 0;
+		
+		for($i=0;$i<$pdf_all;$i++){
+			$pageall += $mpdf->SetSourceFile($arrs["filename"][$i]);
+		}
+		
+		for($i=0;$i<$pdf_all;$i++){
+			$mpdf->SetImportUse();
+			$pagecount = $mpdf->SetSourceFile($arrs["filename"][$i]);
+			
+			for($j = 1; $j<=$pagecount;$j++){
+				if($i != 0){
+					$mpdf->AddPage();
+				} else if($j != 1) {
+					$mpdf->AddPage();
+				}
+				$tplId = $mpdf->ImportPage($j);
+				$mpdf->UseTemplate($tplId);
+				$mpdf->WriteHTML("<div style='position:fixed;top:-105px;left:970px;width:100px;font-size:7pt;font-family: garuda;font-size:9pt;'>หน้าที่ ".(++$pagenow)." / ".$pageall."</div>");
+				$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
+			}
+		}
+		
+		$date = new DateTime();
+		$logDT .= "<br> รวมไฟล์ :: ".$date->format('Y-m-d H:i:s'); 
+		
+		$mpdf->addPage();
+		$mpdf->WriteHTML("<div style='width:100%;font-family: garuda;font-size:9pt;'>".$logDT."</div>");
+		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
+		
+		$mpdf->Output();
+	}
+	
+	function stockcardPDF_SAVEFILE($filename,$NRow,$sql,$arrs,$data_sum,$islast){
+		ini_set("memory_limit","-1");
+		ini_set("pcre.backtrack_limit", "100000000");
+		
+		$query = $this->db->query($sql);
+		$bod = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				if($row->ffm == 2 and $row->model == ""){ continue; }
+				if($row->ffm == 1){
+					$data_sum["turnover"] = $row->total;
+				}else if($row->ffm == 3){
+					$data_sum["turnover"] = $row->total;
+					$data_sum["turnoverSum"] = (isset($data_sum["turnoverSum"]) ? $data_sum["turnoverSum"] : 0) + $data_sum["turnover"];
+				}else{
+					$data_sum["turnover"] = $data_sum["turnover"] + $row->total;
+				}
+				
+				$bod .= "
+					<tr>
+						<td style='width:50px;max-width:50px;'>".($row->ffm == 1 ? ++$NRow:"")."</td>
+						<td style='width:170px;max-width:170px;'>".($row->ffm == 3 ? "":$row->model)."</td>
+						<td style='width:80px;max-width:80px;'>".$row->fmlocat."</td>
+						<td style='width:70px;max-width:70px;'>".($row->ffm != 2 ? "":$row->stklocat)."</td>
+						<td style='width:90px;max-width:90px;;'>".$row->refno."</td>
+						<td style='width:60px;max-width:60px;'>".$this->Convertdate(2,$row->stkdate)."</td>
+						<td style='width:110px;max-width:110px;'>".$row->strno."</td>
+						<td style='width:40px;max-width:40px;'>".$row->baab."</td>
+						<td style='width:120px;max-width:120px;'>".$row->color."</td>
+						<td align='right' style='width:60px;max-width:60px;'>".($row->ffm == 2 ? ($row->qtyin == 0 ? "" :$row->qtyin) : "")."</td>
+						<td align='right' style='width:60px;max-width:60px;'>".($row->ffm == 2 ? ($row->qtyout == 0 ? "" :$row->qtyout) : "")."</td>
+						<td style='width:70px;max-width:70px;'>".($row->ffm == 2 ? "":($row->ffm == 1 ? "ยอดยกมา":"ยอดยกไป"))."</td>
+						<td align='right' style='width:70px;max-width:70px;'>".$data_sum["turnover"]."</td>
+					</td>
+				";
+			}
+		}
+		
+		// ข้อมูลชุดสุดท้ายหรือไม่ TRUE or FLASE
+		if($islast){
+			$bod .= "			
+				<tr class='wf fs7'>
+					<td class='bor3' style='width:50px;max-width:50px;'>&emsp;</td>
+					<td class='bor3' style='width:170px;max-width:170px;'>รวมทั้งสิ้น</td>
+					<td class='bor3' style='width:80px;max-width:80px;'>".$NRow."</td>
+					<td class='bor3' style='width:70px;max-width:70px;'>รายการ</td>
+					<td class='bor3' style='width:90px;max-width:90px;;'>&emsp;</td>
+					<td class='bor3' style='width:60px;max-width:60px;'>&emsp;</td>
+					<td class='bor3' style='width:110px;max-width:110px;'>&emsp;</td>
+					<td class='bor3' style='width:50px;max-width:50px;'>&emsp;</td>
+					<td class='bor3' style='width:110px;max-width:110px;'>&emsp;</td>
+					<td class='bor3' align='right' style='width:60px;max-width:60px;'>&emsp;</td>
+					<td class='bor3' align='right' style='width:60px;max-width:60px;'>&emsp;</td>
+					<td class='bor3' style='width:70px;max-width:70px;'>รวมยอดยกไป</td>
+					<td class='bor3' align='right' style='width:70px;max-width:70px;'>".$data_sum["turnoverSum"]."</td>
+				</tr>
+			";
+		}
+		$bod = "<table class='fs7'>".$bod."</table>";
+		
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8', 
+			'format' => 'A4-L',
+			'margin_top' => 80, 	//default = 16
+			'margin_left' => 8, 	//default = 15
+			'margin_right' => 8, 	//default = 15
+			'margin_bottom' => 6, 	//default = 16
+			'margin_header' => 6, 	//default = 9
+			'margin_footer' => 9, 	//default = 9
+		]);
+		
+		$stylesheet = "
+			<style>
+				body { font-family: garuda;font-size:9pt; }
+				.wf { width:100%; }
+				.pdlr { pedding-left:2px;pedding-right:2px; }
+				.fs7 { font-size:7pt; }
+				.fs12 { font-size:12pt; }
+				.h10 { height:10px; }
+				.tc { text-align:center; }
+				.pf { position:fixed; }
+				.bor { border:0.1px solid white; }
+				.bor2 { border:0.1px dotted black; }
+				.bor3 { border-top:0.5px solid black;border-bottom:0.5px solid black; }
+				.data { background-color:#fff;font-size:9pt; }
+			</style>
+		";
+		
+		$locat = " ระหว่างวันที่ ".$this->Convertdate(2,$arrs['SDATE'])." ถึงวันที่ ".$this->Convertdate(2,$arrs['EDATE']);
+		$content = "
+			<div class='wf tc fs12'><b>{$arrs['company']}</b></div>
+			<div class='wf tc fs12'><b>{$arrs['reportName']}</b></div>
+			<div class='wf tc'>{$locat}</div>
+			<div class='wf'>ชื่อผู้ประกอบการ</div>
+			<div class='wf'>ชื่อสถานที่ประกอบการ : {$arrs['compadr1']}</div>
+			<div class='wf'>เลขประจำตัวผู้เสียภาษี : {$arrs['comptax']}</div>
+			<div style='width:100%;float:left;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>
+			<!-- div style='width:50%;float:left;text-align:right;'>หน้าที่ : {PAGENO} / {nb} &emsp;&emsp;</div -->
+			
+			<hr>
+			<div class='wf'>
+				<div style='width:50px;float:left;'>ลำดับที่</div>
+				<div style='width:170px;float:left;'>รุ่น<br>ประเภทการเคลื่อนไหว</div>
+				<div style='width:80px;float:left;'>&emsp;<br>โอนจากสาขา</div>
+				<div style='width:70px;float:left;'>&emsp;<br>โอนไปสาขา</div>
+				<div style='width:90px;float:left;;float:left;'>&emsp;<br>ใบสำคัญเลขที่</div>
+				<div style='width:60px;float:left;'>&emsp;<br>วดป.</div>
+				<div style='width:110px;float:left;'>&emsp;<br>เลขตัวถัง</div>
+				<div style='width:40px;float:left;'>&emsp;<br>แบบ</div>
+				<div style='width:120px;float:left;'>&emsp;<br>สี</div>
+				<div style='width:60px;float:left;'>&emsp;<br>จำนวนรับ</div>
+				<div style='width:60px;float:left;'>&emsp;<br>จำนวนจ่าย</div>
+				<div style='width:70px;float:left;'>&emsp;<br>&emsp;</div>
+				<div style='width:70px;float:left;'>&emsp;<br>ยอดคงเหลือ</div>
+			</div>
+			<hr>
+		";		
+		$mpdf->SetHTMLHeader($content);
+		$mpdf->WriteHTML($bod.$stylesheet);
+		
+		// $mpdf->SetHTMLFooter("<div class='wf pf' style='top:730;left:0;font-size:6pt;width:1020px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
+		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
+		// $mpdf->Output('report.pdf', 'D');
+		// $mpdf->Output('x.pdf','F');
+		$mpdf->Output($filename,'F');
+		
+		$response = array(
+			'NRow' => $NRow,
+			'data_sum' => array(
+				'turnover' => $data_sum["turnover"],
+				'turnoverSum' => $data_sum["turnoverSum"]
+			)
+		);
+		
+		return $response;
 	}
 	
 	function formloadding(){

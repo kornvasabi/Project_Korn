@@ -123,13 +123,34 @@ class RevPayment extends MY_Controller {
 			<div>
 				<div class='col-sm-2'>	
 					<div class='form-group'>
+						ใบรับชั่วคราว
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;' readonly>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						วันที่รับเงิน
+						<input type='text' id='XXXXXX' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value='' maxlength=10>
+					</div>
+				</div>
+				
+				<div class='col-sm-2'>	
+					<div class='form-group'>
 						สาขา
 						<select id='locat' class='form-control input-sm chosen-select' data-placeholder='สาขา'>
 							<option value='{$this->sess['branch']}'>{$this->sess['branch']}</option>
 						</select>
 					</div>
 				</div>
-				<div class='col-sm-3'>	
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						ชำระโดย
+						<select id='locat' class='form-control input-sm chosen-select' data-placeholder='สาขา'>
+							<option value=''></option>
+						</select>
+					</div>
+				</div>
+				<div class='col-sm-4'>	
 					<div class='form-group'>
 						ชื่อสกุล-ลูกค้า
 						<div class='input-group'>
@@ -138,6 +159,93 @@ class RevPayment extends MY_Controller {
 						   <button id='fCUSCOD_removed' class='btn btn-danger btn-sm' type='button'>
 								<span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button>
 						   </span>
+						</div>
+					</div>
+				</div>
+				
+				
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						เลขที่อ้างอิง
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;'>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						เลขที่เช็ค
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;'>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						วันที่เช็ค
+						<input type='text' id='XXXXXX' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value='' maxlength=10>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						จำนวนเงิน
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;'>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						ธนาคาร
+						<select id='locat' class='form-control input-sm chosen-select' data-placeholder='สาขา'>
+							<option value=''></option>
+						</select>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						สาขาธนาคาร
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;'>
+					</div>
+				</div>
+				
+				<div class='col-sm-2 col-sm-offset-4'>	
+					<div class='form-group'>
+						เลขที่ใบเสร็จ
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;'>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						วันที่ใบเสร็จ
+						<input type='text' id='XXXXXX' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value='' maxlength=10>
+					</div>
+				</div>
+				
+				<div class='col-sm-12'>	
+					<div class='row' style='width:100%;height:100%;padding-left:30px;background-color:#269da1;'>
+						<div class='form-group col-sm-12' style='height:100%;'>
+							<span style='color:#efff14;'>ชำระค่า</span>
+							<div id='dataTable_fixed_ARMGAR' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='max-height:calc(100% - 50px);height:calc(100% - 30px);overflow:auto;border:1px dotted black;background-color:white;'>
+								<table id='dataTable_ARMGAR' class='table table-bordered dataTable table-hover table-secondary' id='dataTables_ARMGAR' stat='' role='grid' aria-describedby='dataTable_info' style='width:100%;line-height:10px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;' cellspacing='0'>
+									<thead class='thead-dark' style='width:100%;'>
+										<tr role='row'>
+											<th style='width:40px'>
+												<i id='add_payment' class='btn btn-xs btn-success glyphicon glyphicon-plus' style='cursor:pointer;'> เพิ่ม  </i>
+											</th>
+											<th>ชำระค่า</th>
+											<th>เลขที่สัญญา</th>
+											<th>จำนวนชำระ</th>
+											<th>ส่วนลด</th>
+											<th>ค่าเบี้ยปรับ</th>
+											<th>ส่วนลดเบี้ยปรับ</th>
+											<th>ยอดรับสุทธิ</th>
+										</tr>
+									</thead>
+									<tbody style='white-space: nowrap;'></tbody>
+								</table>
+							</div>
+						</div>
+						
+						<div class='col-sm-2 col-sm-offset-10'>	
+							<div class='form-group'>
+								<span style='color:#efff14;'>รวม</span>
+								<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;' readonly>
+							</div>
 						</div>
 					</div>
 				</div>

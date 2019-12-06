@@ -158,7 +158,7 @@ function fnPDF(data){
 				height: $(window).height(),
 				content: data.html,
 				draggable: false,
-				closeOnEsc: true,
+				closeOnEsc: false,
 				shown: function($thisPDF){
 					//setTimeout(function(){ document.getElementById("formsubmit").submit(); },500);
 					document.getElementById("formsubmit").submit();

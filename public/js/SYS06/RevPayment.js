@@ -60,8 +60,8 @@ function fnForm(data){
 				content: data.html,
 				draggable: false,
 				closeOnEsc: true,
-				shown: function($thisPDF){
-					
+				shown: function($this){
+					fn_after($this);
 				}
 			});
 			
@@ -71,5 +71,51 @@ function fnForm(data){
 		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
+
+function fn_after($window){
+	var jd_add_payment=null;
+	$('#add_payment').click(function(){
+		jd_add_payment = $.ajax({
+			url:'../SYS06/RevPayment/get_form_received',
+			data: data,
+			type:'POST',
+			dataType:'json',
+			success: function(data){
+				Lobibox.window({
+					title: 'แบบฟอร์มรับชำระ',
+					width: $(window).width(),
+					height: $(window).height(),
+					content: data.html,
+					draggable: false,
+					closeOnEsc: true,
+					shown: function($this){
+						fn_after($this);
+					}
+				});
+				
+				jd_add_payment = null;
+			},
+			beforeSend: function(){ if(jd_add_payment !== null){ jd_add_payment.abort(); } },
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		});
+	});
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
