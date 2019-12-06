@@ -39,7 +39,7 @@ $(function(){
 	$('#CONTNO1').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2b/getCONTNO_H',
+			url: '../Cselect2b/getCONTNO_F',
 			data: function (params) {
 				dataToPost = new Object();
 				//dataToPost.now = $('#add_cuscod').find(':selected').val();
@@ -64,38 +64,10 @@ $(function(){
 		width: '100%'
 	});
 	
-	$('#BILLCOL1').select2({
+	$('#FINCODE1').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2b/getOFFICER',
-			data: function (params) {
-				dataToPost = new Object();
-				//dataToPost.now = $('#add_cuscod').find(':selected').val();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $(".b_tab1"),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('#CONTSTAT1').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2b/getTYPCONT',
+			url: '../Cselect2b/getFINCODE',
 			data: function (params) {
 				dataToPost = new Object();
 				//dataToPost.now = $('#add_cuscod').find(':selected').val();
@@ -221,8 +193,6 @@ function search(){
 		orderby = "CONTNO";
 	}else if($("#cuscod").is(":checked")){ 
 		orderby = "CUSCOD";
-	}else if($("#type").is(":checked")){ 
-		orderby = "TYPE";
 	}
 	
 	var vat = "";
@@ -232,7 +202,7 @@ function search(){
 		$height = 350;
 	}else if($("#sumvat").is(":checked")){
 		vat = "sumvat";
-		$height = 315;
+		$height = 330;
 	}
 	var stat = "";
 	if($("#NEW").is(":checked")){ 
@@ -242,83 +212,70 @@ function search(){
 	}else if($("#ALL").is(":checked")){
 		stat = "";
 	}
+	
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
 	dataToPost.CONTNO1 		= (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.BILLCOL1 	= (typeof $('#BILLCOL1').find(':selected').val() === 'undefined' ? '':$('#BILLCOL1').find(':selected').val());
+	dataToPost.GCODE1 		= (typeof $('#GCODE1').find(':selected').val() === 'undefined' ? '':$('#GCODE1').find(':selected').val());
+	dataToPost.FINCODE1 	= (typeof $('#FINCODE1').find(':selected').val() === 'undefined' ? '':$('#FINCODE1').find(':selected').val());
 	dataToPost.TYPE1 		= (typeof $('#TYPE1').find(':selected').val() === 'undefined' ? '':$('#TYPE1').find(':selected').val());
 	dataToPost.MODEL1 		= (typeof $('#MODEL1').find(':selected').val() === 'undefined' ? '':$('#MODEL1').find(':selected').val());
-	dataToPost.CONTSTAT1 	= (typeof $('#CONTSTAT1').find(':selected').val() === 'undefined' ? '':$('#CONTSTAT1').find(':selected').val());
-	dataToPost.GCODE1 		= (typeof $('#GCODE1').find(':selected').val() === 'undefined' ? '':$('#GCODE1').find(':selected').val());
 	dataToPost.ARDATE 		= $('#ARDATE').val();
+	dataToPost.FRMDATE 		= $('#FRMDATE').val();
+	dataToPost.TODATE 		= $('#TODATE').val();
 	dataToPost.orderby 		= orderby;
 	dataToPost.vat 			= vat;
 	dataToPost.stat 		= stat;
 	
-	if(dataToPost.LOCAT1 == ""){	
-		Lobibox.notify('warning', {
-			title: 'แจ้งเตือน',
-			size: 'mini',
-			closeOnClick: false,
-			delay: 15000,
-			pauseDelayOnHover: true,
-			continueDelayOnInactiveTab: false,
-			soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
-			soundExt: '.ogg',
-			icon: true,
-			messageHeight: '90vh',
-			msg: 'กรุณาเลือกสาขา'
-		});
-	}else{
-		$('#loadding').show();
-		reportsearch = $.ajax({
-			url: '../SYS05/ReportARfromsaleinstalment/search',
-			data: dataToPost,
-			Type: 'POST',
-			dataType:'json',
-			success: function(data){	
-				$('#loadding').hide();	
-				Lobibox.window({
-					title: 'รายงานลูกหนี้คงเหลือจากการขายผ่อน',
-					content: data.html,
-					height: $(window).height(),
-					width: $(window).width(),
-					closeOnEsc: false,
-					draggable: false
-				});
-				
-				fn_datatables('table-ReportARfromsaleinstalment',1,$height);
-				
-				$('.data-export').prepend('<img id="print-ARfromsaleinstalment" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-				$("#print-ARfromsaleinstalment").hover(function() {
-					document.getElementById("print-ARfromsaleinstalment").style.filter = "contrast(70%)";
-				}, function() {
-					document.getElementById("print-ARfromsaleinstalment").style.filter = "contrast(100%)";
-				});
-				
-				$('.data-export').prepend('<img id="table-ARfromsaleinstalment-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-				$("#table-ARfromsaleinstalment-excel").hover(function() {
-					document.getElementById("table-ARfromsaleinstalment-excel").style.filter = "contrast(70%)";
-				}, function() {
-					document.getElementById("table-ARfromsaleinstalment-excel").style.filter = "contrast(100%)";
-				});
-				
-				$("#table-ARfromsaleinstalment-excel").click(function(){ 
-					tableToExcel_Export(data.report,"sheet 1","รายงานลูกหนี้คงเหลือจากการขายผ่อน "+data.reporttoday); 
-				});
-				
-				$('#print-ARfromsaleinstalment').click(function(){
-					printReport();
-				});
+	$('#loadding').show();
+	reportsearch = $.ajax({
+		url: '../SYS05/ReportARfromsalefinance/search',
+		data: dataToPost,
+		Type: 'POST',
+		dataType:'json',
+		success: function(data){	
+			$('#loadding').hide();	
+			Lobibox.window({
+				title: 'รายงานลูกหนี้คงเหลือจากการขายส่งไฟแนนซ์',
+				content: data.html,
+				height: $(window).height(),
+				width: $(window).width(),
+				closeOnEsc: false,
+				draggable: false
+			});
+			
+			fn_datatables('table-ReportARfromsalefinance',1,$height);
+			
+			$('.data-export').prepend('<img id="print-ARfromsalefinance" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+			$("#print-ARfromsalefinance").hover(function() {
+				document.getElementById("print-ARfromsalefinance").style.filter = "contrast(70%)";
+			}, function() {
+				document.getElementById("print-ARfromsalefinance").style.filter = "contrast(100%)";
+			});
+			
+			$('.data-export').prepend('<img id="table-ARfromsalefinance-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+			$("#table-ARfromsalefinance-excel").hover(function() {
+				document.getElementById("table-ARfromsalefinance-excel").style.filter = "contrast(70%)";
+			}, function() {
+				document.getElementById("table-ARfromsalefinance-excel").style.filter = "contrast(100%)";
+			});
+			
+			$("#table-ARfromsalefinance-excel").click(function(){ 
+				tableToExcel_Export(data.report,"sheet 1","รายงานลูกหนี้คงเหลือจากการขายส่งไฟแนนซ์ "+data.reporttoday); 
+			});
+			
+			$('#print-ARfromsalefinance').click(function(){
+				printReport();
+			});
 
-				reportsearch = null;
-			},
-			beforeSend: function(){
-				if(reportsearch !== null){
-					reportsearch.abort();
-				}
+			reportsearch = null;
+		},
+		beforeSend: function(){
+			if(reportsearch !== null){
+				reportsearch.abort();
 			}
-		});
-	}
+		}
+	});
+	
 }
 
 function printReport(){
@@ -337,8 +294,6 @@ function printReport(){
 		orderby = "CONTNO";
 	}else if($("#cuscod").is(":checked")){ 
 		orderby = "CUSCOD";
-	}else if($("#type").is(":checked")){ 
-		orderby = "TYPE";
 	}
 	
 	var vat = "";
@@ -359,26 +314,27 @@ function printReport(){
 	
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
 	dataToPost.CONTNO1 		= (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.BILLCOL1 	= (typeof $('#BILLCOL1').find(':selected').val() === 'undefined' ? '':$('#BILLCOL1').find(':selected').val());
+	dataToPost.GCODE1 		= (typeof $('#GCODE1').find(':selected').val() === 'undefined' ? '':$('#GCODE1').find(':selected').val());
+	dataToPost.FINCODE1 	= (typeof $('#FINCODE1').find(':selected').val() === 'undefined' ? '':$('#FINCODE1').find(':selected').val());
 	dataToPost.TYPE1 		= (typeof $('#TYPE1').find(':selected').val() === 'undefined' ? '':$('#TYPE1').find(':selected').val());
 	dataToPost.MODEL1 		= (typeof $('#MODEL1').find(':selected').val() === 'undefined' ? '':$('#MODEL1').find(':selected').val());
-	dataToPost.CONTSTAT1 	= (typeof $('#CONTSTAT1').find(':selected').val() === 'undefined' ? '':$('#CONTSTAT1').find(':selected').val());
-	dataToPost.GCODE1 		= (typeof $('#GCODE1').find(':selected').val() === 'undefined' ? '':$('#GCODE1').find(':selected').val());
 	dataToPost.ARDATE 		= $('#ARDATE').val();
+	dataToPost.FRMDATE 		= $('#FRMDATE').val();
+	dataToPost.TODATE 		= $('#TODATE').val();
 	dataToPost.orderby 		= orderby;
 	dataToPost.vat 			= vat;
 	dataToPost.stat 		= stat;
 	dataToPost.layout 		= layout;
 	
 	$.ajax({
-		url: '../SYS05/ReportARfromsaleinstalment/conditiontopdf',
+		url: '../SYS05/ReportARfromsalefinance/conditiontopdf',
 		data: dataToPost,
 		type:'POST',
 		dataType: 'json',
 		success: function(data){
 			//alert(data[0]);
 			var baseUrl = $('body').attr('baseUrl');
-			var url = baseUrl+'SYS05/ReportARfromsaleinstalment/pdf?condpdf='+data[0];
+			var url = baseUrl+'SYS05/ReportARfromsalefinance/pdf?condpdf='+data[0];
 			var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 			Lobibox.window({
 				title: 'พิมพ์รายงาน',

@@ -214,7 +214,7 @@ function Add_AROTHER($thisWindowARothr){
 	$('#PAYTYPS').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2b/getPAYFOR',
+			url: '../Cselect2b/getPAYFORnot102',
 			data: function (params) {
 				dataToPost = new Object();
 				//dataToPost.now = $('#add_cuscod').find(':selected').val();

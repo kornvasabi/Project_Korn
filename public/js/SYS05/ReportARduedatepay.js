@@ -39,7 +39,7 @@ $(function(){
 	$('#CONTNO1').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2b/getCONTNO_C',
+			url: '../Cselect2b/getCONTNO_H',
 			data: function (params) {
 				dataToPost = new Object();
 				//dataToPost.now = $('#add_cuscod').find(':selected').val();
@@ -64,10 +64,10 @@ $(function(){
 		width: '100%'
 	});
 	
-	$('#GCODE1').select2({
+	$('#BILLCOL1').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2b/getGCode',
+			url: '../Cselect2b/getOFFICER',
 			data: function (params) {
 				dataToPost = new Object();
 				//dataToPost.now = $('#add_cuscod').find(':selected').val();
@@ -92,15 +92,14 @@ $(function(){
 		width: '100%'
 	});
 	
-	$('#TYPE1').select2({
+	$('#AMPHUR1').select2({
 		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2b/getTYPECOD',
+		ajax: {
+			url: '../Cselect2b/getAUMPHUR',
 			data: function (params) {
 				dataToPost = new Object();
-				//dataToPost.now = $('#add_cuscod').find(':selected').val();
+				dataToPost.now = $('#PROVINCE').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
 				return dataToPost;				
 			},
 			dataType: 'json',
@@ -111,24 +110,47 @@ $(function(){
 				};
 			},
 			cache: true
-        },
+		},
 		allowClear: true,
 		multiple: false,
 		dropdownParent: $(".b_tab1"),
 		//disabled: true,
 		//theme: 'classic',
+		dropdownAutoWidth : true,
 		width: '100%'
 	});
 	
-	$('#MODEL1').select2({
+	BEECONTNOSCHANGE = null
+	$('#AMPHUR1').change(function(){ 
+		var aumphur = (typeof $('#AMPHUR1').find(":selected").val() === 'undefined' ? '' : $('#AMPHUR1').find(":selected").val());
+		dataToPost = new Object();
+		dataToPost.aumphur = aumphur;
+		BEECONTNOSCHANGE = $.ajax({
+			url : "../Cselect2b/getPROVINCEbyAUMPHUR",
+			data : dataToPost,
+			type : "POST",
+			dataType : "json",
+			success: function(data){
+				var newOption = new Option(data.PROVDES, data.PROVCOD, true, true);
+				$('#PROVINCE1').empty().append(newOption).trigger('change.select2');			
+				BEECONTNOSCHANGE = null;
+			},
+			beforeSend: function(){
+				if(BEECONTNOSCHANGE !== null){
+					BEECONTNOSCHANGE.abort();
+				}
+			}
+		});
+		$('.AUMP').not(this).val($(this).val());
+	});
+	
+	$('#PROVINCE1').select2({
 		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2b/getMODELS',
+		ajax: {
+			url: '../Cselect2b/getPROVINCE',
 			data: function (params) {
 				dataToPost = new Object();
-				//dataToPost.now = $('#add_cuscod').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
 				return dataToPost;				
 			},
 			dataType: 'json',
@@ -139,66 +161,69 @@ $(function(){
 				};
 			},
 			cache: true
-        },
+		},
 		allowClear: true,
 		multiple: false,
 		dropdownParent: $(".b_tab1"),
 		//disabled: true,
 		//theme: 'classic',
+		dropdownAutoWidth : true,
 		width: '100%'
+	});
+	
+	$('#PROVINCE1').change(function(){ 
+		$('#AMPHUR1').empty().trigger('change.select2');
+		$('.AUMP').not(this).val($(this).val());
 	});
 });
 
 //กดแสดงข้อมูล
 $('#btnt1search').click(function(){
+	//alert('5555');
 	search();
 });
 
 var reportsearch = null;
 function search(){
-	dataToPost = new Object();
+	
 	var orderby = "";
-	if($("#sdate").is(":checked")){ 
-		orderby = "A.SDATE";
-	}else if($("#contno").is(":checked")){
-		orderby = "A.CONTNO";
-	}else if($("#cuscod").is(":checked")){ 
-		orderby = "A.CUSCOD";
+	if($("#contno").is(":checked")){ 
+		orderby = "CONTNO";
+	}else if($("#billcoll").is(":checked")){
+		orderby = "BILLCOL";
+	}else if($("#duedate").is(":checked")){ 
+		orderby = "DDATE";
 	}
-	var vat = "";
-	if($("#showvat").is(":checked")){ 
-		vat = "showvat";
-	}else if($("#sumvat").is(":checked")){
-		vat = "sumvat";
+	
+	var report = "";
+	if($("#detail").is(":checked")){ 
+		report = "detail";
+	}else if($("#summary").is(":checked")){
+		report = "summary";
 	}
-	var stat = "";
-	if($("#NEW").is(":checked")){ 
-		stat = "N";
-	}else if($("#OLD").is(":checked")){
-		stat = "O";
-	}else if($("#ALL").is(":checked")){
-		stat = "";
-	}
+	
+	dataToPost = new Object();
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
 	dataToPost.CONTNO1 		= (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.GCODE1 		= (typeof $('#GCODE1').find(':selected').val() === 'undefined' ? '':$('#GCODE1').find(':selected').val());
-	dataToPost.TYPE1 		= (typeof $('#TYPE1').find(':selected').val() === 'undefined' ? '':$('#TYPE1').find(':selected').val());
-	dataToPost.MODEL1 		= (typeof $('#MODEL1').find(':selected').val() === 'undefined' ? '':$('#MODEL1').find(':selected').val());
-	dataToPost.ARDATE 		= $('#ARDATE').val();
+	dataToPost.BILLCOL1 	= (typeof $('#BILLCOL1').find(':selected').val() === 'undefined' ? '':$('#BILLCOL1').find(':selected').val());
+	dataToPost.AMPHUR1 		= (typeof $('#AMPHUR1').find(':selected').val() === 'undefined' ? '':$('#AMPHUR1').find(':selected').val());
+	dataToPost.PROVINCE1 	= (typeof $('#PROVINCE1').find(':selected').val() === 'undefined' ? '':$('#PROVINCE1').find(':selected').val());
+	dataToPost.FRMDATE 		= $('#FRMDATE').val();
+	dataToPost.TODATE 		= $('#TODATE').val();
+	dataToPost.TUMBON1 		= $('#TUMBON1').val();
+	dataToPost.report 		= report;
 	dataToPost.orderby 		= orderby;
-	dataToPost.vat 			= vat;
-	dataToPost.stat 		= stat;
 	
 	$('#loadding').show();
 	reportsearch = $.ajax({
-		url: '../SYS05/ReportARfromsalecash/search',
+		url: '../SYS05/ReportARduedatepay/search',
 		data: dataToPost,
 		Type: 'POST',
 		dataType:'json',
 		success: function(data){	
 			$('#loadding').hide();	
 			Lobibox.window({
-				title: 'รายงานลูกหนี้คงเหลือจากการขายสด',
+				title: 'รายงานลูกหนี้ครบกำหนดชำระค่างวด',
 				content: data.html,
 				height: $(window).height(),
 				width: $(window).width(),
@@ -206,28 +231,27 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportARfromsalecash',1,350);
-			//$('.dataTables_info').hide();
+			fn_datatables('table-ReportARduedatepay',1,320);
 			
-			$('.data-export').prepend('<img id="print-ARfromsalecash" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-			$("#print-ARfromsalecash").hover(function() {
-				document.getElementById("print-ARfromsalecash").style.filter = "contrast(70%)";
+			$('.data-export').prepend('<img id="print-ARduedatepay" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+			$("#print-ARduedatepay").hover(function() {
+				document.getElementById("print-ARduedatepay").style.filter = "contrast(70%)";
 			}, function() {
-				document.getElementById("print-ARfromsalecash").style.filter = "contrast(100%)";
+				document.getElementById("print-ARduedatepay").style.filter = "contrast(100%)";
 			});
 			
-			$('.data-export').prepend('<img id="table-ARfromsalecash-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-			$("#table-ARfromsalecash-excel").hover(function() {
-				document.getElementById("table-ARfromsalecash-excel").style.filter = "contrast(70%)";
+			$('.data-export').prepend('<img id="table-ARduedatepay-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+			$("#table-ARduedatepay-excel").hover(function() {
+				document.getElementById("table-ARduedatepay-excel").style.filter = "contrast(70%)";
 			}, function() {
-				document.getElementById("table-ARfromsalecash-excel").style.filter = "contrast(100%)";
+				document.getElementById("table-ARduedatepay-excel").style.filter = "contrast(100%)";
 			});
 			
-			$("#table-ARfromsalecash-excel").click(function(){ 
-				tableToExcel_Export(data.report,"sheet 1","รายงานลูกหนี้คงเหลือจากการขายสด "+data.reporttoday); 
+			$("#table-ARduedatepay-excel").click(function(){ 
+				tableToExcel_Export(data.report,"sheet 1","รายงานลูกหนี้ครบกำหนดชำระค่างวด "+data.reporttoday); 
 			});
 			
-			$('#print-ARfromsalecash').click(function(){
+			$('#print-ARduedatepay').click(function(){
 				printReport();
 			});
 
@@ -239,10 +263,10 @@ function search(){
 			}
 		}
 	});
+	
 }
 
 function printReport(){
-	dataToPost = new Object();
 	var layout = "";
 	if($("#ver").is(":checked")){ 
 		layout = "A4";
@@ -251,47 +275,43 @@ function printReport(){
 	}
 	
 	var orderby = "";
-	if($("#sdate").is(":checked")){ 
-		orderby = "A.SDATE";
-	}else if($("#contno").is(":checked")){
-		orderby = "A.CONTNO";
-	}else if($("#cuscod").is(":checked")){ 
-		orderby = "A.CUSCOD";
+	if($("#contno").is(":checked")){ 
+		orderby = "CONTNO";
+	}else if($("#billcoll").is(":checked")){
+		orderby = "BILLCOL";
+	}else if($("#duedate").is(":checked")){ 
+		orderby = "DDATE";
 	}
-	var vat = "";
-	if($("#showvat").is(":checked")){ 
-		vat = "showvat";
-	}else if($("#sumvat").is(":checked")){
-		vat = "sumvat";
+	
+	var report = "";
+	if($("#detail").is(":checked")){ 
+		report = "detail";
+	}else if($("#summary").is(":checked")){
+		report = "summary";
 	}
-	var stat = "";
-	if($("#NEW").is(":checked")){ 
-		stat = "N";
-	}else if($("#OLD").is(":checked")){
-		stat = "O";
-	}else if($("#ALL").is(":checked")){
-		stat = "";
-	}
+	
+	dataToPost = new Object();
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
 	dataToPost.CONTNO1 		= (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.GCODE1 		= (typeof $('#GCODE1').find(':selected').val() === 'undefined' ? '':$('#GCODE1').find(':selected').val());
-	dataToPost.TYPE1 		= (typeof $('#TYPE1').find(':selected').val() === 'undefined' ? '':$('#TYPE1').find(':selected').val());
-	dataToPost.MODEL1 		= (typeof $('#MODEL1').find(':selected').val() === 'undefined' ? '':$('#MODEL1').find(':selected').val());
-	dataToPost.ARDATE 		= $('#ARDATE').val();
+	dataToPost.BILLCOL1 	= (typeof $('#BILLCOL1').find(':selected').val() === 'undefined' ? '':$('#BILLCOL1').find(':selected').val());
+	dataToPost.AMPHUR1 		= (typeof $('#AMPHUR1').find(':selected').val() === 'undefined' ? '':$('#AMPHUR1').find(':selected').val());
+	dataToPost.PROVINCE1 	= (typeof $('#PROVINCE1').find(':selected').val() === 'undefined' ? '':$('#PROVINCE1').find(':selected').val());
+	dataToPost.FRMDATE 		= $('#FRMDATE').val();
+	dataToPost.TODATE 		= $('#TODATE').val();
+	dataToPost.TUMBON1 		= $('#TUMBON1').val();
+	dataToPost.report 		= report;
 	dataToPost.orderby 		= orderby;
-	dataToPost.vat 			= vat;
-	dataToPost.stat 		= stat;
 	dataToPost.layout 		= layout;
 	
 	$.ajax({
-		url: '../SYS05/ReportARfromsalecash/conditiontopdf',
+		url: '../SYS05/ReportARduedatepay/conditiontopdf',
 		data: dataToPost,
 		type:'POST',
 		dataType: 'json',
 		success: function(data){
 			//alert(data[0]);
 			var baseUrl = $('body').attr('baseUrl');
-			var url = baseUrl+'SYS05/ReportARfromsalecash/pdf?condpdf='+data[0];
+			var url = baseUrl+'SYS05/ReportARduedatepay/pdf?condpdf='+data[0];
 			var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 			Lobibox.window({
 				title: 'พิมพ์รายงาน',
