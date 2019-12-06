@@ -95,25 +95,12 @@ $('#btnt1search').click(function(){
 			$('#loadding').fadeOut(200);
 			jd_btnt1search = null;
 		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: 15000,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
-			$('#loadding').fadeOut(200);
-		},
 		beforeSend: function(){
 			if(jd_btnt1search !== null){
 				jd_btnt1search.abort();
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -150,25 +137,12 @@ function redraw(){
 				$('#loadding').fadeOut(200);
 				jd_leasingEdit = null;
 			},
-			error: function (x,c,b){
-				Lobibox.notify('error', {
-					title: 'แจ้งเตือน',
-					size: 'mini',
-					closeOnClick: false,
-					delay: 15000,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					icon: true,
-					messageHeight: '90vh',
-					msg: x.status +' '+ b
-				});
-				$('#loadding').fadeOut(200);
-			},
 			beforeSend: function(){
 				if(jd_leasingEdit !== null){
 					jd_leasingEdit.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 }

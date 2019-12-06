@@ -1492,7 +1492,7 @@ class Agent extends MY_Controller {
 					WHEN A.TSALE='F' THEN 'ขายส่งไฟแนนช์' 
 					WHEN A.TSALE='C' THEN 'ขายสด / เครดิต'   
 					WHEN A.TSALE='H' THEN 'ข่ายผ่อนเช่าซื้อ' ELSE '' END) AS ประเภทการขาย
-				,convert(char(8),A.SDATE,112) AS วันที่ใบส่งสินค้า,A.CONTNO AS เลขที่ใบส่งสินค้า, A.NPRICE AS ราคาสุทธิ
+				,convert(char(8),A.SDATE,112) AS วันที่ใบส่งสินค้า,'' AS เลขที่ใบส่งสินค้า, A.NPRICE AS ราคาสุทธิ
 				,A.VATPRC AS ภาษีมูลค่าเพิ่ม, A.TOTPRC AS ราคารวมภาษี,{$this->MAuth->getdb('FN_JD_CONVERT_NUM2BATH')}(A.TOTPRC) as ราคารวมภาษีอักษร
 				,A.SALCOD AS รหัสพนักงานขาย
 				,A.VATRT AS อัตราภาษี, A.TAXNO AS เลขที่ใบกำกับภาษี, A.TAXDT AS วันที่ใบกำกับภาษี
@@ -1619,11 +1619,42 @@ class Agent extends MY_Controller {
 				";
 				$i++;
 				
-				$data["vatrt"] = number_format($row->อัตราภาษี,0);				
+				$data["vatrt"] = number_format($row->อัตราภาษี,2);				
 				$data["total"] = number_format($row->ราคาสุทธิ,2);
 				$data["totalvat"] = number_format($row->ภาษีมูลค่าเพิ่ม,2);
 				$data["totalprice"] = number_format($row->ราคารวมภาษี,2);
 				$data["totalpriceTH"] = $row->ราคารวมภาษีอักษร;
+			}
+			
+			$sql = "
+				select a.optcode as optcode,a.qty as qty,a.uprice as uprice
+					,a.nprice as nprice, a.totvat as totvat,a.totprc as totprc
+					,b.optname as optname  
+				from {$this->MAuth->getdb('ARINOPT')} a
+				left join {$this->MAuth->getdb('OPTMAST')} b on a.optcode=b.optcode and a.locat=B.locat
+				where a.contno='".$data["contno"]."' 
+			";
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					if(($i % 21) == 0){ 
+						// ครบ 20 คัน ให้ขึ้นหน้าใหม่
+						$top = 305;
+						$data["carsize"] += 1; 
+					}
+					if(!isset($data["car"][$data["carsize"]])){ $data["car"][$data["carsize"]] = "";  }
+					
+					$top += 25; 
+					$data["car"][$data["carsize"]] .= "
+						<div class='wf pf data' style='top:{$top};left:0;width:30px;'>{$i}</div>
+						<div class='wf pf data' colspan='4' style='top:{$top};left:30;width:300px;'>{$row->optname}</div>
+						<div class='wf pf tc data' style='top:{$top};left:480;width:50px;'>{$row->qty}</div>
+						<div class='wf pf tr data' style='top:{$top};left:540;width:90px;'>".number_format($row->nprice,2)."</div>
+						<div class='wf pf tr data' style='top:{$top};left:635;width:80px;'>".number_format($row->totprc,2)."</div>
+					";
+					$i++;
+				}
 			}
 		}
 		

@@ -76,25 +76,12 @@ $('#btnt1search').click(function(){
 			$('#loadding').hide();
 			jd_btnt1search = null;
 		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: 15000,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
-			$('#loadding').hide();
-		},
 		beforeSend: function(){
 			if(jd_btnt1search !== null){
 				jd_btnt1search.abort();
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -109,24 +96,12 @@ function leasingDetails($contno,$event){
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
-			$('#loadding').hide();
 			//load form leasing
 			loadLeasing(data);
-		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: false,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
+			
 			$('#loadding').hide();
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -153,7 +128,8 @@ function loadLeasing($param){
 					$('#btnt1leasing').attr('disabled',false);
 				}
 			});			
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 	
@@ -180,7 +156,8 @@ $('#btnt1leasing').click(function(){
 					$('#btnt1leasing').attr('disabled',false);
 				}
 			});			
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -379,7 +356,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			},
 			beforeSend: function(){
 				if(jd_add_approve !== null){ jd_add_approve.abort(); }
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});	
 	
@@ -404,7 +382,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#add_paynext').val('');
 		$('#add_paylast').val('');
 		$('#add_sell').val('');
-		$('#add_totalSell').val('');
+		$('#add_totalSell').val('');		
 		$('#add_interest').val('');
 		
 		$('#add_intRate').val('');
@@ -561,7 +539,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						}
 					});
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -617,7 +596,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				}
 				
 				$('#add_cuscod').trigger('select2:select');
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -801,10 +781,10 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						$('#add_inopt').attr('disabled',false);
 					}
 				});
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
-	
 	/*
 	$('#add_inprc').attr('disabled',true);
 	$('#add_indwn').attr('disabled',true);
@@ -843,7 +823,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			dataType: 'json',
 			success: function(data){
 				
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 		
 	}
@@ -1143,7 +1124,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						$('#add_mgar').attr('disabled',false);
 					}
 				});
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -1244,7 +1226,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						$('#add_othmgar').attr('disabled',false);
 					}
 				});
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});	
 	});
 	
@@ -1801,7 +1784,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 																			
 																			fnCalculate();
 																			$thisFormStd.destroy();
-																		}
+																		},
+																		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 																	});
 																});	
 																
@@ -1843,7 +1827,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 											},
 											beforeClose : function(){
 												$('#btnStd').attr('disabled',false);
-											}
+											},
+											error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 										});
 									}
 								});
@@ -1934,22 +1919,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 											});
 										}
 									},
-									error: function(x,m,l){
-										$('#loadding').hide();
-										Lobibox.notify('error', {
-											title: 'แจ้งเตือน',
-											size: 'mini',
-											closeOnClick: false,
-											delay: false,
-											pauseDelayOnHover: true,
-											continueDelayOnInactiveTab: false,
-											soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
-											soundExt: '.ogg',
-											icon: true,
-											messageHeight: '90vh',
-											msg: l
-										});
-									}
+									error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 								});
 							}
 							
@@ -2015,22 +1985,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 										$('#add_save').attr('cal','y');										
 										$thisFormCalNopay.destroy();
 									},
-									error: function(x,m,l){
-										$('#loadding').hide();
-										Lobibox.notify('error', {
-											title: 'แจ้งเตือน',
-											size: 'mini',
-											closeOnClick: false,
-											delay: false,
-											pauseDelayOnHover: true,
-											continueDelayOnInactiveTab: false,
-											soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
-											soundExt: '.ogg',
-											icon: true,
-											messageHeight: '90vh',
-											msg: l
-										});
-									}
+									error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 								});								
 							});
 						}
@@ -2050,7 +2005,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						msg: 'ไม่พบเลขตัวถัง โปรดระบุเลขตัวถังก่อนคำนวนค่างวดครับ'
 					});
 				}				
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -2106,7 +2062,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						msg: data.msg
 					});
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 
@@ -2278,7 +2235,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 									msg: data.msg
 								});
 							}
-						}
+						},
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}
 			}
@@ -2417,7 +2375,8 @@ function fn_calbilldas(){
 				var comment = $('#add_comments').val().split("\n");
 				$('#add_comments').val(data.Details+"\n"+(typeof comment[1] === 'undefined' ? '' : comment[1]));
 				$('#loadding').hide();
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		})
 	}else{
 		$('#add_free').val('0.00');
@@ -2427,6 +2386,7 @@ function fn_calbilldas(){
 }
 
 function inopt_remove(){
+	$('.inoptTab2').unbind('click');
 	$('.inoptTab2').click(function(){
 		$(this).parents().closest('tr').remove(); 
 		
@@ -2443,6 +2403,7 @@ function inopt_remove(){
 }
 
 function mgar_remove(){
+	$('.mgarTab5').unbind('click');
 	$('.mgarTab5').click(function(){ 
 		$(this).parents().closest('tr').remove(); 
 		
@@ -2460,6 +2421,7 @@ function mgar_remove(){
 }
 
 function othmgar_remove(){
+	$('.othmgarTab5').unbind('click');
 	$('.othmgarTab5').click(function(){
 		$(this).parents().closest('tr').remove(); 
 		
@@ -2498,9 +2460,12 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_strno').empty().append(newOption).trigger('change');
 	var newOption = new Option($dataLoad.PAYDESC, $dataLoad.PAYTYP, true, true);
 	$('#add_paydue').empty().append(newOption).trigger('change');
+	var newOption = new Option($dataLoad.ACTINAME, $dataLoad.ACTICOD, true, true);
+	$('#add_acticod').empty().append(newOption).trigger('change');
 	/*tab2*/
 	//$('#add_inopt').attr('disabled',true);
 	$('#dataTables-inopt tbody').empty().append($dataLoad.option);
+	inopt_remove();
 	$('#add2_optcost').val($dataLoad.OPTCTOT);
 	$('#add2_optsell').val($dataLoad.OPTPTOT);
 	$('#add_inprc').val($dataLoad.KEYINPRC);
@@ -2531,8 +2496,7 @@ function permission($dataLoad,$thisWindowLeasing){
 	var newOption = new Option($dataLoad.SALNAME, $dataLoad.SALCOD, true, true);
 	$('#add_empSell').empty().append(newOption).trigger('change');
 	$('#add_agent').val($dataLoad.COMITN);
-	var newOption = new Option($dataLoad.ACTINAME, $dataLoad.ACTICOD, true, true);
-	$('#add_acticod').empty().append(newOption).trigger('change');
+	
 	/*tab4*/
 	var newOption = new Option($dataLoad.RECOMNAME, $dataLoad.RECOMCOD, true, true);
 	$('#add_advisor').empty().append(newOption).trigger('change');
@@ -2605,10 +2569,12 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_duelast').attr('disabled',true);
 	$('#add_release').attr('disabled',true);
 	$('#add_released').attr('disabled',true);
+	$('#add_interestRate').attr('disabled',true);
 	$('#add_interestRateReal').attr('disabled',true);
 	$('#add_nextlastmonth').attr('disabled',true);
 	
 	$('#add_empSell').select2({ dropdownParent: true,disabled: true,width:'100%' });
+	$('#add_acticod').select2({ dropdownParent: true,disabled: true,width:'100%' });
 	
 	if(_update == 'T'){
 		$('#add_save').attr('disabled',false);
@@ -2655,7 +2621,7 @@ function permission($dataLoad,$thisWindowLeasing){
 	
 	btnOther($thisWindowLeasing);
 }
-
+var JDbtnOther = null;
 function btnOther($thisWindowLeasing){
 	$('#btnArpay').click(function(){
 		dataToPost = new Object();
@@ -2664,7 +2630,7 @@ function btnOther($thisWindowLeasing){
 		$('#btnArpay').attr('disabled',true);
 		
 		$('#loadding').show();
-		$.ajax({
+		JDbtnOther = $.ajax({
 			url:'../SYS04/Leasing/loadARPAY',
 			data: dataToPost,
 			type: 'POST',
@@ -2690,10 +2656,15 @@ function btnOther($thisWindowLeasing){
 						$('#btnArpay').attr('disabled',false);
 					}
 				});
-			}
+				
+				JDbtnOther = null;
+			},
+			beforeSend: function(){ if(JDbtnOther !== null){ JDbtnOther.abort(); } },
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
+	var JDadd_delete = null;
 	$('#add_delete').click(function(){
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
@@ -2716,16 +2687,13 @@ function btnOther($thisWindowLeasing){
 					dataToPost = new Object();
 					dataToPost.contno = $('#add_contno').val();
 					
-					$('#loadding').show();
-					
-					$.ajax({
+					$('#loadding').fadeIn(200);
+					JDadd_delete = $.ajax({
 						url:'../SYS04/Leasing/deleteContno',
 						data:dataToPost,
 						type:'POST',
 						dataType:'json',
 						success:function(data){
-							$('#loadding').hide();
-							
 							if(data.status == 'S'){
 								Lobibox.notify('success', {
 									title: 'สำเร็จ',
@@ -2753,10 +2721,12 @@ function btnOther($thisWindowLeasing){
 									msg: data.msg
 								});
 							}
+							
+							$('#loadding').fadeOut(200);
+							JDadd_delete = null;
 						},
-						error: function(){
-							$('#loadding').hide();
-						}
+						beforeSend: function(){ if(JDadd_delete !== null){ JDadd_delete.abort(); } },
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}
 			}

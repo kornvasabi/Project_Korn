@@ -690,9 +690,7 @@ function search(){
 							loadform(INCFL,LOCAT,ARDATE,ARCONT,TSALE,DESC1,CONTNO,CUSCOD,CUSNAME,PAYFOR,FORDESC,USERID,PAYAMT,VATRT,SMPAY,MEMO1,
 							up_PIC1,up_PIC2,up_PIC3,filePath);			
 						}
-					}); 
-					 
-					
+					});
 				});
 			}		
 		}

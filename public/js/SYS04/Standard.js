@@ -122,7 +122,8 @@ $("#btnt1search").click(function(){
 								},
 								beforeSend : function(){
 									if(JDstddetail !== null){ JDstddetail.abort(); }
-								}
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 							});
 						});
 					}
@@ -147,20 +148,7 @@ $("#btnt1search").click(function(){
 				JDbtnt1search.abort();
 			}
 		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: false,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
-			$('#loadding').hide();
-		}
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -294,20 +282,7 @@ $("#btnt1createStd").click(function(){
 				JDbtnt1createStd.abort();
 			}
 		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: false,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
-			$('#loadding').hide();
-		}
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -560,20 +535,7 @@ function fnload($thisForm){
 					JDbtnAddDwn.abort();
 				}
 			},
-			error: function (x,c,b){
-				Lobibox.notify('error', {
-					title: 'แจ้งเตือน',
-					size: 'mini',
-					closeOnClick: false,
-					delay: false,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					icon: true,
-					messageHeight: '90vh',
-					msg: x.status +' '+ b
-				});
-				$('#loadding').hide();
-			}
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -613,21 +575,7 @@ function fnload($thisForm){
 					jd_btnUpload.abort();
 				}
 			},
-			error: function (x,c,b){
-				Lobibox.notify('error', {
-					title: 'แจ้งเตือน',
-					size: 'mini',
-					closeOnClick: false,
-					delay: false,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					icon: true,
-					messageHeight: '90vh',
-					msg: x.status +' '+ b
-				});
-				$('#loadding').hide();
-				jd_btnUpload = null;
-			}
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});	
 }
@@ -804,7 +752,8 @@ function FN_JD_BSSELECT($id,$thisSelected){
 				if(JDselectSACTICOD2_Cache !== null){
 					JDselectSACTICOD2_Cache.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	}
 }
@@ -1079,20 +1028,7 @@ function loadAddDwn($edit){
 				JDbtnAddDwn.abort();
 			}
 		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: false,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
-			$('#loadding').hide();
-		}
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -1238,20 +1174,7 @@ function loadAddFree($edit){
 				JDbtnAddDwn.abort();
 			}
 		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: false,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
-			$('#loadding').hide();
-		}
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 

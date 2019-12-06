@@ -35,7 +35,8 @@ function search(){
 		},
 		beforeSend: function(){
 			if(calc !== null){ calc.abort(); }
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 $('#calc').click(function(){ search(); });

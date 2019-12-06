@@ -368,6 +368,9 @@ class CHomenew extends MY_Controller {
 				insert into serviceweb.dbo.sn_invtranGCODELogs(STRNO,GCODE,GCODENew,insertBy,dt,ipAddress)
 				select STRNO,GCODE,'".$gcode."','".$sess['IDNo']."',getdate(),'".$_SERVER['REMOTE_ADDR']."' from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$strno."'
 			
+				insert into {$this->MAuth->getdb('INVTRANGCODE')} (STRNO,GCODE,GCODENew,dblocat,insby,insdt,ipAddress)
+				select STRNO,GCODE,'".$gcode."','".$sess["db"]."','".$sess['IDNo']."',getdate(),'".$_SERVER['REMOTE_ADDR']."' from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$strno."'
+				
 				update {$this->MAuth->getdb('INVTRAN')}
 				set GCODE='".$gcode."'
 				where STRNO='".$strno."'
