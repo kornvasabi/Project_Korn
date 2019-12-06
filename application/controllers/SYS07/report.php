@@ -359,7 +359,7 @@ class Report extends MY_Controller {
 		";
 		$this->db->query($sql);
 		
-		$sql 	 = "select count(*) as r from ##temp_stc";
+		$sql 	 = "select count(*) as r from #temp_stc";
 		$query 	 = $this->db->query($sql);
 		$row 	 = $query->row();
 		$row_all = $row->r;
@@ -374,7 +374,7 @@ class Report extends MY_Controller {
 		// Loop รันข้อมูลครั้งละ 3000 แถว  เนื่องจากมีข้อมูลจำนวนมาก ทำให้ PHP ไม่สามารถดึงข้อมูลมาแสดงได้ 
 		for($query_run = 1;$query_run <= $row_all; $query_run += 3000){			
 			$sql = "
-				select * from ##temp_stc
+				select * from #temp_stc
 				where 1=1 and r between ".$query_run." and ".($query_run+3000)."
 			";
 			$query 	 = $this->db->query($sql);
