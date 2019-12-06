@@ -284,7 +284,7 @@ class Ctransferscars extends MY_Controller {
 			where 1=1 ".$cond."
 			order by a.TRANSNO desc
 		";
-		echo $sql; exit;
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 
 		$html = "";
