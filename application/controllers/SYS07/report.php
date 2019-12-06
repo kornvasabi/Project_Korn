@@ -92,14 +92,14 @@ class Report extends MY_Controller {
 						</div>
 					</div>
 					<div class='row'>
-						<div class='col-sm-6'>
+						<!--div class='col-sm-6'>
 							<div class='form-group'>
 								<button id='btnt1search' class='btn btn-primary btn-block'>
 									<span class='glyphicon glyphicon-search'> แสดง</span>
 								</button>
 							</div>
-						</div>
-						<div class='col-sm-6'>
+						</div -->
+						<div class='col-sm-12'>
 							<div class='form-group'>
 								<button id='btnt1PDF' class='btn btn-danger btn-block'>
 									<span class='glyphicon glyphicon-download'> Donwload PDF</span>
@@ -281,33 +281,7 @@ class Report extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	function stockcardPDFx(){
-		$mpdf = new \Mpdf\Mpdf([
-			'mode' => 'utf-8', 
-			'format' => 'A4-L',
-			'margin_top' => 80, 	//default = 16
-			'margin_left' => 8, 	//default = 15
-			'margin_right' => 8, 	//default = 15
-			'margin_bottom' => 6, 	//default = 16
-			'margin_header' => 6, 	//default = 9
-			'margin_footer' => 9, 	//default = 9
-		]);
-		
-		$mpdf->SetImportUse();
-		$pagecount = $mpdf->SetSourceFile('x.pdf');
-		
-		for($i = 1; $i<=$pagecount;$i++){
-			if($i != 1) $mpdf->AddPage();
-			$tplId = $mpdf->ImportPage($i);
-			$mpdf->UseTemplate($tplId);
-		}
-
-		$mpdf->AddPage();
-		$mpdf->WriteHTML('Hello World');
-		$mpdf->Output();
-	}
-	
-	function stockcardPDF_Success(){
+	function stockcardPDF_Success_limit(){
 		ini_set("memory_limit","-1");
 		ini_set("pcre.backtrack_limit", "100000000");
 		
@@ -517,7 +491,6 @@ class Report extends MY_Controller {
 		$mpdf->Output();
 	}
 	
-	
 	function stockcardPDF(){
 		ini_set("memory_limit","-1");
 		ini_set("pcre.backtrack_limit", "100000000");
@@ -531,6 +504,7 @@ class Report extends MY_Controller {
 		$filename = $text.".pdf";
 		/* declare filename end*/
 		
+		// LOG FILE
 		$logDT = "";
 		$date = new DateTime();
 		$logDT .= "เริ่มต้น :: ".$date->format('Y-m-d H:i:s'); 
@@ -555,7 +529,6 @@ class Report extends MY_Controller {
 		$sql = "select comp_nm,comp_adr1,comp_adr2,telp,taxid from {$this->MAuth->getdb('condpay')}";
 		$query = $this->db->query($sql);
 		
-		
 		$arrs['company']	= '';
 		$arrs['compadr1']	= '';
 		$arrs['comptax']	= '';
@@ -570,6 +543,8 @@ class Report extends MY_Controller {
 		}
 		/*end header*/
 		
+		
+		// query นำข้อมูลใส่ temp และสร้างลำดับเพื่อใช้ในการ select ข้อมูลทีละชุด ให้ PHP สามารถรันได้
 		$sql = "
 			declare @fmdt datetime		 = '{$arrs['SDATE']}';
 			declare @todt datetime		 = '{$arrs['EDATE']}';
@@ -590,21 +565,21 @@ class Report extends MY_Controller {
 		";
 		$this->db->query($sql);
 		
+		// LOG FILE
 		$date = new DateTime();
 		$logDT .= "<br> โหลดข้อมูลเสร็จ :: ".$date->format('Y-m-d H:i:s'); 
 		
 		$sql 		= "select count(*) as r from #temp_stc";
 		$query 		= $this->db->query($sql);
-		$row 	 	= $query->row();
-		$row_all 	= $row->r;
-		$_seq	 	= 3000; // จำนวนข้อมูล แต่ละรอบ
-		$file_all 	= (int) ($row_all / $_seq);
-		$file_all	= $file_all + ($row_all % $_seq == 0 ? 0 : 1);
+		$row 	 	= $query->row();				
+		$row_all 	= $row->r;											// จำนวนข้อมูลทั้งหมด		
+		$_seq	 	= 3000;									 			// ดึงข้อมูลครั้งละ 3000 ต่อรอบ
+		$file_all 	= (int) ($row_all / $_seq);							// หาว่าข้อมูลทั้งหมด ใช้กี่รอบ
+		$file_all	= $file_all + ($row_all % $_seq == 0 ? 0 : 1);		// กรณีมีเศษ + เพิ่มอีก 1 รอบ
 		
 		$data_sum 	= array();
-		$NRow 		= 0;
-		$bod 		= "";
-		$arrs["filename"] = array();
+		$NRow 		= 0;												// จำนวนรุ่นทั้งหมด
+		$arrs["filename"] = array();									// เก็บชื่อไฟล์
 		
 		$s = 0;
 		$e = 0;
@@ -616,10 +591,10 @@ class Report extends MY_Controller {
 			$filename_replace 	= 'public/pdffile/'.$ex[0]."_".$ex[1]."_".$ex[2]."_".$ex[3]."_".$query_run.".pdf";
 			$arrs["filename"][] = $filename_replace;
 			
-			if($query_run == 1){
+			if($query_run == 1){ 										// รอบแรกกำหนดตัวแปร ให้ดึงข้อมูลจากแถว 1 ถึงแถวที่กำหนด
 				$s = 1;
 				$e = $_seq;
-			}else{
+			}else{ 														// รอบถัดไป ให้ดึงข้อมูลต่อจากรอบที่ 1 ถึงแถวที่กำหนด
 				$s = $s+$_seq;
 				$e = $e+$_seq;
 			}
@@ -635,6 +610,7 @@ class Report extends MY_Controller {
 			$data_sum["turnoverSum"] = $result["data_sum"]["turnoverSum"];
 		}
 		
+		// LOG FILE
 		$date = new DateTime();
 		$logDT .= "<br> สร้างไฟล์ PDF เสร็จ :: ".$date->format('Y-m-d H:i:s'); 
 		
@@ -649,7 +625,7 @@ class Report extends MY_Controller {
 			'margin_footer' => 9, 	//default = 9
 		]);
 		
-		$pdf_all = sizeof($arrs["filename"]);
+		$pdf_all = sizeof($arrs["filename"]);	// จำนวนไฟล์
 		$pageall = 0;
 		$pagenow = 0;
 		
@@ -657,6 +633,7 @@ class Report extends MY_Controller {
 			$pageall += $mpdf->SetSourceFile($arrs["filename"][$i]);
 		}
 		
+		// loop นี้ใช้ดึงไฟล์ที่สร้างไว้ เพื่อนำมารวมไฟล์ สร้างเป็นไฟล์ใหม่
 		for($i=0;$i<$pdf_all;$i++){
 			$mpdf->SetImportUse();
 			$pagecount = $mpdf->SetSourceFile($arrs["filename"][$i]);
@@ -674,16 +651,17 @@ class Report extends MY_Controller {
 			}
 		}
 		
+		// LOG FILE
 		$date = new DateTime();
 		$logDT .= "<br> รวมไฟล์ :: ".$date->format('Y-m-d H:i:s'); 
 		
+		// LOG SHOW
 		$mpdf->addPage();
 		$mpdf->WriteHTML("<div style='width:100%;font-family: garuda;font-size:9pt;'>".$logDT."</div>");
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
-		
 		$mpdf->Output();
 		
-		// ลบไฟล์
+		// ลบไฟล์ ทิ้งหลังจากแสดงผลแล้ว
 		for($i=0;$i<$pdf_all;$i++){ unlink($arrs["filename"][$i]); }
 	}
 	
