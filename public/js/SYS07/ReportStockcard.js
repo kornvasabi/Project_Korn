@@ -160,7 +160,8 @@ function fnPDF(data){
 				draggable: false,
 				closeOnEsc: true,
 				shown: function($thisPDF){
-					setTimeout(function(){ document.getElementById("formsubmit").submit(); },500);
+					//setTimeout(function(){ document.getElementById("formsubmit").submit(); },500);
+					document.getElementById("formsubmit").submit();
 					//setTimeout(function(){ $thisPDF.destroy(); },3000);
 				}
 			});

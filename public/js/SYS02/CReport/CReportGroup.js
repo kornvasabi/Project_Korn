@@ -42,9 +42,8 @@ $('#btnt1RpGroup').click(function(){
 			jd_btnt1RpGroup = null;
 			$('#loadding').fadeOut(200);
 		},
-		beforeSend: function(){
-			if(jd_btnt1RpGroup !== null){ jd_btnt1RpGroup.abort(); }
-		}
+		beforeSend: function(){ if(jd_btnt1RpGroup !== null){ jd_btnt1RpGroup.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 

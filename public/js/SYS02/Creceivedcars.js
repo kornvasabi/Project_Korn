@@ -149,7 +149,8 @@ $('#add_TRANSNO').change(function(){
 			}
 			
 			delSTRNO();
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -259,9 +260,8 @@ $('#btnt2addSTRNO').click(function(){
 			
 			jdbtnt2addSTRNO = null;
 		},
-		beforeSend: function(){
-			if(jdbtnt2addSTRNO !== null){ jdbtnt2addSTRNO.abort(); }
-		}
+		beforeSend: function(){ if(jdbtnt2addSTRNO !== null){ jdbtnt2addSTRNO.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -340,9 +340,8 @@ function search(){
 			$('#loadding').fadeOut(200);
 			jdsearch = null;
 		},
-		beforeSend: function(){
-			if(jdsearch !== null){ jdsearch.abort(); }
-		}
+		beforeSend: function(){ if(jdsearch !== null){ jdsearch.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -484,7 +483,8 @@ $('#btnt2save').click(function(){
 								msg: data.msg
 							});
 						}
-					}
+					},
+					error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 				});
 			}else{
 				Lobibox.notify('error', {

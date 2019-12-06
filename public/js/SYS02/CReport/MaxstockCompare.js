@@ -13,6 +13,7 @@ var _update = $('.tab1[name="home"]').attr('cup');
 var _delete = $('.tab1[name="home"]').attr('cdel');
 var _level  = $('.tab1[name="home"]').attr('clev');
 
+var jdbtnt1transferPendding = null;
 $('#btnt1transferPendding').click(function(){
 	dataToPost = new Object();
 	dataToPost.tab11prov1 = [$('#tab11prov1').is(':checked'),$('#tab11prov1').val()];
@@ -28,16 +29,14 @@ $('#btnt1transferPendding').click(function(){
 	dataToPost.CONDSort	= $('#CONDSort').find(':selected').val();
 	dataToPost.sort 	= $('.sort[name=maxmin]:checked').val();
 	
-	$('#loadding').show();
+	$('#loadding').fadeIn(200);
 
-	$.ajax({
+	jdbtnt1transferPendding = $.ajax({
 		url: '../SYS02/CReport/MaxstockCompareSearch',
 		data: dataToPost,
 		Type: 'POST',
 		dataType:'json',
 		success: function(data){
-			$('#loadding').hide();			
-			
 			Lobibox.window({
 				title: 'รายงานการโอนย้ายรถ',
 				content: data.html,
@@ -77,6 +76,11 @@ $('#btnt1transferPendding').click(function(){
 					'cursor':'default'
 				});
 			});
-		}
+			
+			$('#loadding').fadeOut(200);			
+			jdbtnt1transferPendding = null;
+		},
+		beforeSend: function(){ if(jdbtnt1transferPendding !== null){ jdbtnt1transferPendding.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });

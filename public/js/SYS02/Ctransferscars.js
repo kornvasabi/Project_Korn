@@ -261,9 +261,8 @@ function search(){
 			jdsearch = null;
 			$('#loadding').fadeOut(200);	
 		},
-		beforeSend:function(){
-			if(jdsearch !== null){ jdsearch.abort(); }
-		}
+		beforeSend:function(){ if(jdsearch !== null){ jdsearch.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -456,11 +455,8 @@ function loadData(dataToPost){
 			
 			JASOBJloadData = null;
 		},
-		beforeSend: function(){
-			if(JASOBJloadData !== null){
-				JASOBJloadData.abort();
-			}
-		}		
+		beforeSend: function(){ if(JASOBJloadData !== null){ JASOBJloadData.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }		
 	});
 }
 
@@ -691,7 +687,8 @@ $('#btnt2addSTRNo').click(function(){
 					$('#loadding').fadeOut(200);
 				}
 			});
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -735,7 +732,8 @@ function checkdt($this){
 					msg: 'วันที่โอนย้าย จะต้องไม่เกิน 4 วันนับจากวันปัจจุบันครับ'
 				});
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -765,7 +763,8 @@ $('#btnt2bill').click(function(){
 					width: $(window).width()
 				});
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -872,7 +871,8 @@ $('#btnt2save').click(function(){
 						}
 						
 						$('#loadding').hide();
-					}
+					},
+					error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 				});
 			}
 		}
@@ -944,7 +944,8 @@ $('#btnt2del').click(function(){
 								msg: data.msg
 							});
 						}
-					}
+					},
+					error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 				});
 			}
 		}
@@ -1002,11 +1003,8 @@ $('#btnt2billUnlock').click(function(){
 						
 						JASOBJbillUnlock = null;
 					},
-					beforeSend: function(){
-						if(JASOBJbillUnlock !== null){
-							JASOBJbillUnlock.abort();
-						}
-					}
+					beforeSend: function(){ if(JASOBJbillUnlock !== null){ JASOBJbillUnlock.abort(); } },
+					error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 				});
 			});
 		}

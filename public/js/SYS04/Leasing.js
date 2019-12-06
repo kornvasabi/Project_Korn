@@ -76,25 +76,12 @@ $('#btnt1search').click(function(){
 			$('#loadding').hide();
 			jd_btnt1search = null;
 		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: 15000,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
-			$('#loadding').hide();
-		},
 		beforeSend: function(){
 			if(jd_btnt1search !== null){
 				jd_btnt1search.abort();
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -109,24 +96,12 @@ function leasingDetails($contno,$event){
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
-			$('#loadding').hide();
 			//load form leasing
 			loadLeasing(data);
-		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: false,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
+			
 			$('#loadding').hide();
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -153,7 +128,8 @@ function loadLeasing($param){
 					$('#btnt1leasing').attr('disabled',false);
 				}
 			});			
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 	
@@ -180,7 +156,8 @@ $('#btnt1leasing').click(function(){
 					$('#btnt1leasing').attr('disabled',false);
 				}
 			});			
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -379,7 +356,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			},
 			beforeSend: function(){
 				if(jd_add_approve !== null){ jd_add_approve.abort(); }
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});	
 	
@@ -561,7 +539,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						}
 					});
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -617,7 +596,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				}
 				
 				$('#add_cuscod').trigger('select2:select');
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -801,7 +781,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						$('#add_inopt').attr('disabled',false);
 					}
 				});
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	/*
@@ -842,7 +823,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			dataType: 'json',
 			success: function(data){
 				
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 		
 	}
@@ -1142,7 +1124,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						$('#add_mgar').attr('disabled',false);
 					}
 				});
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -1243,7 +1226,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						$('#add_othmgar').attr('disabled',false);
 					}
 				});
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});	
 	});
 	
@@ -1800,7 +1784,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 																			
 																			fnCalculate();
 																			$thisFormStd.destroy();
-																		}
+																		},
+																		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 																	});
 																});	
 																
@@ -1842,7 +1827,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 											},
 											beforeClose : function(){
 												$('#btnStd').attr('disabled',false);
-											}
+											},
+											error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 										});
 									}
 								});
@@ -1933,22 +1919,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 											});
 										}
 									},
-									error: function(x,m,l){
-										$('#loadding').hide();
-										Lobibox.notify('error', {
-											title: 'แจ้งเตือน',
-											size: 'mini',
-											closeOnClick: false,
-											delay: false,
-											pauseDelayOnHover: true,
-											continueDelayOnInactiveTab: false,
-											soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
-											soundExt: '.ogg',
-											icon: true,
-											messageHeight: '90vh',
-											msg: l
-										});
-									}
+									error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 								});
 							}
 							
@@ -2014,22 +1985,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 										$('#add_save').attr('cal','y');										
 										$thisFormCalNopay.destroy();
 									},
-									error: function(x,m,l){
-										$('#loadding').hide();
-										Lobibox.notify('error', {
-											title: 'แจ้งเตือน',
-											size: 'mini',
-											closeOnClick: false,
-											delay: false,
-											pauseDelayOnHover: true,
-											continueDelayOnInactiveTab: false,
-											soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
-											soundExt: '.ogg',
-											icon: true,
-											messageHeight: '90vh',
-											msg: l
-										});
-									}
+									error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 								});								
 							});
 						}
@@ -2049,7 +2005,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						msg: 'ไม่พบเลขตัวถัง โปรดระบุเลขตัวถังก่อนคำนวนค่างวดครับ'
 					});
 				}				
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -2105,7 +2062,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						msg: data.msg
 					});
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 
@@ -2277,7 +2235,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 									msg: data.msg
 								});
 							}
-						}
+						},
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}
 			}
@@ -2416,7 +2375,8 @@ function fn_calbilldas(){
 				var comment = $('#add_comments').val().split("\n");
 				$('#add_comments').val(data.Details+"\n"+(typeof comment[1] === 'undefined' ? '' : comment[1]));
 				$('#loadding').hide();
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		})
 	}else{
 		$('#add_free').val('0.00');
@@ -2699,7 +2659,8 @@ function btnOther($thisWindowLeasing){
 				
 				JDbtnOther = null;
 			},
-			beforeSend: function(){ if(JDbtnOther !== null){ JDbtnOther.abort(); } }
+			beforeSend: function(){ if(JDbtnOther !== null){ JDbtnOther.abort(); } },
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -2764,10 +2725,8 @@ function btnOther($thisWindowLeasing){
 							$('#loadding').fadeOut(200);
 							JDadd_delete = null;
 						},
-						error: function(){
-							$('#loadding').fadeOut(200);
-						},
-						beforeSend: function(){ if(JDadd_delete !== null){ JDadd_delete.abort(); } }
+						beforeSend: function(){ if(JDadd_delete !== null){ JDadd_delete.abort(); } },
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}
 			}

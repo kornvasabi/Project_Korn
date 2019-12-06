@@ -335,6 +335,43 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 	}
 	
+	function fnAjaxERROR(jqXHR,exception){
+		var msg = '';
+		var delay = 5000;
+        if (jqXHR.status === 0) {
+			delay = false;
+            msg = 'Not connect.\n Verify Network.';
+        } else if (jqXHR.status == 404) {
+            delay = false;
+			msg = 'Requested page not found. [404]';
+        } else if (jqXHR.status == 500) {
+            delay = false;
+			msg = 'Internal Server Error [500].';
+        } else if (exception === 'parsererror') {
+            msg = 'Requested JSON parse failed.';
+        } else if (exception === 'timeout') {
+            msg = 'Time out error.';
+        } else if (exception === 'abort') {
+            msg = 'Ajax request aborted.';
+        } else {
+            msg = 'Uncaught Error.\n' + jqXHR.responseText;
+        }
+		
+		Lobibox.notify('error', {
+			title: 'ผิดพลาด',
+			size: 'mini',
+			closeOnClick: false,
+			delay: delay,
+			pauseDelayOnHover: true,
+			continueDelayOnInactiveTab: false,
+			icon: true,
+			messageHeight: '90vh',
+			msg: msg
+		});
+		
+		$('#loadding').fadeOut(200);
+	}
+	
 	var setwidth = $(window).width();
 	var setheight = $(window).height();
 	if(setwidth > 1000){
