@@ -567,7 +567,7 @@ $('#btnt2addSTRNo').click(function(){
 						$('.delSTRNO').each(function(){
 							str[$(this).attr('strno')] = $(this).attr('strno');
 						});
-						alert(str.length);
+						//alert(str.length);
 						dataToPost.strOld = (str.length > 0 ? str:'none');
 						/*
 						var spinner = $('body>.spinner').clone().removeClass('hide');
