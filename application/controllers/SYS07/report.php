@@ -682,6 +682,9 @@ class Report extends MY_Controller {
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
 		
 		$mpdf->Output();
+		
+		// ลบไฟล์
+		for($i=0;$i<$pdf_all;$i++){ unlink($arrs["filename"][$i]); }
 	}
 	
 	function stockcardPDF_SAVEFILE($filename,$NRow,$sql,$arrs,$data_sum,$islast){
