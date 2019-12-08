@@ -70,7 +70,7 @@ $('#btnt1search').click(function(){
 			$("#result").html(data.html);
 			
 			$('#table-ReserveCar').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-ReserveCar',1,250);
+			fn_datatables('table-ReserveCar',1,350);
 			
 			// Export data to Excel
 			$('.data-export').prepend('<img id="table-ReserveCar-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
@@ -83,10 +83,19 @@ $('#btnt1search').click(function(){
 				$('.resvnoClick').click(function(){
 					fn_load_formResv($(this),'edit');
 				});
+				
+				$('.getit').hover(function(){
+					$(this).css({'background-color':'yellow'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#f9f9a9'});
+				},function(){
+					$(this).css({'background-color':'white'});
+					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
+				});
 			}
 			
 			$('#loadding').fadeOut(100);
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -120,7 +129,8 @@ function fn_load_formResv($this,$event){
 					$('#loadding').fadeOut(100);
 				}
 			});
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -128,7 +138,6 @@ function fn_load_formResv($this,$event){
 function fn_loadPropoties($thisWindow,$EVENT){
 	//$('#fRESVNO').attr('disabled',true);
 	//$('#fRESVNO').val('Auto Genarate');
-	
 	$('#fLOCAT').select2({
 		placeholder: 'เลือก',
         ajax: {
@@ -157,38 +166,88 @@ function fn_loadPropoties($thisWindow,$EVENT){
 		width: '100%'
 	});
 	
-	$('#fCUSCOD').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERS',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#fCUSCOD').find(':selected').val() === 'undefined' ? '' : $('#fCUSCOD').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				$('#loadding').fadeIn(200);
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 250,
-			processResults: function (data) {
-				$('#loadding').fadeOut(200);
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: false,
-		multiple: false,
-		dropdownParent: $(".lobibox-body"),
-		//disabled: (_level == 1 ? false:true),
-		//theme: 'classic',
-		width: '100%'
+	$('#fCUSCOD_removed').click(function(){
+		$('#fCUSCOD').attr('CUSCOD','');
+		$('#fCUSCOD').val('');
 	});
 	
-	$('#fCUSCOD').on("select2:select",function(){
-		//
+	$('#fCUSCOD').click(function(){
+		$('#loadding').fadeIn(200);
+		
+		$.ajax({
+			url:'../Cselect2/getfromCUSTOMER',
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				$('#fCUSCOD').attr('disabled',true);
+				$('#btnSave').attr('disabled',true);
+				
+				Lobibox.window({
+					title: 'FORM CUSTOMER',
+					//width: $(window).width(),
+					//height: $(window).height(),
+					content: data.html,
+					draggable: false,
+					closeOnEsc: true,
+					shown: function($thisCUS){
+						var jd_cus_search = null;
+						$('#cus_fname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_lname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_idno').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_search').click(function(){ fnResultCUSTOMER(); });
+						
+						function fnResultCUSTOMER(){
+							data = new Object();
+							data.fname = $('#cus_fname').val();
+							data.lname = $('#cus_lname').val();
+							data.idno = $('#cus_idno').val();
+							
+							let use = new Object();
+							use.recomcod = $('#add_recomcod').attr('CUSCOD');
+							data.inuse = use;
+							
+							$('#loadding').fadeIn(200);
+							jd_cus_search = $.ajax({
+								url:'../Cselect2/getResultCUSTOMER',
+								data:data,
+								type: 'POST',
+								dataType: 'json',
+								success: function(data){
+									$('#cus_result').html(data.html);
+									
+									$('.CUSDetails').unbind('click');
+									$('.CUSDetails').click(function(){
+										dtp = new Object();
+										dtp.cuscod  = $(this).attr('CUSCOD');
+										dtp.cusname = $(this).attr('CUSNAMES');
+										
+										$('#fCUSCOD').attr('CUSCOD',dtp.cuscod);
+										$('#fCUSCOD').val(dtp.cusname);
+										
+										$thisCUS.destroy();
+									});
+									
+									$('#loadding').fadeOut(200);
+									jd_cus_search = null;
+								},
+								beforeSend: function(){
+									if(jd_cus_search !== null){ jd_cus_search.abort(); }
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+							});
+						}
+						
+					},
+					beforeClose : function(){
+						$('#fCUSCOD').attr('disabled',false);
+						$('#btnSave').attr('disabled',false);
+					}
+				});
+				
+				$('#loadding').fadeOut(200);
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		});
 	});
 	
 	$('#fRECVCD').select2({
@@ -253,7 +312,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			url: '../Cselect2/getSTRNO',
 			data: function (params) {
 				dataToPost = new Object();
-				dataToPost.now 	 = (typeof $('#fSTRNO').find(':selected').val() === 'undefined' ? '' : $('#fSTRNO').find(':selected').val());
+				dataToPost.now 	 = (typeof $('#fSTRNO').find(':selected').val() === 'undefined' ? $('#btncantStrno').attr('strno') : $('#fSTRNO').find(':selected').val());
 				dataToPost.q 	 = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = (typeof $('#fLOCAT').find(':selected').val() === 'undefined' ? '' : $('#fLOCAT').find(':selected').val());
 				
@@ -275,7 +334,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			},
 			cache: true
         },
-		allowClear: true,
+		allowClear: false,
 		multiple: false,
 		dropdownParent: $(".lobibox-body"),
 		//disabled: true,
@@ -316,8 +375,14 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				if(JDfSTRNO_select !== null){
 					JDfSTRNO_select.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
+	});
+	
+	var jdbtncantStrno = null;
+	$('#btncantStrno').click(function(){
+		$('#fSTRNO').empty().trigger('changed');
 	});
 	
 	$('#fACTICOD').select2({
@@ -348,21 +413,19 @@ function fn_loadPropoties($thisWindow,$EVENT){
 		width: '100%'
 	});
 	
-	$('#fACTICOD').on("select2:select",function(){
+	$('#fACTICOD').on("select2:select",function(){ restd(); });
+	
+	function restd(){
 		$('#fSTAT').trigger('select2:select');
-		
-		setTimeout(function(){
-			fn_balance();
-		},250);
-	});
+		setTimeout(function(){ fn_balance(); },250);
+	}
 	
 	$('#fACTICOD').on("select2:unselect",function(){
 		$('#fPRICE').attr('stdid','');
 		$('#fPRICE').attr('stdplrank','');
 		$('#fPRICE').val('');
 		
-		fn_balance();
-		//$('#fSTAT').trigger('select2:select');
+		setTimeout(function(){ fn_balance(); },250);
 	});
 		
 	$('#fGRPCOD').select2({
@@ -601,7 +664,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 							$('#fRESPAY').focus();
 							$('#fBALANCE').val(data.price);
 						}else{
-							var bl = data.price - $('#fRESPAY').val();
+							var bl = data.price - ($('#fRESPAY').val()).replace(',','');
 							$('#fBALANCE').val(bl);
 						}						
 					}
@@ -613,7 +676,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					if(JDfSTAT_select !== null){
 						JDfSTAT_select.abort();
 					}
-				}
+				},
+				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 			});
 		}else{
 			$('#fPRICE').val('');
@@ -655,7 +719,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				if(jd_fn_balance !== null){
 					jd_fn_balance.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	}
 	
@@ -689,11 +754,14 @@ function fn_loadPropoties($thisWindow,$EVENT){
 	if($EVENT == 'add'){
 		$('#fCC').val(null).trigger('change');
 		$('#fSTAT').val(null).trigger('change');
-		$('#btnDelete').hide();
+		$('#btnDelete').hide(0);
+		$('#btnClear').show(0);
 	}else{
+		$('#btnClear').hide(0);
 		if(_level == 1){
 			$('#fRESVDT').attr('disabled',false);
 			$('#fCUSCOD').attr('disabled',false);
+			$('#fCUSCOD_removed').attr('disabled',false);
 			$('#fACTICOD').attr('disabled',false);
 			$('#fGRPCOD').attr('disabled',false);
 			$('#fTYPE').attr('disabled',false);
@@ -707,6 +775,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 		}else{
 			$('#fRESVDT').attr('disabled',true);
 			$('#fCUSCOD').attr('disabled',true);
+			$('#fCUSCOD_removed').attr('disabled',true);
 			$('#fACTICOD').attr('disabled',true);
 			$('#fGRPCOD').attr('disabled',true);
 			$('#fTYPE').attr('disabled',true);
@@ -725,13 +794,31 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			$('#btnSave').attr('disabled',true);
 		}
 		
-		$('#btnDelete').show();
+		$('#btnDelete').show(0);
 		if(_delete == 'T'){
 			$('#btnDelete').attr('disabled',false);
 		}else{
 			$('#btnDelete').attr('disabled',true);
 		}
 	}
+	
+	
+	$('#btnClear').click(function(){
+		$('#fCUSCOD').attr('CUSCOD','');
+		$('#fCUSCOD').val('');
+		$('#fSTRNO').empty().trigger('change');
+		$('#fACTICOD').empty().trigger('change');
+		$('#fGRPCOD').empty().trigger('change');
+		$('#fMODEL').empty().trigger('change');
+		$('#fBAAB').empty().trigger('change');
+		$('#fCOLOR').empty().trigger('change');
+		$('#fCC').empty().trigger('change');
+		$('#fSTAT').val('').trigger('change');
+		$('#fPRICE').val();
+		$('#fRESPAY').val();
+		$('#fBALANCE').val();
+		$('#fRECVDUE').val();
+	});
 
 	var jd_btnDelete = null;
 	$('#btnDelete').click(function(){
@@ -803,7 +890,7 @@ function fn_save($thisWindow,lobibox){
 	dataToPost.RESVNO 	= $('#fRESVNO').val();
 	dataToPost.RESVDT	= $('#fRESVDT').val();
 	dataToPost.LOCAT 	= (typeof $('#fLOCAT').find(':selected').val() === 'undefined' ? '':$('#fLOCAT').find(':selected').val());
-	dataToPost.CUSCOD 	= (typeof $('#fCUSCOD').find(':selected').val() === 'undefined' ? '':$('#fCUSCOD').find(':selected').val());
+	dataToPost.CUSCOD 	= $('#fCUSCOD').attr('CUSCOD');
 	dataToPost.RECVCD 	= (typeof $('#fRECVCD').find(':selected').val() === 'undefined' ? '':$('#fRECVCD').find(':selected').val());
 	dataToPost.SALCOD 	= (typeof $('#fSALCOD').find(':selected').val() === 'undefined' ? '':$('#fSALCOD').find(':selected').val());
 	dataToPost.VATRT 	= $('#fVATRT').val();
@@ -871,7 +958,8 @@ function fn_save($thisWindow,lobibox){
 			if(JD_fn_save !== null){
 				JD_fn_save.abort();
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 

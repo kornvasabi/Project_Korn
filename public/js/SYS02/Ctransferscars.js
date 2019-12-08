@@ -24,7 +24,8 @@ $(function(){
 	}else{
 		$('#btnt1transfers').attr('disabled',true);
 	}
-		
+	
+	$('#TRANSSTAT').select2();
 	initPage();
 });
 
@@ -194,6 +195,7 @@ $('#add_EMPCARRY').change(function(){
 	});
 });
 
+var jdsearch=null;
 $('#btnt1search').click(function(){ 
 	search();
 });
@@ -203,19 +205,21 @@ function search(){
 	dataToPost.TRANSNO = $('#TRANSNO').val();
 	dataToPost.TRANSDT = $('#TRANSDT').val();
 	dataToPost.TRANSFM = $('#TRANSFM').val();
-	dataToPost.TRANSSTAT = $('#TRANSSTAT').val();
+	dataToPost.TRANSSTAT = $('#TRANSSTAT').find(':selected').val();
 	
+	/*
 	var spinner = $('body>.spinner').clone().removeClass('hide');
     $('#resultt1transfers').html('');
 	$('#resultt1transfers').append(spinner);
-	
-	$.ajax({
+	*/
+	$('#loadding').fadeIn(200);
+	jdsearch = $.ajax({
 		url:'../SYS02/Ctransferscars/search',
 		data:dataToPost,
 		type:'POST',
 		dataType:'json',
 		success:function(data){
-			$('#resultt1transfers').find('.spinner, .spinner-backdrop').remove();
+			//$('#resultt1transfers').find('.spinner, .spinner-backdrop').remove();
 			$('#resultt1transfers').html(data.html);
 			
 			/*
@@ -226,7 +230,7 @@ function search(){
 			*/
 			
 			$('#table-Ctransferscars').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-Ctransferscars',1,360);
+			fn_datatables('table-Ctransferscars',1,330);
 			
 			/*
 			// Export data to Excel
@@ -252,8 +256,13 @@ function search(){
 					dataToPost.clev = _level;
 					loadData(dataToPost);
 				});
-			}		
-		}
+			}
+
+			jdsearch = null;
+			$('#loadding').fadeOut(200);	
+		},
+		beforeSend:function(){ if(jdsearch !== null){ jdsearch.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -267,9 +276,7 @@ function loadData(dataToPost){
 		dataType:'json',
 		success:function(data){
 			$('#loadding').hide();
-
 			$('#table-STRNOTRANS tbody tr').remove(); //ลบข้อมูลเลขตัวถังเดิมออกก่อน
-			
 			document.getElementById("table-fixed-STRNOTRANS").addEventListener("scroll", function(){
 				var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
 				this.querySelector("thead").style.transform = translate;	
@@ -414,11 +421,19 @@ function loadData(dataToPost){
 			for(var i=0;i<STRNO.length;i++){
 				$('#table-STRNOTRANS tbody').append(STRNO[i]);
 			}
+			//fn_datatables('table-STRNOTRANS',1,325);
 			
 			$('.SETEMPCARRY').select2({
 				placeholder: 'เลือก',
 				ajax: {
 					url: '../Cselect2/getVUSER',
+					data: function (params) {
+						dataToPost = new Object();
+						dataToPost.now = $(this).find(':selected').val();
+						dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+						
+						return dataToPost;				
+					},
 					dataType: 'json',
 					delay: 1000,
 					processResults: function (data) {
@@ -440,11 +455,8 @@ function loadData(dataToPost){
 			
 			JASOBJloadData = null;
 		},
-		beforeSend: function(){
-			if(JASOBJloadData !== null){
-				JASOBJloadData.abort();
-			}
-		}		
+		beforeSend: function(){ if(JASOBJloadData !== null){ JASOBJloadData.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }		
 	});
 }
 
@@ -526,6 +538,7 @@ $('#btnt2addSTRNo').click(function(){
 	dataToPost = new Object();
 	dataToPost.locat = $('#add_TRANSFM').val();
 	
+	$('#loadding').fadeIn(200);
 	$.ajax({
 		url: '../SYS02/Ctransferscars/getSTRNoForm',
 		data: dataToPost,
@@ -546,17 +559,25 @@ $('#btnt2addSTRNo').click(function(){
 						dataToPost.fCRLOCAT = $('#add_TRANSFM').val();
 						dataToPost.fGCODE	= $('#fGCODE').val();
 						
+						str = new Array();
+						$('.delSTRNO').each(function(){
+							str[$(this).attr('strno')] = $(this).attr('strno');
+						});
+						//alert(str.length);
+						dataToPost.strOld = (str.length > 0 ? str:'none');
+						/*
 						var spinner = $('body>.spinner').clone().removeClass('hide');
 						$('#resultSTRNO').html('');
 						$('#resultSTRNO').append(spinner);
-						
+						*/
+						$('#loadding').fadeIn(200);
 						$.ajax({
 							url: '../SYS02/Ctransferscars/getSTRNo',
 							data: dataToPost,
 							Type: 'POST',
 							dataType:'json',
 							success: function(data){
-								$('#resultSTRNO').find('.spinner, .spinner-backdrop').remove();
+								//$('#resultSTRNO').find('.spinner, .spinner-backdrop').remove();
 								$('#resultSTRNO').html(data.html);
 								
 								document.getElementById("table-fixed-getSTRNo").addEventListener("scroll", function(){
@@ -608,7 +629,7 @@ $('#btnt2addSTRNo').click(function(){
 										var valued = (typeof $('#add_EMPCARRY').find(':selected').val() === "undefined" ? "" : $('#add_EMPCARRY').find(':selected').val());	
 										
 										var row = '<tr seq="new'+generate+'">';
-										row += '<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" seq="new'+generate+'" value="ยกเลิก"></td>';
+										row += '<td><input type="button" class="delSTRNO btn btn-xs btn-danger btn-block" strno="'+STRNO+'" seq="new'+generate+'" value="ยกเลิก"></td>';
 										row += '<td>'+STRNO+'</td>';
 										row += '<td>'+MODEL+'</td>';
 										row += '<td>'+BAAB+'</td>';
@@ -634,6 +655,13 @@ $('#btnt2addSTRNo').click(function(){
 										placeholder: 'เลือก',
 										ajax: {
 											url: '../Cselect2/getVUSER',
+											data: function (params) {
+												dataToPost = new Object();
+												dataToPost.now = $(this).find(':selected').val();
+												dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+												
+												return dataToPost;				
+											},
 											dataType: 'json',
 											delay: 1000,
 											processResults: function (data) {
@@ -650,12 +678,17 @@ $('#btnt2addSTRNo').click(function(){
 									
 									$this.destroy();
 								});
+								
+								$('#loadding').fadeOut(200);
 							}
 						});
 					});
+					
+					$('#loadding').fadeOut(200);
 				}
 			});
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -699,7 +732,8 @@ function checkdt($this){
 					msg: 'วันที่โอนย้าย จะต้องไม่เกิน 4 วันนับจากวันปัจจุบันครับ'
 				});
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -729,7 +763,8 @@ $('#btnt2bill').click(function(){
 					width: $(window).width()
 				});
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -836,7 +871,8 @@ $('#btnt2save').click(function(){
 						}
 						
 						$('#loadding').hide();
-					}
+					},
+					error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 				});
 			}
 		}
@@ -908,7 +944,8 @@ $('#btnt2del').click(function(){
 								msg: data.msg
 							});
 						}
-					}
+					},
+					error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 				});
 			}
 		}
@@ -966,11 +1003,8 @@ $('#btnt2billUnlock').click(function(){
 						
 						JASOBJbillUnlock = null;
 					},
-					beforeSend: function(){
-						if(JASOBJbillUnlock !== null){
-							JASOBJbillUnlock.abort();
-						}
-					}
+					beforeSend: function(){ if(JASOBJbillUnlock !== null){ JASOBJbillUnlock.abort(); } },
+					error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 				});
 			});
 		}

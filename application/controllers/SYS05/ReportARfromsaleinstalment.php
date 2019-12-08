@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 //BEE+
-class ReportARfromsalecash extends MY_Controller {
+class ReportARfromsaleinstalment extends MY_Controller {
 	private $sess = array(); 
 	
 	function __construct(){
@@ -25,9 +25,9 @@ class ReportARfromsalecash extends MY_Controller {
 				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
 					<div class='row' style='height:90%;'>
 						<div class='col-sm-12 col-xs-12' style='background-color:#3d9690;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
-							<br>รายงานลูกหนี้คงเหลือจากการขายสด<br>
+							<br>รายงานลูกหนี้คงเหลือจากการขายผ่อน<br>
 						</div>
-						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>	
+						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>
 							<br>
 							<div class='col-sm-4 col-xs-4'>	
 								<div class='form-group'>
@@ -49,8 +49,8 @@ class ReportARfromsalecash extends MY_Controller {
 							</div>
 							<div class='col-sm-4 col-xs-4'>	
 								<div class='form-group' >
-									กลุ่มสินค้า
-									<select id='GCODE1' class='form-control input-sm' data-placeholder='กลุ่มสินค้า'></select>
+									พนักงานเก็บเงิน
+									<select id='BILLCOL1' class='form-control input-sm' data-placeholder='พนักงานเก็บเงิน'></select>
 								</div>
 							</div>
 							<div class='col-sm-4 col-xs-4'>	
@@ -65,25 +65,42 @@ class ReportARfromsalecash extends MY_Controller {
 									<select id='MODEL1' class='form-control input-sm' data-placeholder='รุ่นสินค้า'></select>
 								</div>
 							</div>
+							<div class='col-sm-4 col-xs-4'>	
+								<div class='form-group' >
+									สถานะสัญญา
+									<select id='CONTSTAT1' class='form-control input-sm' data-placeholder='สถานะสัญญา'></select>
+								</div>
+							</div>
+							<div class='col-sm-8 col-xs-8'>	
+								<div class='form-group' >
+									กลุ่มสินค้า
+									<select id='GCODE1' class='form-control input-sm' data-placeholder='กลุ่มสินค้า'></select>
+								</div>
+							</div>
 						</div>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'><br>	
 							<div class='col-sm-12 col-xs-12'>	
 								<div class='form-group'>
 									เรียงลำดับข้อมูล
 									<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #d6d6d6;'>	
-										<div class='col-sm-4 col-xs-4'>
+										<div class='col-sm-3 col-xs-3'>
 											<div class='form-group'><br>
 												<input type= 'radio' id='sdate' name='orderby' checked> ตามวันที่ขาย
 											</div>
 										</div>
-										<div class='col-sm-4 col-xs-4'>
+										<div class='col-sm-3 col-xs-3'>
 											<div class='form-group'><br>
 												<input type= 'radio' id='contno' name='orderby'> เลขที่สัญญา
 											</div>
 										</div>
-										<div class='col-sm-4 col-xs-4'>
+										<div class='col-sm-3 col-xs-3'>
 											<div class='form-group'><br>
 												<input type= 'radio' id='cuscod' name='orderby'> ตามรหัสลูกค้า
+											</div>
+										</div>
+										<div class='col-sm-3 col-xs-3'>
+											<div class='form-group'><br>
+												<input type= 'radio' id='type' name='orderby'> ยี่ห้อ
 											</div>
 										</div>
 									</div>
@@ -99,7 +116,7 @@ class ReportARfromsalecash extends MY_Controller {
 											<div class='form-group'>
 												<br>
 												<input type= 'radio' id='hor' name='layout' checked> แนวนอน
-												<br><br><br><br>
+												<br><br>
 												<input type= 'radio' id='ver' name='layout'> แนวตั้ง
 											</div>
 										</div>
@@ -114,7 +131,7 @@ class ReportARfromsalecash extends MY_Controller {
 											<div class='form-group'>
 												<br>
 												<input type= 'radio' id='showvat' name='vat' checked> แสดงภาษี
-												<br><br><br><br>
+												<br><br>
 												<input type= 'radio' id='sumvat' name='vat'> รวมภาษี
 											</div>
 											
@@ -130,9 +147,9 @@ class ReportARfromsalecash extends MY_Controller {
 											<div class='form-group'>
 												<br>
 												<input type= 'radio' id='NEW' name='stat'> ใหม่
-												<br><br>
+												<br>
 												<input type= 'radio' id='OLD' name='stat'> เก่า
-												<br><br>
+												<br>
 												<input type= 'radio' id='ALL' name='stat' checked> ทั้งหมด
 											</div>
 										</div>
@@ -150,16 +167,18 @@ class ReportARfromsalecash extends MY_Controller {
 			</div>
 		";
 		
-		$html.= "<script src='".base_url('public/js/SYS05/ReportARfromsalecash.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/SYS05/ReportARfromsaleinstalment.js')."'></script>";
 		echo $html;
 	}
 	
 	function search(){
 		$LOCAT1		= $_REQUEST["LOCAT1"];
 		$CONTNO1 	= $_REQUEST["CONTNO1"];
-		$GCODE1 	= str_replace(chr(0),'',$_REQUEST["GCODE1"]);
+		$BILLCOL1 	= str_replace(chr(0),'',$_REQUEST["BILLCOL1"]);
 		$TYPE1 		= str_replace(chr(0),'',$_REQUEST["TYPE1"]);
 		$MODEL1 	= str_replace(chr(0),'',$_REQUEST["MODEL1"]);
+		$CONTSTAT1 	= str_replace(chr(0),'',$_REQUEST["CONTSTAT1"]);
+		$GCODE1 	= str_replace(chr(0),'',$_REQUEST["GCODE1"]);
 		$ARDATE 	= $_REQUEST["ARDATE"];
 		$orderby 	= $_REQUEST["orderby"];
 		$vat 		= $_REQUEST["vat"];
@@ -183,101 +202,157 @@ class ReportARfromsalecash extends MY_Controller {
 			$rpcond .= "  ลูกหนี้ ณ วันที่ ".$ARDATE;
 		}
 		
+		if($BILLCOL1 != ""){
+			$cond .= " AND A.BILLCOLL LIKE '%".$BILLCOL1."%'";
+			$rpcond .= "  พนักงานเก็บเงิน ".$TYPE1;
+		}else{
+			$cond .= " AND (A.BILLCOLL LIKE '%%' OR A.BILLCOLL IS NULL)";
+		}
+		
 		if($stat == "N"){
 			$rpcond .= "  ประเภทสินค้า รถใหม่ ";
-			$cond .= " AND (C.STAT LIKE '%".$stat."%')";
+			$cond .= " AND (D.STAT LIKE '%".$stat."%')";
 		}else if($stat == "O"){
 			$rpcond .= "  ประเภทสินค้า รถมือสอง ";
-			$cond .= " AND (C.STAT LIKE '%".$stat."%')";
+			$cond .= " AND (D.STAT LIKE '%".$stat."%')";
 		}else{
-			$cond .= " AND (C.STAT LIKE '%%' OR C.STAT IS NULL )";
+			$cond .= " AND (D.STAT LIKE '%%' OR D.STAT IS NULL )";
 		}
 		
 		if($TYPE1 != ""){
-			$cond .= " AND (C.TYPE  LIKE '%".$TYPE1."%')";
+			$cond .= " AND (D.TYPE  LIKE '%".$TYPE1."%')";
 			$rpcond .= "  ยี่ห้อสินค้า ".$TYPE1;
+		}else{
+			$cond .= " AND D.TYPE  LIKE '%%' OR D.TYPE IS NULL";
 		}
 		
 		if($MODEL1 != ""){
-			$cond .= " AND (C.MODEL LIKE '%".$MODEL1."%')";
+			$cond .= " AND (D.MODEL LIKE '%".$MODEL1."%')";
 			$rpcond .= "  รุ่น ".$MODEL1;
+		}else{
+			$cond .= " AND (D.MODEL LIKE '%%' OR D.MODEL IS NULL)";
 		}
 		
 		if($GCODE1 == "N"){
-			$cond .= " AND (C.GCODE LIKE '%".$GCODE1."%')";
+			$cond .= " AND (D.GCODE LIKE '%".$GCODE1."%')";
 			$rpcond .= "  สถานะสินค้า ".$GCODE1;
 		}else if($GCODE1 == "O"){
-			$cond .= " AND (C.GCODE LIKE '%".$GCODE1."%')";
+			$cond .= " AND (D.GCODE LIKE '%".$GCODE1."%')";
 			$rpcond .= "  สถานะสินค้า ".$GCODE1;
 		}else{
-			$cond .= " AND (C.GCODE LIKE '%%' OR C.GCODE IS NULL )";
+			$cond .= " AND (D.GCODE LIKE '%%' OR D.GCODE IS NULL )";
 		}
 		
+		if($CONTSTAT1 != ""){
+			$cond .= " AND (A.CONTSTAT LIKE '%".$CONTSTAT1."%')";
+			$rpcond .= "  สถานะสัญญา ".$CONTSTAT1;
+		}else{
+			$cond .= " (A.CONTSTAT LIKE '%%' OR A.CONTSTAT IS NULL)";
+		}
+		
+		
+		
 		$sql = "
-				IF OBJECT_ID('tempdb..#SALE') IS NOT NULL DROP TABLE #SALE
+				IF OBJECT_ID('tempdb..#main') IS NOT NULL DROP TABLE #main
 				select *
-				into #SALE
+				into #main
 				from(
-					select A.LOCAT, A.CONTNO, A.CUSCOD, A.SDATE, B.SNAM+B.NAME1+'  '+B.NAME2 as CUSNAME, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, A.VATPRES, 
-					A.TOTPRES, A.SMPAY, A.SMCHQ
-					from {$this->MAuth->getdb('ARCRED')} A
-					left join CUSTMAST B on A.CUSCOD = B.CUSCOD
-					left join INVTRAN C on A.STRNO = C.STRNO
-					where (A.SDATE <= '".$ARDATES."')  AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYDT > '".$ARDATES."')) 
-					".$cond."
-					union
-					select A.LOCAT, A.CONTNO, A.CUSCOD, A.SDATE, B.SNAM+B.NAME1+'  '+B.NAME2 as CUSNAME, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, A.VATPRES, 
-					A.TOTPRES, A.SMPAY, A.SMCHQ
-					from {$this->MAuth->getdb('HARCRED')} A
-					left join CUSTMAST B on A.CUSCOD = B.CUSCOD
-					left join HINVTRAN C on A.STRNO = C.STRNO
-					where (A.SDATE <= '".$ARDATES."') AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYDT > '".$ARDATES."')) 
-					".$cond."
-				)SALE
+					select LOCAT, CONTNO, CUSCOD, SNAM+NAME1+' '+NAME2 as CUSNAME, SDATE, LDATE, NPRICE, VATPRC, TOTPRC, NPAYRES, VATPRES, TOTPRES,
+					NDAWN, VATDWN, TOTDWN, case when smdamt-snetp > 0 then smdamt-snetp else 0 end as KANGPAY, 
+					totdwn-(snetp1+totpres)-(case when totdwn<>0 then (totdwn-(snetp1+totpres))*vatdwn/totdwn else 0 end) as KANHDOWN,
+					case when totdwn <> 0 then (totdwn-(snetp1+totpres))*vatdwn/totdwn else 0 end as VKANHDOWN,
+					totdwn-(snetp1+totpres) as NKANHDOWN, (d.snetp+d.snetp1)-(vpay+vdn) as PAY, vpay+vdn as VPAY,
+					(d.snetp+d.snetp1)-(vpay+vdn) as NPAY, (totprc-(totpres+snetp1+snetp))-(vatprc-(vatpres+vdn+vpay)) as ARBALANCE,
+					vatprc-(vatpres+vdn+vpay) as VARBALANCE, totprc-(totpres+snetp1+snetp) as NARBALANCE, 
+					case when smv_damt-vpay>0 then smv_damt-vpay else 0 end as VKANGPAY, TYPE
+					from ( 
+						select DISTINCT A.LOCAT, A.CONTNO, A.TOTPRC, A.TOTPRES, A.CUSCOD, A.SDATE, B.SNAM, A.TOTDWN, A.NPRICE, A.VATPRC, A.NDAWN, A.VATDWN,
+						A.NPAYRES, A.VATPRES, A.LDATE, B.NAME1, B.NAME2, D.TYPE, case when e.smdamt is null then 0 else e.smdamt end as smdamt,
+						case when e.smv_damt is null then 0 else e.smv_damt end as smv_damt ,case when f.snetp is null then 0 else f.snetp end as snetp,
+						case when f.snetp1 is null then 0 else f.snetp1 end as snetp1  ,case when f.vpay is null then 0 else f.vpay end as vpay,
+						case when f.vdn is null then 0 else f.vdn end as vdn  
+						from   ARMAST 
+						A left outer join CUSTMAST B on a.cuscod = b.cuscod  
+						left outer join (
+							select strno, gcode, type, model, stat, contno from invtran  
+							union 
+							select strno, gcode, type, model, stat, contno from hinvtran
+						) as D on a.strno=d.strno and a.contno=d.contno  
+						left outer join (
+							select contno, locat, sum(damt) as smdamt, sum(v_damt) as smv_damt from arpay where ddate <= '20191107' 
+							group by contno, locat  
+							union 
+							select contno, locat, sum(damt) as smdamt, sum(v_damt) as smv_damt from harpay where ddate <= '20191107' 
+							group by contno, locat 
+						) as e on a.contno=e.contno and a.locat=e.locat  
+						left outer join (
+							select contno, locatpay,
+							sum(CASE WHEN (PAYDT <='20191107' AND ((PAYFOR = '006') OR (PAYFOR = '007'))  AND FLAG <>'C' ) THEN  PAYAMT ELSE 0 END) AS SNETP,
+							sum(CASE WHEN (PAYDT <='20191107' AND (PAYFOR = '002')  AND FLAG <>'C' ) THEN  PAYAMT ELSE 0 END) AS SNETP1,
+							sum(CASE WHEN (PAYDT <='20191107' AND ((PAYFOR = '006') OR (PAYFOR = '007')) AND FLAG <>'C' ) THEN  PAYAMT_V ELSE 0 END) AS VPAY,
+							sum(CASE WHEN (PAYDT <='20191107' AND (PAYFOR = '002')  AND FLAG <>'C' ) THEN  PAYAMT_V ELSE 0 END) AS VDN  
+							from chqtran 
+							group by contno,locatpay
+						) as f on a.contno = f.contno and a.locat = f.locatpay 
+						where (A.LOCAT LIKE '%%') AND (A.CONTNO LIKE '%%') AND (A.SDATE <= '20191107') AND (D.GCODE LIKE '%%' OR D.GCODE IS NULL ) AND 
+						(D.TYPE  LIKE '%%' OR D.TYPE IS NULL ) AND (D.MODEL LIKE '%%' OR D.MODEL IS NULL) AND (D.STAT LIKE '%%'  OR D.STAT IS NULL) AND        
+						(A.BILLCOLL LIKE '%%' OR A.BILLCOLL IS NULL) AND (A.CONTSTAT LIKE '%%' OR A.CONTSTAT IS NULL) AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY 
+						OR (A.TOTPRC = A.SMPAY AND A.LPAYD > '20191107'))  
+
+						union 
+
+						select DISTINCT A.LOCAT, A.CONTNO, A.TOTPRC, A.TOTPRES, A.CUSCOD, A.SDATE, B.SNAM, A.TOTDWN, A.NPRICE, A.VATPRC, A.NDAWN, A.VATDWN, 
+						A.NPAYRES, A.VATPRES, A.LDATE, B.NAME1, B.NAME2, D.TYPE , case when e.smdamt is null then 0 else e.smdamt end as smdamt,
+						case when e.smv_damt is null then 0 else e.smv_damt end as smv_damt ,case when f.snetp is null then 0 else f.snetp end as snetp,
+						case when f.snetp1 is null then 0 else f.snetp1 end as snetp1, case when f.vpay is null then 0 else f.vpay end as vpay, 
+						case when f.vdn is null then 0 else f.vdn end as vdn  
+						from HARMAST A 
+						left outer join chgar_view B on a.contno = b.contno and a.locat = b.locat  
+						left outer join (
+							select strno, gcode, type, model, stat, contno from invtran  
+							union 
+							select strno, gcode, type, model, stat, contno from hinvtran
+						) as D on a.strno=d.strno and a.contno=d.contno  
+						left outer join (
+							select contno, locat, sum(damt) as smdamt, sum(v_damt) as smv_damt from arpay where ddate <= '20191107' group by contno, locat  
+							union 
+							select contno, locat, sum(damt) as smdamt, sum(v_damt) as smv_damt from harpay where ddate <='20191107' group by contno, locat 
+						) as e on a.contno = e.contno and a.locat = e.locat  
+						left outer join (
+							select contno, locatpay,
+							sum(CASE WHEN (PAYDT <='20191107' AND ((PAYFOR = '006') OR (PAYFOR = '007')) AND FLAG <>'C' ) THEN  PAYAMT ELSE 0 END) AS SNETP,
+							sum(CASE WHEN (PAYDT <='20191107' AND (PAYFOR = '002')  AND FLAG <>'C') THEN  PAYAMT ELSE 0 END) AS SNETP1,
+							sum(CASE WHEN (PAYDT <='20191107' AND ((PAYFOR = '006') OR (PAYFOR = '007')) AND FLAG <>'C' ) THEN  PAYAMT_V ELSE 0 END) AS VPAY,
+							sum(CASE WHEN (PAYDT <='20191107' AND (PAYFOR = '002') AND FLAG <>'C' ) THEN  PAYAMT_V ELSE 0 END) AS VDN  
+							from chqtran 
+							group by contno,locatpay
+						) as f on a.contno = f.contno and a.locat = f.locatpay 
+						where (A.LOCAT LIKE '%%') AND (A.CONTNO LIKE '%%') AND (A.SDATE <= '20191107') AND (D.GCODE LIKE '%%' OR D.GCODE IS NULL )AND 
+						(D.TYPE  LIKE '%%' OR D.TYPE IS NULL ) AND (D.MODEL LIKE '%%' OR D.MODEL IS NULL ) AND (D.STAT LIKE '%%'  OR D.STAT IS NULL)AND       
+						(A.BILLCOLL LIKE '%%' OR A.BILLCOLL IS NULL) AND (A.CONTSTAT LIKE '%%' OR A.CONTSTAT IS NULL) AND A.TOTPRC > 0 AND 
+						(A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYD > '20191107')) and b.date1> '20191107'  
+					 ) as d 
+				)main
 		";
 		//echo $sql; 
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				IF OBJECT_ID('tempdb..#VAT') IS NOT NULL DROP TABLE #VAT
-				select *
-				into #VAT
-				from(
-					select A.CONTNO, 
-					sum(CASE WHEN (A.PAYDT <= '".$ARDATES."') THEN  A.PAYAMT ELSE 0 END) AS SNETP  ,
-					sum(CASE WHEN ((A.PAYDT > '".$ARDATES."' OR A.PAYDT IS NULL) AND A.PAYTYP = '02' AND A.TMBILDT <= '".$ARDATES."') THEN  A.PAYAMT ELSE 0 END) AS SNETP1,
-					sum(CASE WHEN (A.PAYDT <= '".$ARDATES."') THEN  A.PAYAMT_V ELSE 0 END) AS VPY  ,
-					sum(CASE WHEN ((A.PAYDT > '".$ARDATES."' OR A.PAYDT IS NULL) AND A.PAYTYP = '02' AND A.TMBILDT <= '".$ARDATES."') THEN  A.PAYAMT_V ELSE 0 END) AS VCQ  
-					from CHQTRAN A
-					where  A.FLAG != 'C' AND A.CONTNO in (select CONTNO from #SALE)
-					group by A.CONTNO
-				)VAT
-		";
-		//echo $sql;
-		$query = $this->db->query($sql);
-		
-		$sql = "
-				select A.LOCAT, A.CONTNO, A.CUSCOD, A.CUSNAME, A.SDATE, convert(nvarchar,A.SDATE,112) as SDATES, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, 
-				A.VATPRES, A.TOTPRES, A.SMPAY-isnull(B.VPY,0) as SMPAY, isnull(B.VPY,0) as VPY, A.SMPAY as TOTSMPAY, A.NPRICE-(A.SMPAY-isnull(B.VPY,0)) as ARBALANC, 
-				A.VATPRC-isnull(B.VPY,0) as ARVAT, A.TOTPRC-A.SMPAY as TOTAR, A.SMCHQ-isnull(B.VCQ,0) as SMCHQ, isnull(B.VCQ,0) as VCQ, A.SMCHQ as TOTSMCHQ, 
-				A.NPRICE-(A.SMPAY-isnull(B.VPY,0))-(A.SMCHQ-isnull(B.VCQ,0)) as BALANCE, A.VATPRC-isnull(B.VPY,0)-isnull(B.VCQ,0) as VATBALNCE,
-				A.TOTPRC-A.SMPAY-A.SMCHQ as TOTBALANCE
-				from #SALE A
-				left join #VAT B on A.CONTNO = B.CONTNO
-				order by ".$orderby."
+				select LOCAT, CONTNO, CUSCOD, CUSNAME, TYPE, SDATE, LDATE, NPRICE, VATPRC, TOTPRC, NPAYRES, VATPRES, TOTPRES, NDAWN, VATDWN, 
+				TOTDWN, KANGPAY, KANHDOWN, VKANHDOWN, NKANHDOWN, PAY, VPAY, NPAY, ARBALANCE, VARBALANCE, NARBALANCE, VKANGPAY
+				from #main 
+				order by SDATE
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				select 'รวมทั้งหมด' as Total, sum(A.NPRICE) as sumNPRICE, sum(A.VATPRC) as sumVATPRC, sum(A.TOTPRC) as sumTOTPRC, sum(A.NPAYRES) as sumNPAYRES, 
-				sum(A.VATPRES) as sumVATPRES, sum(A.TOTPRES) as sumTOTPRES, sum(A.SMPAY-isnull(B.VPY,0)) as sumSMPAY, sum(isnull(B.VPY,0)) as sumVPY, 
-				sum(A.SMPAY) as sumTOTSMPAY, sum(A.NPRICE-(A.SMPAY-isnull(B.VPY,0))) as sumARBALANC, sum(A.VATPRC-isnull(B.VPY,0)) as sumARVAT, 
-				sum(A.TOTPRC-A.SMPAY) as sumTOTAR, sum(A.SMCHQ-isnull(B.VCQ,0)) as sumSMCHQ, sum(isnull(B.VCQ,0)) as sumVCQ, sum(A.SMCHQ) as sumTOTSMCHQ, 
-				sum(A.NPRICE-(A.SMPAY-isnull(B.VPY,0))-(A.SMCHQ-isnull(B.VCQ,0))) as sumBALANCE, sum(A.VATPRC-isnull(B.VPY,0)-isnull(B.VCQ,0)) as sumVATBALNCE,
-				sum(A.TOTPRC-A.SMPAY-A.SMCHQ) as sumTOTBALANCE
-				from #SALE A
-				left join #VAT B on A.CONTNO = B.CONTNO
+				select 'รวมทั้งหมด' as Total, sum(NPRICE) as sumNPRICE, sum(VATPRC) as sumVATPRC, sum(TOTPRC) as sumTOTPRC, sum(NPAYRES) as sumNPAYRES, 
+				sum(VATPRES) as sumVATPRES, sum(TOTPRES) as sumTOTPRES, sum(NDAWN) as sumNDAWN, sum(VATDWN) as sumVATDWN, sum(TOTDWN) as sumTOTDWN, 
+				sum(KANGPAY) as sumKANGPAY, sum(KANHDOWN) as sumKANHDOWN, sum(VKANHDOWN) as sumVKANHDOWN, sum(NKANHDOWN) as sumNKANHDOWN, sum(PAY) as sumPAY, 
+				sum(VPAY) as sumVPAY, sum(NPAY) as sumNPAY, sum(ARBALANCE) as sumARBALANCE, sum(VARBALANCE) as sumVARBALANCE, 
+				sum(NARBALANCE) as sumNARBALANCE, sum(VKANGPAY) as sumVKANGPAY
+				from #main 
 		";
 		//echo $sql; exit;
 		$query2 = $this->db->query($sql);
@@ -292,15 +367,17 @@ class ReportARfromsalecash extends MY_Controller {
 					<th style='vertical-align:middle;'>เลขที่สัญญา</th>
 					<th style='vertical-align:middle;'>รหัสลูกค้า<br>ชื่อ - นามสกุล</th>
 					<th style='vertical-align:middle;'>วันที่ขาย</th> 
-					<th style='text-align:right;'>มูลค่าราคาขาย<br>มูลค่าล/นคงเหลือ</th> 
-					<th style='text-align:right;'>ภาษีขาย<br>ภาษีคงเหลือ</th>
-					<th style='text-align:right;'>ราคาขาย<br>ลูกหนี้คงเหลือ</th>
-					<th style='text-align:right;'>มูลค่าเงินจอง<br>มูลค่าเช็ค</th>
-					<th style='text-align:right;'>ภาษีจอง<br>ภาษีเช็ค</th>
-					<th style='text-align:right;'>เงินจอง<br>เช็ครอเรียกเก็บ</th>
-					<th style='text-align:right;'>มูลค่าชำระ<br>มูลค่าล/นหักเช็ค</th>
-					<th style='text-align:right;'>ภาษีชำระ<br>ภาษีล/นหักเช็ค</th>
-					<th style='text-align:right;'>ชำระแล้ว<br>ล/นหักเช็ค</th>
+					<th style='vertical-align:middle;'>วันดิวสุดท้าย</th> 
+					<th style='text-align:right;'>มูลค่าราคาขาย<br>มูลค่าค้างดาวน์</th> 
+					<th style='text-align:right;'>ภาษีขาย<br>ภาษีค้างดาวน์</th>
+					<th style='text-align:right;'>ราคาขาย<br>ค้างดาวน์</th>
+					<th style='text-align:right;'>มูลค่าเงินจอง<br>มูลค่าชำระ</th>
+					<th style='text-align:right;'>ภาษีจอง<br>ภาษีชำระ</th>
+					<th style='text-align:right;'>เงินจอง<br>ชำระแล้ว</th>
+					<th style='text-align:right;'>มูลค่าเงินดาวน์<br>มูลค่าล/นคงเหลือ</th>
+					<th style='text-align:right;'>ภาษีดาวน์<br>ภาษีคงเหลือ</th>
+					<th style='text-align:right;'>เงินดาวน์<br>ลูกหนี้คงเหลือ</th>
+					<th style='text-align:right;'>ค้างงวด<br>ภาษีค้างงวด</th>
 					</tr>
 			";
 			
@@ -311,24 +388,26 @@ class ReportARfromsalecash extends MY_Controller {
 					<th style='vertical-align:middle;'>รหัสลูกค้า</th>
 					<th style='vertical-align:middle;'>ชื่อ - นามสกุล</th>
 					<th style='vertical-align:middle;'>วันที่ขาย</th>
+					<th style='vertical-align:middle;'>วันดิวสุดท้าย</th>
 					<th style='vertical-align:middle;'>มูลค่าราคาขาย</th>
 					<th style='vertical-align:middle;'>ภาษีขาย</th>
 					<th style='vertical-align:middle;'>ราคาขาย</th>
 					<th style='vertical-align:middle;'>มูลค่าเงินจอง</th>
 					<th style='vertical-align:middle;'>ภาษีจอง</th>
 					<th style='vertical-align:middle;'>เงินจอง</th>
+					<th style='vertical-align:middle;'>มูลค่าเงินดาวน์</th>
+					<th style='vertical-align:middle;'>ภาษีดาวน์</th>
+					<th style='vertical-align:middle;'>เงินดาวน์</th>
+					<th style='vertical-align:middle;'>มูลค่าค้างดาวน์</th>
+					<th style='vertical-align:middle;'>ภาษีค้างดาวน์</th>
+					<th style='vertical-align:middle;'>ค้างดาวน์</th>
 					<th style='vertical-align:middle;'>มูลค่าชำระ</th>
 					<th style='vertical-align:middle;'>ภาษีชำระ</th>
 					<th style='vertical-align:middle;'>ชำระแล้ว</th>
 					<th style='vertical-align:middle;'>มูลค่าล/นคงเหลือ</th>
 					<th style='vertical-align:middle;'>ภาษีคงเหลือ</th>
 					<th style='vertical-align:middle;'>ลูกหนี้คงเหลือ</th>
-					<th style='vertical-align:middle;'>มูลค่าเช็ครอเรียกเก็บ</th>
-					<th style='vertical-align:middle;'>ภาษีเช็ค</th>
-					<th style='vertical-align:middle;'>เช็ครอเรียกเก็บ</th>
-					<th style='vertical-align:middle;'>มูลค่าล/นหักเช็ค</th>
-					<th style='vertical-align:middle;'>ภาษีล/นหักเช็ค</th>
-					<th style='vertical-align:middle;'>ล/นหักเช็ค</th>
+					<th style='vertical-align:middle;'>ภาษีค้างงวด</th>
 					</tr>
 			";
 			

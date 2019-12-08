@@ -26,10 +26,11 @@ class Analyze extends MY_Controller {
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
-		//style='height:calc(100vh - 132px);overflow:auto;background-color:white;'
+		// style='height:calc(100vh - 132px);overflow:auto;background-color:white;'
+		// $this->load->library('user_agent'); print_r($this->agent); exit;
 		$html = "
 			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
-				<div class='divcondition col-sm-12' style='overflow:auto;'>
+				<div class='divcondition col-sm-12'>
 					<div class='row'>
 						<div class='col-sm-2'>	
 							<div class='form-group'>
@@ -303,6 +304,8 @@ class Analyze extends MY_Controller {
 					when a.ANSTAT='A' then 'อนุมัติ' 
 					when a.ANSTAT='N' then 'ไม่อนุมัติ' 
 					when a.ANSTAT='C' then 'ยกเลิก'  end as ANSTATDESC
+				,a.STDID
+				,a.STDPLRANK
 			from {$this->MAuth->getdb('ARANALYZE')} a
 			left join {$this->MAuth->getdb('ARANALYZEDATA')} b on a.ID=b.ID
 			where a.ID='".$ANID."'
@@ -338,7 +341,7 @@ class Analyze extends MY_Controller {
 		}
 		
 		$sql = "
-			select a.CUSTYPE
+			select a.CUSTYPE,a.CUSCOD
 				,b.SNAM+b.NAME1+' '+b.NAME2 as CUSNAME 
 				,b.IDNO as CUSIDNO
 				,convert(varchar(10),b.BIRTHDT,103) as CUSBIRTH
@@ -414,6 +417,15 @@ class Analyze extends MY_Controller {
 			$css = "color:red";
 		}
 		
+		$csscus0 = "";
+		$csscus1 = "";
+		$csscus2 = "";		
+		if(in_array($arrs["GRADE"][0],array('F','FF'))){ $csscus0 = "color:red;"; }
+		if(in_array($arrs["GRADE"][1],array('F','FF'))){ $csscus1 = "color:red;"; }
+		if(isset($arrs["GRADE"][2])){
+			if(in_array($arrs["GRADE"][2],array('F','FF'))){ $csscus2 = "color:red;"; }			
+		}
+		 
 		$html = "
 			<div class='col-sm-12' style='border:1px dotted #aaa;{$css}'>
 				<div class='col-sm-10 col-sm-offset-1'>	
@@ -458,11 +470,16 @@ class Analyze extends MY_Controller {
 						</tr>
 						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
+								<div class='col-sm-4'><b>บิล std :: </b>".$arrs["STDID"]."</div>
+								<div class='col-sm-4'></div>
+								<div class='col-sm-4'></div>
+							</td>
+						</tr>
+						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
+							<td>
 								<hr>
 							</td>
 						</tr>
-						
-						
 						<!-- tr style='background-color:#f2ff8f;' -->
 						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png&#39;) repeat scroll 0% 0%;'>
 							<td>
@@ -475,136 +492,148 @@ class Analyze extends MY_Controller {
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ชื่อ-สกุล</th>
-										<td>".(isset($arrs["CUSNAME"][0]) ? $arrs["CUSNAME"][0]:"-")."</td>
-										<td>".(isset($arrs["CUSNAME"][1]) ? $arrs["CUSNAME"][1]:"-")."</td>
-										<td>".(isset($arrs["CUSNAME"][2]) ? $arrs["CUSNAME"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["CUSNAME"][0]) ? $arrs["CUSNAME"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["CUSNAME"][1]) ? $arrs["CUSNAME"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["CUSNAME"][2]) ? $arrs["CUSNAME"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>เลขที่บัตรประชาชน</th>
-										<td>".(isset($arrs["CUSIDNO"][0]) ? $arrs["CUSIDNO"][0]:"-")."</td>
-										<td>".(isset($arrs["CUSIDNO"][1]) ? $arrs["CUSIDNO"][1]:"-")."</td>
-										<td>".(isset($arrs["CUSIDNO"][2]) ? $arrs["CUSIDNO"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["CUSIDNO"][0]) ? $arrs["CUSIDNO"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["CUSIDNO"][1]) ? $arrs["CUSIDNO"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["CUSIDNO"][2]) ? $arrs["CUSIDNO"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ว.ด.ป.เกิด (คศ)</th>
-										<td>".(isset($arrs["CUSBIRTH"][0]) ? $arrs["CUSBIRTH"][0]:"-")."</td>
-										<td>".(isset($arrs["CUSBIRTH"][1]) ? $arrs["CUSBIRTH"][1]:"-")."</td>
-										<td>".(isset($arrs["CUSBIRTH"][2]) ? $arrs["CUSBIRTH"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["CUSBIRTH"][0]) ? $arrs["CUSBIRTH"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["CUSBIRTH"][1]) ? $arrs["CUSBIRTH"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["CUSBIRTH"][2]) ? $arrs["CUSBIRTH"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ว.ด.ป.บัตรหมดอายุ (คศ)</th>
-										<td>".(isset($arrs["CUSEXPDT"][0]) ? $arrs["CUSEXPDT"][0]:"-")."</td>
-										<td>".(isset($arrs["CUSEXPDT"][1]) ? $arrs["CUSEXPDT"][1]:"-")."</td>
-										<td>".(isset($arrs["CUSEXPDT"][2]) ? $arrs["CUSEXPDT"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["CUSEXPDT"][0]) ? $arrs["CUSEXPDT"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["CUSEXPDT"][1]) ? $arrs["CUSEXPDT"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["CUSEXPDT"][2]) ? $arrs["CUSEXPDT"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>อายุ</th>
-										<td>".(isset($arrs["CUSAGE"][0]) ? $arrs["CUSAGE"][0]:"-")."</td>
-										<td>".(isset($arrs["CUSAGE"][1]) ? $arrs["CUSAGE"][1]:"-")."</td>
-										<td>".(isset($arrs["CUSAGE"][2]) ? $arrs["CUSAGE"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["CUSAGE"][0]) ? $arrs["CUSAGE"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["CUSAGE"][1]) ? $arrs["CUSAGE"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["CUSAGE"][2]) ? $arrs["CUSAGE"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>สถานะภาพการสมรส</th>
-										<td>".(isset($arrs["CUSSTAT"][0]) ? $arrs["CUSSTAT"][0]:"-")."</td>
-										<td>".(isset($arrs["CUSSTAT"][1]) ? $arrs["CUSSTAT"][1]:"-")."</td>
-										<td>".(isset($arrs["CUSSTAT"][2]) ? $arrs["CUSSTAT"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["CUSSTAT"][0]) ? $arrs["CUSSTAT"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["CUSSTAT"][1]) ? $arrs["CUSSTAT"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["CUSSTAT"][2]) ? $arrs["CUSSTAT"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>จำนวนบุตร</th>
-										<td>".(isset($arrs["CUSBABY"][0]) ? $arrs["CUSBABY"][0]:"-")."</td>
-										<td>".(isset($arrs["CUSBABY"][1]) ? $arrs["CUSBABY"][1]:"-")."</td>
-										<td>".(isset($arrs["CUSBABY"][2]) ? $arrs["CUSBABY"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["CUSBABY"][0]) ? $arrs["CUSBABY"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["CUSBABY"][1]) ? $arrs["CUSBABY"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["CUSBABY"][2]) ? $arrs["CUSBABY"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ที่อยู่ตาม ทบ.บ้าน</th>
-										<td style='max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR1"][0]) ? $arrs["CUSADDR1"][0]:"-")."</td>
-										<td style='max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR1"][1]) ? $arrs["CUSADDR1"][1]:"-")."</td>
-										<td style='max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR1"][2]) ? $arrs["CUSADDR1"][2]:"-")."</td>
+										<td style='".$csscus0."max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR1"][0]) ? $arrs["CUSADDR1"][0]:"-")."</td>
+										<td style='".$csscus1."max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR1"][1]) ? $arrs["CUSADDR1"][1]:"-")."</td>
+										<td style='".$csscus2."max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR1"][2]) ? $arrs["CUSADDR1"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ที่อยู่ส่งเอกสาร</th>
-										<td style='max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR2"][0]) ? $arrs["CUSADDR2"][0]:"-")."</td>
-										<td style='max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR2"][1]) ? $arrs["CUSADDR2"][1]:"-")."</td>
-										<td style='max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR2"][2]) ? $arrs["CUSADDR2"][2]:"-")."</td>
+										<td style='".$csscus0."max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR2"][0]) ? $arrs["CUSADDR2"][0]:"-")."</td>
+										<td style='".$csscus1."max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR2"][1]) ? $arrs["CUSADDR2"][1]:"-")."</td>
+										<td style='".$csscus2."max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CUSADDR2"][2]) ? $arrs["CUSADDR2"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>อาชีพ</th>
-										<td>".(isset($arrs["CAREER"][0]) ? $arrs["CAREER"][0]:"-")."</td>
-										<td>".(isset($arrs["CAREER"][1]) ? $arrs["CAREER"][1]:"-")."</td>
-										<td>".(isset($arrs["CAREER"][2]) ? $arrs["CAREER"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["CAREER"][0]) ? $arrs["CAREER"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["CAREER"][1]) ? $arrs["CAREER"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["CAREER"][2]) ? $arrs["CAREER"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>สถานที่ทำงาน/ที่อยู่</th>
-										<td style='max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CAREERADDR"][0]) ? $arrs["CAREERADDR"][0]:"-")."</td>
-										<td style='max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CAREERADDR"][1]) ? $arrs["CAREERADDR"][1]:"-")."</td>
-										<td style='max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CAREERADDR"][2]) ? $arrs["CAREERADDR"][2]:"-")."</td>
+										<td style='".$csscus0."max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CAREERADDR"][0]) ? $arrs["CAREERADDR"][0]:"-")."</td>
+										<td style='".$csscus1."max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CAREERADDR"][1]) ? $arrs["CAREERADDR"][1]:"-")."</td>
+										<td style='".$csscus2."max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>".(isset($arrs["CAREERADDR"][2]) ? $arrs["CAREERADDR"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>เบอร์ติดต่อได้.ที่ทำงาน</th>
-										<td>".(isset($arrs["CAREERTEL"][0]) ? $arrs["CAREERTEL"][0]:"-")."</td>
-										<td>".(isset($arrs["CAREERTEL"][1]) ? $arrs["CAREERTEL"][1]:"-")."</td>
-										<td>".(isset($arrs["CAREERTEL"][2]) ? $arrs["CAREERTEL"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["CAREERTEL"][0]) ? $arrs["CAREERTEL"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["CAREERTEL"][1]) ? $arrs["CAREERTEL"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["CAREERTEL"][2]) ? $arrs["CAREERTEL"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ประกันสังคม (มี/ไม่มี)</th>
-										<td>".(isset($arrs["SOCAILSECURITY"][0]) ? $arrs["SOCAILSECURITY"][0]:"-")."</td>
-										<td>".(isset($arrs["SOCAILSECURITY"][1]) ? $arrs["SOCAILSECURITY"][1]:"-")."</td>
-										<td>".(isset($arrs["SOCAILSECURITY"][2]) ? $arrs["SOCAILSECURITY"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["SOCAILSECURITY"][0]) ? $arrs["SOCAILSECURITY"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["SOCAILSECURITY"][1]) ? $arrs["SOCAILSECURITY"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["SOCAILSECURITY"][2]) ? $arrs["SOCAILSECURITY"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>รายได้ต่อเดือน</th>
-										<td>".(isset($arrs["MREVENU"][0]) ? $arrs["MREVENU"][0]:"-")."</td>
-										<td>".(isset($arrs["MREVENU"][1]) ? $arrs["MREVENU"][1]:"-")."</td>
-										<td>".(isset($arrs["MREVENU"][2]) ? $arrs["MREVENU"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["MREVENU"][0]) ? $arrs["MREVENU"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["MREVENU"][1]) ? $arrs["MREVENU"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["MREVENU"][2]) ? $arrs["MREVENU"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>เบอร์โทรศัทพ์ติดต่อ.ลูกค้า</th>
-										<td>".(isset($arrs["MOBILENO"][0]) ? $arrs["MOBILENO"][0]:"-")."</td>
-										<td>".(isset($arrs["MOBILENO"][1]) ? $arrs["MOBILENO"][1]:"-")."</td>
-										<td>".(isset($arrs["MOBILENO"][2]) ? $arrs["MOBILENO"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["MOBILENO"][0]) ? $arrs["MOBILENO"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["MOBILENO"][1]) ? $arrs["MOBILENO"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["MOBILENO"][2]) ? $arrs["MOBILENO"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน )</th>
-										<td>".(isset($arrs["HOSTNAME"][0]) ? $arrs["HOSTNAME"][0]:"-")."</td>
-										<td>".(isset($arrs["HOSTNAME"][1]) ? $arrs["HOSTNAME"][1]:"-")."</td>
-										<td>".(isset($arrs["HOSTNAME"][2]) ? $arrs["HOSTNAME"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["HOSTNAME"][0]) ? $arrs["HOSTNAME"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["HOSTNAME"][1]) ? $arrs["HOSTNAME"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["HOSTNAME"][2]) ? $arrs["HOSTNAME"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>เลขที่บัตรประชาชน (เจ้าบ้าน)</th>
-										<td>".(isset($arrs["HOSTIDNO"][0]) ? $arrs["HOSTIDNO"][0]:"-")."</td>
-										<td>".(isset($arrs["HOSTIDNO"][1]) ? $arrs["HOSTIDNO"][1]:"-")."</td>
-										<td>".(isset($arrs["HOSTIDNO"][2]) ? $arrs["HOSTIDNO"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["HOSTIDNO"][0]) ? $arrs["HOSTIDNO"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["HOSTIDNO"][1]) ? $arrs["HOSTIDNO"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["HOSTIDNO"][2]) ? $arrs["HOSTIDNO"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>เบอร์โทรศัทพ์ติดต่อ (เจ้าบ้าน)</th>
-										<td>".(isset($arrs["HOSTTEL"][0]) ? $arrs["HOSTTEL"][0]:"-")."</td>
-										<td>".(isset($arrs["HOSTTEL"][1]) ? $arrs["HOSTTEL"][1]:"-")."</td>
-										<td>".(isset($arrs["HOSTTEL"][2]) ? $arrs["HOSTTEL"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["HOSTTEL"][0]) ? $arrs["HOSTTEL"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["HOSTTEL"][1]) ? $arrs["HOSTTEL"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["HOSTTEL"][2]) ? $arrs["HOSTTEL"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ความสัมพันธ์กับ  เจ้าบ้าน</th>
-										<td>".(isset($arrs["HOSTRELATION"][0]) ? $arrs["HOSTRELATION"][0]:"-")."</td>
-										<td>".(isset($arrs["HOSTRELATION"][1]) ? $arrs["HOSTRELATION"][1]:"-")."</td>
-										<td>".(isset($arrs["HOSTRELATION"][2]) ? $arrs["HOSTRELATION"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["HOSTRELATION"][0]) ? $arrs["HOSTRELATION"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["HOSTRELATION"][1]) ? $arrs["HOSTRELATION"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["HOSTRELATION"][2]) ? $arrs["HOSTRELATION"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ความสัมพันธ์กับ พนักงาน</th>
-										<td>".(isset($arrs["EMPRELATION"][0]) ? $arrs["EMPRELATION"][0]:"-")."</td>
-										<td>".(isset($arrs["EMPRELATION"][1]) ? $arrs["EMPRELATION"][1]:"-")."</td>
-										<td>".(isset($arrs["EMPRELATION"][2]) ? $arrs["EMPRELATION"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["EMPRELATION"][0]) ? $arrs["EMPRELATION"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["EMPRELATION"][1]) ? $arrs["EMPRELATION"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["EMPRELATION"][2]) ? $arrs["EMPRELATION"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>บุคคลอ้างอิง</th>
-										<td>".(isset($arrs["REFERANT"][0]) ? $arrs["REFERANT"][0]:"-")."</td>
-										<td>".(isset($arrs["REFERANT"][1]) ? $arrs["REFERANT"][1]:"-")."</td>
-										<td>".(isset($arrs["REFERANT"][2]) ? $arrs["REFERANT"][2]:"-")."</td>
+										<td style='".$csscus0."'>".(isset($arrs["REFERANT"][0]) ? $arrs["REFERANT"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["REFERANT"][1]) ? $arrs["REFERANT"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["REFERANT"][2]) ? $arrs["REFERANT"][2]:"-")."</td>
 									</tr>
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>อยู่ในกลุ่มเสี่ยงหรือไม่</th>
-										<td>".(isset($arrs["GRADE"][0]) ? $arrs["GRADE"][0]:"-")."</td>
-										<td>".(isset($arrs["GRADE"][1]) ? $arrs["GRADE"][1]:"-")."</td>
-										<td>".(isset($arrs["GRADE"][2]) ? $arrs["GRADE"][2]:"-")."</td>
-									</tr>
+										<td style='".$csscus0."'>".(isset($arrs["GRADE"][0]) ? $arrs["GRADE"][0]:"-")."</td>
+										<td style='".$csscus1."'>".(isset($arrs["GRADE"][1]) ? $arrs["GRADE"][1]:"-")."</td>
+										<td style='".$csscus2."'>".(isset($arrs["GRADE"][2]) ? $arrs["GRADE"][2]:"-")."</td>
+									</tr>									
+									<tr>
+										<th style='text-align:right;padding-right:20px;'></th>
+										<td style='".$csscus0."'>
+											".(isset($arrs["CUSCOD"][0]) ? "<input type='button' class='cushistory' cuscod='".$arrs["CUSCOD"][0]."' class='btn btn-xs btn-block' value='ประวัติการซื้อ'>":"")."
+										</td>
+										<td style='".$csscus1."'>										
+											".(isset($arrs["CUSIDNO"][1]) ? "<input type='button' class='cushistory' cuscod='".$arrs["CUSCOD"][1]."' class='btn btn-xs btn-block' value='ประวัติการซื้อ'>":"")."
+										</td>
+										<td style='".$csscus2."'>
+											".(isset($arrs["CUSIDNO"][2]) ? "<input type='button' class='cushistory' cuscod='".$arrs["CUSCOD"][2]."' class='btn btn-xs btn-block' value='ประวัติการซื้อ'>":"")."
+										</td>
+									</tr>									
 								</table>
 							</td>
 						</tr>
@@ -666,634 +695,13 @@ class Analyze extends MY_Controller {
 	}
 	
 	function loadform(){
-		$sql = "select convert(varchar(8),getdate(),112) as dt";
-		$q = $this->db->query($sql);
-		$r = $q->row();
 		$html = "
 			<div id='panel'>
-				<div class='row' style='border:1px dotted #aaa;background-color:#d5f2ba;'>
-					<h3>
-						<div class='col-sm-10 col-sm-offset-1 text-primary'>
-							<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData1' style='cursor:pointer;'>&emsp;ข้อมูลรถ</span>
-						</div>
-					</h3>
-					<div class='toggleData1' isshow=1>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									สาขา
-									<select id='locat' class='form-control input-sm select2'>
-										<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>
-									</select>
-								</div>
-							</div>
-							<div class='col-sm-2 col-sm-offset-4'>	
-								<div class='form-group'>
-									กิจกรรมการขาย
-									<select id='acticod' class='form-control input-sm select2'></select>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									วันที่
-									<input type='text' id='createDate' class='form-control input-sm' value='".$this->Convertdate(2,$r->dt)."' disabled>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									เงินดาวน์รถ
-									<input type='text' id='dwnAmt' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เงินดาวน์ ป.1
-									<input type='text' id='insuranceAmt' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									จำนวนงวด
-									<input type='text' id='nopay' class='form-control input-sm jzAllowNumber' maxlength=2>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เลขที่บิลจอง
-									<select id='resvno' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เงินจอง
-									<input type='text' id='resvAmt' class='form-control input-sm' value='' disabled>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									เลขตัวถัง
-									<select id='strno' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									รุ่น
-									<select id='model' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									แบบ
-									<select id='baab' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									สี
-									<select id='color' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									สถานะรถ
-									<input type='text' id='stat' class='form-control input-sm' value='' disabled>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									วันที่ซื้อ ก่อนยึด
-									<input type='text' id='sdateold' class='form-control input-sm' value='' disabled>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									วันที่ยึด
-									<input type='text' id='ydate' class='form-control input-sm' value='' disabled>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									ราคารถ(สด) ก่อนหักส่วนลด
-									<input type='text' id='price' class='form-control input-sm jzAllowNumber' stdid='' stdplrank=''> 
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									อัตราดอกเบี้ยต่อเดือน
-									<input type='text' id='interatert' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class='row' style='border:1px dotted #aaa;background-color:#eff2ba;'>
-					<h3>
-						<div class='col-sm-10 col-sm-offset-1 text-primary'>
-							<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData2' style='cursor:pointer;'>&emsp;ผู้เช่าซื้อ</span>
-						</div>
-					</h3>
-					<div class='toggleData2' isshow=1>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									ชื่อ-สกุล ลูกค้า
-									<select id='cuscod' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เลข ปชช.
-									<input type='text' id='idno' class='form-control input-sm' value=''>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									วันเกิด
-									<input type='text' id='idnoBirth' class='form-control input-sm datepicker'>
-								</div>
-							</div>
-							<div class='col-sm-2'>
-								<div class='form-group'>
-									วันหมดอายุบัตร
-									<input type='text' id='idnoExpire' class='form-control input-sm datepicker'>
-								</div>
-							</div>
-							<div class='col-sm-2'>
-								<div class='row'>
-									<div class='col-sm-6'>
-										<div class='form-group'>
-											อายุ
-											<input type='text' id='idnoAge' class='form-control input-sm jzAllowNumber'>
-										</div>
-									</div>
-									<div class='col-sm-6'>
-										<div class='form-group'>
-											สถานะ
-											<select id='idnoStat' class='form-control input-sm select2'>
-												<option value='1'>โสด</option>
-												<option value='2'>สมรส</option>
-												<option value='3'>หม้าย</option>
-												<option value='4'>หย่า</option>
-												<option value='5'>แยกกันอยู่</option>
-											</select>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-3 col-sm-offset-1'>	
-								<div class='form-group'>
-									ที่อยู่ตาม ทบ.บ้าน
-									<select id='addr1' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									ที่อยู่ส่งเอกสาร
-									<select id='addr2' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เบอร์ติดต่อ
-									<input type='text' id='phoneNumber' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									จำนวนบุตร
-									<input type='text' id='baby' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									ประกันสังคม
-									<input type='text' id='socialSecurity' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-3'>	
-								<div class='form-group'>
-									อาชีพ
-									<input type='text' id='career' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-5'>
-								<div class='form-group'>
-									ที่อยู๋ที่ทำงาน
-									<input type='text' id='careerOffice' class='form-control input-sm'>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									เบอร์ติดต่อที่ทำงาน
-									<input type='text' id='careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									รายได้/เดือน
-									<input type='text' id='income' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
-									<input type='text' id='hostName' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									เลข ปชช.(เจ้าบ้าน)
-									<input type='text' id='hostIDNo' class='form-control input-sm'>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									เบอร์ติดต่อที่ (เจ้าบ้าน)
-									<input type='text' id='hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									ความสัมพันธ์กับเจ้าบ้าน
-									<input type='text' id='hostRelation' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									ความสัมพันธ์กับพนักงาน
-									<select id='empRelation' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									บุคคลอ้างอิง
-									<input type='text' id='reference' class='form-control input-sm'>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				
-				<div class='row' style='border:1px dotted #aaa;background-color:#f2cdba;'>
-					<h3>
-						<div class='col-sm-10 col-sm-offset-1 text-primary'>
-							<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData3' style='cursor:pointer;'>&emsp;ผู้ค้ำประกัน 1</span>
-						</div>
-					</h3>
-					<div class='toggleData3' isshow=1>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									ชื่อ-สกุล ลูกค้า
-									<select id='is1_cuscod' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เลข ปชช.
-									<input type='text' id='is1_idno' class='form-control input-sm' value=''>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									วันเกิด
-									<input type='text' id='is1_idnoBirth' class='form-control input-sm datepicker'>
-								</div>
-							</div>
-							<div class='col-sm-2'>
-								<div class='form-group'>
-									วันหมดอายุบัตร
-									<input type='text' id='is1_idnoExpire' class='form-control input-sm datepicker'>
-								</div>
-							</div>
-							<div class='col-sm-2'>
-								<div class='row'>
-									<div class='col-sm-6'>
-										<div class='form-group'>
-											อายุ
-											<input type='text' id='is1_idnoAge' class='form-control input-sm'>
-										</div>
-									</div>
-									<div class='col-sm-6'>
-										<div class='form-group'>
-											สถานะ
-											<select id='is1_idnoStat' class='form-control input-sm select2'>
-												<option value='1'>โสด</option>
-												<option value='2'>สมรส</option>
-												<option value='3'>หม้าย</option>
-												<option value='4'>หย่า</option>
-												<option value='5'>แยกกันอยู่</option>
-											</select>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-3 col-sm-offset-1'>	
-								<div class='form-group'>
-									ที่อยู่ตาม ทบ.บ้าน
-									<select id='is1_addr1' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									ที่อยู่ส่งเอกสาร
-									<select id='is1_addr2' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เบอร์ติดต่อ
-									<input type='text' id='is1_phoneNumber' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									จำนวนบุตร
-									<input type='text' id='is1_baby' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									ประกันสังคม
-									<input type='text' id='is1_socialSecurity' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-3'>	
-								<div class='form-group'>
-									อาชีพ
-									<input type='text' id='is1_career' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-5'>
-								<div class='form-group'>
-									ที่อยู๋ที่ทำงาน
-									<input type='text' id='is1_careerOffice' class='form-control input-sm'>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									เบอร์ติดต่อที่ทำงาน
-									<input type='text' id='is1_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									รายได้/เดือน
-									<input type='text' id='is1_income' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
-									<input type='text' id='is1_hostName' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									เลข ปชช.(เจ้าบ้าน)
-									<input type='text' id='is1_hostIDNo' class='form-control input-sm'>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									เบอร์ติดต่อที่ (เจ้าบ้าน)
-									<input type='text' id='is1_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									ความสัมพันธ์กับเจ้าบ้าน
-									<input type='text' id='is1_hostRelation' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									ความสัมพันธ์กับพนักงาน
-									<select id='is1_empRelation' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									บุคคลอ้างอิง
-									<input type='text' id='is1_reference' class='form-control input-sm'>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class='row' style='border:1px dotted #aaa;background-color:#f2baba;'>
-					<h3>
-						<div class='col-sm-10 col-sm-offset-1 text-primary'>
-							<span class='toggleData glyphicon glyphicon-plus' thisc='toggleData4' style='cursor:pointer;'>&emsp;ผู้ค้ำประกัน 2</span>
-						</div>
-					</h3>
-					<div class='toggleData4' isshow=0 hidden>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									ชื่อ-สกุล ลูกค้า
-									<select id='is2_cuscod' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เลข ปชช.
-									<input type='text' id='is2_idno' class='form-control input-sm' value=''>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									วันเกิด
-									<input type='text' id='is2_idnoBirth' class='form-control input-sm datepicker'>
-								</div>
-							</div>
-							<div class='col-sm-2'>
-								<div class='form-group'>
-									วันหมดอายุบัตร
-									<input type='text' id='is2_idnoExpire' class='form-control input-sm datepicker'>
-								</div>
-							</div>
-							<div class='col-sm-2'>
-								<div class='row'>
-									<div class='col-sm-6'>
-										<div class='form-group'>
-											อายุ
-											<input type='text' id='is2_idnoAge' class='form-control input-sm'>
-										</div>
-									</div>
-									<div class='col-sm-6'>
-										<div class='form-group'>
-											สถานะ
-											<select id='is2_idnoStat' class='form-control input-sm select2'>
-												<option value='1'>โสด</option>
-												<option value='2'>สมรส</option>
-												<option value='3'>หม้าย</option>
-												<option value='4'>หย่า</option>
-												<option value='5'>แยกกันอยู่</option>
-											</select>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-3 col-sm-offset-1'>	
-								<div class='form-group'>
-									ที่อยู่ตาม ทบ.บ้าน
-									<select id='is2_addr1' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									ที่อยู่ส่งเอกสาร
-									<select id='is2_addr2' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เบอร์ติดต่อ
-									<input type='text' id='is2_phoneNumber' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									จำนวนบุตร
-									<input type='text' id='is2_baby' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									ประกันสังคม
-									<input type='text' id='is2_socialSecurity' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-3'>	
-								<div class='form-group'>
-									อาชีพ
-									<input type='text' id='is2_career' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-5'>
-								<div class='form-group'>
-									ที่อยู๋ที่ทำงาน
-									<input type='text' id='is2_careerOffice' class='form-control input-sm'>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									เบอร์ติดต่อที่ทำงาน
-									<input type='text' id='is2_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									รายได้/เดือน
-									<input type='text' id='is2_income' class='form-control input-sm jzAllowNumber'>
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
-									<input type='text' id='is2_hostName' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									เลข ปชช.(เจ้าบ้าน)
-									<input type='text' id='is2_hostIDNo' class='form-control input-sm'>
-								</div>
-							</div>
-						</div>
-						<div class='row'>
-							<div class='col-sm-2 col-sm-offset-1'>	
-								<div class='form-group'>
-									เบอร์ติดต่อที่ (เจ้าบ้าน)
-									<input type='text' id='is2_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									ความสัมพันธ์กับเจ้าบ้าน
-									<input type='text' id='is2_hostRelation' class='form-control input-sm'>
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									ความสัมพันธ์กับพนักงาน
-									<select id='is2_empRelation' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-3'>
-								<div class='form-group'>
-									บุคคลอ้างอิง
-									<input type='text' id='is2_reference' class='form-control input-sm'>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				
-				<div class='row' style='border:1px dotted #aaa;background-color:#baeff2;'>
-					<h3>
-						<div class='col-sm-10 col-sm-offset-1 text-primary'>
-							<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData5' style='cursor:pointer;'>&emsp;สาขา</span>
-						</div>
-					</h3>
-					<div class='toggleData5' isshow=1>
-						<div class='row'>
-							<div class='col-sm-3 col-sm-offset-1'>	
-								<div class='form-group'>
-									พนักงาน
-									<select id='empIDNo' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เบอร์ติดต่อ
-									<input type='text' id='empTel' class='form-control input-sm jzAllowNumber' maxlength=10>
-								</div>
-							</div>
-							<div class='col-sm-3'>	
-								<div class='form-group'>
-									ผู้จัดการสาขา
-									<select id='mngIDNo' class='form-control input-sm select2'></select>	
-								</div>
-							</div>
-							<div class='col-sm-2'>	
-								<div class='form-group'>
-									เบอร์ติดต่อ
-									<input type='text' id='mngTel' class='form-control input-sm jzAllowNumber' maxlength=10>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+				".$this->_formCAR()."
+				".$this->_formCUS()."
+				".$this->_formGRT1()."
+				".$this->_formGRT2()."
+				".$this->_formEMP()."
 				
 				<div class='row' style='padding-top:30px;padding-bottom:30px;'>
 					<div class='col-sm-2 col-sm-offset-9'>	
@@ -1306,6 +714,678 @@ class Analyze extends MY_Controller {
 		
 		$response = array("html"=>$html);
 		echo json_encode($response);
+	}
+	
+	function _formCAR(){
+		$html = "
+			<div class='row' style='border:1px dotted #aaa;background-color:#d5f2ba;'>
+				<h3>
+					<div class='col-sm-10 col-sm-offset-1 text-primary'>
+						<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData1' style='cursor:pointer;'>&emsp;ข้อมูลรถ</span>
+					</div>
+				</h3>
+				<div class='toggleData1' isshow=1>
+					<div class='row'>							
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								สาขา
+								<select id='locat' class='form-control input-sm select2'>
+									<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>
+								</select>
+							</div>
+						</div>
+						<div class='col-sm-2 col-sm-offset-4'>	
+							<div class='form-group'>
+								กิจกรรมการขาย
+								<select id='acticod' class='form-control input-sm select2'></select>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								วันที่
+								<input type='text' id='createDate' class='form-control input-sm' value='".$this->today('today')."' disabled>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								เงินดาวน์รถ
+								<input type='text' id='dwnAmt' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เงินดาวน์ ป.1 &emsp;
+								<div class='radio-inline' style='margin-top:-5px'>
+									<label>
+										<input type='radio' class='insuranceType' name='insuranceType' value='Y' >รวม
+									</label>
+								</div>
+								<div class='radio-inline' style='margin-top:-5px'>
+									<label>
+										<input type='radio' class='insuranceType' name='insuranceType' value='N' checked>แยก
+									</label>
+								</div>
+								<input type='text' id='insuranceAmt' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								จำนวนงวด
+								<input type='text' id='nopay' class='form-control input-sm jzAllowNumber' maxlength=2>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เลขที่บิลจอง
+								<select id='resvno' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เงินจอง
+								<input type='text' id='resvAmt' class='form-control input-sm' value='' disabled>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								เลขตัวถัง
+								<select id='strno' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								รุ่น
+								<select id='model' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								แบบ
+								<select id='baab' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								สี
+								<select id='color' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								สถานะรถ
+								<input type='text' id='stat' class='form-control input-sm' value='' disabled>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								วันที่ซื้อ ก่อนยึด
+								<input type='text' id='sdateold' class='form-control input-sm' value='' disabled>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								วันที่ยึด
+								<input type='text' id='ydate' class='form-control input-sm' value='' disabled>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								ราคารถ(สด) ก่อนหักส่วนลด
+								<input type='text' id='price' class='form-control input-sm jzAllowNumber' stdid='' stdplrank=''> 
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								อัตราดอกเบี้ยต่อเดือน
+								<input type='text' id='interatert' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		";
+		
+		return $html;
+	}
+	
+	function _formCUS(){
+		$html = "
+			<div class='row' style='border:1px dotted #aaa;background-color:#eff2ba;'>
+				<h3>
+					<div class='col-sm-10 col-sm-offset-1 text-primary'>
+						<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData2' style='cursor:pointer;'>&emsp;ผู้เช่าซื้อ</span>
+					</div>
+				</h3>
+				<div class='toggleData2' isshow=1>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								ชื่อ-สกุล ลูกค้า
+								<select id='cuscod' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เลข ปชช.
+								<input type='text' id='idno' class='form-control input-sm' value=''>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								วันเกิด
+								<input type='text' id='idnoBirth' class='form-control input-sm datepicker'>
+							</div>
+						</div>
+						<div class='col-sm-2'>
+							<div class='form-group'>
+								วันหมดอายุบัตร
+								<input type='text' id='idnoExpire' class='form-control input-sm datepicker'>
+							</div>
+						</div>
+						<div class='col-sm-2'>
+							<div class='row'>
+								<div class='col-sm-6'>
+									<div class='form-group'>
+										อายุ
+										<input type='text' id='idnoAge' class='form-control input-sm jzAllowNumber'>
+									</div>
+								</div>
+								<div class='col-sm-6'>
+									<div class='form-group'>
+										สถานะ
+										<select id='idnoStat' class='form-control input-sm select2'>
+											<option value='1'>โสด</option>
+											<option value='2'>สมรส</option>
+											<option value='3'>หม้าย</option>
+											<option value='4'>หย่า</option>
+											<option value='5'>แยกกันอยู่</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-3 col-sm-offset-1'>	
+							<div class='form-group'>
+								ที่อยู่ตาม ทบ.บ้าน
+								<select id='addr1' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ที่อยู่ส่งเอกสาร
+								<select id='addr2' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เบอร์ติดต่อ
+								<input type='text' id='phoneNumber' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								จำนวนบุตร
+								<input type='text' id='baby' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								ประกันสังคม
+								<input type='text' id='socialSecurity' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								อาชีพ
+								<input type='text' id='career' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-5'>
+							<div class='form-group'>
+								ที่อยู๋ที่ทำงาน
+								<input type='text' id='careerOffice' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								เบอร์ติดต่อที่ทำงาน
+								<input type='text' id='careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								รายได้/เดือน
+								<input type='text' id='income' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
+								<input type='text' id='hostName' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								เลข ปชช.(เจ้าบ้าน)
+								<input type='text' id='hostIDNo' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								เบอร์ติดต่อที่ (เจ้าบ้าน)
+								<input type='text' id='hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								ความสัมพันธ์กับเจ้าบ้าน
+								<input type='text' id='hostRelation' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ความสัมพันธ์กับพนักงาน
+								<select id='empRelation' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								บุคคลอ้างอิง
+								<input type='text' id='reference' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		";
+		return $html;
+	}
+	
+	function _formGRT1(){
+		$html = "
+			<div class='row' style='border:1px dotted #aaa;background-color:#f2cdba;'>
+				<h3>
+					<div class='col-sm-10 col-sm-offset-1 text-primary'>
+						<span class='toggleData glyphicon glyphicon-plus' thisc='toggleData3' style='cursor:pointer;'>&emsp;ผู้ค้ำประกัน 1</span>
+					</div>
+				</h3>
+				<div class='toggleData3' isshow=0 hidden>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								ชื่อ-สกุล ลูกค้า
+								<select id='is1_cuscod' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เลข ปชช.
+								<input type='text' id='is1_idno' class='form-control input-sm' value=''>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								วันเกิด
+								<input type='text' id='is1_idnoBirth' class='form-control input-sm datepicker'>
+							</div>
+						</div>
+						<div class='col-sm-2'>
+							<div class='form-group'>
+								วันหมดอายุบัตร
+								<input type='text' id='is1_idnoExpire' class='form-control input-sm datepicker'>
+							</div>
+						</div>
+						<div class='col-sm-2'>
+							<div class='row'>
+								<div class='col-sm-6'>
+									<div class='form-group'>
+										อายุ
+										<input type='text' id='is1_idnoAge' class='form-control input-sm'>
+									</div>
+								</div>
+								<div class='col-sm-6'>
+									<div class='form-group'>
+										สถานะ
+										<select id='is1_idnoStat' class='form-control input-sm select2'>
+											<option value='1'>โสด</option>
+											<option value='2'>สมรส</option>
+											<option value='3'>หม้าย</option>
+											<option value='4'>หย่า</option>
+											<option value='5'>แยกกันอยู่</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-3 col-sm-offset-1'>	
+							<div class='form-group'>
+								ที่อยู่ตาม ทบ.บ้าน
+								<select id='is1_addr1' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ที่อยู่ส่งเอกสาร
+								<select id='is1_addr2' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เบอร์ติดต่อ
+								<input type='text' id='is1_phoneNumber' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								จำนวนบุตร
+								<input type='text' id='is1_baby' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								ประกันสังคม
+								<input type='text' id='is1_socialSecurity' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								อาชีพ
+								<input type='text' id='is1_career' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-5'>
+							<div class='form-group'>
+								ที่อยู๋ที่ทำงาน
+								<input type='text' id='is1_careerOffice' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								เบอร์ติดต่อที่ทำงาน
+								<input type='text' id='is1_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								รายได้/เดือน
+								<input type='text' id='is1_income' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
+								<input type='text' id='is1_hostName' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								เลข ปชช.(เจ้าบ้าน)
+								<input type='text' id='is1_hostIDNo' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								เบอร์ติดต่อที่ (เจ้าบ้าน)
+								<input type='text' id='is1_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								ความสัมพันธ์กับเจ้าบ้าน
+								<input type='text' id='is1_hostRelation' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ความสัมพันธ์กับพนักงาน
+								<select id='is1_empRelation' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								บุคคลอ้างอิง
+								<input type='text' id='is1_reference' class='form-control input-sm'>
+							</div>
+						</div>
+						
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								แนบรูป
+								<input type='text' id='is1_reference' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		";
+		
+		return $html;
+	}
+	
+	function _formGRT2(){
+		$html = "
+			<div class='row' style='border:1px dotted #aaa;background-color:#f2baba;'>
+				<h3>
+					<div class='col-sm-10 col-sm-offset-1 text-primary'>
+						<span class='toggleData glyphicon glyphicon-plus' thisc='toggleData4' style='cursor:pointer;'>&emsp;ผู้ค้ำประกัน 2</span>
+					</div>
+				</h3>
+				<div class='toggleData4' isshow=0 hidden>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								ชื่อ-สกุล ลูกค้า
+								<select id='is2_cuscod' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เลข ปชช.
+								<input type='text' id='is2_idno' class='form-control input-sm' value=''>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								วันเกิด
+								<input type='text' id='is2_idnoBirth' class='form-control input-sm datepicker'>
+							</div>
+						</div>
+						<div class='col-sm-2'>
+							<div class='form-group'>
+								วันหมดอายุบัตร
+								<input type='text' id='is2_idnoExpire' class='form-control input-sm datepicker'>
+							</div>
+						</div>
+						<div class='col-sm-2'>
+							<div class='row'>
+								<div class='col-sm-6'>
+									<div class='form-group'>
+										อายุ
+										<input type='text' id='is2_idnoAge' class='form-control input-sm'>
+									</div>
+								</div>
+								<div class='col-sm-6'>
+									<div class='form-group'>
+										สถานะ
+										<select id='is2_idnoStat' class='form-control input-sm select2'>
+											<option value='1'>โสด</option>
+											<option value='2'>สมรส</option>
+											<option value='3'>หม้าย</option>
+											<option value='4'>หย่า</option>
+											<option value='5'>แยกกันอยู่</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-3 col-sm-offset-1'>	
+							<div class='form-group'>
+								ที่อยู่ตาม ทบ.บ้าน
+								<select id='is2_addr1' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ที่อยู่ส่งเอกสาร
+								<select id='is2_addr2' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เบอร์ติดต่อ
+								<input type='text' id='is2_phoneNumber' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								จำนวนบุตร
+								<input type='text' id='is2_baby' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								ประกันสังคม
+								<input type='text' id='is2_socialSecurity' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								อาชีพ
+								<input type='text' id='is2_career' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-5'>
+							<div class='form-group'>
+								ที่อยู๋ที่ทำงาน
+								<input type='text' id='is2_careerOffice' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								เบอร์ติดต่อที่ทำงาน
+								<input type='text' id='is2_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								รายได้/เดือน
+								<input type='text' id='is2_income' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
+								<input type='text' id='is2_hostName' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								เลข ปชช.(เจ้าบ้าน)
+								<input type='text' id='is2_hostIDNo' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								เบอร์ติดต่อที่ (เจ้าบ้าน)
+								<input type='text' id='is2_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								ความสัมพันธ์กับเจ้าบ้าน
+								<input type='text' id='is2_hostRelation' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ความสัมพันธ์กับพนักงาน
+								<select id='is2_empRelation' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								บุคคลอ้างอิง
+								<input type='text' id='is2_reference' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		";
+		
+		return $html;
+	}
+	
+	function _formEMP(){
+		$html = "
+			<div class='row' style='border:1px dotted #aaa;background-color:#baeff2;'>
+				<h3>
+					<div class='col-sm-10 col-sm-offset-1 text-primary'>
+						<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData5' style='cursor:pointer;'>&emsp;สาขา</span>
+					</div>
+				</h3>
+				<div class='toggleData5' isshow=1>
+					<div class='row'>
+						<div class='col-sm-3 col-sm-offset-1'>	
+							<div class='form-group'>
+								พนักงาน
+								<select id='empIDNo' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เบอร์ติดต่อ
+								<input type='text' id='empTel' class='form-control input-sm jzAllowNumber' maxlength=10>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								ผู้จัดการสาขา
+								<select id='mngIDNo' class='form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เบอร์ติดต่อ
+								<input type='text' id='mngTel' class='form-control input-sm jzAllowNumber' maxlength=10>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		";
+		
+		return $html;
 	}
 	
 	function dataResv(){
@@ -1618,6 +1698,7 @@ class Analyze extends MY_Controller {
 					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
 				end
 			";
+			//echo $sql; exit;
 			$query = $this->db->query($sql);
 			
 			if($query->row()){
@@ -1635,6 +1716,7 @@ class Analyze extends MY_Controller {
 					สี :: ".$data["COLOR"]."<br>
 					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
 				";
+				echo json_encode($response); exit;
 			}
 			
 			$sql = "
@@ -1657,6 +1739,8 @@ class Analyze extends MY_Controller {
 					สี :: ".$data["COLOR"]."<br>
 					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
 				";
+				
+				echo json_encode($response); exit;
 			}
 		}
 		
@@ -1738,6 +1822,7 @@ class Analyze extends MY_Controller {
 		$arrs["resvno"] 	= ($_POST["resvno"] == "" ? "NULL":"'".$_POST["resvno"]."'");
 		$arrs["resvAmt"] 	= ($_POST["resvAmt"] == "" ? "NULL":"'".$_POST["resvAmt"]."'");
 		$arrs["dwnAmt"] 	= ($_POST["dwnAmt"] == "" ? "NULL":"'".$_POST["dwnAmt"]."'");
+		$arrs["insuranceType"] = ($_POST["insuranceType"] == "" ? "NULL":"'".$_POST["insuranceType"]."'");
 		$arrs["insuranceAmt"] = ($_POST["insuranceAmt"] == "" ? "NULL":"'".$_POST["insuranceAmt"]."'");
 		$arrs["nopay"] 		= "'".$_POST["nopay"]."'";
 		$arrs["strno"] 		= "'".$_POST["strno"]."'";
@@ -1842,10 +1927,10 @@ class Analyze extends MY_Controller {
 				
 				declare @id bigint;
 				insert into {$this->MAuth->getdb('ARANALYZE')} (
-					ID,LOCAT,RESVNO,RESVAMT,DWN,DWN_INSURANCE,INTEREST_RT,NOPAY,STRNO,MODEL
+					ID,LOCAT,RESVNO,RESVAMT,DWN,INSURANCE_TYP,DWN_INSURANCE,INTEREST_RT,NOPAY,STRNO,MODEL
 					,BAAB,COLOR,STAT,SDATE,YDATE,PRICE,ANSTAT,STDID,STDPLRANK,INSBY,INSDT
 				) 
-				select @ANID,".$arrs["locat"].",".$arrs["resvno"].",".$arrs["resvAmt"].",".$arrs["dwnAmt"]."
+				select @ANID,".$arrs["locat"].",".$arrs["resvno"].",".$arrs["resvAmt"].",".$arrs["dwnAmt"].",".$arrs["insuranceType"]."
 					,".$arrs["insuranceAmt"].",".$arrs["interatert"].",".$arrs["nopay"].",".$arrs["strno"].",".$arrs["model"]."
 					,".$arrs["baab"].",".$arrs["color"].",".$arrs["stat"].",".$arrs["sdateold"].",".$arrs["ydate"]."
 					,".$arrs["price"].",'I',".$arrs["stdid"].",".$arrs["stdplrank"].",'".$this->sess["IDNo"]."',getdate();
@@ -1939,12 +2024,12 @@ class Analyze extends MY_Controller {
 		//echo $sql; exit;
 		$this->db->query($sql);
 		
-		$sql 	= "select * from #transaction";   
-		$query 	= $this->db->query($sql);
+		$sql   = "select * from #transaction";
+		$query = $this->db->query($sql);
 		
-		$stat 	= true;
+		$stat  = true;
+		$msg   = '';
 		$ARANALYZE_ID  = '';
-		$msg  	= '';
 		
 		if($query->row()) {
 			foreach ($query->result() as $row) {
@@ -2224,6 +2309,136 @@ class Analyze extends MY_Controller {
 		$response['ARANALYZE_ID'] = $ARANALYZE_ID;
 		
 		echo json_encode($response); exit;
+	}
+	
+	function formApproved(){
+		$html = "
+			<div class='row'><div class='col-sm-12'>
+				<div class='form-group'>
+					รายการอนุมัติ 
+					<select id='APPTYPE' class='form-control'>
+						<option value='A'>อนุมัติ</option>
+						<option value='N'>ไม่อนุมัติ</option>
+					</select>
+					
+					ผลการวิเคราะห์ 
+					<textarea id='APPCOMMENT' class='form-control' rows='10' style='color:green;'></textarea>
+					
+					เปลี่ยนแปลงอัตราดอกผลเช่าซื้อ
+					<input type='text' id='' class='form-control'>
+				</div>
+			</div>
+		";						
+		$response = array("html" => $html);
+		echo json_encode($response);
+	}
+	
+	function getCusHistory(){
+		$cuscod = $_POST["cuscod"];
+		$tableid = md5($cuscod);
+		
+		$sql = "
+			declare @cuscod varchar(12) = '".$cuscod."';
+			SELECT A.CONTNO,A.CUSCOD,A.TYPESALE,A.LOCAT
+				,convert(varchar(8),A.SDATE,112) as SDATE
+				,A.TOTPRC,A.SMPAY,A.BALANCE,A.SMCHQ
+				,A.TKANG,A.STRNO,A.RESVNO,A.TSALE,A.FL  
+			FROM (
+				SELECT CONTNO,CUSCOD,'ขายผ่อน      ' AS TYPESALE
+					,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) AS BALANCE,SMCHQ
+					,TKANG,STRNO,RESVNO,TSALE,'' AS FL 
+				FROM ARMAST  
+				WHERE DELDT IS NULL AND CUSCOD = @cuscod
+				UNION 
+				SELECT CONTNO,CUSCOD,'ขายผ่อน      ' AS TYPESALE,LOCAT,SDATE,TOTPRC
+					,SMPAY,(TOTPRC-SMPAY) AS BALANCE,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' AS FL 
+				FROM HARMAST  
+				WHERE DELDT IS NULL AND CUSCOD = @cuscod
+				UNION 
+				SELECT CONTNO,CUSCOD,'ขายสด        ' AS TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY
+					,(TOTPRC-SMPAY) AS BALANCE,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' AS FL 
+				FROM ARCRED  
+				WHERE DELDT IS NULL AND CUSCOD = @cuscod
+				UNION 
+				SELECT CONTNO,CUSCOD,'ขายสด        ' AS TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY
+					,(TOTPRC-SMPAY) AS BALANCE,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' AS FL 
+				FROM HARCRED  
+				WHERE DELDT IS NULL and CUSCOD = @cuscod
+				UNION 
+				SELECT CONTNO,CUSCOD,'ขายไฟแนนซ์   ' AS TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY
+					,(TOTPRC-SMPAY) AS BALANCE,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' AS FL 
+				FROM ARFINC  
+				WHERE DELDT IS NULL and CUSCOD = @cuscod
+				UNION 
+				SELECT CONTNO,CUSCOD,'ขายไฟแนนซ์   ' AS TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY
+					,(TOTPRC-SMPAY) AS BALANCE,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' AS FL 
+				FROM HARFINC  
+				WHERE DELDT IS NULL and CUSCOD = @cuscod
+				UNION 
+				SELECT A.CONTNO,A.CUSCOD,'ขายส่งเอเยนต์' AS TYPESALE,A.LOCAT,A.SDATE,A.TOTPRC,A.SMPAY
+					,(A.TOTPRC-A.SMPAY) AS BALANCE,A.SMCHQ,0 AS TKANG,B.STRNO ,'' AS RESVNO,A.TSALE,'' AS FL 
+				FROM AR_INVOI A,INVTRAN B  
+				WHERE A.DELDT IS NULL AND A.CONTNO=B.CONTNO  AND A.CUSCOD = @cuscod
+				UNION 
+				SELECT A.CONTNO,A.CUSCOD,'ขายส่งเอเยนต์' AS TYPESALE,A.LOCAT,A.SDATE,A.TOTPRC,A.SMPAY
+					,(A.TOTPRC-A.SMPAY) AS BALANCE,A.SMCHQ,0 AS TKANG,B.STRNO,'*' AS RESVNO,A.TSALE,'' AS FL 
+				FROM HAR_INVO A,HINVTRAN B  
+				WHERE A.DELDT IS NULL AND A.CONTNO=B.CONTNO  AND A.CUSCOD = @cuscod
+				UNION 
+				SELECT A.ARCONT AS CONTNO,A.CUSCOD,'ลูกหนี้อื่น  ' AS TYPESALE,A.LOCAT,A.ARDATE AS SDATE,A.PAYAMT AS TOTPRC
+					,A.SMPAY,(A.PAYAMT-A.SMPAY) AS BALANCE,A.SMCHQ,0 AS TKANG,'' AS STRNO,'' AS RESVNO,A.TSALE,'' AS FL 
+				FROM AROTHR A  
+				WHERE A.CUSCOD = @cuscod
+			) AS A 
+			LEFT OUTER JOIN REGTAB B ON A.STRNO=B.STRNO  
+			WHERE (B.REGNO LIKE '%' OR (B.REGNO IS NULL) ) AND A.STRNO LIKE '%' 
+			ORDER BY TYPESALE,SDATE DESC
+		";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .= "
+					<tr>
+						<td>".$row->CONTNO."</td>
+						<td>".$row->TYPESALE."</td>
+						<td>".$row->LOCAT."</td>
+						<td>".$this->Convertdate(2,$row->SDATE)."</td>
+						<td align='right'>".number_format($row->TOTPRC,2)."</td>
+						<td align='right'>".number_format($row->SMPAY,2)."</td>
+						<td align='right'>".number_format($row->BALANCE,2)."</td>						
+						<td>".$row->FL."</td>
+					</tr>
+				";
+			}
+		}
+		
+		$html = "
+			<table id='".$tableid."' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>			
+				<thead>
+					<tr>
+						<th colspan='8'>การซื้อ</th>
+					</tr>
+					<tr>
+						<th>เลขที่สัญญา</th>
+						<th>ประเภท ล/น.</th>
+						<th>สาขา</th>
+						<th>วันที่ทำสัญญา</th>
+						<th>ราคา</th>
+						<th>ชำระแล้ว</th>
+						<th>ล/น. คงเหลือ</th>
+						<th>*</th>
+					</tr>
+				</thead>
+				<tbody>
+					".$html."
+				</tbody>				
+			</table>
+		";
+		
+		$response = array("html"=>$html,"tableName"=>$tableid);
+		echo json_encode($response);
 	}
 	
 }

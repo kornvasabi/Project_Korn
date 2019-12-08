@@ -447,15 +447,31 @@ class Sell extends MY_Controller {
 			</div>
 			<div>
 				<div class='col-sm-6 text-left'>
-					<input type='button' id='btnTax' class='btn btn-xs btn-info' style='width:100px;' value='ใบกำกับ' disabled>
-					<input type='button' id='btnSend' class='btn btn-xs btn-info' style='width:100px;' value='ใบส่งมอบ' disabled>
+					<br>
+					<div class='btn-group btn-group-xs dropup'>
+						<button type='button' id='btnDocument' class='btn btn-xs btn-info'>
+							เอกสาร
+						</button>
+						<button type='button' id='btnDocumentOption' class='btn btn-xs btn-info dropdown-toggle' data-toggle='dropdown' aria-expanded='false'>
+							<i class='fa fa-cog'></i>
+							<span class='sr-only'>Toggle Dropdown</span>
+						</button>
+						<ul class='dropdown-menu'>
+							<span id='btnDOSend' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>1.ใบส่งมอบสินค้า</span>
+							<span id='btnDOSendTax' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>2.ใบส่งของ / ใบกำกับภาษี</span>
+							<!-- span id='btnDOPrice' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>3.ใบเสร็จรับเงิน</span>
+							<span id='btnDOPriceTax' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>4.ใบเสร็จรับเงิน / ใบกำกับภาษี</span>
+							<span id='btnDOTax' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>5.ใบกำกับภาษี</span -->
+						</ul>
+					</div>
+					
 					<input type='button' id='btnApproveSell' class='btn btn-xs btn-info' style='width:100px;' value='ใบอนุมัติขาย' disabled>
 					<br>
 				</div>
 				<div class='col-sm-6 text-right'>
-					<input type='button' id='add_save' class='btn btn-xs btn-primary right' style='width:100px;' value='บันทึก' >
 					<br>
 					<input type='button' id='add_delete' class='btn btn-xs btn-danger right' style='width:100px;' value='ลบ' >
+					<input type='button' id='add_save' class='btn btn-xs btn-primary right' style='width:100px;' value='บันทึก' >
 				</div>
 			</div>
 		";
@@ -719,7 +735,7 @@ class Sell extends MY_Controller {
 								<div class='form-group'>
 									ผู้แนะนำการซื้อ
 									<div class='input-group'>
-										<input type='text' id='add_recomcod' CUSCOD='' class='form-control input-sm' placeholder='ลูกค้า' >
+										<input type='text' id='add_recomcod' CUSCOD='' class='form-control input-sm' placeholder='ผู้แนะนำการซื้อ' >
 										<span class='input-group-btn'>
 										<button id='add_recomcod_removed' class='btn btn-danger btn-sm' type='button'>
 											<span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button>
@@ -1558,7 +1574,7 @@ class Sell extends MY_Controller {
 	}
 	
 	function approvepdf(){
-		echo 'อยู่ระหว่างการพัฒนาโปรแกรม'; exit;
+		//echo 'อยู่ระหว่างการพัฒนาโปรแกรม'; exit;
 		$mpdf = new \Mpdf\Mpdf([
 			'mode' => 'utf-8', 
 			'format' => 'A4',
@@ -1592,7 +1608,7 @@ class Sell extends MY_Controller {
 		$sql = "
 			select a.RESVNO 
 				,(select LOCATNM from INVLOCAT where LOCATCD=a.LOCAT) as LOCAT
-				,case when a.TSALE = 'H' then 'ขายผ่อน' else a.TSALE end TSALE
+				,case when a.TSALE = 'C' then 'ขายสด' else a.TSALE end TSALE
 				,convert(varchar(8),b.RECVDT,112) as RECVDT
 				,convert(varchar(8),a.SDATE,112) as SDATE
 				,convert(varchar(8),a.DUEDT,112) as LDATE
@@ -1628,15 +1644,15 @@ class Sell extends MY_Controller {
 				,b.ENGNO
 				,(select USERNAME from {$this->MAuth->getdb('PASSWRD')} where USERID = a.SALCOD) as SALCOD
 				
-				,0 as CRED
+				,a.TOTPRC as CRED
 				,0 as HP
 				,0 as FN
 				,a.TOTPRES
-				,0 as TOTDR
-				,0 as PAYDWN
-				,0 as REV
-				,0 as T_NOPAY
-				,a.TKANG
+				,cast(totprc-totpres as decimal) as TOTDR
+				,cast(smpay-totpres as decimal) as PAYDWN
+				,cast(totprc-smpay as decimal) as REV
+				,(case when A.TSALE='C' then ' ' end) as T_NOPAY
+				,cast(totprc-totpres as decimal) - cast(smpay-totpres as decimal) as TKANG
 				
 			from {$this->MAuth->getdb('ARCRED')} a
 			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO
@@ -1877,9 +1893,9 @@ class Sell extends MY_Controller {
 			<div class='wf pf data' style='top:925;left:520;width:135px;text-align:right;'>{$data[38]}</div>
 			<div class='wf pf' style='top:925;left:670;font-size:10pt;'>บาท</div>
 			
-			<div class='wf pf' style='top:955;left:400;font-size:10pt;'>ผ่อนจำนวน</div>
+			<!-- div class='wf pf' style='top:955;left:400;font-size:10pt;'>ผ่อนจำนวน</div>
 			<div class='wf pf data' style='top:955;left:520;width:135px;text-align:right;'>{$data[39]}</div>
-			<div class='wf pf' style='top:955;left:670;font-size:10pt;'>งวด</div>
+			<div class='wf pf' style='top:955;left:670;font-size:10pt;'>งวด</div -->
 			
 			<div class='wf pf' style='top:985;left:420;font-size:10pt;'>ยอดตั้งลูกหนี้</div>
 			<div class='wf pf data' style='top:985;left:520;width:135px;text-align:right;'>{$data[40]}</div>

@@ -81,24 +81,10 @@ $('#btnt1search').click(function(){
 			
 			jd_btnt1search = null;
 		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: 15000,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
-			$('#loadding').fadeOut(200);
-			jd_btnt1search = null;
-		},
 		beforeSend: function(){
 			if(jd_btnt1search !== null){ jd_btnt1search.abort(); }
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -118,24 +104,10 @@ function sellDetails($contno,$event){
 			loadSell(data);
 			jd_sellDetails = null;
 		},
-		error: function (x,c,b){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				closeOnClick: false,
-				delay: false,
-				pauseDelayOnHover: true,
-				continueDelayOnInactiveTab: false,
-				icon: true,
-				messageHeight: '90vh',
-				msg: x.status +' '+ b
-			});
-			$('#loadding').hide();
-			jd_sellDetails = null;
-		},
 		beforeSend: function(){
 			if(jd_sellDetails !== null){ jd_sellDetails.abort(); }
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -167,7 +139,8 @@ function loadSell($param){
 		},
 		beforeSend: function(){
 			if(jd_loadSell !== null){ jd_loadSell.abort(); }
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -200,7 +173,8 @@ $('#btnt1sell').click(function(){
 		},
 		beforeSend: function(){
 			if(jd_btnt1sell !== null){ jd_btnt1sell.abort(); }
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -352,34 +326,6 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
-	/* $('#add_cuscod').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERS',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = $('#add_cuscod').find(':selected').val();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $("#wizard-sell"),
-		// disabled: true,
-		// theme: 'classic',
-		width: '100%'
-	}); */
-	
 	$('#add_cuscod').click(function(){
 		$('#loadding').fadeIn(200);
 		
@@ -443,7 +389,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								},
 								beforeSend: function(){
 									if(jd_cus_search !== null){ jd_cus_search.abort(); }
-								}
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 							});
 						}
 						
@@ -455,7 +402,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				});
 				
 				$('#loadding').fadeOut(200);
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -556,94 +504,40 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
-	//$('#add_cuscod').change(function(){
-	/* $('#add_cuscod').on('select2:select', function (e) {	
-		dataToPost = new Object();
-		dataToPost.cuscod = $(this).find(':selected').val();
-		
-		$.ajax({
-			url:'../SYS04/Leasing/checkCustomer',
-			data: dataToPost,
-			type: 'POST',
-			dataType: 'json',
-			success: function(data) {
-				var newOption = new Option(data.ADDRDT, data.ADDRNO, true, true);
-				$('#add_addrno').empty().append(newOption).trigger('change');	
-				
-				if(data.GRADE == "F" || data.GRADE == "FF"){
-					Lobibox.notify('error', {
-						title: 'ผิดพลาด',
-						size: 'mini',
-						closeOnClick: false,
-						delay: false,
-						pauseDelayOnHover: true,
-						continueDelayOnInactiveTab: false,
-						icon: true,
-						messageHeight: '90vh',
-						msg: "รหัสลูกค้า "+dataToPost.cuscod+" เกรดลูกหนี้เป็น "+data.GRADE+" ไม่สามารถปล่อยสินเชื่อได้ครับ"
-					});
-					$('#add_cuscod').empty().trigger('change');					
-					$('#add_addrno').empty().trigger('change');
-				}else if(data.GRADE == ""){
-					$('#add_addrno').empty().trigger('change');
-				}
-				
-				var resvno = (typeof $("#add_resvno").find(':selected').val() === 'undefined' ? '' : $("#add_resvno").find(':selected').val());
-				if(data.ARRESV != "" && resvno == ""){
-					Lobibox.window({
-						title: 'รายการบิลจอง',
-						//width: setwidth,
-						//height: '300',
-						draggable: false,
-						content: data.ARRESV,
-						closeOnEsc: false,
-						shown: function($this){
-							$('.cusinresv').click(function(){
-								var resvno = $(this).attr('resvno');
-								var newOption = new Option(resvno, resvno, true, true);
-								$('#add_resvno').empty().append(newOption).trigger('change');
-								
-								$this.destroy();
-							});
-						}
-					});
-				}
-			}
+	if($param != 'old'){
+		$('#add_strno').change(function(){
+			dataToPost = new Object();
+			dataToPost.strno = (typeof $(this).find(':selected').val() === 'undefined' ? '' : $(this).find(':selected').val());
+			dataToPost.sdate = $('#add_sdate').val();
+			
+			$.ajax({
+				url:'../SYS04/Sell/strnoChanged',
+				data: dataToPost,
+				type: 'POST',
+				dataType: 'json',
+				success: function(data) {
+					if(data.error){
+						Lobibox.notify('warning', {
+							title: 'ผิดพลาด',
+							size: 'mini',
+							closeOnClick: false,
+							delay: 5000,
+							pauseDelayOnHover: true,
+							continueDelayOnInactiveTab: false,
+							icon: true,
+							messageHeight: '90vh',
+							msg: data.msg
+						});
+					}
+					
+					$('#add_stdprc').val(data.html.price);
+					$('#add_inprc').val(data.html.price);
+				},
+				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+			});
 		});
-	}); */
+	}
 	
-	$('#add_strno').change(function(){
-		dataToPost = new Object();
-		dataToPost.strno = (typeof $(this).find(':selected').val() === 'undefined' ? '' : $(this).find(':selected').val());
-		dataToPost.sdate = $('#add_sdate').val();
-		
-		$.ajax({
-			url:'../SYS04/Sell/strnoChanged',
-			data: dataToPost,
-			type: 'POST',
-			dataType: 'json',
-			success: function(data) {
-				if(data.error){
-					Lobibox.notify('warning', {
-						title: 'ผิดพลาด',
-						size: 'mini',
-						closeOnClick: false,
-						delay: 5000,
-						pauseDelayOnHover: true,
-						continueDelayOnInactiveTab: false,
-						icon: true,
-						messageHeight: '90vh',
-						msg: data.msg
-					});
-				}
-				
-				$('#add_stdprc').val(data.html.price);
-				$('#add_inprc').val(data.html.price);
-			}
-		});
-	});
-	
-	//$('#add_resvno').change(function(){
 	$('#add_resvno').on('select2:select', function (e) {	
 		dataToPost = new Object();
 		dataToPost.resvno = (typeof $(this).find(':selected').val() === 'undefined' ? '' : $(this).find(':selected').val());
@@ -694,7 +588,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					var newOption = new Option(data.STRNO, data.STRNO, true, true);
 					$('#add_strno').empty().append(newOption).trigger('change');
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -827,7 +722,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 										$('#inopt_results').html(data.html);
 										$('#receipt_inopt').hide();
 									}
-								}
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 							});
 						});
 						
@@ -904,7 +800,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						$('#add_inopt').attr('disabled',false);
 					}
 				});
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -1025,7 +922,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								},
 								beforeSend: function(){
 									if(jd_cus_search !== null){ jd_cus_search.abort(); }
-								}
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 							});
 						}
 						
@@ -1038,7 +936,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				});
 				
 				$('#loadding').fadeOut(200);
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -1232,7 +1131,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 									msg: data.msg
 								});
 							}
-						}
+						},
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}
 			}
@@ -1555,33 +1455,32 @@ function btnOther($thisWindowLeasing){
 		});
 	});
 	
-	$('#btnTax').click(function(){
-		Lobibox.notify('info', {
-			title: 'info',
-			size: 'mini',
-			closeOnClick: false,
-			delay: 3000,
-			pauseDelayOnHover: true,
-			continueDelayOnInactiveTab: false,
-			icon: true,
-			messageHeight: '90vh',
-			msg: 'feature นี้ยังไม่สามารถใช้งานได้ครับ'
-		});
+	$contno = $('#add_contno').val();
+	$('#btnDOSend').click(function(){
+		documents('ใบส่งมอบสินค้า');
+	});
+	$('#btnDOSendTax').click(function(){
+		documents('ใบส่งของ / ใบกำกับภาษี');
 	});
 	
-	$('#btnSend').click(function(){
-		Lobibox.notify('info', {
-			title: 'info',
-			size: 'mini',
-			closeOnClick: false,
-			delay: 3000,
-			pauseDelayOnHover: true,
-			continueDelayOnInactiveTab: false,
-			icon: true,
-			messageHeight: '90vh',
-			msg: 'feature นี้ยังไม่สามารถใช้งานได้ครับ'
+	function documents($type){
+		var baseUrl = $('body').attr('baseUrl');
+		var url = baseUrl+'SYS04/Agent/sendpdf?contno='+$contno+'&document='+$type;
+		var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
+		
+		Lobibox.window({
+			title: $type,
+			width: $(window).width(),
+			height: $(window).height(),
+			content: content,
+			draggable: false,
+			closeOnEsc: true,			
+			beforeClose : function(){
+				$('#btnApproveSell').attr('disabled',false);
+			}
 		});
-	});
+	}
+	
 	
 	$('#btnApproveSell').click(function(){
 		$('#btnApproveSell').attr('disabled',true);		

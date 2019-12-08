@@ -73,6 +73,7 @@ class MLogin extends CI_Model {
 		";
 		
 		$lastmenu = 1;
+		$lasthead = '';
 		if($query->row()){
 			foreach($query->result() as $row){
 				if($row->menulevel == 1 and $row->menulevel > $lastmenu){
@@ -98,6 +99,7 @@ class MLogin extends CI_Model {
 					}
 				}else if($row->menulevel == 1 and $row->menulevel == $lastmenu){
 					if($row->menuhead == 'y'){
+						if($lasthead == 'y'){ $html .= "</ul></li>"; }
 						$html .= "
 							<li>
 								<a href='#'>
@@ -166,6 +168,7 @@ class MLogin extends CI_Model {
 					}
 				}else if($row->menulevel == 2 and $row->menulevel == $lastmenu){
 					if($row->menuhead == 'y'){
+						if($lasthead == 'y'){ $html .= "</ul></li>"; }
 						$html .= "
 							<li>
 								<a href='#'>
@@ -234,6 +237,7 @@ class MLogin extends CI_Model {
 					}
 				}else if($row->menulevel == 3 and $row->menulevel == $lastmenu){
 					if($row->menuhead == 'y'){
+						if($lasthead == 'y'){ $html .= "</ul></li>"; }
 						$html .= "
 							<li>
 								<a href='#'>
@@ -302,6 +306,7 @@ class MLogin extends CI_Model {
 					}
 				}else if($row->menulevel == 4 and $row->menulevel == $lastmenu){
 					if($row->menuhead == 'y'){
+						if($lasthead == 'y'){ $html .= "</ul></li>"; }
 						$html .= "
 							<li>
 								<a href='#'>
@@ -370,6 +375,7 @@ class MLogin extends CI_Model {
 					}
 				}else if($row->menulevel == 5 and $row->menulevel == $lastmenu){
 					if($row->menuhead == 'y'){
+						if($lasthead == 'y'){ $html .= "</ul></li>"; }
 						$html .= "
 							<li>
 								<a href='#'>
@@ -438,6 +444,7 @@ class MLogin extends CI_Model {
 					}
 				}else if($row->menulevel == 6 and $row->menulevel == $lastmenu){
 					if($row->menuhead == 'y'){
+						if($lasthead == 'y'){ $html .= "</ul></li>"; }
 						$html .= "
 							<li>
 								<a href='#'>
@@ -485,6 +492,7 @@ class MLogin extends CI_Model {
 				}
 				
 				$lastmenu = $row->menulevel;
+				$lasthead = $row->menuhead;
 			}
 			//echo $html; exit;
 			return $html;

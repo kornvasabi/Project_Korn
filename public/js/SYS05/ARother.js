@@ -690,9 +690,7 @@ function search(){
 							loadform(INCFL,LOCAT,ARDATE,ARCONT,TSALE,DESC1,CONTNO,CUSCOD,CUSNAME,PAYFOR,FORDESC,USERID,PAYAMT,VATRT,SMPAY,MEMO1,
 							up_PIC1,up_PIC2,up_PIC3,filePath);			
 						}
-					}); 
-					 
-					
+					});
 				});
 			}		
 		}
@@ -804,6 +802,7 @@ function loadform(INCFL,LOCAT,ARDATE,ARCONT,TSALE,DESC1,CONTNO,CUSCOD,CUSNAME,PA
 					$('#PAYMENTS').attr('disabled',true);
 					$('#Products').attr('disabled',true);
 					$('#Services').attr('disabled',true);
+					$('#AMOUNT').attr('disabled',true);
 					
 					$('#SHOWP1').click(function() {
 						show_img(ARCONT,filePath,up_PIC1);
@@ -825,14 +824,12 @@ function loadform(INCFL,LOCAT,ARDATE,ARCONT,TSALE,DESC1,CONTNO,CUSCOD,CUSNAME,PA
 							}else{
 								$('#btnsave_arother').attr('disabled',true);
 								$('#PAYTYPS').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
-								$('#AMOUNT').attr('disabled',true);
 								$('#MEMO').attr('disabled',true);
 								var status = "notupdate";
 							}
 						}else{
 							$('#btnsave_arother').attr('disabled',true);
 							$('#PAYTYPS').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
-							$('#AMOUNT').attr('disabled',true);
 							$('#MEMO').attr('disabled',true);
 							var status = "notupdate";
 						}
@@ -945,12 +942,10 @@ function Edit_AROTH($thisWindowEdit){
 				dataToPost.PIC2 	= $('#FILEPIC2').attr("newname");
 				dataToPost.PIC3 	= $('#FILEPIC3').attr("newname");
 
-				if(dataToPost.PAYFOR == "" || dataToPost.PAYAMT == "" || dataToPost.BALANCE >= dataToPost.PAYAMT){	
+				if(dataToPost.PAYFOR == "" || dataToPost.BALANCE >= dataToPost.PAYAMT){	
 					$msg = "";
 					if(dataToPost.PAYFOR == ""){
 						$msg = "กรุณาเลือกค้างชำระ";
-					}else if(dataToPost.PAYAMT == ""){
-						$msg = "กรุณาระบุจำนวนเงิน";
 					}else if(dataToPost.BALANCE >= dataToPost.PAYAMT ){
 						$msg = "ไม่สามารถแก้ไขได้ เนื่องจากมีการรับชำระแล้ว";
 					}

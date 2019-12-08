@@ -21,8 +21,8 @@ class ARother extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "
-			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div class='col-sm-12 col-xs-12' style='overflow:auto;'>					
+			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+				<div class='col-sm-12 col-xs-12'>
 					<div class='row'>
 						<div class='col-sm-2 col-xs-2'>	
 							<div class='form-group'>
@@ -340,7 +340,7 @@ class ARother extends MY_Controller {
 		}
 		
 		$html = "
-			<div id='table-fixed-ARother' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+			<div id='table-fixed-ARother' class='col-sm-12'>
 				<table id='table-ARother' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
 						<tr>
@@ -521,7 +521,7 @@ class ARother extends MY_Controller {
 		$CONTNO	= $_REQUEST["CONTNO"];
 		$CUSCOD	= $_REQUEST["CUSCOD"];
 		$PAYFOR	= $_REQUEST["PAYFOR"];
-		$PAYAMT	= str_replace(',','',$_REQUEST["PAYAMT"]);
+		//$PAYAMT	= str_replace(',','',$_REQUEST["PAYAMT"]);
 		$MEMO	= $_REQUEST["MEMO"];
 		
 		$uploadpic = "";
@@ -577,7 +577,7 @@ class ARother extends MY_Controller {
 				declare @id varchar(max) = (select id from YTKManagement.dbo.config_fileupload where refno = '".$this->sess["db"]."');
 				
 				update {$this->MAuth->getdb('AROTHR')}
-				set PAYFOR = '".$PAYFOR."', PAYAMT = '".$PAYAMT."', MEMO1 = '".$MEMO."'
+				set PAYFOR = '".$PAYFOR."', MEMO1 = '".$MEMO."'
 				where ARCONT like '%".$ARCONT."%' and CONTNO like '%".$CONTNO."%' and CUSCOD like '%".$CUSCOD."%'
 				
 				".$uploadpic."
