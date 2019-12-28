@@ -1319,7 +1319,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$tabContent.find('.tab-pane').removeClass('active');
 		$tabContent.find('.tab-pane[name='+$id+']').addClass('active');	
 		
-		return true;					
+		return true;
 	}
 	
 	$('#add_inprcCal').click(function(){

@@ -27,6 +27,8 @@ class CLogin extends MY_Controller {
 				}
             }
 		}
+		
+		$this->load->library('user_agent');
 	}
 	
 	function index(){
@@ -87,6 +89,7 @@ class CLogin extends MY_Controller {
 						'corpName' => $row->corpName,
 						'branch' => $row->LOCATCD,
 						'lock' => 'no',
+						'is_mobile' => ($this->agent->is_mobile() == 1 ? "yes":"no"),
                         'db' =>$row->dblocat
 					);
 					$this->session->set_userdata('cbjsess001', $sess_array);
@@ -111,6 +114,7 @@ class CLogin extends MY_Controller {
 						'corpName' => $row->corpName,
 						'branch' => $row->LOCATCD,
 						'lock' => 'no',
+						'is_mobile' => ($this->agent->is_mobile() == 1 ? "yes":"no"),
                         'db' =>$row->dblocat
 					);
 					$this->session->set_userdata('cbjsess001', $sess_array);

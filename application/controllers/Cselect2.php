@@ -416,6 +416,31 @@ class Cselect2 extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getCOLOR_STD(){
+		//สีรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
+			where COLORCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by COLORCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array('id'=>str_replace(chr(0),"",$row->COLORCOD), 'text'=>str_replace(chr(0),"",$row->COLORCOD));
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
 	function getRESVNO(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_REQUEST['q']);
