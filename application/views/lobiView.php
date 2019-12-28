@@ -28,6 +28,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			background: transparent;
 		}
 		
+		.select2-container--open {
+			z-index:50000;
+		}
+
 		.table > tbody > tr > td
 		, .table > tbody > tr > th
 		, .table > tfoot > tr > td
