@@ -329,7 +329,7 @@ class Cselect2 extends MY_Controller {
 	function getMODEL(){
 		//รุ่นรถ
 		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_GET['q']);
+		$dataSearch = trim($_REQUEST['q']);
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		$TYPECOD = $_REQUEST['TYPECOD'];
 		

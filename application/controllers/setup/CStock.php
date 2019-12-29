@@ -863,6 +863,481 @@ class CStock extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	#20191229 JDH
+	public function baab(){
+		$claim = $this->MLogin->getclaim(uri_string());
+		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
+		
+		$html = "
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' >
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						ยี่ห้อ
+						<input type='text' id='TYPECOD' class='form-control input-sm' placeholder='ยี่ห้อ'>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						รุ่น
+						<input type='text' id='MODELCOD' class='form-control input-sm' placeholder='รุ่น'>	
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						แบบ
+						<input type='text' id='BAABCOD' class='form-control input-sm' placeholder='แบบ'>	
+					</div>
+				</div>				
+				<div class='col-sm-2 col-sm-offset-2'>	
+					<div class='form-group'>
+						<br>
+						<input type='button' id='search_baab' class='btn btn-primary btn-sm btn-block' value='แสดง'>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						<br>
+						<input type='button' id='add_baab' class='btn btn-cyan btn-sm btn-block' value='เพิ่ม' >
+					</div>
+				</div>
+			</div>
+			<div id='setbaabResult' class='col-sm-12 tab1' style='height:calc(100vh - 197px);overflow:auto;background-color:#;'></div>
+			
+			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
+		";
+	
+		$html.= "<script src='".base_url('public/js/setup/setbaab.js')."'></script>";
+		echo $html;
+	}
+	
+	public function baabSearch(){
+		$arrs = array();
+		$arrs['TYPECOD'] 	= !isset($_REQUEST['TYPECOD']) ? '' : $_REQUEST['TYPECOD'];
+		$arrs['MODELCOD'] 	= !isset($_REQUEST['MODELCOD']) ? '' : $_REQUEST['MODELCOD'];
+		$arrs['BAABCOD'] 	= !isset($_REQUEST['BAABCOD']) ? '' : $_REQUEST['BAABCOD'];
+		
+		$cond = "";
+		if($arrs['TYPECOD'] != ''){
+			$cond .= " and TYPECOD like '%".$arrs['TYPECOD']."%'";
+		}
+		
+		if($arrs['MODELCOD'] != ''){
+			$cond .= " and MODELCOD like '%".$arrs['MODELCOD']."%'";
+		}
+		
+		if($arrs['BAABCOD'] != ''){
+			$cond .= " and BAABCOD like '%".$arrs['BAABCOD']."%'";
+		}
+		
+		$sql = "
+			select * from {$this->MAuth->getdb('SETBAAB')}
+			where 1=1 ".$cond."
+			order by TYPECOD,MODELCOD,BAABCOD
+		";
+		//echo $sql;exit;
+		$query = $this->db->query($sql);
+				
+		$NRow = 1;
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .= "
+					<tr class='trow' seq='".$NRow."'>
+						<td class='getit' seq='".$NRow++."' 
+							TYPECOD='".str_replace(chr(0),'',$row->TYPECOD)."' 
+							MODELCOD='".str_replace(chr(0),'',$row->MODELCOD)."' 
+							BAABCOD='".str_replace(chr(0),'',$row->BAABCOD)."' 
+							style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
+						<td>".str_replace(chr(0),'',$row->TYPECOD)."</td>
+						<td>".str_replace(chr(0),'',$row->MODELCOD)."</td>
+						<td>".str_replace(chr(0),'',$row->BAABCOD)."</td>
+						<td>".str_replace(chr(0),'',$row->MEMO1)."</td>
+					</tr>
+				";
+			}
+		}
+		
+		$html = "
+			<div id='tbScroll' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>ยี่ห้อ</th>
+							<th>รุ่น</th>
+							<th>แบบ</th>
+							<th>คำอธิบาย</th>							
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		
+		$response = array();
+		$response['html'] = $html;
+		echo json_encode($response);
+	}
+	
+	public function baabGetFormAE(){
+		$arrs = array();
+		$arrs['TYPECOD'] = (!isset($_REQUEST['TYPECOD']) ? '' : $_REQUEST['TYPECOD']);
+		$arrs['MODELCOD'] = (!isset($_REQUEST['MODELCOD']) ? '' : $_REQUEST['MODELCOD']);
+		$arrs['BAABCOD'] = (!isset($_REQUEST['BAABCOD']) ? '' : $_REQUEST['BAABCOD']);
+		
+		$data = array(
+			'TYPECOD'=>'',
+			'MODELCOD'=>'',
+			'BAABCOD'=>'',
+			'MEMO1'=>'',
+		);
+		if($arrs['TYPECOD'] != '' and $arrs['MODELCOD'] != '' and $arrs['BAABCOD'] != ''){
+			$sql = "
+				select * from {$this->MAuth->getdb('SETBAAB')}
+				where TYPECOD='".$arrs['TYPECOD']."' 
+					and MODELCOD='".$arrs['MODELCOD']."'
+					and BAABCOD='".$arrs['BAABCOD']."'
+			";
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$data['TYPECOD'] 	= str_replace(chr(0),'',$row->TYPECOD);
+					$data['MODELCOD'] 	= str_replace(chr(0),'',$row->MODELCOD);
+					$data['BAABCOD'] 	= str_replace(chr(0),'',$row->BAABCOD);
+					$data['MEMO1'] 		= str_replace(chr(0),'',$row->MEMO1);
+				}
+			}
+		}else{
+			$data['TYPECOD'] 	= "HONDA";
+		}
+		
+		$response = array();
+		$response['html'] = "
+			<div class='col-sm-12'>
+				<div style='height:calc(100vh - 165px);overflow:auto;'>
+					<div class='col-sm-4 col-sm-offset-4'>	
+						<div class='form-group'>
+							ยี่ห้อ
+							<select id='t2TYPECOD' TYPECOD='".$data['TYPECOD']."' class='form-control input-sm' data-placeholder='ยี่ห้อ'>
+								<option value='".$data['TYPECOD']."'>".$data['TYPECOD']."</option>
+							</select>
+						</div>
+					</div>
+					
+					<div class='col-sm-4 col-sm-offset-4'>	
+						<div class='form-group'>
+							รุ่น
+							<select id='t2MODEL' MODELCOD='".$data['MODELCOD']."' class='form-control input-sm' data-placeholder='รุ่น'>
+								<option value='".$data['MODELCOD']."'>".$data['MODELCOD']."</option>
+							</select>
+						</div>
+					</div>
+					
+					<div class='col-sm-4 col-sm-offset-4'>	
+						<div class='form-group'>
+							แบบ
+							<input type='text' id='t2BAAB' BAABCOD='".$data['BAABCOD']."' class='form-control input-sm' value='".$data['BAABCOD']."'>
+						</div>
+					</div>
+					
+					<div class='col-sm-4 col-sm-offset-4'>	
+						<div class='form-group'>
+							คำอธิบาย
+							<textarea id='t2MEMO1' class='form-control input-sm' >".$data['MEMO1']."</textarea>
+						</div>
+					</div>
+				</div>
+				
+				<div class='col-sm-1 col-sm-offset-5'>
+					<input type='button' id='tab2back' class='btn btn-inverse btn-sm' style='width:100%;' value='ย้อนกลับ'>					
+				</div>
+				<div class='col-sm-1'>
+					<input type='button' id='tab2del' class='btn btn-danger btn-sm' style='width:100%;' value='ลบ'>
+				</div>
+				<div class='col-sm-1'>
+					<input type='button' id='tab2save' class='btn btn-primary btn-sm' style='width:100%;' value='บันทึก'>
+				</div>
+			</div>	
+		";
+		
+		echo json_encode($response);
+	}
+	
+	public function baabSave(){
+		$arrs = array();
+		$arrs['TYPECOD'] = (!isset($_REQUEST['TYPECOD'])?'':$_REQUEST['TYPECOD']);
+		$arrs['MODEL'] 	 = (!isset($_REQUEST['MODEL'])?'':$_REQUEST['MODEL']);
+		$arrs['BAAB'] 	 = (!isset($_REQUEST['BAAB'])?'':$_REQUEST['BAAB']);
+		
+		$arrs['TYPECOD_OLD'] = (!isset($_REQUEST['TYPECOD_OLD'])?'':$_REQUEST['TYPECOD_OLD']);
+		$arrs['MODEL_OLD'] 	 = (!isset($_REQUEST['MODEL_OLD'])?'':$_REQUEST['MODEL_OLD']);
+		$arrs['BAAB_OLD'] 	 = (!isset($_REQUEST['BAAB_OLD'])?'':$_REQUEST['BAAB_OLD']);
+		
+		$arrs['MEMO1']	 = (!isset($_REQUEST['MEMO1'])?'':$_REQUEST['MEMO1']);
+		$arrs['action']  = (!isset($_REQUEST['action'])?'':$_REQUEST['action']);
+		
+		$data = "";
+		if($arrs['action'] == 'add'){
+			$data = "
+				declare @isval int = isnull((
+					select count(*) from {$this->MAuth->getdb('SETBAAB')}
+					where TYPECOD='".$arrs['TYPECOD']."' 
+						and MODELCOD='".$arrs['MODEL']."'
+						and BAABCOD='".$arrs['BAAB']."'
+				),0);
+				
+				if(@isval = 0)
+				begin 
+					insert into {$this->MAuth->getdb('SETBAAB')} (TYPECOD,MODELCOD,BAABCOD,MEMO1)
+					select '".$arrs['TYPECOD']."','".$arrs['MODEL']."','".$arrs['BAAB']."','".$arrs['MEMO1']."'
+					
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')}(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+					values ('".$this->sess["IDNo"]."','แบบรถ เพิ่ม','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				end 
+				else
+				begin 
+					rollback tran tsc;
+					insert into #tempolary select 'N' as id,'ไม่บันทึก : มีข้อมูลรหัสรุ่น ".$arrs['MODEL']." แบบ  ".$arrs['BAAB']." แล้ว' as msg;
+					return;
+				end
+			";
+		}else{			
+			$data = "
+				update {$this->MAuth->getdb('SETBAAB')}
+				set TYPECOD='".$arrs['TYPECOD']."'
+					,MODELCOD='".$arrs['MODEL']."'
+					,BAABCOD='".$arrs['BAAB']."'
+					,MEMO1='".$arrs['MEMO1']."'
+				where TYPECOD='".$arrs['TYPECOD_OLD']."' 
+					and MODELCOD='".$arrs['MODEL_OLD']."'
+					and BAABCOD='".$arrs['BAAB_OLD']."'
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')}(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','แบบรถ แก้ไข','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+			";
+		}
+		
+		$sql = "
+			if object_id('tempdb..#tempolary') is not null drop table #tempolary;
+			create table #tempolary (id varchar(1),msg varchar(max));
+			
+			begin tran tsc
+			begin try			
+				".$data."
+				
+				insert into #tempolary select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
+				commit tran tsc;
+			end try
+			begin catch
+				rollback tran tsc;
+				insert into #tempolary select 'N' as id,'Fail : '+ERROR_MESSAGE() as msg;
+			end catch
+		";
+		
+		$this->db->query($sql);
+		$sql = "select * from #tempolary";
+		$query = $this->db->query($sql);
+		
+		$response = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response['stat'] = ($row->id == 'Y' ? true:false);
+				$response['msg'] = $row->msg;
+			}
+		}else{
+			$response['stat'] = false;
+			$response['msg'] = 'ผิดพลาด';
+		}
+		
+		echo json_encode($response);
+	}
+	
+	public function baabDel(){
+		$arrs = array();
+		$arrs['TYPECOD'] = (!isset($_REQUEST['TYPECOD'])?'':$_REQUEST['TYPECOD']);
+		$arrs['MODEL'] 	 = (!isset($_REQUEST['MODEL'])?'':$_REQUEST['MODEL']);
+		$arrs['BAAB'] 	 = (!isset($_REQUEST['BAAB'])?'':$_REQUEST['BAAB']);
+		
+		$arrs['TYPECOD_OLD'] = (!isset($_REQUEST['TYPECOD_OLD'])?'':$_REQUEST['TYPECOD_OLD']);
+		$arrs['MODEL_OLD'] 	 = (!isset($_REQUEST['MODEL_OLD'])?'':$_REQUEST['MODEL_OLD']);
+		$arrs['BAAB_OLD'] 	 = (!isset($_REQUEST['BAAB_OLD'])?'':$_REQUEST['BAAB_OLD']);
+		
+		$arrs['MEMO1']	 = (!isset($_REQUEST['MEMO1'])?'':$_REQUEST['MEMO1']);
+		$arrs['action']  = (!isset($_REQUEST['action'])?'':$_REQUEST['action']);
+		
+		$sql = "
+			if object_id('tempdb..#tempolary') is not null drop table #tempolary;
+			create table #tempolary (id varchar(1),msg varchar(max));
+			
+			begin tran tsc
+			begin try			
+				delete {$this->MAuth->getdb('SETBAAB')}
+				where TYPECOD='".$arrs['TYPECOD_OLD']."' 
+					and MODELCOD='".$arrs['MODEL_OLD']."'
+					and BAABCOD='".$arrs['BAAB_OLD']."'
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')}(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','แบบรถ ลบ','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
+				insert into #tempolary select 'Y' as id,'สำเร็จ ลบรุ่นรถ ".$arrs['MODEL_OLD']."  แบบ ".$arrs['BAAB_OLD']." แล้ว' as msg;
+				commit tran tsc;
+			end try
+			begin catch
+				rollback tran tsc;
+				insert into #tempolary select 'N' as id,'Fail : '+ERROR_MESSAGE() as msg;
+			end catch
+		";
+		
+		$this->db->query($sql);
+		$sql = "select * from #tempolary";
+		$query = $this->db->query($sql);
+		
+		$response = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response['stat'] = ($row->id == 'Y' ? true:false);
+				$response['msg'] = $row->msg;
+			}
+		}else{
+			$response['stat'] = false;
+			$response['msg'] = 'ผิดพลาด';
+		}
+		
+		echo json_encode($response);
+	}
+	
+	#20191229 JDH
+	public function color(){
+		$claim = $this->MLogin->getclaim(uri_string());
+		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
+		
+		$html = "
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' >
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						ยี่ห้อ
+						<input type='text' id='TYPECOD' class='form-control input-sm' placeholder='ยี่ห้อ'>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						รุ่น
+						<input type='text' id='MODELCOD' class='form-control input-sm' placeholder='รุ่น'>	
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						แบบ
+						<input type='text' id='BAABCOD' class='form-control input-sm' placeholder='แบบ'>	
+					</div>
+				</div>	
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						สี
+						<input type='text' id='COLORCOD' class='form-control input-sm' placeholder='สี'>	
+					</div>
+				</div>		
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						<br>
+						<input type='button' id='search_color' class='btn btn-primary btn-sm btn-block' value='แสดง'>
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						<br>
+						<input type='button' id='add_color' class='btn btn-cyan btn-sm btn-block' value='เพิ่ม' >
+					</div>
+				</div>
+			</div>
+			<div id='setcolorResult' class='col-sm-12 tab1' style='height:calc(100vh - 197px);overflow:auto;background-color:#;'></div>
+			
+			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
+		";
+	
+		$html.= "<script src='".base_url('public/js/setup/setcolor.js')."'></script>";
+		echo $html;
+	}
+	
+	public function colorSearch(){
+		$arrs = array();
+		$arrs['TYPECOD'] 	= !isset($_REQUEST['TYPECOD']) ? '' : $_REQUEST['TYPECOD'];
+		$arrs['MODELCOD'] 	= !isset($_REQUEST['MODELCOD']) ? '' : $_REQUEST['MODELCOD'];
+		$arrs['BAABCOD'] 	= !isset($_REQUEST['BAABCOD']) ? '' : $_REQUEST['BAABCOD'];
+		$arrs['COLORCOD'] 	= !isset($_REQUEST['COLORCOD']) ? '' : $_REQUEST['COLORCOD'];
+		
+		$cond = "";
+		if($arrs['TYPECOD'] != ''){
+			$cond .= " and TYPECOD like '%".$arrs['TYPECOD']."%'";
+		}
+		
+		if($arrs['MODELCOD'] != ''){
+			$cond .= " and MODELCOD like '%".$arrs['MODELCOD']."%'";
+		}
+		
+		if($arrs['BAABCOD'] != ''){
+			$cond .= " and BAABCOD like '%".$arrs['BAABCOD']."%'";
+		}
+		
+		if($arrs['COLORCOD'] != ''){
+			$cond .= " and COLORCOD like '%".$arrs['COLORCOD']."%'";
+		}
+		
+		$sql = "
+			select * from {$this->MAuth->getdb('JD_SETCOLOR')}
+			where 1=1 ".$cond."
+			order by TYPECOD,MODELCOD,BAABCOD
+		";
+		//echo $sql;exit;
+		$query = $this->db->query($sql);
+				
+		$NRow = 1;
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .= "
+					<tr class='trow' seq='".$NRow."'>
+						<td class='getit' seq='".$NRow++."' 
+							TYPECOD='".str_replace(chr(0),'',$row->TYPECOD)."' 
+							MODELCOD='".str_replace(chr(0),'',$row->MODELCOD)."' 
+							BAABCOD='".str_replace(chr(0),'',$row->BAABCOD)."' 
+							style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
+						<td>".str_replace(chr(0),'',$row->TYPECOD)."</td>
+						<td>".str_replace(chr(0),'',$row->MODELCOD)."</td>
+						<td>".str_replace(chr(0),'',$row->BAABCOD)."</td>
+						<td>".str_replace(chr(0),'',$row->MEMO1)."</td>
+					</tr>
+				";
+			}
+		}
+		
+		$html = "
+			<div id='tbScroll' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>ยี่ห้อ</th>
+							<th>รุ่น</th>
+							<th>แบบ</th>
+							<th>คำอธิบาย</th>							
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		
+		$response = array();
+		$response['html'] = $html;
+		echo json_encode($response);
+	}
+	
 	public function maxstock(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
