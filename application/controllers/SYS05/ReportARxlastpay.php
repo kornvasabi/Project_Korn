@@ -214,7 +214,7 @@ class ReportARxlastpay extends MY_Controller {
 		$COLOR1 	= str_replace(chr(0),'',$_REQUEST["COLOR1"]);
 		$TUMBON1 	= $_REQUEST["TUMBON1"];
 		$EXPPRD1 	= $_REQUEST["EXPPRD1"];
-		$CUSCOD1 	= $_REQUEST["CUSCOD1"];
+		$MEMBCOD 	= $_REQUEST["CUSCOD1"];
 		$types 		= $_REQUEST["types"];
 		$ystat 		= $_REQUEST["ystat"];
 		$sumkang 	= $_REQUEST["sumkang"];
@@ -263,47 +263,113 @@ class ReportARxlastpay extends MY_Controller {
 			$rpcond .= "  กลุ่มสินค้า ".$GCOCE1;
 		}
 		
+		if($TYPE1 != ""){
+			$cond .= " AND (C.TYPE LIKE '%".$TYPE1."%' )";
+		}else{
+			$cond .= " AND (C.TYPE LIKE '%%' OR C.TYPE IS NULL)";
+		}
+		
+		if($MODEL1 != ""){
+			$cond .= " AND (C.MODEL LIKE '%".$MODEL1."%' )";
+		}else{
+			$cond .= " AND (C.MODEL LIKE '%%' OR C.MODEL IS NULL)";
+		}
+		
+		if($BAAB1 != ""){
+			$cond .= " AND (C.BAAB LIKE '%".$BAAB1."%' )";
+		}else{
+			$cond .= " AND (C.BAAB LIKE '%%' OR C.BAAB IS NULL)";
+		}
+		
+		if($COLOR1 != ""){
+			$cond .= " AND (C.COLOR LIKE '%".$COLOR1."%' )";
+		}else{
+			$cond .= " AND (C.COLOR LIKE '%%' OR C.COLOR IS NULL) ";
+		}
+		
 		if($TUMBON1 != ""){
 			$cond .= " AND D.TUMB LIKE '%".$TUMBON1."%'";
+		}
+		
+		if($MEMBCOD != ""){
+			$cond .= " AND B.MEMBCOD LIKE '%".$MEMBCOD."%'";
 		}
 		
 		if($ystat == 'NO'){
 			$cond .= " AND (A.YSTAT<>'Y')";
 		}
 		
+		if($types != ""){
+			$cond .= " AND (C.STAT = '".$types."')";
+		}
+		
+		if($sumkang == 'sumkang'){
+			$sumkang = " DDATE >= '18000101'";
+		}else{
+			$sumkang = " convert(nvarchar,getdate(),112)";
+		}
+		
 		$sql = "
-				
+				IF OBJECT_ID('tempdb..#main') IS NOT NULL DROP TABLE #main
+				select *
+				into #main
+				from(
+					select LOCAT, CONTNO, CUSCOD, SNAM+NAME1+' '+NAME2 as CUSNAME, isnull(addr1,'')+isnull(' ถ.'+addr2,'')+isnull(' ต.'+tumb,'')+
+					isnull(' อ.'+aumpdes,'')+isnull(' จ.'+provdes,'')+' '+isnull(zip,'')+isnull(' โทร. '+telp,'') as CUSADD, convert(nvarchar,SDATE,112) as SDATE,
+					TOTPRC, T_NOPAY, TOTPRC-SMPAY as TOTAR, EXP_FRM, EXP_TO, LPAYD, convert(nvarchar,LPAYD,112) as LPAYDS, SMPAY, convert(nvarchar,LDATE,112) as LDATE, 
+					EXP_AMT,
+					TYPE, MODEL, BAAB, COLOR
+					from(
+						SELECT A.LOCAT, A.CONTNO, A.TOTPRC, A.TOTPRES, A.CUSCOD, A.SDATE, B.SNAM, A.TOTDWN, A.LPAYD, A.LDATE, A.BILLCOLL,
+						A.TOT_UPAY, A.EXP_AMT, A.SMPAY, A.EXP_FRM, A.EXP_TO, B.NAME1, B.NAME2, B.MEMBCOD, A.PAYDWN, A.T_NOPAY, C.TYPE, C.BAAB,
+						C.COLOR, C.MODEL, B.addrno , D.addr1, D.addr2, D.tumb, D.aumpcod, D.provcod, D.zip, D.telp, E.nopayfrm, E.nopayto,  
+						(select aumpdes from setaump where aumpcod=D.aumpcod) as aumpdes, (select provdes from setprov where provcod=D.provcod) as provdes 
+						FROM ARMAST A 
+						LEFT OUTER JOIN CUSTMAST B ON (A.CUSCOD = B.CUSCOD)  
+						LEFT OUTER JOIN INVTRAN C ON (A.STRNO = C.STRNO)  
+						LEFT OUTER JOIN CUSTADDR D ON (A.CUSCOD = D.CUSCOD) AND (A.ADDRNO = D.ADDRNO)  
+						LEFT OUTER JOIN (
+							SELECT E.CONTNO, E.LOCAT, COUNT(NOPAY) AS KANGNOPAY, min(nopay) as nopayfrm, max(nopay) as nopayto  
+							FROM ARPAY E 
+							WHERE ".$sumkang." AND (damt > payment)  
+							GROUP BY E.CONTNO, E.LOCAT
+						) E ON A.CONTNO=E.CONTNO AND A.LOCAT=E.LOCAT  
+						WHERE KANGNOPAY <= ".$EXPPRD1." ".$cond." 
+					)a
+				)main
 		";//echo $sql; 
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				
+				select LOCAT, CONTNO, CUSCOD, CUSNAME, CUSCOD+'  '+CUSNAME as CUSTOMER, CUSADD, SDATE, TOTPRC, T_NOPAY, TOTAR, EXP_FRM, EXP_TO, LPAYD, LPAYDS, SMPAY, LDATE, 
+				EXP_AMT, TYPE, MODEL, BAAB, COLOR
+				from #main
+				order by ".$orderby."
 		";//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$sql = "
-
+				select 'รวมทั้งหมด' as Total, sum(TOTPRC) as sumTOTPRC, sum(TOTAR) as sumTOTAR, sum(SMPAY) as sumSMPAY, sum(EXP_AMT) as sumEXP_AMT
+				from #main
 		";
 		//echo $sql; exit;
 		$query2 = $this->db->query($sql);
 		
 		$head = ""; $html = ""; $head2 = "";  $report = ""; $sumreport = ""; $sumreport2 = ""; $i = 0; 
 		
-		$head = "<tr>
+		$head = "<tr style='height:35px;'>
 				<th style='display:none;'>#</th>
 				<th style='vertical-align:top;'>สาขา</th>
-				<th style='vertical-align:top;'>เลขที่สัญญา<br>เลขทะเบียน</th>
-				<th style='vertical-align:top;'>รหัสลูกค้า<br>เลขตัวถัง</th>
-				<th style='vertical-align:top;'>ชื่อ - นามสกุล<br>ที่อยู่</th>
-				<th style='vertical-align:top;'>วันที่ขาย<br>กิจกรรมการขาย</th>
-				<th style='vertical-align:top;text-align:right;'>ราคาขาย</th> 
-				<th style='vertical-align:top;text-align:right;'>เงินดาวน์ </th>
-				<th style='vertical-align:top;text-align:right;'>ค้างดาวน์</th>
-				<th style='vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือจริง<br>งวดทั้งหมด</th>
-				<th style='vertical-align:top;text-align:right;'>ค้างงวด<br>งวดที่ค้าง</th>
-				<th style='vertical-align:top;text-align:right;'>ค่างวดๆละ<br>จากงวดที่</th>
-				<th style='vertical-align:top;text-align:right;'>ชำระล่าสุด<br>ค้างเบี้ยปรับ</th>
-				<th style='vertical-align:top;text-align:right;'>Billcoll<br>ขาดการติดต่อ</th>
+				<th style='vertical-align:top;'>เลขที่สัญญา</th>
+				<th style='vertical-align:top;'>รหัส/ชื่อ-สกุล ลูกค้า<br>ที่อยู่ลูกค้า</th>
+				<th style='vertical-align:top;'>วันที่ขาย<br>ยี่ห้อ</th>
+				<th style='vertical-align:top;'>วันดิวงวดสุดท้าย<br>รุ่น</th>
+				<th style='vertical-align:top;'>จน. งวดทั้งหมด<br>แบบ</th>
+				<th style='vertical-align:top;text-align:right;'>ราคาขาย<br>สี</th> 
+				<th style='vertical-align:top;text-align:right;'>จำนวนที่ชำระ<br>วันที่ชำระล่าสุด</th>
+				<th style='vertical-align:top;text-align:right;'>ยอดคงเหลือ</th>
+				<th style='vertical-align:top;text-align:right;'>งวดที่</th>
+				<th style='vertical-align:top;text-align:right;'>ค้างงวด</th>
 				</tr>
 		";
 		
@@ -314,33 +380,24 @@ class ReportARxlastpay extends MY_Controller {
 					<th style='vertical-align:top;'>รหัสลูกค้า</th>
 					<th style='vertical-align:top;'>ชื่อ - นามสกุล</th>
 					<th style='vertical-align:top;'>ที่อยู่</th>
-					<th style='vertical-align:top;'>เลขทะเบียน</th>
-					<th style='vertical-align:top;'>เลขตัวถัง</th>
+					<th style='vertical-align:top;'>ยี่ห้อ</th>
+					<th style='vertical-align:top;'>รุ่น</th>
+					<th style='vertical-align:top;'>แบบ</th>
+					<th style='vertical-align:top;'>สี</th>
 					<th style='vertical-align:top;'>วันที่ขาย</th>
+					<th style='vertical-align:top;'>วันดิวงวดสุดท้าย</th>
+					<th style='vertical-align:top;'>จน. งวดทั้งหมด</th>
 					<th style='vertical-align:top;text-align:right;'>ราคาขาย</th> 
-					<th style='vertical-align:top;text-align:right;'>เงินดาวน์ </th>
-					<th style='vertical-align:top;text-align:right;'>ค้างดาวน์</th>
-					<th style='vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือจริง</th>
+					<th style='vertical-align:top;text-align:right;'>จำนวนที่ชำระ </th>
+					<th style='vertical-align:top;text-align:right;'>ยอดคงเหลือ</th>
+					<th style='vertical-align:top;text-align:center;'>งวดที่</th>
+					<th style='vertical-align:top;text-align:right;'>วันที่ชำระล่าสุด</th>
 					<th style='vertical-align:top;text-align:right;'>ค้างงวด</th>
-					<th style='vertical-align:top;text-align:right;'>ค่างวดๆละ</th>
-					<th style='vertical-align:top;text-align:center;'>ชำระล่าสุด</th>
-					<th style='vertical-align:top;text-align:center;'>ค้างเบี้ยปรับ</th>
-					<th style='vertical-align:top;text-align:center;'>งวดทั้งหมด</th>
-					<th style='vertical-align:top;text-align:center;'>งวดที่ค้าง</th>
-					<th style='vertical-align:top;text-align:center;'>จากงวดที่</th>
-					<th style='vertical-align:top;text-align:center;'>ขาดการติดต่อ</th>
-					<th style='vertical-align:top;text-align:center;'>กิจกรรมการขาย</th>
-					<th style='vertical-align:top;text-align:center;'>Billcoll</th>
 				</tr>
 		";
+	
 		
-		$sql = "select count(*) r from #main";
-		$dtrow = $this->db->query($sql);
-		$dtrow = $dtrow->row();
-		
-		if(($dtrow->r) > 6000){
-			$html = "<font color='red'>*ข้อมูลปริมาณมากไม่สามารถแสดงได้กรุณาระบุเงื่อนไขเพิ่ม หรือ เลือกช่วงเวลาการขายให้แคบลง</font>";
-		}else{
+
 			$NRow = 1;
 			if($query->row()){
 				foreach($query->result() as $row){$i++;
@@ -348,18 +405,16 @@ class ReportARxlastpay extends MY_Controller {
 						<tr class='trow' seq=".$NRow.">
 							<td seq=".$NRow++." style='display:none;'></td>
 							<td>".$row->LOCAT."</td>
-							<td>".$row->CONTNO."<br>".$row->REGNO."</td>
-							<td>".$row->CUSCOD."<br>".$row->STRNO."</td>
-							<td>".$row->CUSNAME."<br>".$row->CUSADD."</td>
-							<td>".$this->Convertdate(2,$row->SDATE)."<br>".$row->ACTICOD."</td>
-							<td align='right'>".number_format($row->TOTPRC,2)."</td>
-							<td align='right'>".number_format($row->TOTDWN,2)."</td>
-							<td align='right'>".number_format($row->KANGDWN,2)."</td>
-							<td align='right'>".number_format($row->TOTAR,2)."<br>".number_format($row->T_NOPAY)."</td>
-							<td align='right'>".number_format($row->EXP_AMT,2)."<br>".number_format($row->EXP_PRD)."</td>
-							<td align='right'>".number_format($row->TOT_UPAY)."<br>".number_format($row->EXP_FRM).'-'.number_format($row->EXP_TO)."</td>
-							<td align='right'>".$this->Convertdate(2,$row->LPAYDS)."<br>".number_format($row->KANGINT,2)."</td>
-							<td align='right'>".$row->BILLCOLL."<br>".number_format($row->LATED).' วัน'."</td>
+							<td>".$row->CONTNO."</td>
+							<td>".$row->CUSTOMER."<br>".$row->CUSADD."<br></td>
+							<td>".$this->Convertdate(2,$row->SDATE)."<br>".$row->TYPE."</td>
+							<td>".$this->Convertdate(2,$row->LDATE)."<br>".$row->MODEL."</td>
+							<td>".$row->T_NOPAY."<br>".$row->BAAB."</td>
+							<td align='right'>".number_format($row->TOTPRC,2)."<br>".$row->COLOR."</td>
+							<td align='right'>".number_format($row->SMPAY,2)."<br>".$this->Convertdate(2,$row->LPAYDS)."</td>
+							<td align='right'>".number_format($row->TOTAR,2)."</td>
+							<td align='center'>".number_format($row->EXP_FRM).'-'.number_format($row->EXP_TO)."</td>
+							<td align='right'>".number_format($row->EXP_AMT,2)."</td>
 						</tr>
 					";	
 				}
@@ -377,23 +432,19 @@ class ReportARxlastpay extends MY_Controller {
 							<td style='mso-number-format:\"\@\";'>".$row->CUSCOD."</td>
 							<td style='mso-number-format:\"\@\";'>".$row->CUSNAME."</td>
 							<td style='mso-number-format:\"\@\";'>".$row->CUSADD."</td>
-							<td style='mso-number-format:\"\@\";'>".$row->REGNO."</td>
-							<td style='mso-number-format:\"\@\";'>".$row->STRNO."</td>
-							<td style='mso-number-format:\"\@\";text-align:center;'>".$this->Convertdate(2,$row->SDATE)."</td>
+							<td style='mso-number-format:\"\@\";'>".$row->TYPE."</td>
+							<td style='mso-number-format:\"\@\";'>".$row->MODEL."</td>
+							<td style='mso-number-format:\"\@\";'>".$row->BAAB."</td>
+							<td style='mso-number-format:\"\@\";'>".$row->COLOR."</td>
+							<td style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->SDATE)."</td>
+							<td style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->LDATE)."</td>
+							<td style='mso-number-format:\"\@\";'>".$row->T_NOPAY."</td>
 							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->TOTPRC,2)."</td>
-							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->TOTDWN,2)."</td>
-							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->KANGDWN,2)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->SMPAY,2)."</td>
 							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->TOTAR,2)."</td>
-							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->EXP_AMT,2)."</td>
-							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->TOT_UPAY,2)."</td>
-							<td style='mso-number-format:\"\@\";text-align:center;'>".$this->Convertdate(2,$row->LPAYDS)."</td>
-							<td style='mso-number-format:\"\@\";text-align:center;'>".number_format($row->KANGINT,2)."</td>
-							<td style='mso-number-format:\"\@\";text-align:center;'>".number_format($row->T_NOPAY)."</td>
-							<td style='mso-number-format:\"\@\";text-align:center;'>".number_format($row->EXP_PRD)."</td>
 							<td style='mso-number-format:\"\@\";text-align:center;'>".number_format($row->EXP_FRM).'-'.number_format($row->EXP_TO)."</td>
-							<td style='mso-number-format:\"\@\";text-align:center;'>".$row->LATED."</td>
-							<td style='mso-number-format:\"\@\";text-align:center;'>".$row->ACTICOD."</td>
-							<td style='mso-number-format:\"\@\";text-align:center;'>".$row->BILLCOLL."</td>
+							<td style='mso-number-format:\"\@\";'>".$this->Convertdate(2,$row->LPAYDS)."</td>
+							<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->EXP_AMT,2)."</td>
 						</tr>
 					";	
 				}
@@ -402,16 +453,15 @@ class ReportARxlastpay extends MY_Controller {
 			if($query2->row()){
 				foreach($query2->result() as $row){
 					$sumreport = "
-						<tr>
-							<th colspan='5' style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:center;'>".$row->Total."</th>
-							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumTOTPRC)."</th>
-							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumTOTDWN,2)."</th>
-							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumKANGDWN,2)."</th>
-							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumTOTAR,2)."</th>
-							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumEXP_AMT,2)."</th>
-							<th colspan='3' style='border:0px;text-align:right;'></th>
+						<tr style='height:40px;'>
+							<th colspan='6' style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:center;'>".$row->Total."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumTOTPRC,2)."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumSMPAY,2)."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumTOTAR,2)."</th>
+							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'></th>
+							<th style='border:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumEXP_AMT,2)."</th>
 						</tr>
-					";	
+					";
 				}
 			}
 			
@@ -419,13 +469,12 @@ class ReportARxlastpay extends MY_Controller {
 				foreach($query2->result() as $row){
 					$sumreport2 = "
 						<tr class='trow'>
-							<th style='mso-number-format:\"\@\";text-align:center;' colspan='9'>".$row->Total."</th>
+							<th style='mso-number-format:\"\@\";text-align:center;' colspan='13'>".$row->Total."</th>
 							<th style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumTOTPRC,2)."</th>
-							<th style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumTOTDWN,2)."</th>
-							<th style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumKANGDWN,2)."</th>
+							<th style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumSMPAY,2)."</th>
 							<th style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumTOTAR,2)."</th>
+							<th style='mso-number-format:\"\@\";text-align:center;' colspan='2'></th>
 							<th style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumEXP_AMT,2)."</th>
-							<th style='mso-number-format:\"\@\";text-align:center;' colspan='9'></th>
 						</tr>
 					";	
 				}
@@ -437,10 +486,10 @@ class ReportARxlastpay extends MY_Controller {
 						<table id='table-ReportARxlastpay' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 							<thead>
 							<tr>
-								<th colspan='13' style='font-size:12pt;border:0px;text-align:center;'>รายงานลูกหนี้คงเหลือ x งวดสุดท้าย ณ ปัจจุบัน</th>
+								<th colspan='11' style='height:30px;font-size:12pt;border:0px;text-align:center;'>รายงานลูกหนี้ค้างชำระน้อยกว่าหรือเท่ากับ ".$EXPPRD1." งวดสุดท้าย</th>
 							</tr>
 							<tr>
-								<td colspan='13' style='border-bottom:1px solid #ddd;text-align:center;'>วันที่ขาย ".$_REQUEST["FRMDATE"]." - ".$_REQUEST["TODATE"]." ".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
+								<td colspan='11' style='height:30px;border-bottom:1px solid #ddd;text-align:center;'><br>".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 							</tr>
 							".$head."
 							</thead>	
@@ -462,10 +511,10 @@ class ReportARxlastpay extends MY_Controller {
 					<table id='table-ReportARxlastpay2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
 						<thead>
 							<tr>
-								<th colspan='23' style='font-size:12pt;border:0px;text-align:center;'>รายงานลูกหนี้คงเหลือ x งวดสุดท้าย ณ ปัจจุบัน</th>
+								<th colspan='19' style='font-size:12pt;border:0px;text-align:center;'>รายงานลูกหนี้ค้างชำระน้อยกว่าหรือเท่ากับ ".$EXPPRD1." งวดสุดท้าย</th>
 							</tr>
 							<tr>
-								<td colspan='23' style='border:0px;text-align:center;'>วันที่ขาย ".$_REQUEST["FRMDATE"]." - ".$_REQUEST["TODATE"]." ".$rpcond." ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
+								<td colspan='19' style='border:0px;text-align:center;'>".$rpcond." ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 							</tr>
 							".$head2."
 						</thead>	
@@ -476,7 +525,6 @@ class ReportARxlastpay extends MY_Controller {
 					</table>
 				</div>
 			";
-		}
 		
 		$response = array("html"=>$html, "report"=>$report, "reporttoday"=>str_replace('/','-',$this->today('today')));
 		echo json_encode($response);
@@ -485,13 +533,13 @@ class ReportARxlastpay extends MY_Controller {
 	function conditiontopdf(){
 		$data 	= 	array();
 		$data[] = 	urlencode($_REQUEST["LOCAT1"].'||'.$_REQUEST["CONTNO1"].'||'.$_REQUEST["BILLCOL1"].'||'.$_REQUEST["CHECKER1"]
-					.'||'.$_REQUEST["AMPHUR1"].'||'.$_REQUEST["PROVINCE1"].'||'.$_REQUEST["GCOCE1"].'||'.$_REQUEST["ACTICOD1"]
-					.'||'.$_REQUEST["FRMDATE"].'||'.$_REQUEST["TODATE"].'||'.$_REQUEST["TUMBON1"].'||'.$_REQUEST["EXPFRM1"]
-					.'||'.$_REQUEST["EXPTO1"].'||'.$_REQUEST["LATEFRM1"].'||'.$_REQUEST["LATETO1"]
-					.'||'.$_REQUEST["orderby"].'||'.$_REQUEST["ystat"].'||'.$_REQUEST["exp"].'||'.$_REQUEST["layout"]);
+					.'||'.$_REQUEST["AMPHUR1"].'||'.$_REQUEST["PROVINCE1"].'||'.$_REQUEST["GCOCE1"].'||'.$_REQUEST["TYPE1"]
+					.'||'.$_REQUEST["MODEL1"].'||'.$_REQUEST["BAAB1"].'||'.$_REQUEST["COLOR1"].'||'.$_REQUEST["TUMBON1"]
+					.'||'.$_REQUEST["EXPPRD1"].'||'.$_REQUEST["CUSCOD1"].'||'.$_REQUEST["types"].'||'.$_REQUEST["ystat"]
+					.'||'.$_REQUEST["sumkang"].'||'.$_REQUEST["orderby"].'||'.$_REQUEST["layout"]);
 		echo json_encode($this->generateData($data,"encode"));
 	}
-	
+
 	function pdf(){
 		$data 	= array();
 		$data[] = $_GET["condpdf"];
@@ -505,17 +553,17 @@ class ReportARxlastpay extends MY_Controller {
 		$AMPHUR1 	= str_replace(chr(0),'',$tx[4]);
 		$PROVINCE1 	= str_replace(chr(0),'',$tx[5]);
 		$GCOCE1 	= str_replace(chr(0),'',$tx[6]);
-		$ACTICOD1 	= str_replace(chr(0),'',$tx[7]);
-		$FRMDATE 	= $this->Convertdate(1,$tx[8]);
-		$TODATE 	= $this->Convertdate(1,$tx[9]);
-		$TUMBON1 	= $tx[10];
-		$EXPFRM1 	= $tx[11];
-		$EXPTO1 	= $tx[12];
-		$LATEFRM1 	= $tx[13];
-		$LATETO1 	= $tx[14];
-		$orderby 	= $tx[15];
-		$ystat 		= $tx[16];
-		$exp 		= $tx[17];
+		$TYPE1 		= str_replace(chr(0),'',$tx[7]);
+		$MODEL1 	= str_replace(chr(0),'',$tx[8]);
+		$BAAB1 		= str_replace(chr(0),'',$tx[9]);
+		$COLOR1 	= str_replace(chr(0),'',$tx[10]);
+		$TUMBON1 	= $tx[11];
+		$EXPPRD1 	= $tx[12];
+		$CUSCOD1 	= $tx[13];
+		$types 		= $tx[14];
+		$ystat 		= $tx[15];
+		$sumkang 	= $tx[16];
+		$orderby 	= $tx[17];
 		$layout 	= $tx[18];
 		
 		$cond = ""; $rpcond = "";
@@ -561,28 +609,50 @@ class ReportARxlastpay extends MY_Controller {
 			$rpcond .= "  กลุ่มสินค้า ".$GCOCE1;
 		}
 		
-		if($ACTICOD1 != ""){
-			$cond .= " AND (A.ACTICOD LIKE '%".$ACTICOD1."%' )";
-			$rpcond .= "  กิจกรรมการขาย ".$ACTICOD1;
+		if($TYPE1 != ""){
+			$cond .= " AND (C.TYPE LIKE '%".$TYPE1."%' )";
 		}else{
-			$cond .= " AND (A.ACTICOD LIKE '%%' OR A.ACTICOD IS NULL)";
+			$cond .= " AND (C.TYPE LIKE '%%' OR C.TYPE IS NULL)";
+		}
+		
+		if($MODEL1 != ""){
+			$cond .= " AND (C.MODEL LIKE '%".$MODEL1."%' )";
+		}else{
+			$cond .= " AND (C.MODEL LIKE '%%' OR C.MODEL IS NULL)";
+		}
+		
+		if($BAAB1 != ""){
+			$cond .= " AND (C.BAAB LIKE '%".$BAAB1."%' )";
+		}else{
+			$cond .= " AND (C.BAAB LIKE '%%' OR C.BAAB IS NULL)";
+		}
+		
+		if($COLOR1 != ""){
+			$cond .= " AND (C.COLOR LIKE '%".$COLOR1."%' )";
+		}else{
+			$cond .= " AND (C.COLOR LIKE '%%' OR C.COLOR IS NULL) ";
 		}
 		
 		if($TUMBON1 != ""){
 			$cond .= " AND D.TUMB LIKE '%".$TUMBON1."%'";
 		}
 		
+		if($MEMBCOD != ""){
+			$cond .= " AND B.MEMBCOD LIKE '%".$MEMBCOD."%'";
+		}
+		
 		if($ystat == 'NO'){
 			$cond .= " AND (A.YSTAT<>'Y')";
 		}
 		
-		//ไม่รวมลูกหนี้ที่ขาด x งวดแรก 
-		if($exp == 'notexp1'){
-			$cond .= " AND A.EXP_FRM > ".$EXPTO1."";
+		if($types != ""){
+			$cond .= " AND (C.STAT = '".$types."')";
 		}
-
-		if($LATEFRM1 != "" && $LATETO1 != ""){
-			$cond .= " AND DATEDIFF(DAY,isnull(A.LPAYD,A.SDATE),GETDATE())  BETWEEN ".$LATEFRM1." AND ".$LATETO1."";
+		
+		if($sumkang == 'sumkang'){
+			$sumkang = " DDATE >= '18000101'";
+		}else{
+			$sumkang = " convert(nvarchar,getdate(),112)";
 		}
 		
 		$sql = "
@@ -590,45 +660,42 @@ class ReportARxlastpay extends MY_Controller {
 				select *
 				into #main
 				from(
-					SELECT LOCAT, CONTNO, CUSCOD, SNAM+NAME1+' '+NAME2 as CUSNAME, REGNO, STRNO, isnull(addr1,'')+isnull(' ถ.'+addr2,'')+
-					isnull(' ต.'+tumb,'')+isnull(' อ.'+x_aumpdes,'')+isnull(' จ.'+x_provdes,'')+' '+isnull(zip,'')+isnull(' โทร. '+telp,'') as CUSADD, 
-					SDATE, TOTPRC, TOTDWN, TOTDWN-PAYDWN as KANGDWN, TOTPRC-SMPAY as TOTAR, EXP_AMT, TOT_UPAY, LPAYD, sumintamt-sumpayint AS KANGINT,
-					T_NOPAY, EXP_PRD, EXP_FRM, EXP_TO, DATEDIFF(DAY,isnull(LPAYD,SDATE),GETDATE()) as LATED, ACTICOD, BILLCOLL, tumb, aumpcod, provcod
-					FROM ( 
-						select A.ACTICOD, A.LOCAT, A.CONTNO, A.TOTPRC, A.TOTPRES, A.CUSCOD, A.SDATE, B.SNAM, A.TOTDWN, A.LPAYD, A.BILLCOLL, A.TOT_UPAY,
-						A.T_NOPAY, A.EXP_PRD, A.EXP_AMT, A.SMPAY, A.EXP_FRM, A.EXP_TO, B.NAME1, B.NAME2, A.PAYDWN, A.STRNO, C.REGNO, A.YSTAT,
-						(case when sumintamt is null then 0 else sumintamt end) as sumintamt, (case when sumpayint is null then 0 else sumpayint end) as sumpayint,
-						d.addr1, d.addr2, d.tumb, d.aumpcod, d.provcod, d.zip, d.telp, (select aumpdes  from {$this->MAuth->getdb('SETAUMP')} where aumpcod = d.aumpcod) as x_aumpdes,  
-						(select provdes from {$this->MAuth->getdb('SETPROV')} where provcod = d.provcod)  as x_provdes   
-						from {$this->MAuth->getdb('ARMAST')} A 
-						left outer join {$this->MAuth->getdb('CUSTMAST')} B ON A.CUSCOD=B.CUSCOD  
-						left outer join {$this->MAuth->getdb('INVTRAN')} C ON A.STRNO=C.STRNO   
-						left outer join (
-							select contno,locat,sum(intamt) as sumintamt from {$this->MAuth->getdb('ARPAY')} group by contno,locat
-						) g on a.contno=g.contno and a.locat=g.locat  
-						left outer join (
-							select contno,locatpay,sum(payint) as sumpayint from {$this->MAuth->getdb('CHQTRAN')} where flag<>'C' and (payfor='006' or payfor='007')  
-							group by contno,locatpay 
-						) e on a.contno=e.contno and a.locat=e.locatpay  
-						left outer join {$this->MAuth->getdb('CUSTADDR')} D on (A.CUSCOD = D.CUSCOD) AND D.ADDRNO = B.ADDRNO  
-						where  A.TOTPRC > 0 AND (A.TOTPRC-A.SMPAY) > 0 AND A.SDATE BETWEEN '".$FRMDATE."' and '".$TODATE."' 
-						AND (A.EXP_PRD between ".$EXPFRM1." and ".$EXPTO1.") ".$cond."
-					) as X  
+					select LOCAT, CONTNO, CUSCOD, SNAM+NAME1+' '+NAME2 as CUSNAME, isnull(addr1,'')+isnull(' ถ.'+addr2,'')+isnull(' ต.'+tumb,'')+
+					isnull(' อ.'+aumpdes,'')+isnull(' จ.'+provdes,'')+' '+isnull(zip,'')+isnull(' โทร. '+telp,'') as CUSADD, convert(nvarchar,SDATE,112) as SDATE,
+					TOTPRC, T_NOPAY, TOTPRC-SMPAY as TOTAR, EXP_FRM, EXP_TO, LPAYD, convert(nvarchar,LPAYD,112) as LPAYDS, SMPAY, convert(nvarchar,LDATE,112) as LDATE, 
+					EXP_AMT,
+					TYPE, MODEL, BAAB, COLOR
+					from(
+						SELECT A.LOCAT, A.CONTNO, A.TOTPRC, A.TOTPRES, A.CUSCOD, A.SDATE, B.SNAM, A.TOTDWN, A.LPAYD, A.LDATE, A.BILLCOLL,
+						A.TOT_UPAY, A.EXP_AMT, A.SMPAY, A.EXP_FRM, A.EXP_TO, B.NAME1, B.NAME2, B.MEMBCOD, A.PAYDWN, A.T_NOPAY, C.TYPE, C.BAAB,
+						C.COLOR, C.MODEL, B.addrno , D.addr1, D.addr2, D.tumb, D.aumpcod, D.provcod, D.zip, D.telp, E.nopayfrm, E.nopayto,  
+						(select aumpdes from setaump where aumpcod=D.aumpcod) as aumpdes, (select provdes from setprov where provcod=D.provcod) as provdes 
+						FROM ARMAST A 
+						LEFT OUTER JOIN CUSTMAST B ON (A.CUSCOD = B.CUSCOD)  
+						LEFT OUTER JOIN INVTRAN C ON (A.STRNO = C.STRNO)  
+						LEFT OUTER JOIN CUSTADDR D ON (A.CUSCOD = D.CUSCOD) AND (A.ADDRNO = D.ADDRNO)  
+						LEFT OUTER JOIN (
+							SELECT E.CONTNO, E.LOCAT, COUNT(NOPAY) AS KANGNOPAY, min(nopay) as nopayfrm, max(nopay) as nopayto  
+							FROM ARPAY E 
+							WHERE ".$sumkang." AND (damt > payment)  
+							GROUP BY E.CONTNO, E.LOCAT
+						) E ON A.CONTNO=E.CONTNO AND A.LOCAT=E.LOCAT  
+						WHERE KANGNOPAY <= ".$EXPPRD1." ".$cond." 
+					)a
 				)main
 		";//echo $sql; 
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				select LOCAT, CONTNO, CUSCOD, CUSNAME, REGNO, STRNO, CUSADD, convert(nvarchar,SDATE,112) as SDATE, TOTPRC, TOTDWN, KANGDWN, TOTAR, EXP_AMT, 
-				KANGINT, TOT_UPAY, LPAYD, convert(nvarchar,LPAYD,112) as LPAYDS, T_NOPAY, EXP_PRD, EXP_FRM, EXP_TO, LATED, ACTICOD, BILLCOLL, tumb, aumpcod, provcod
+				select LOCAT, CONTNO, CUSCOD, CUSNAME, CUSCOD+'  '+CUSNAME as CUSTOMER, CUSADD, SDATE, TOTPRC, T_NOPAY, TOTAR, EXP_FRM, EXP_TO, LPAYD, LPAYDS, SMPAY, LDATE, 
+				EXP_AMT, TYPE, MODEL, BAAB, COLOR
 				from #main
 				order by ".$orderby."
 		";//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				select 'รวมทั้งหมด' as Total, sum(TOTPRC) as sumTOTPRC, sum(TOTDWN) as sumTOTDWN, sum(KANGDWN) as sumKANGDWN, 
-				sum(TOTAR) as sumTOTAR, sum(EXP_AMT) as sumEXP_AMT
+				select 'รวมทั้งหมด' as Total, sum(TOTPRC) as sumTOTPRC, sum(TOTAR) as sumTOTAR, sum(SMPAY) as sumSMPAY, sum(EXP_AMT) as sumEXP_AMT
 				from #main
 		";
 		//echo $sql; exit;
@@ -640,18 +707,16 @@ class ReportARxlastpay extends MY_Controller {
 				<tr>
 					<th style='border-bottom:0.1px solid black;text-align:left;'>#</th>
 					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>สาขา</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>เลขที่สัญญา<br>เลขทะเบียน</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>รหัสลูกค้า<br>เลขตัวถัง</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>ชื่อ - นามสกุล<br>ที่อยู่</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>วันที่ขาย<br>กิจกรรมการขาย</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ราคาขาย</th> 
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>เงินดาวน์ </th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ค้างดาวน์</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ<br>งวดทั้งหมด</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ค้างงวด<br>งวดที่ค้าง</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ค่างวดๆละ<br>จากงวดที่</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:center;'>ชำระล่าสุด<br>ค้างเบี้ยปรับ</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:center;'>Billcoll<br>ขาดการติดต่อ</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>เลขที่สัญญา</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>รหัส/ชื่อ-สกุล ลูกค้า<br>ที่อยู่ลูกค้า</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>วันที่ขาย<br>ยี่ห้อ</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>วันดิวงวดสุดท้าย<br>รุ่น</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>จน. งวดทั้งหมด<br>แบบ</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ราคาขาย<br>สี</th> 
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>จำนวนที่ชำระ<br>วันที่ชำระล่าสุด</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ยอดคงเหลือ</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:center;'>งวดที่</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ค้างงวด</th>
 				</tr>
 		";
 		
@@ -661,20 +726,17 @@ class ReportARxlastpay extends MY_Controller {
 				$html .= "
 					<tr class='trow' seq=".$No.">
 						<td style='width:25px;'>".$No++."</td>
-						<td style='width:40px;'>".$row->LOCAT."</td>
-						<td style='width:75px;'>".$row->CONTNO."<br>".$row->REGNO."</td>
-						<td style='width:120px;'>".$row->CUSCOD."<br>".$row->STRNO."</td>
-						<td style='width:200px;' >".$row->CUSNAME."<br>".$row->CUSADD."</td>
-						<td style='width:80px;'>".$this->Convertdate(2,$row->SDATE)."<br>".$row->ACTICOD."</td>
-						<td style='width:70px;' align='right'>".number_format($row->TOTPRC,2)."</td>
-						<td style='width:70px;' align='right'>".number_format($row->TOTDWN,2)."</td>
-						<td style='width:70px;' align='right'>".number_format($row->KANGDWN,2)."</td>
-						<td style='width:70px;' align='right'>".number_format($row->TOTAR,2)."<br>".number_format($row->T_NOPAY)."</td>
-						<td style='width:70px;' align='right'>".number_format($row->EXP_AMT,2)."<br>".number_format($row->EXP_PRD)."</td>
-						<td style='width:60px;' align='right'>".number_format($row->TOT_UPAY)."<br>".number_format($row->EXP_FRM).'-'.number_format($row->EXP_TO)."</td>
-						<td style='width:70px;' align='center'>".$this->Convertdate(2,$row->LPAYDS)."<br>".number_format($row->KANGINT,2)."</td>
-						<td style='width:70px;' align='center'>".$row->BILLCOLL."<br>".number_format($row->LATED)."</td>
-						
+						<td style='width:50px;'>".$row->LOCAT."</td>
+						<td style='width:75px;'>".$row->CONTNO."</td>
+						<td style='width:250px;'>".$row->CUSTOMER."<br>".$row->CUSADD."</td>
+						<td style='width:75px;'>".$this->Convertdate(2,$row->SDATE)."<br>".$row->TYPE."</td>
+						<td style='width:90px;'>".$this->Convertdate(2,$row->LDATE)."<br>".$row->MODEL."</td>
+						<td style='width:70px;'>".$row->T_NOPAY."<br>".$row->BAAB."</td>
+						<td style='width:90px;' align='right'>".number_format($row->TOTPRC,2)."<br>".$row->COLOR."</td>
+						<td style='width:90px;' align='right'>".number_format($row->SMPAY,2)."<br>".$this->Convertdate(2,$row->LPAYDS)."</td>
+						<td style='width:90px;' align='right'>".number_format($row->TOTAR,2)."</td>
+						<td style='width:50px;' align='center'>".number_format($row->EXP_FRM).'-'.number_format($row->EXP_TO)."</td>
+						<td style='width:80px;' align='right'>".number_format($row->EXP_AMT,2)."</td>
 					</tr>
 				";	
 			}
@@ -684,13 +746,12 @@ class ReportARxlastpay extends MY_Controller {
 			foreach($query2->result() as $row){	
 				$html .= "
 					<tr class='trow bor' style='background-color:#ebebeb;'>
-						<td colspan='6' style='text-align:center;vertical-align:middle;'>".$row->Total."</td>
+						<td colspan='7' style='text-align:center;vertical-align:middle;'>".$row->Total."</td>
 						<td align='right'>".number_format($row->sumTOTPRC)."</td>
-						<td align='right'>".number_format($row->sumTOTDWN,2)."</td>
-						<td align='right'>".number_format($row->sumKANGDWN,2)."</td>
+						<td align='right'>".number_format($row->sumSMPAY,2)."</td>
 						<td align='right'>".number_format($row->sumTOTAR,2)."</td>
+						<td></td>
 						<td align='right'>".number_format($row->sumEXP_AMT,2)."</td>
-						<td colspan='3' style='text-align:center;vertical-align:middle;'></td>
 					</tr>
 				";	
 			}
@@ -711,10 +772,10 @@ class ReportARxlastpay extends MY_Controller {
 			<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
 				<tbody>
 					<tr>
-						<th colspan='14' style='font-size:10pt;'>รายงานลูกหนี้คงเหลือ x งวดสุดท้าย ณ ปัจจุบัน</th>
+						<th colspan='12' style='font-size:10pt;'>รายงานลูกหนี้ค้างชำระน้อยกว่าหรือเท่ากับ ".$EXPPRD1." งวดสุดท้าย</th>
 					</tr>
 					<tr>
-						<td colspan='14' style='font-size:8pt;height:35px;border-bottom:0.1px solid black;text-align:center;'>".$rpcond." วันที่ขาย ".$tx[8]." - ".$tx[9]."</td>
+						<td colspan='12' style='font-size:8pt;height:35px;border-bottom:0.1px solid black;text-align:center;'>".$rpcond." ณ วันที่ ".$this->today('today')."</td>
 					</tr>
 					".$head."
 					".$html."

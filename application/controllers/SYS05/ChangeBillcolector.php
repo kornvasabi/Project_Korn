@@ -104,7 +104,7 @@ class ChangeBillcolector extends MY_Controller {
 									<div class='row'>
 										<div class='col-sm-4 col-xs-4'><br>
 											เปลี่ยนตามพนักงานเก็บเงิน/สัญญา
-											<div class='form-group col-sm-10 col-xs-10' style='border:0.1px solid #ebebeb;'>
+											<div class='form-group col-sm-10 col-xs-10' style='border:0.1px solid #d6d6d6;'>
 												<div class='form-group'>
 													<br>
 													เปลี่ยนจากพนักงานเก็บเงิน
@@ -289,7 +289,7 @@ class ChangeBillcolector extends MY_Controller {
 			<div id='table-fixed-CHGBILLC' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
 				<table id='table-CHGBILLC' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
-						<tr>
+						<tr style='height:30px;'>
 							<th style='vertical-align:middle;'>#</th>
 							<th style='vertical-align:middle;'>เลขที่เอกสาร</th>
 							<th style='vertical-align:middle;'>ชื่อ-สุกล ลูกค้า</th>
@@ -323,7 +323,7 @@ class ChangeBillcolector extends MY_Controller {
 		$AMPHUR		= $_REQUEST["AMPHUR"];
 		$PROVINCE	= $_REQUEST["PROVINCE"];
 		$LOCAT2		= $_REQUEST["LOCAT2"];
-		$OLD_BILLC	= $_REQUEST["OLD_BILLC"];
+		$OLD_BILLC	= str_replace(chr(0),'',$_REQUEST["OLD_BILLC"]);
 		$CONTNO		= $_REQUEST["CONTNO"];
 		$VILLAGE	= $_REQUEST["VILLAGE"];
 		$TAMBON		= $_REQUEST["TAMBON"];
@@ -332,7 +332,7 @@ class ChangeBillcolector extends MY_Controller {
 		$EXP		= $_REQUEST["EXP"];
 		
 		if($EXP == '1'){
-			$EXP = "and a.EXP_FRM = 1";
+			$EXP = " and a.EXP_FRM = 1";
 		}else{
 			$EXP = "";
 		}
@@ -346,14 +346,14 @@ class ChangeBillcolector extends MY_Controller {
 				left outer join {$this->MAuth->getdb('CUSTADDR')} c on a.CUSCOD = c.CUSCOD and b.ADDRNO = c.ADDRNO
 				left outer join {$this->MAuth->getdb('SETAUMP')} d on c.AUMPCOD = d.AUMPCOD
 				left outer join {$this->MAuth->getdb('SETPROV')} e on c.PROVCOD = e.PROVCOD
-				where	a.BILLCOLL  like '%".$OLD_BILLC."%' 
-						and a.LOCAT like '%".$LOCAT2."%' 
-						and a.CONTNO like '%".$CONTNO."%'
+				where	a.BILLCOLL  = '".$OLD_BILLC."' 
+						and a.LOCAT like '".$LOCAT2."%' 
+						and a.CONTNO like '".$CONTNO."%'
 						and a.EXP_PRD between ".$EXP_FRM." and ".$EXP_TO."
-						and c.TUMB like '%".$TAMBON."%' 
-						and c.AUMPCOD like '%".$AMPHUR."%' 
-						and c.PROVCOD like '%".$PROVINCE."%'  
-						and c.MOOBAN like '%".$VILLAGE."%'   
+						and c.TUMB like '".$TAMBON."%' 
+						and c.AUMPCOD like '".$AMPHUR."%' 
+						and c.PROVCOD like '".$PROVINCE."%'  
+						and c.MOOBAN like '".$VILLAGE."%'   
 						and a.TOTPRC > 0 and (a.TOTPRC-a.SMPAY) >0  
 						".$EXP." 
 				order by EXP_PRD 		

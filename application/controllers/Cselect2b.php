@@ -1019,7 +1019,7 @@ class Cselect2b extends MY_Controller {
 		$dataSearch = trim($_REQUEST['q']);
 		
 		$sql = "
-			select  top 20 CODE, NAME+' ('+CODE +')'  as NAME, DEPCODE from {$this->MAuth->getdb('OFFICER')}
+			select  top 20 CODE, CODE+' - '+NAME  as NAME, DEPCODE from {$this->MAuth->getdb('OFFICER')}
 			where 	CODE like '%".$dataSearch."%' collate Thai_CI_AS 
 					or NAME like '%".$dataSearch."%' collate Thai_CI_AS
 		";

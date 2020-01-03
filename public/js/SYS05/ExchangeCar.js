@@ -396,7 +396,7 @@ function search(){
 			$('#resultt_ExchangeCar').html(data.html);
 			
 			$('#table-ExchangeCar').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-ExchangeCar',1,340);
+			fn_datatables('table-ExchangeCar',1,335);
 			
 			$('.data-export').prepend('<img id="print-ExchangeCar" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(70%);">');
 			$("#print-ExchangeCar").hover(function() {

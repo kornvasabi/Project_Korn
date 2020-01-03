@@ -286,7 +286,6 @@ class ExchangeCar extends MY_Controller {
 	}
 	
 	function search(){
-		//echo base64_encode('SYS005-001-006'); exit; U1lTMDA1LTAwMS0wMDY=
 		$LOCAT1	= $_REQUEST["LOCAT1"];
 		$CONTNO1 = $_REQUEST["CONTNO1"];
 		//$CUSCOD1 = $_REQUEST["CUSCOD1"];
@@ -301,7 +300,7 @@ class ExchangeCar extends MY_Controller {
 		}
 		
 		if($CONTNO1 != ""){
-			$cond .= " and CONTNO like '%".$CONTNO1."%' collate thai_cs_as";
+			$cond .= " and CONTNO like '".$CONTNO1."%' collate thai_cs_as";
 		}
 		
 		/*if($CUSCOD1 != ""){
@@ -341,7 +340,7 @@ class ExchangeCar extends MY_Controller {
 		
 		$head = ""; $html = ""; $report = ""; $sumreport = ""; $i=0; $ii=0;
 	
-		$head = "<tr>
+		$head = "<tr style='height:30px;'>
 				<th style='vertical-align:middle;'>#</th>
 				<th style='vertical-align:middle;'>สาขา</th>
 				<th style='vertical-align:middle;'>เลขที่สัญญา</th>
@@ -858,6 +857,9 @@ class ExchangeCar extends MY_Controller {
 							STDPRC	= ".$SALENEW."
 					where STRNO = '".$STRNO."'
 					
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+					values ('".$this->sess["IDNo"]."','SYS05::บันทึกรถแลกเปลี่ยน (แก้ไข)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+
 					insert into #EditCHGTemp select 'S',@CONTNO,'แก้ไขรายการแลกเปลี่ยนรถ เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 					
 				end

@@ -624,12 +624,12 @@ $('#btnt1search').click(function(){
 //แสดงข้อมูล
 function search(){
 	dataToPost = new Object();
-	dataToPost.LOCATS 	= (typeof $('#LOCATS').find(':selected').val() === 'undefined' ? '':$('#LOCATS').find(':selected').val() );
+	dataToPost.LOCATS 	= (typeof $('#LOCATS').find(':selected').val() === 'undefined' ? '':$('#LOCATS').find(':selected').val());
 	dataToPost.AROTHR 	= $('#AROTHR').val();
-	dataToPost.CUSCOD 	= (typeof $('#CUSCODS').find(':selected').val() === 'undefined' ? '':$('#CUSCODS').find(':selected').val() );
+	dataToPost.CUSCOD 	= (typeof $('#CUSCODS').find(':selected').val() === 'undefined' ? '':$('#CUSCODS').find(':selected').val());
 	dataToPost.CONTNO 	= $('#CONTNO').val();
-	dataToPost.TSALE 	= (typeof $('#TSALE').find(':selected').val() === 'undefined' ? '':$('#TSALE').find(':selected').val() );
-	dataToPost.PAYFORS 	= (typeof $('#PAYFORS').find(':selected').val() === 'undefined' ? '':$('#PAYFORS').find(':selected').val() );
+	dataToPost.TSALE 	= (typeof $('#TSALE').find(':selected').val() === 'undefined' ? '':$('#TSALE').find(':selected').val());
+	dataToPost.PAYFORS 	= (typeof $('#PAYFORS').find(':selected').val() === 'undefined' ? '':$('#PAYFORS').find(':selected').val());
 	
 	var spinner = $('body>.spinner').clone().removeClass('hide');
     $('#resultt_ARother').html('');

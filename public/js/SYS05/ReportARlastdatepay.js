@@ -187,19 +187,19 @@ var reportsearch = null;
 function search(){
 	
 	var orderby = "";
-	if($("#contno").is(":checked")){ 
+	if($("#ldate").is(":checked")){ 
+		orderby = "LDATE";
+	}else if($("#contno").is(":checked")){
 		orderby = "CONTNO";
-	}else if($("#billcoll").is(":checked")){
+	}else if($("#billcoll").is(":checked")){ 
 		orderby = "BILLCOLL";
-	}else if($("#duedate").is(":checked")){ 
-		orderby = "DDATE";
 	}
 	
 	var report = "";
-	if($("#detail").is(":checked")){ 
-		report = "detail";
-	}else if($("#summary").is(":checked")){
-		report = "summary";
+	if($("#armore0").is(":checked")){ 
+		report = "armore0";
+	}else if($("#arall").is(":checked")){
+		report = "arall";
 	}
 	
 	dataToPost = new Object();
@@ -216,14 +216,14 @@ function search(){
 	
 	$('#loadding').show();
 	reportsearch = $.ajax({
-		url: '../SYS05/ReportARduedatepay/search',
+		url: '../SYS05/ReportARlastdatepay/search',
 		data: dataToPost,
 		Type: 'POST',
 		dataType:'json',
 		success: function(data){	
 			$('#loadding').hide();	
 			Lobibox.window({
-				title: 'รายงานลูกหนี้ครบกำหนดชำระค่างวด',
+				title: 'รายงานลูกหนี้ครบกำหนดสัญญา',
 				content: data.html,
 				height: $(window).height(),
 				width: $(window).width(),
@@ -231,27 +231,27 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportARduedatepay',1,300);
+			fn_datatables('table-ReportARlastdatepay',1,290);
 			
-			$('.data-export').prepend('<img id="print-ARduedatepay" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-			$("#print-ARduedatepay").hover(function() {
-				document.getElementById("print-ARduedatepay").style.filter = "contrast(70%)";
+			$('.data-export').prepend('<img id="print-ARlastdatepay" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+			$("#print-ARlastdatepay").hover(function() {
+				document.getElementById("print-ARlastdatepay").style.filter = "contrast(70%)";
 			}, function() {
-				document.getElementById("print-ARduedatepay").style.filter = "contrast(100%)";
+				document.getElementById("print-ARlastdatepay").style.filter = "contrast(100%)";
 			});
 			
-			$('.data-export').prepend('<img id="table-ARduedatepay-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-			$("#table-ARduedatepay-excel").hover(function() {
-				document.getElementById("table-ARduedatepay-excel").style.filter = "contrast(70%)";
+			$('.data-export').prepend('<img id="table-ARlastdatepay-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+			$("#table-ARlastdatepay-excel").hover(function() {
+				document.getElementById("table-ARlastdatepay-excel").style.filter = "contrast(70%)";
 			}, function() {
-				document.getElementById("table-ARduedatepay-excel").style.filter = "contrast(100%)";
+				document.getElementById("table-ARlastdatepay-excel").style.filter = "contrast(100%)";
 			});
 			
-			$("#table-ARduedatepay-excel").click(function(){ 
-				tableToExcel_Export(data.report,"sheet 1","รายงานลูกหนี้ครบกำหนดชำระค่างวด "+data.reporttoday); 
+			$("#table-ARlastdatepay-excel").click(function(){ 
+				tableToExcel_Export(data.report,"sheet 1","รายงานลูกหนี้ครบกำหนดสัญญา "+data.reporttoday); 
 			});
 			
-			$('#print-ARduedatepay').click(function(){
+			$('#print-ARlastdatepay').click(function(){
 				printReport();
 			});
 
@@ -275,19 +275,19 @@ function printReport(){
 	}
 	
 	var orderby = "";
-	if($("#contno").is(":checked")){ 
+	if($("#ldate").is(":checked")){ 
+		orderby = "LDATE";
+	}else if($("#contno").is(":checked")){
 		orderby = "CONTNO";
-	}else if($("#billcoll").is(":checked")){
+	}else if($("#billcoll").is(":checked")){ 
 		orderby = "BILLCOLL";
-	}else if($("#duedate").is(":checked")){ 
-		orderby = "DDATE";
 	}
 	
 	var report = "";
-	if($("#detail").is(":checked")){ 
-		report = "detail";
-	}else if($("#summary").is(":checked")){
-		report = "summary";
+	if($("#armore0").is(":checked")){ 
+		report = "armore0";
+	}else if($("#arall").is(":checked")){
+		report = "arall";
 	}
 	
 	dataToPost = new Object();
@@ -304,14 +304,14 @@ function printReport(){
 	dataToPost.layout 		= layout;
 	
 	$.ajax({
-		url: '../SYS05/ReportARduedatepay/conditiontopdf',
+		url: '../SYS05/ReportARlastdatepay/conditiontopdf',
 		data: dataToPost,
 		type:'POST',
 		dataType: 'json',
 		success: function(data){
 			//alert(data[0]);
 			var baseUrl = $('body').attr('baseUrl');
-			var url = baseUrl+'SYS05/ReportARduedatepay/pdf?condpdf='+data[0];
+			var url = baseUrl+'SYS05/ReportARlastdatepay/pdf?condpdf='+data[0];
 			var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 			Lobibox.window({
 				title: 'พิมพ์รายงาน',

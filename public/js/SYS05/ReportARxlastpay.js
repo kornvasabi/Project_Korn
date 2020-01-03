@@ -406,55 +406,71 @@ function search(){
 	dataToPost.sumkang 		= sumkang;
 	dataToPost.orderby 		= orderby;
 	
-	$('#loadding').show();
-	reportsearch = $.ajax({
-		url: '../SYS05/ReportARxlastpay/search',
-		data: dataToPost,
-		Type: 'POST',
-		dataType:'json',
-		success: function(data){	
-			$('#loadding').hide();	
-			Lobibox.window({
-				title: 'รายงานลูกหนี้คงเหลือ x งวดสุดท้าย ณ ปัจจุบัน',
-				content: data.html,
-				height: $(window).height(),
-				width: $(window).width(),
-				closeOnEsc: false,
-				draggable: false
-			});
-			
-			fn_datatables('table-ReportARxlastpay',1,320);
-			
-			$('.data-export').prepend('<img id="print-ARxlastpay" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-			$("#print-ARxlastpay").hover(function() {
-				document.getElementById("print-ARxlastpay").style.filter = "contrast(70%)";
-			}, function() {
-				document.getElementById("print-ARxlastpay").style.filter = "contrast(100%)";
-			});
-			
-			$('.data-export').prepend('<img id="table-ARxlastpay-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-			$("#table-ARxlastpay-excel").hover(function() {
-				document.getElementById("table-ARxlastpay-excel").style.filter = "contrast(70%)";
-			}, function() {
-				document.getElementById("table-ARxlastpay-excel").style.filter = "contrast(100%)";
-			});
-			
-			$("#table-ARxlastpay-excel").click(function(){ 
-				tableToExcel_Export(data.report,"sheet 1","รายงานลูกหนี้คงเหลือ x งวดสุดท้าย ณ ปัจจุบัน "+data.reporttoday); 
-			});
-			
-			$('#print-ARxlastpay').click(function(){
-				printReport();
-			});
+	if(dataToPost.EXPPRD1 == ""){	
+		Lobibox.notify('warning', {
+			title: 'แจ้งเตือน',
+			size: 'mini',
+			closeOnClick: false,
+			delay: 15000,
+			pauseDelayOnHover: true,
+			continueDelayOnInactiveTab: false,
+			soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
+			soundExt: '.ogg',
+			icon: true,
+			messageHeight: '90vh',
+			msg: 'กรุณาระบุจำนวนงวดที่ค้าง'
+		});
+	}else{
+		$('#loadding').show();
+		reportsearch = $.ajax({
+			url: '../SYS05/ReportARxlastpay/search',
+			data: dataToPost,
+			Type: 'POST',
+			dataType:'json',
+			success: function(data){	
+				$('#loadding').hide();	
+				Lobibox.window({
+					title: 'รายงานลูกหนี้คงเหลือ x งวดสุดท้าย ณ ปัจจุบัน',
+					content: data.html,
+					height: $(window).height(),
+					width: $(window).width(),
+					closeOnEsc: false,
+					draggable: false
+				});
+				
+				fn_datatables('table-ReportARxlastpay',1,320);
+				
+				$('.data-export').prepend('<img id="print-ARxlastpay" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+				$("#print-ARxlastpay").hover(function() {
+					document.getElementById("print-ARxlastpay").style.filter = "contrast(70%)";
+				}, function() {
+					document.getElementById("print-ARxlastpay").style.filter = "contrast(100%)";
+				});
+				
+				$('.data-export').prepend('<img id="table-ARxlastpay-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+				$("#table-ARxlastpay-excel").hover(function() {
+					document.getElementById("table-ARxlastpay-excel").style.filter = "contrast(70%)";
+				}, function() {
+					document.getElementById("table-ARxlastpay-excel").style.filter = "contrast(100%)";
+				});
+				
+				$("#table-ARxlastpay-excel").click(function(){ 
+					tableToExcel_Export(data.report,"sheet 1","รายงานลูกหนี้คงเหลือ x งวดสุดท้าย ณ ปัจจุบัน "+data.reporttoday); 
+				});
+				
+				$('#print-ARxlastpay').click(function(){
+					printReport();
+				});
 
-			reportsearch = null;
-		},
-		beforeSend: function(){
-			if(reportsearch !== null){
-				reportsearch.abort();
+				reportsearch = null;
+			},
+			beforeSend: function(){
+				if(reportsearch !== null){
+					reportsearch.abort();
+				}
 			}
-		}
-	});
+		});
+	}
 	
 }
 
