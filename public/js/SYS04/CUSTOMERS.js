@@ -422,26 +422,6 @@ function fn_load_formaddcm($this,$event){
 					$('#add_save').attr('action','add');
 					$('#add_update').attr('action','edit');
 					
-					
-					/*
-					if(_insert == 'T'){
-						$('#add_save').attr('disabled',false);	
-					}else{
-						$('#add_save').attr('disabled',true);	
-					}
-					
-					if(_delete == 'T'){
-						$('#btn_Delete').attr('disabled',false);	
-					}else{
-						$('#btn_Delete').attr('disabled',true);	
-					}
-					
-					if(_update == 'T'){
-						$('#add_update').attr('disabled',false);	
-					}else{
-						$('#add_update').attr('disabled',true);	
-					}
-					*/
 					//$('#btn_Delete').attr('disabled',false);
 					
 					fn_loadPropoties($this)
@@ -474,12 +454,11 @@ function fn_load_formeditcm($this,$event){
 				closeOnEsc: false,
 				shown: function($this){
 					//$this.destroy();
-					
+					/*
 					$('#add_save').attr('action','add');
 					$('#add_update').attr('action','edit');
 					
 					
-					/*
 					if(_insert == 'T'){
 						$('#add_save').attr('disabled',false);	
 					}else{
@@ -509,9 +488,6 @@ function fn_load_formeditcm($this,$event){
 		}
 	});
 }
-
-
-
 function fn_loadPropoties($window){
 	$('#add_contno').val('Auto Genarate');
 	$('#add_contno').attr('readonly',true);
@@ -785,7 +761,7 @@ function fn_loadFromADDR($action,$this){
 		dataToPost = new Object();			//---------->		---------      --from แก้ไขfrom
 		dataToPost.ADDRNO 	= $this.attr("ADDRNO");
 		dataToPost.ADDR1 	= $this.attr("ADDR1");
-		//dataToPost.SWIN		= $this.attr("SWIN");
+		dataToPost.SWIN		= $this.attr("SWIN");
 		dataToPost.SOI      = $this.attr("SOI");
 		dataToPost.ADDR2 	= $this.attr("ADDR2");
 		dataToPost.MOOBAN 	= $this.attr("MOOBAN");
@@ -982,7 +958,7 @@ function fn_loadPropotiesAddr($window,$action,$this){
         dataToPost.CUSCOD   = $("#CUSCOD").val();
         dataToPost.ADDRNO 	= $("#ADDRNO").val();
         dataToPost.ADDR1 	= $("#ADDR1").val();
-		//dataToPost.SWIN		= $("#SWIN").val();
+		dataToPost.SWIN		= $("#SWIN").val();
         dataToPost.SOI      = $("#SOI").val();
         dataToPost.ADDR2 	= $("#ADDR2").val();
         dataToPost.MOOBAN 	= $("#MOOBAN").val();
@@ -1036,7 +1012,7 @@ function fn_loadPropotiesAddr($window,$action,$this){
 		dataToPost = new Object();
         dataToPost.CUSCOD   = $("#CUSCOD").val();
         dataToPost.ADDRNO 	= $("#ADDRNO").val();
-		//dataToPost.SWIN 	= $("#SWIN").val();
+		dataToPost.SWIN 	= $("#SWIN").val();
         dataToPost.ADDR1 	= $("#ADDR1").val();
         dataToPost.SOI      = $("#SOI").val();
         dataToPost.ADDR2 	= $("#ADDR2").val();
@@ -1092,11 +1068,11 @@ function fn_loadPropotiesAddr($window,$action,$this){
 	var OBJbtnWAClose = null;			
 	$("#btnWAClose").unbind('click');
 	$("#btnWAClose").click(function(){
-		if($action == "edit"){	//แก้ไข ดึงข้อมูลจากตาราง html 
+		if($action == "edit"){	
 			dataToPost = new Object();
 			dataToPost.ADDRNO 	= $this.attr("ADDRNO");
 			dataToPost.ADDR1 	= $this.attr("ADDR1");
-			//dataToPost.SWIN		= $this.attr("SWIN");
+			dataToPost.SWIN		= $this.attr("SWIN");
 			dataToPost.SOI     	= $this.attr("SOI");
 			dataToPost.ADDR2 	= $this.attr("ADDR2");
 			dataToPost.MOOBAN 	= $this.attr("MOOBAN");
@@ -1110,7 +1086,7 @@ function fn_loadPropotiesAddr($window,$action,$this){
 			dataToPost.MEMO1 	= $this.attr("MEMO1");
 			
 			OBJbtnWAClose = $.ajax({
-				url: '../SYS04/CUSTOMERS/SetAddr_TableHtml',		
+				url: '../SYS04/CUSTOMERS/SetAddr_TableHtml_Cancel',		
 				data: dataToPost,
 				type: 'POST',
 				dataType: 'json',
@@ -1121,6 +1097,7 @@ function fn_loadPropotiesAddr($window,$action,$this){
 						fn_address("edit");
 						OBJbtnWAClose = null;
 						$window.destroy();
+						fn_reactive_addr();
 					}
 				},
 				beforeSend: function(){
@@ -1177,7 +1154,7 @@ function CloseLobiwindow(address_ae,event){
         dataToPost = new Object();
         dataToPost.ADDRNO   = $("#ADDRNO").val();
         dataToPost.ADDR1    = $("#ADDR1").val();
-		//dataToPost.SWIN		= $("#SWIN").val();
+		dataToPost.SWIN		= $("#SWIN").val();
         dataToPost.SOI      = $("#SOI").val();
         dataToPost.ADDR2    = $("#ADDR2").val();
         dataToPost.MOOBAN   = $("#MOOBAN").val();
@@ -1288,6 +1265,7 @@ function fn_save($window){
 		adr.push($(this).attr('ZIP'));
 		adr.push($(this).attr('TELP'));
 		adr.push($(this).attr('MEMO1'));
+		adr.push($(this).attr('SWIN'));
 		
 		ad.push(adr);
 	});
@@ -1341,7 +1319,7 @@ function fn_save($window){
 				});
 				
 				$window.destroy();
-				
+				searchcm();
 			}else{
 				Lobibox.notify('error', {
 					title: 'แจ้งเตือน',
@@ -1416,7 +1394,7 @@ function fn_update($window){
 		adr.push($(this).attr('ZIP'));
 		adr.push($(this).attr('TELP'));
 		adr.push($(this).attr('MEMO1'));
-		
+		adr.push($(this).attr('SWIN'));
 		ad.push(adr);
 	});
 	$('#loadding').fadeIn(100);
@@ -1468,7 +1446,7 @@ function fn_update($window){
 					msg: data.msg
 				});
 				$window.destroy();
-				 
+				searchcm(); 
 			}else{
 				Lobibox.notify('error', {
 					title: 'แจ้งเตือน',
