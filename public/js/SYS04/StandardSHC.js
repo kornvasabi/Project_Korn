@@ -79,59 +79,75 @@ $("#btnt1search").click(function(){
 
 var JDbtnt1import = null;
 $("#btnt1import").click(function(){
-	Lobibox.window({
-		title: 'นำเข้าสแตนดาร์ดรถมือสอง',
-		//width: $(window).width(),
-		height: '200',
-		content: "<div id='form_stdshc'></div>",
-		draggable: false,
-		closeOnEsc: false,
-		shown: function($this){
-			$("#form_stdshc").uploadFile({		
-				url:'../SYS04/StandardSHC/import_stdshc',
-				fileName:'myfile',
-				autoSubmit: true,
-				acceptFiles: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
-				allowedTypes: 'xls,xlsx',
-				onSubmit:function(files){			
-					$("#loadding").fadeIn(200);
-				},
-				onSuccess:function(files,data,xhr,pd){
-					obj = JSON.parse(data);
-					
-					if(obj["error"]){
-						Lobibox.notify('warning', {
-							title: 'แจ้งเตือน',
-							size: 'mini',
-							closeOnClick: false,
-							delay: 5000,
-							pauseDelayOnHover: true,
-							continueDelayOnInactiveTab: false,
-							icon: true,
-							messageHeight: '90vh',
-							msg: obj["errorMsg"]
-						});
-					}else{
-						Lobibox.window({
-							title: 'นำเข้าสแตนดาร์ดรถมือสอง',
-							width: $(window).width(),
-							height: $(window).height(),
-							content: obj["errorMsg"],
-							draggable: false,
-							closeOnEsc: false,
-							shown: function($this){
-								fn_import();
-							}
-						});
+	JDbtnt1import = $.ajax({
+		url:'../SYS04/StandardSHC/stdshcFormUPLOAD',
+		type: 'POST',
+		dataType: 'json',
+		success: function(data){
+			Lobibox.window({
+				title: 'นำเข้าสแตนดาร์ดรถมือสอง',
+				//width: $(window).width(),
+				height: '200',
+				content: data.html,
+				draggable: false,
+				closeOnEsc: false,
+				shown: function($this){
+					$("#form_stdshc").uploadFile({		
+						url:'../SYS04/StandardSHC/import_stdshc',
+						fileName:'myfile',
+						autoSubmit: true,
+						acceptFiles: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+						allowedTypes: 'xls,xlsx',
+						onSubmit:function(files){			
+							$("#loadding").fadeIn(200);
+						},
+						onSuccess:function(files,data,xhr,pd){
+							obj = JSON.parse(data);
+							
+							if(obj["error"]){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: obj["errorMsg"]
+								});
+							}else{
+								Lobibox.window({
+									title: 'นำเข้าสแตนดาร์ดรถมือสอง',
+									width: $(window).width(),
+									height: $(window).height(),
+									content: obj["errorMsg"],
+									draggable: false,
+									closeOnEsc: false,
+									shown: function($this){
+										fn_import();
+									}
+								});
 
-						$this.destroy();
-						
-						$("#loadding").fadeOut(200);
-					}
+								$this.destroy();
+								
+								$("#loadding").fadeOut(200);
+							}
+							
+						}
+					});
 					
+					$("#form_import").unbind('click');
+					$("#form_import").click(function(){
+						window.open("../public/form_upload/std_shc.xlsx");
+					});
 				}
 			});
-		}
+			
+			JDbtnt1import = null;
+		},
+		beforeSend: function(){ if(JDbtnt1import !== null){ JDbtnt1import.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -411,58 +427,81 @@ function form_operation(dataToPost){
 					var jdbtn_save=null;
 					$('#btn_save').unbind('click');
 					$('#btn_save').click(function(){
-						dataToPost2 = new Object();
-						dataToPost2.stdid 	= $(this).attr('stdid');
-						dataToPost2.model 	= (typeof $('#shc_model').find(':selected').val() === 'undefined' ? '':$('#shc_model').find(':selected').val());
-						dataToPost2.baab  	= (typeof $('#shc_baab').find(':selected').val() === 'undefined' ? '':$('#shc_baab').find(':selected').val());
-						dataToPost2.color 	= $('#shc_color').val();
-						dataToPost2.locat 	= $('#shc_locat').val();
-						dataToPost2.manuyr 	= $('#shc_manuyr').val();
-						dataToPost2.gcode 	= $('#shc_gcode').val();
-						dataToPost2.nprice 	= $('#shc_nprice').val();
-						dataToPost2.oprice	= $('#shc_oprice').val();
-						dataToPost2.event 	= $event;
-						
-						jdbtn_save = $.ajax({
-							url:'../SYS04/StandardSHC/SHC_save',
-							data: dataToPost2,
-							type: 'POST',
-							dataType: 'json',
-							success: function(data){
-								if(data.error){
-									Lobibox.notify('warning', {
-										title: 'แจ้งเตือน',
-										size: 'mini',
-										closeOnClick: false,
-										delay: 5000,
-										pauseDelayOnHover: true,
-										continueDelayOnInactiveTab: false,
-										icon: true,
-										messageHeight: '90vh',
-										msg: data["errorMsg"]
-									});
-								}else{
-									Lobibox.notify('success', {
-										title: 'แจ้งเตือน',
-										size: 'mini',
-										closeOnClick: false,
-										delay: 5000,
-										pauseDelayOnHover: true,
-										continueDelayOnInactiveTab: false,
-										icon: true,
-										messageHeight: '90vh',
-										msg: data["errorMsg"]
-									});
+						$btn_save = $(this);
+						Lobibox.confirm({
+							title: 'ยืนยันการทำรายการ',
+							iconClass: false,
+							msg: "คุณต้องการบันทึกการกำหนดราคารถมือสองหรือไม่ ?",
+							buttons: {
+								ok : {
+									'class': 'btn btn-primary',
+									text: 'ยืนยัน ,บันทึกข้อมูล',
+									closeOnClick: true,
+								},
+								cancel : {
+									'class': 'btn btn-danger',
+									text: 'ยกเลิก ,ยังไม่บันทึกก่อน',
+									closeOnClick: true
+								},
+							},
+							callback: function(lobibox, type){
+								var btnType;
+								if (type === 'ok'){
+									dataToPost2 = new Object();
+									dataToPost2.stdid 	= $btn_save.attr('stdid');
+									dataToPost2.model 	= (typeof $('#shc_model').find(':selected').val() === 'undefined' ? '':$('#shc_model').find(':selected').val());
+									dataToPost2.baab  	= (typeof $('#shc_baab').find(':selected').val() === 'undefined' ? '':$('#shc_baab').find(':selected').val());
+									dataToPost2.color 	= $('#shc_color').val();
+									dataToPost2.locat 	= $('#shc_locat').val();
+									dataToPost2.manuyr 	= $('#shc_manuyr').val();
+									dataToPost2.gcode 	= $('#shc_gcode').val();
+									dataToPost2.nprice 	= $('#shc_nprice').val();
+									dataToPost2.oprice	= $('#shc_oprice').val();
+									dataToPost2.event 	= $event;
 									
-									$this.destroy();
+									jdbtn_save = $.ajax({
+										url:'../SYS04/StandardSHC/SHC_save',
+										data: dataToPost2,
+										type: 'POST',
+										dataType: 'json',
+										success: function(data){
+											if(data.error){
+												Lobibox.notify('warning', {
+													title: 'แจ้งเตือน',
+													size: 'mini',
+													closeOnClick: false,
+													delay: 5000,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data["errorMsg"]
+												});
+											}else{
+												Lobibox.notify('success', {
+													title: 'แจ้งเตือน',
+													size: 'mini',
+													closeOnClick: false,
+													delay: 5000,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data["errorMsg"]
+												});
+												
+												$this.destroy();
+											}
+										},
+										beforeSend: function(){
+											if(JDbtnt1search !== null){
+												JDbtnt1search.abort();
+											}
+										},
+										error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+									});
 								}
-							},
-							beforeSend: function(){
-								if(JDbtnt1search !== null){
-									JDbtnt1search.abort();
-								}
-							},
-							error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+							}
 						});
 					});
 				},

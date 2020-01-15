@@ -100,6 +100,7 @@ class StandardSHC extends MY_Controller {
 		$arrs = array();
 		
 		if($_POST["event"] == "add"){
+			/*
 			$arrs["shc_model"] 	= $this->MMAIN->Option_get_model(array("ND125"));
 			$arrs["shc_baab"] 	= $this->MMAIN->Option_get_baab(array('model'=>"ND125",'baab'=>array("A")));
 			$arrs["shc_manuyr"] = '2530';
@@ -107,6 +108,15 @@ class StandardSHC extends MY_Controller {
 			$arrs["shc_nprice"] = '50000';
 			$arrs["shc_oprice"] = '30000';
 			$arrs["shc_color"] 	= $this->MMAIN->Option_get_color(array(),"ND125","A");
+			$arrs["shc_locat"]	= $this->MMAIN->Option_get_locat(array());
+			*/
+			$arrs["shc_model"] 	= $this->MMAIN->Option_get_model(array());
+			$arrs["shc_baab"] 	= $this->MMAIN->Option_get_baab(array('model'=>"",'baab'=>array()));
+			$arrs["shc_manuyr"] = '';
+			$arrs["shc_gcode"] 	= $this->MMAIN->Option_get_groupcode(array());
+			$arrs["shc_nprice"] = '';
+			$arrs["shc_oprice"] = '';
+			$arrs["shc_color"] 	= $this->MMAIN->Option_get_color(array(),"","");
 			$arrs["shc_locat"]	= $this->MMAIN->Option_get_locat(array());
 		}else{
 			$sql = "
@@ -205,6 +215,20 @@ class StandardSHC extends MY_Controller {
 		";
 		
 		$response = array('html'=>$html,'status'=>true);
+		echo json_encode($response);
+	}
+	
+	public function stdshcFormUPLOAD(){
+		$html = "
+			<div class='row'>
+				<input type='button' id='form_import' class='btn btn-info btn-sm' style='width:100%;' value='ดาวน์โหลดฟอร์มนำเข้า'>
+			</div><hr>
+			<div class='row'>
+				<div id='form_stdshc'></div>
+			</div>
+		";
+		
+		$response = array("html"=>$html);
 		echo json_encode($response);
 	}
 	

@@ -152,23 +152,25 @@ class MMAIN extends CI_Model {
 	}
 	
 	public function Option_get_groupcode($selected){
-		$sql = "
-			select GCODE,'('+GCODE+') '+GDESC as GDESC from {$this->MAuth->getdb('SETGROUP')} 
-			order by GCODE
-		";
-		$query = $this->db->query($sql);
-		
 		$opt = "";
-		if($query->row()){
-			foreach($query->result() as $row){
-				$gcode = str_replace(chr(0),"",$row->GCODE);
-				$gdesc = str_replace(chr(0),"",$row->GDESC);
-				
-				$opt .= "
-					<option value='{$gcode}' ".(in_array('G'.$gcode,$selected) ? "selected":"").">
-						{$gdesc}
-					</option>
-				";
+		if(isset($selected["model"])){
+			$sql = "
+				select GCODE,'('+GCODE+') '+GDESC as GDESC from {$this->MAuth->getdb('SETGROUP')} 
+				order by GCODE
+			";
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$gcode = str_replace(chr(0),"",$row->GCODE);
+					$gdesc = str_replace(chr(0),"",$row->GDESC);
+					
+					$opt .= "
+						<option value='{$gcode}' ".(in_array('G'.$gcode,$selected) ? "selected":"").">
+							{$gdesc}
+						</option>
+					";
+				}
 			}
 		}
 		

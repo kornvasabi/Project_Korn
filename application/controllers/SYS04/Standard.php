@@ -1484,7 +1484,7 @@ class Standard extends MY_Controller {
 			
 			$arrs["FMODEL"] 	= $this->MMAIN->Option_get_model(array());
 			$arrs["FBAAB"]	 	= $this->MMAIN->Option_get_baab(array("model"=>"","baab"=>array()));
-			$arrs["FCOLOR"] 	= $this->MMAIN->Option_get_color(array());
+			$arrs["FCOLOR"] 	= $this->MMAIN->Option_get_color(array(),"","");
 			$arrs["FSTAT"]	 	= $this->MMAIN->Option_get_stat(array());
 			$arrs["STAT"]	 	= "N";
 			$arrs["tb_car_old"]	= "";
@@ -1504,7 +1504,7 @@ class Standard extends MY_Controller {
 			
 			$arrs["FMODEL"] 	= $this->MMAIN->Option_get_model($now["FMODEL"]);
 			$arrs["FBAAB"]	 	= $this->MMAIN->Option_get_baab(array("model"=>$now["FMODEL"][0],"baab"=>$now["FBAAB"]));
-			$arrs["FCOLOR"] 	= $this->MMAIN->Option_get_color($now["FCOLOR"]);
+			$arrs["FCOLOR"] 	= $this->MMAIN->Option_get_color($now["FCOLOR"],$now["FMODEL"],$now["FBAAB"]);
 			$arrs["FSTAT"]	 	= $this->MMAIN->Option_get_stat($now["FSTAT"]);
 			$arrs["STAT"]	 	= $now["FSTAT"][0];
 			$arrs["tb_car_old"]	= $now["tb_car_old"];
