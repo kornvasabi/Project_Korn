@@ -156,6 +156,7 @@ function afterSelect(){
 					$t2TYPECOD.append('<option value="'+data[$i].id+'"  '+(data[$i].id == dataToPost.now ? "selected":"")+'  >'+data[$i].text+'</option>');
 				}
 				$t2TYPECOD.select2({
+					disabled: ($('#tab2save').attr('action') == "add" ? false:true),
 					width: '100%'
 				});
 				$('#loadding').fadeOut(200);

@@ -470,6 +470,33 @@ class Cselect2 extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getJDCOLOR(){
+		$sess 		= $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow 	= (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$MODEL 		= $_REQUEST['MODEL'];
+		$BAAB 		= $_REQUEST['BAAB'];
+		
+		$sql = "
+			select COLORCOD from {$this->MAuth->getdb('JD_SETCOLOR')}
+			where MODELCOD='{$MODEL}' collate Thai_CI_AS
+				and BAABCOD='{$BAAB}' collate Thai_CI_AS
+			order by COLORCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array('id'=>str_replace(chr(0),"",$row->COLORCOD), 'text'=>str_replace(chr(0),"",$row->COLORCOD));
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
 	function getCC(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);

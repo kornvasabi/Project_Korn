@@ -83,9 +83,10 @@ class MMAIN extends CI_Model {
 		return $opt;
 	}
 	
-	public function Option_get_color($selected){
+	public function Option_get_color($selected,$model,$baab){
 		$sql = "
-			select COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
+			select COLORCOD from {$this->MAuth->getdb('JD_SETCOLOR')}
+			where MODELCOD='{$model}' and BAABCOD='{$baab}'
 			order by COLORCOD
 		";
 		$query = $this->db->query($sql);
@@ -142,6 +143,30 @@ class MMAIN extends CI_Model {
 				$opt .= "
 					<option value='{$locatcd}' title='{$locatnm}' ".(in_array($locatcd,$selected) ? "selected":"").">
 						{$locatcd}
+					</option>
+				";
+			}
+		}
+		
+		return $opt;
+	}
+	
+	public function Option_get_groupcode($selected){
+		$sql = "
+			select GCODE,'('+GCODE+') '+GDESC as GDESC from {$this->MAuth->getdb('SETGROUP')} 
+			order by GCODE
+		";
+		$query = $this->db->query($sql);
+		
+		$opt = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$gcode = str_replace(chr(0),"",$row->GCODE);
+				$gdesc = str_replace(chr(0),"",$row->GDESC);
+				
+				$opt .= "
+					<option value='{$gcode}' ".(in_array('G'.$gcode,$selected) ? "selected":"").">
+						{$gdesc}
 					</option>
 				";
 			}

@@ -160,6 +160,7 @@ function afterSelect(){
 				$t2TYPECOD.append('<option value="'+data[$i].id+'"  '+(data[$i].id == dataToPost.now ? "selected":"")+'  >'+data[$i].text+'</option>');
 			}
 			$t2TYPECOD.select2({
+				disabled: ($('#tab2save').attr('action') == "add" ? false:true),
 				width: '100%'
 			});
 			$('#loadding').fadeOut(200);
@@ -196,7 +197,7 @@ function afterSelect(){
 		allowClear: false,
 		multiple: false,
 		dropdownParent: $("body"),
-		//disabled: true,
+		disabled: ($('#tab2save').attr('action') == "add" ? false:true),
 		//theme: 'classic',
 		width: '100%'
 	});

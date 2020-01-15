@@ -2303,8 +2303,9 @@ class Standard extends MY_Controller {
 			if(trim($ex_color[$i]) != "ALL"){
 				$sql = "
 					select count(*) r from {$this->MAuth->getdb('JD_SETCOLOR')}
-					where MODEL='".$data_temp_02->C."' and COLOR='".trim($ex_color[$i])."'
+					where MODELCOD='".$data_temp_02->C."' and COLORCOD='".trim($ex_color[$i])."'
 				";
+				//echo $sql; exit;
 				$query = $this->db->query($sql);
 				$data = $query->row();
 				if($data->r == 0){
@@ -3891,7 +3892,7 @@ class Standard extends MY_Controller {
 				
 				if ((@hasACTI = 'YES') and (@hasBAAB = 'YES') and (@hasCOLOR = 'YES') and (@hasLOCAT = 'YES'))
 				begin
-					rollback tran tsins;
+					rollback tran tsup;
 					insert into #tempResult 
 					select 'y','ผิดพลาด เนื่องจากกิจกรรมการขาย รุ่นรถ แบบ สี <br>สถานะภาพรถ และสาขาที่กำหนดใช้ std. <br>ในช่วงวันที่ ".@$_POST["EVENTS"]." ถึง ".@$_POST["EVENTE"]."<br>มีข้อมูลอยู่แล้ว';
 					return;					
