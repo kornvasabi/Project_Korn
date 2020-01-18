@@ -1584,6 +1584,106 @@ function loadAddFree($edit){
 
 
 
+var JDbtnt1import = null;
+$("#btnt1import").click(function(){
+	JDbtnt1import = $.ajax({
+		url:'../SYS04/Standard/stdFormUPLOAD',
+		type: 'POST',
+		dataType: 'json',
+		success: function(data){
+			Lobibox.window({
+				title: 'นำเข้ารายการสแตนดาร์ด',
+				//width: $(window).width(),
+				height: '200',
+				content: data.html,
+				draggable: false,
+				closeOnEsc: false,
+				shown: function($this){
+					$("#form_std").uploadFile({		
+						url:'../SYS04/Standard/import_std',
+						fileName:'myfile',
+						autoSubmit: true,
+						acceptFiles: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+						allowedTypes: 'xls,xlsx',
+						onSubmit:function(files){			
+							$("#loadding").fadeIn(200);
+						},
+						onSuccess:function(files,data,xhr,pd){
+							obj = JSON.parse(data);
+							
+							if(obj["error"]){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: obj["errorMsg"]
+								});
+							}else{
+								Lobibox.window({
+									title: 'นำเข้าสแตนดาร์ดรถมือสอง',
+									width: $(window).width(),
+									height: $(window).height(),
+									content: obj["html"],
+									draggable: false,
+									closeOnEsc: false,
+									shown: function($this){
+										//fn_import();
+									}
+								});
+
+								$this.destroy();
+								
+								$("#loadding").fadeOut(200);
+							}
+							
+						}
+					});
+					
+					$("#form_import").unbind('click');
+					$("#form_import").click(function(){
+						window.open("../public/form_upload/std_sell_multiple.xlsx");
+					});
+				}
+			});
+			
+			JDbtnt1import = null;
+		},
+		beforeSend: function(){ if(JDbtnt1import !== null){ JDbtnt1import.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+	});
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

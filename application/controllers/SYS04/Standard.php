@@ -108,12 +108,17 @@ class Standard extends MY_Controller {
 					</div>
 					
 					<div class='row'>
-						<div class='col-sm-6'>	
+						<div class='col-sm-4'>	
+							<div class='form-group'>
+								<button id='btnt1import' class='btn btn-warning btn-block'><span class='glyphicon glyphicon-import'> นำเข้า</span></button>
+							</div>
+						</div>
+						<div class='col-sm-4'>	
 							<div class='form-group'>
 								<button id='btnt1createStd' class='btn btn-cyan btn-block'><span class='glyphicon glyphicon-pencil'> สร้าง</span></button>
 							</div>
 						</div>
-						<div class='col-sm-6'>	
+						<div class='col-sm-4'>	
 							<div class='form-group'>
 								<button id='btnt1search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 							</div>
@@ -4366,6 +4371,241 @@ class Standard extends MY_Controller {
 		echo json_encode($response);
 	}
 	*/
+	
+	function stdFormUPLOAD(){
+		$html = "
+			<div class='row'>
+				<input type='button' id='form_import' class='btn btn-info btn-sm' style='width:100%;' value='ดาวน์โหลดฟอร์มนำเข้า'>
+			</div><hr>
+			<div class='row'>
+				<div id='form_std'></div>
+			</div>
+		";
+		
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	
+	function import_std(){
+		$this->load->library('excel');
+		
+		$file = $_FILES["myfile"]["tmp_name"];
+		
+		//read file from path
+		$objPHPExcel = PHPExcel_IOFactory::load($file);
+		
+		//X ตรวจสอบว่ามีกี่ sheet
+		//X $sheetCount = $objPHPExcel->getSheetCount();
+		//X จะดึงข้อมูลแค่ sheet 1 เท่านั้น
+		$sheetCount = 1; 
+		for($sheetIndex=0;$sheetIndex<$sheetCount;$sheetIndex++){
+			$objPHPExcel->setActiveSheetIndex($sheetIndex);
+			//get only the Cell Collection
+			$cell_collection = $objPHPExcel->getActiveSheet()->getCellCollection();
+			 
+			$arrs = array("now"=>1,"old"=>1); 
+			//extract to a PHP readable array format			
+			foreach ($cell_collection as $cell) {
+				$column = $objPHPExcel->getActiveSheet()->getCell($cell)->getColumn();
+				$row = $objPHPExcel->getActiveSheet()->getCell($cell)->getRow();
+				$data_value = $objPHPExcel->getActiveSheet()->getCell($cell)->getValue();
+				
+				
+				
+					if($arrs["old"] == 1){
+						$arrs["now"] = 1;
+					}else if($arrs["old"] == $row){
+						$arrs["now"] = $arrs["now"];
+					}else{
+						$arrs["now"] += 1;
+					}
+					
+					//The header will/should be in row 1 only. of course, this can be modified to suit your need.
+					if ($row == 1 and $sheetIndex == 0) {
+						$header[$row][$column] = $data_value;
+					} else {
+						switch($column){
+							case 'I': $arr_data[$arrs["now"]][$column] = $this->Convertdate(2,$data_value); break;
+							case 'J': $arr_data[$arrs["now"]][$column] = $this->Convertdate(2,$data_value); break;
+							case 'E': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
+							case 'F': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
+							case 'H': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
+							case 'K': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
+							default: $arr_data[$arrs["now"]][$column] = $data_value; break;
+						}
+					}
+					
+					$arrs["old"] = $row;
+				
+			}
+		}
+		
+		$arrs = array("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB");
+		$datasize = sizeof($arr_data);
+		for($i=1;$i<=$datasize;$i++){
+			foreach($arrs as $key => $val){
+				if(!isset($arr_data[$i][$val])){
+					$arr_data[$i][$val] = '';
+				}
+			}
+		}
+		
+		$size_data = sizeof($arr_data);		
+		$sql 	= "";
+		$stdA  	= 1;
+		$stdR  	= 1;
+		$stdid 	= 1;
+		for($i=1;$i<=$size_data;$i++){
+			$sql .= ($i==1?"":" union all ")." select ";
+			foreach($arrs as $key => $val){
+				switch($val){
+					case 'A': 
+						if($stdA != $arr_data[$i][$val] and $stdR++ > 1 and $i > 1){
+							$stdR = 1;
+							$stdA = $arr_data[$i][$val];
+							$stdid += 1;
+						}
+						
+						$sql .= "'{$arr_data[$i][$val]}','{$stdid}'";
+						break;
+					/*
+					case 'E':
+					case 'F':
+					case 'H':
+					case 'K':
+						$data 	= $arr_data[$i][$val];
+						$ex 	= str_replace(",","<br>",$data);						
+						$html  .= "<td>{$ex}</td>"; 
+						break;
+					*/
+					case 'I': $sql .= ",".($arr_data[$i][$val] == "" ? "null":"'".$this->Convertdate(1,$arr_data[$i][$val])."'"); break;
+					case 'J': $sql .= ",".($arr_data[$i][$val] == "" ? "null":"'".$this->Convertdate(1,$arr_data[$i][$val])."'"); break;
+					case 'M': 
+					case 'O': $sql .= ",".($arr_data[$i][$val] == "ขึ้นไป" ? "-1":"'".$arr_data[$i][$val]."'"); break;
+					default: $sql .= ",".($arr_data[$i][$val] == "" ? "null":"'{$arr_data[$i][$val]}'"); break;
+				}
+			}			
+		}
+		
+		$this->create_temptable("#STDVehiclesTemp");
+		$sql = "
+			insert into #STDVehiclesTemp ".$sql."
+			
+			delete from #STDVehiclesTemp where sprice is null and free is null
+			
+			/*
+			update c
+			set c.stdid=a.id
+			from (
+				select a.stdid,a.id
+					,isnull(b.id,(select max(id)+1 from #STDVehiclesTemp))-1 as toid 
+				from #STDVehiclesTemp a 
+				left join (
+					select id,stdid - 1 as stdid from #STDVehiclesTemp 
+					where stdid<>0
+				) as b on a.stdid=b.stdid
+				where a.stdid<>0
+			) as a
+			left join #STDVehiclesTemp c on c.id between a.id and a.toid
+
+			
+			update c
+			set c.sprice=a.sprice
+				,c.eprice=a.eprice
+			from (
+				select a.stdid,a.id,a.sprice,a.eprice
+					,isnull(b.id,(select max(id)+1 from #STDVehiclesTemp s where s.stdid=a.stdid))-1 as toid 
+				from (
+					select ROW_NUMBER() over(order by id) r,id,stdid,sprice,eprice from #STDVehiclesTemp
+					where sprice is not null
+				) as a
+				left join (
+					select ROW_NUMBER() over(order by id) - 1 as r,id,stdid,sprice from #STDVehiclesTemp
+					where sprice is not null
+				) as b on a.stdid=b.stdid and a.r=b.r
+			) as a
+			left join #STDVehiclesTemp c on c.id between a.id and a.toid
+			*/
+		";
+		//echo $sql; exit;
+		$this->db->query($sql);
+		$sql = "select * from #STDVehiclesTemp";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			$db_data = array();
+			foreach($query->result() as $row){
+				if($row->stdid == $row->id){
+					$db_data[$row->stdid] = 1;
+				}else{
+					$db_data[$row->stdid] += 1;
+				}
+			}	
+			
+			foreach($query->result() as $row){
+				$html .= "<tr style='vertical-align:text-top;'>";
+				foreach($row as $key => $val){
+					switch($key){
+						case 'id': 
+						case 'stdid': break;
+						case 'keyid': 
+						case 'stdname': 
+						case 'stddesc': 
+						case 'model': 
+						case 'stat': 
+							if($row->stdid == $row->id){
+								$html .= "<td rowspan='{$db_data[$row->stdid]}'>{$val}</td>"; 
+							}
+							break;
+						case 'sevent': 
+						case 'eevent': 
+							if($row->stdid == $row->id){
+								$html .= "<td rowspan='{$db_data[$row->stdid]}'>{$this->Convertdate(103,$val)}</td>"; 
+							}
+							break;
+						case 'baab': 
+						case 'color': 
+						case 'acticod': 
+						case 'locat': 
+							if($row->stdid == $row->id){								
+								$html .= "<td rowspan='{$db_data[$row->stdid]}'>".str_replace(",","<br>",$val)."</td>"; 
+							}
+							break;
+						default: $html .= "<td align='right'>{$val}</td>"; break;
+					}
+				}
+				$html .= "</tr>";
+			}
+		}
+		
+		$html = "<table border=1 style='border-collapse:collapse;width:100%;'>{$html}</table>";
+		
+		$response = array();
+		$response["html"] 	  = $html;
+		$response["error"] 	  = false;
+		$response["errorMsg"] = "";
+		echo json_encode($response); 
+	}
+	
+	function create_temptable($temptable){
+		$sql = "
+			if OBJECT_ID('tempdb..{$temptable}') is not null drop table {$temptable};
+			create table {$temptable} (
+				id int identity(1,1),keyid int,stdid int,stdname varchar(200),
+				stddesc varchar(200),model varchar(20),baab varchar(max),
+				color varchar(max),stat varchar(5),acticod varchar(max),
+				sevent datetime,eevent datetime,locat varchar(max),
+				sprice decimal(18,2),eprice decimal(18,2),sdown decimal(18,2),
+				edown decimal(18,2),interest decimal(18,2),interest2 decimal(18,2),
+				insurance decimal(18,2),trans decimal(18,2),regist decimal(18,2),
+				act decimal(18,2),coupon decimal(18,2),approve varchar(5),free varchar(20),
+				snopay int,enopay int,freeamt decimal(18,2),memo1 varchar(250)	
+			)
+		";
+		//echo $sql;
+		$this->db->query($sql);
+	}
 	
 }
 
