@@ -98,7 +98,7 @@ $(function(){
 		dataToPost = new Object();
 		dataToPost.frmdate = frmdate
 		DATECHANGE = $.ajax({
-			url : '../SYS05/ReportALar_agging/dateofendmonth',
+			url : '../Cselect2b/dateofendmonth',
 			data : dataToPost,
 			type : "POST",
 			dataType : "json",

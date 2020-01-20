@@ -63,6 +63,28 @@ $(function(){
 		//theme: 'classic',
 		width: '100%'
 	});
+	
+	DATECHANGE = null
+	$('#FRMDATE').change(function(){ 
+		var frmdate = $('#FRMDATE').val();
+		dataToPost = new Object();
+		dataToPost.frmdate = frmdate
+		DATECHANGE = $.ajax({
+			url : '../Cselect2b/dateofendmonth',
+			data : dataToPost,
+			type : "POST",
+			dataType : "json",
+			success: function(data){
+				$('#TODATE').val(data.dateofendmonth);			
+				DATECHANGE = null;
+			},
+			beforeSend: function(){
+				if(DATECHANGE !== null){
+					DATECHANGE.abort();
+				}
+			}
+		});
+	});
 });
 
 //กดแสดงข้อมูล

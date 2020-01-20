@@ -213,57 +213,72 @@ function search(){
 	dataToPost.TUMBON1 		= $('#TUMBON1').val();
 	dataToPost.report 		= report;
 	dataToPost.orderby 		= orderby;
-	
-	$('#loadding').show();
-	reportsearch = $.ajax({
-		url: '../SYS05/ReportARduedatepay/search',
-		data: dataToPost,
-		Type: 'POST',
-		dataType:'json',
-		success: function(data){	
-			$('#loadding').hide();	
-			Lobibox.window({
-				title: 'รายงานลูกหนี้ครบกำหนดชำระค่างวด',
-				content: data.html,
-				height: $(window).height(),
-				width: $(window).width(),
-				closeOnEsc: false,
-				draggable: false
-			});
-			
-			fn_datatables('table-ReportARduedatepay',1,300);
-			
-			$('.data-export').prepend('<img id="print-ARduedatepay" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-			$("#print-ARduedatepay").hover(function() {
-				document.getElementById("print-ARduedatepay").style.filter = "contrast(70%)";
-			}, function() {
-				document.getElementById("print-ARduedatepay").style.filter = "contrast(100%)";
-			});
-			
-			$('.data-export').prepend('<img id="table-ARduedatepay-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-			$("#table-ARduedatepay-excel").hover(function() {
-				document.getElementById("table-ARduedatepay-excel").style.filter = "contrast(70%)";
-			}, function() {
-				document.getElementById("table-ARduedatepay-excel").style.filter = "contrast(100%)";
-			});
-			
-			$("#table-ARduedatepay-excel").click(function(){ 
-				tableToExcel_Export(data.report,"sheet 1","รายงานลูกหนี้ครบกำหนดชำระค่างวด "+data.reporttoday); 
-			});
-			
-			$('#print-ARduedatepay').click(function(){
-				printReport();
-			});
 
-			reportsearch = null;
-		},
-		beforeSend: function(){
-			if(reportsearch !== null){
-				reportsearch.abort();
+	if(dataToPost.FRMDATE.substring(3,5) == dataToPost.TODATE.substring(3,5)){
+		$('#loadding').show();
+		reportsearch = $.ajax({
+			url: '../SYS05/ReportARduedatepay/search',
+			data: dataToPost,
+			Type: 'POST',
+			dataType:'json',
+			success: function(data){	
+				$('#loadding').hide();	
+				Lobibox.window({
+					title: 'รายงานลูกหนี้ครบกำหนดชำระค่างวด',
+					content: data.html,
+					height: $(window).height(),
+					width: $(window).width(),
+					closeOnEsc: false,
+					draggable: false
+				});
+				
+				fn_datatables('table-ReportARduedatepay',1,300);
+				
+				$('.data-export').prepend('<img id="print-ARduedatepay" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+				$("#print-ARduedatepay").hover(function() {
+					document.getElementById("print-ARduedatepay").style.filter = "contrast(70%)";
+				}, function() {
+					document.getElementById("print-ARduedatepay").style.filter = "contrast(100%)";
+				});
+				
+				$('.data-export').prepend('<img id="table-ARduedatepay-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+				$("#table-ARduedatepay-excel").hover(function() {
+					document.getElementById("table-ARduedatepay-excel").style.filter = "contrast(70%)";
+				}, function() {
+					document.getElementById("table-ARduedatepay-excel").style.filter = "contrast(100%)";
+				});
+				
+				$("#table-ARduedatepay-excel").click(function(){ 
+					tableToExcel_Export(data.report,"sheet 1","รายงานลูกหนี้ครบกำหนดชำระค่างวด "+data.reporttoday); 
+				});
+				
+				$('#print-ARduedatepay').click(function(){
+					printReport();
+				});
+
+				reportsearch = null;
+			},
+			beforeSend: function(){
+				if(reportsearch !== null){
+					reportsearch.abort();
+				}
 			}
-		}
-	});
-	
+		});
+	}else{
+		Lobibox.notify('warning', {
+			title: 'แจ้งเตือน',
+			size: 'mini',
+			closeOnClick: false,
+			delay: 15000,
+			pauseDelayOnHover: true,
+			continueDelayOnInactiveTab: false,
+			soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',
+			soundExt: '.ogg',
+			icon: true,
+			messageHeight: '90vh',
+			msg: 'กรุณาเลือก ช่วงละ 1 เดือน'
+		});
+	}
 }
 
 function printReport(){

@@ -24,7 +24,7 @@ class ReportARtotalsummary extends MY_Controller {
 			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
 				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
 					<div class='row' style='height:90%;'>
-						<div class='col-sm-12 col-xs-12' style='background-color:#4479aa;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
+						<div class='col-sm-12 col-xs-12' style='background-color:#0067a5;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
 							<br>รายงานลูกหนี้คงเหลือตามสาขา<br>
 						</div>
 						<div class='col-sm-4 col-xs-4 col-sm-offset-4'>
@@ -106,7 +106,7 @@ class ReportARtotalsummary extends MY_Controller {
 		
 		if($BILLCOL1 != ""){
 			$rpcond .= "  พนักงานเก็บเงิน ".$BILLCOL1;
-			$BILLCOL1 = " AND (A.BILLCOLL LIKE '%".$BILLCOL1."%' )";
+			$BILLCOL1 = " AND (A.BILLCOLL = '".$BILLCOL1."' )";
 			
 		}else{
 			$BILLCOL1 = " AND (A.BILLCOLL LIKE '%%' OR A.BILLCOLL IS NULL)";
@@ -208,7 +208,7 @@ class ReportARtotalsummary extends MY_Controller {
 		$head = ""; $html = ""; $head2 = ""; $tbRow = ""; $report = ""; $sumreport = ""; $sumreport2 = ""; $i = 0; 
 		
 		$head = "
-				<tr>
+				<tr style='height:30px;'>
 					<th rowspan='2' style='display:none;'>#</th>
 					<th rowspan='2' style='vertical-align:middle;text-align:center;'>สาขา</th>
 					<th rowspan='2' style='vertical-align:middle;text-align:center;'>ชื่อสาขา</th>
@@ -218,7 +218,7 @@ class ReportARtotalsummary extends MY_Controller {
 					<th colspan='3' style='vertical-align:top;text-align:center;'>ขายส่งเอเย่นต์</th>
 					<th colspan='3' style='vertical-align:top;text-align:center;'>ขายอุปกรณ์เสริม</th>
 				</tr>
-				<tr>
+				<tr style='height:30px;'>
 					<th style='vertical-align:top;text-align:right;'>จน สัญญา</th> 
 					<th style='vertical-align:top;text-align:right;'>รวมราคาขาย</th>
 					<th style='vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ</th>
@@ -393,10 +393,10 @@ class ReportARtotalsummary extends MY_Controller {
 				<div id='table-fixed-ReportARtotalsummary' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:8pt;'>
 					<table id='table-ReportARtotalsummary' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 						<thead>
-						<tr>
+						<tr style='height:40px;'>
 							<th colspan='17' style='font-size:12pt;border:0px;text-align:center;'>รายงานลูกหนี้คงเหลือตามสาขา</th>
 						</tr>
-						<tr>
+						<tr style='height:25px;'>
 							<td colspan='17' style='border-bottom:1px solid #ddd;text-align:center;'>ลูกหนี้ ณ วันที่ ".$ARDATE." ".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head."
@@ -466,7 +466,7 @@ class ReportARtotalsummary extends MY_Controller {
 		
 		if($BILLCOL1 != ""){
 			$rpcond .= "  พนักงานเก็บเงิน ".$BILLCOL1;
-			$BILLCOL1 = " AND (A.BILLCOLL LIKE '%".$BILLCOL1."%' )";
+			$BILLCOL1 = " AND (A.BILLCOLL = '".$BILLCOL1."' )";
 			
 		}else{
 			$BILLCOL1 = " AND (A.BILLCOLL LIKE '%%' OR A.BILLCOLL IS NULL)";

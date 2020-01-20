@@ -438,7 +438,7 @@ function search(){
 					draggable: false
 				});
 				
-				fn_datatables('table-ReportARxlastpay',1,320);
+				fn_datatables('table-ReportARxlastpay',1,305);
 				
 				$('.data-export').prepend('<img id="print-ARxlastpay" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
 				$("#print-ARxlastpay").hover(function() {

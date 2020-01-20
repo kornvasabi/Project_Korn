@@ -206,7 +206,7 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportARfromsalecash',1,350);
+			fn_datatables('table-ReportARfromsalecash',1,290);
 			//$('.dataTables_info').hide();
 			
 			$('.data-export').prepend('<img id="print-ARfromsalecash" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');

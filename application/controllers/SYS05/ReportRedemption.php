@@ -22,15 +22,13 @@ class ReportRedemption extends MY_Controller {
 		
 		$html = "
 			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div class='col-sm-12 col-xs-12' style='overflow:auto;font-size:10.5pt;'>					
-					<div class='row'>
-						<div class='col-sm-12 col-xs-12' style='background-color:#637b9a;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
+				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
+					<div class='row' style='height:90%;'>
+						<div class='col-sm-12 col-xs-12' style='background-color:#0067a5;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
 							<br>รายงานการไถ่ถอนรถยึด<br>
 						</div>
-					</div>
-					<br>
-					<div class='row'>
 						<div class='col-sm-6 col-xs-6 col-sm-offset-3'>	
+							<br>
 							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group'>
 									สาขา
@@ -38,8 +36,6 @@ class ReportRedemption extends MY_Controller {
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class='row'>
 						<div class='col-sm-6 col-xs-6 col-sm-offset-3'>	
 							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group' >
@@ -54,8 +50,6 @@ class ReportRedemption extends MY_Controller {
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class='row'>
 						<div class='col-sm-6 col-xs-6 col-sm-offset-3'><br>	
 							<div class='col-sm-12 col-xs-12'>	
 								<div class='form-group'>
@@ -75,8 +69,6 @@ class ReportRedemption extends MY_Controller {
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class='row'>
 						<div class='col-sm-6 col-xs-6 col-sm-offset-3'><br>	
 							<div class='col-sm-12 col-xs-12'>	
 								<div class='form-group'>
@@ -97,12 +89,9 @@ class ReportRedemption extends MY_Controller {
 							</div>
 						</div>
 					</div>
-					<div class='row'>
+					<div class='row' style='height:10%;'>
 						<div class='col-sm-12 col-xs-12'><br>		
-							<div class='form-group'>
-								<br><br>
-								<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'><span class='glyphicon glyphicon-search'> แสดง</span></button>
-							</div>
+							<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'><span class='glyphicon glyphicon-search'> แสดง</span></button>
 						</div>
 					</div>
 				</div>
@@ -184,10 +173,10 @@ class ReportRedemption extends MY_Controller {
 				<th style='vertical-align:top;'>ชื่อ - นามสกุล</th>
 				<th style='vertical-align:top;'>เลขตัวถัง</th>
 				<th style='vertical-align:top;'>วันที่ทำสัญญา</th>
-				<th style='vertical-align:top;'>ราคาขาย</th>
-				<th style='vertical-align:top;'>ชำระแล้ว</th>
-				<th style='vertical-align:top;'>ค้างชำระ<br>(บาท)</th>
-				<th style='vertical-align:top;'>ค้างชำระ<br>(งวด)</th>
+				<th style='vertical-align:top;text-align:right;'>ราคาขาย</th>
+				<th style='vertical-align:top;text-align:right;'>ชำระแล้ว</th>
+				<th style='vertical-align:top;text-align:right;'>ค้างชำระ<br>(บาท)</th>
+				<th style='vertical-align:top;text-align:center;'>ค้างชำระ<br>(งวด)</th>
 				<th style='vertical-align:top;'>เลขที่ใบรับ</th>
 				<th style='vertical-align:top;'>วันที่ชำระ</th>
 				<th style='vertical-align:top;'>วันเวลาที่บันทึก</th>
@@ -229,7 +218,7 @@ class ReportRedemption extends MY_Controller {
 						<td align='right'>".number_format($row->TOTPRC,2)."</td>
 						<td align='right'>".number_format($row->SMPAY,2)."</td>
 						<td align='right'>".number_format($row->EXP_AMT,2)."</td>
-						<td align='right'>".number_format($row->EXP_PRD)."</td>
+						<td align='center'>".number_format($row->EXP_PRD)."</td>
 						<td>".$row->TMBILL."</td>
 						<td>".$row->TMBILDTS."</td>
 						<td>".$row->INPTIME."</td>
@@ -282,10 +271,10 @@ class ReportRedemption extends MY_Controller {
 				<div id='table-fixed-ReportRedemption' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:8pt;'>
 					<table id='table-ReportRedemption' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 						<thead>
-						<tr>
+						<tr style='height:40px;'>
 							<th colspan='15' style='font-size:12pt;border:0px;text-align:center;'>รายงานการไถ่ถอนรถยึด</th>
 						</tr>
-						<tr>
+						<tr style='height:25px;'>
 							<td colspan='15' style='border-bottom:1px solid #ddd;text-align:center;'>".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head."

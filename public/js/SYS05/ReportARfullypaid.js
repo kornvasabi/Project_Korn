@@ -68,8 +68,8 @@ function search(){
 
 	dataToPost = new Object();
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
-	dataToPost.FRMDATE 		= $('#FRMDATE').val()
-	dataToPost.TODATE 		= $('#TODATE').val()
+	dataToPost.FRMDATE 		= $('#FRMDATE').val();
+	dataToPost.TODATE 		= $('#TODATE').val();
 	dataToPost.conddate 	= conddate;
 	dataToPost.orderby 		= orderby;
 	
@@ -90,7 +90,7 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportARfullypaid',1,320);
+			fn_datatables('table-ReportARfullypaid',1,280);
 			
 			$('.data-export').prepend('<img id="print-ARfullypaid" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
 			$("#print-ARfullypaid").hover(function() {
@@ -154,8 +154,8 @@ function printReport(){
 
 	dataToPost = new Object();
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
-	dataToPost.FRMDATE 		= $('#FRMDATE').val()
-	dataToPost.TODATE 		= $('#TODATE').val()
+	dataToPost.FRMDATE 		= $('#FRMDATE').val();
+	dataToPost.TODATE 		= $('#TODATE').val();
 	dataToPost.conddate 	= conddate;
 	dataToPost.orderby 		= orderby;
 	dataToPost.layout 		= layout;

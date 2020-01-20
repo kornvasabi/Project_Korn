@@ -24,7 +24,7 @@ class ReportARdelaydue extends MY_Controller {
 			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
 				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
 					<div class='row' style='height:90%;'>
-						<div class='col-sm-12 col-xs-12' style='background-color:#4479aa;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
+						<div class='col-sm-12 col-xs-12' style='background-color:#0067a5;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
 							<br>รายงานลูกหนี้ขอผลัดดิว<br>
 						</div>
 						<div class='col-sm-6 col-xs-6 col-sm-offset-3'>	
@@ -136,7 +136,7 @@ class ReportARdelaydue extends MY_Controller {
 		
 		$head = ""; $html = ""; $head2 = "";  $report = ""; $sumreport = ""; $sumreport2 = ""; $i = 0; 
 		
-		$head = "<tr>
+		$head = "<tr style='height:30px;'>
 				<th style='display:none;'>#</th>
 				<th style='vertical-align:top;'>สาขา</th>
 				<th style='vertical-align:top;'>เลขที่สัญญา</th>
@@ -148,7 +148,7 @@ class ReportARdelaydue extends MY_Controller {
 				<th style='vertical-align:top;'>พนง.รับแจ้ง</th>
 				<th style='vertical-align:top;'>ผู้อนุมัติ</th>
 				<th style='vertical-align:top;'>ผลัดดิวถึงวันที่</th>
-				<th style='vertical-align:top;'>จำนวนครั้งที่ขอผลัด</th>
+				<th style='vertical-align:top;text-align:center;'>จำนวนครั้งที่ขอผลัด</th>
 				</tr>
 		";
 		
@@ -217,10 +217,10 @@ class ReportARdelaydue extends MY_Controller {
 				<div id='table-fixed-ReportARdelaydue' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:8pt;'>
 					<table id='table-ReportARdelaydue' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 						<thead>
-						<tr>
+						<tr style='height:40px;'>
 							<th colspan='11' style='font-size:12pt;border:0px;text-align:center;'>รายงานลูกหนี้ขอผลัดดิว</th>
 						</tr>
-						<tr>
+						<tr style='height:25px;'>
 							<td colspan='11' style='border-bottom:1px solid #ddd;text-align:center;'>ขอผลัดดิวระหว่างวันที่ ".$_REQUEST["FRMDATE"]." - ".$_REQUEST["TODATE"]." ".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head."

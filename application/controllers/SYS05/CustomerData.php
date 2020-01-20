@@ -47,9 +47,9 @@ class CustomerData extends MY_Controller {
 						<div id='resultt_sale' class='col-sm-12 col-xs-12'><b>การเป็นผู้ซื้อ</b>
 							<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #cccccc;'>	
 								<div class='form-group'>
-									<div id='resultt_HCsale' style='height:135px;'></div>
+									<div id='resultt_HCsale' style='height:165px;'></div>
 									<br>
-									<div id='resultt_AOsale' style='height:135px;'></div>
+									<div id='resultt_AOsale' style='height:165px;'></div>
 								</div>
 							</div>
 						</div>
@@ -59,7 +59,7 @@ class CustomerData extends MY_Controller {
 							<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #cccccc;'>	
 								<div class='form-group'>
 									<br>
-									<div id='resultt_ARmgra' style='height:135px;'></div>
+									<div id='resultt_ARmgra' style='height:165px;'></div>
 								</div>
 							</div>
 						</div>

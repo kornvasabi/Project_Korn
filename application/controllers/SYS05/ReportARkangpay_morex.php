@@ -24,7 +24,7 @@ class ReportARkangpay_morex extends MY_Controller {
 			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
 				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
 					<div class='row' style='height:90%;'>
-						<div class='col-sm-12 col-xs-12' style='background-color:#4479aa;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
+						<div class='col-sm-12 col-xs-12' style='background-color:#0067a5;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
 							<br>รายงานลูกหนี้ค้างชำระมากกว่าหรือเท่ากับ x งวด<br>
 						</div>
 						<div class='col-sm-10 col-xs-10 col-sm-offset-1'>	
@@ -255,7 +255,7 @@ class ReportARkangpay_morex extends MY_Controller {
 		}
 		
 		if($BILLCOL1 != ""){
-			$cond .= " AND (A.BILLCOLL LIKE '%".$BILLCOL1."%' )";
+			$cond .= " AND (A.BILLCOLL = '".$BILLCOL1."' )";
 			$rpcond .= "  พนักงานเก็บเงิน ".$BILLCOL1;
 		}else{
 			$cond .= " AND (A.BILLCOLL LIKE '%%' OR A.BILLCOLL IS NULL)";
@@ -357,7 +357,7 @@ class ReportARkangpay_morex extends MY_Controller {
 		
 		$head = ""; $html = ""; $head2 = "";  $report = ""; $sumreport = ""; $sumreport2 = ""; $i = 0; 
 		
-		$head = "<tr>
+		$head = "<tr style='height:30px;'>
 				<th style='display:none;'>#</th>
 				<th style='vertical-align:top;'>สาขา</th>
 				<th style='vertical-align:top;'>เลขที่สัญญา<br>เลขทะเบียน</th>
@@ -506,10 +506,10 @@ class ReportARkangpay_morex extends MY_Controller {
 					<div id='table-fixed-ReportARkangpay_morex' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:8pt;'>
 						<table id='table-ReportARkangpay_morex' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 							<thead>
-							<tr>
+							<tr style='height:40px;'>
 								<th colspan='13' style='font-size:12pt;border:0px;text-align:center;'>รายงานลูกหนี้ค้างชำระมากกว่าหรือเท่ากับ x งวด</th>
 							</tr>
-							<tr>
+							<tr style='height:25px;'>
 								<td colspan='13' style='border-bottom:1px solid #ddd;text-align:center;'>วันที่ขาย ".$_REQUEST["FRMDATE"]." - ".$_REQUEST["TODATE"]." ".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 							</tr>
 							".$head."
@@ -601,7 +601,7 @@ class ReportARkangpay_morex extends MY_Controller {
 		}
 		
 		if($BILLCOL1 != ""){
-			$cond .= " AND (A.BILLCOLL LIKE '%".$BILLCOL1."%' )";
+			$cond .= " AND (A.BILLCOLL = '".$BILLCOL1."' )";
 			$rpcond .= "  พนักงานเก็บเงิน ".$BILLCOL1;
 		}else{
 			$cond .= " AND (A.BILLCOLL LIKE '%%' OR A.BILLCOLL IS NULL)";

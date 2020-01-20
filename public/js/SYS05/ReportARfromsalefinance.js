@@ -199,10 +199,10 @@ function search(){
 	var $height = 0;
 	if($("#showvat").is(":checked")){ 
 		vat = "showvat";
-		$height = 350;
+		$height = 290;
 	}else if($("#sumvat").is(":checked")){
 		vat = "sumvat";
-		$height = 330;
+		$height = 280;
 	}
 	var stat = "";
 	if($("#NEW").is(":checked")){ 

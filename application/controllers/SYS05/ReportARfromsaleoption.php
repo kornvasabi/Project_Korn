@@ -24,7 +24,7 @@ class ReportARfromsaleoption extends MY_Controller {
 			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
 				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
 					<div class='row' style='height:90%;'>
-						<div class='col-sm-12 col-xs-12' style='background-color:#4479aa;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
+						<div class='col-sm-12 col-xs-12' style='background-color:#0067a5;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
 							<br>รายงานลูกหนี้คงเหลือจากการขายอุปกรณ์<br>
 						</div>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>
@@ -212,11 +212,10 @@ class ReportARfromsaleoption extends MY_Controller {
 		//echo $sql; exit;
 		$query2 = $this->db->query($sql);
 		
-		
 		$head = ""; $html = ""; $head2 = "";  $report = ""; $sumreport = ""; $sumreport2 = ""; $i = 0; 
 		
 		if($vat == 'showvat'){
-			$head = "<tr>
+			$head = "<tr style='height:30px;'>
 					<th style='display:none;'>#</th>
 					<th style='vertical-align:top;'>สาขา</th>
 					<th style='vertical-align:top;'>เลขที่สัญญา</th>
@@ -317,7 +316,7 @@ class ReportARfromsaleoption extends MY_Controller {
 			if($query2->row()){
 				foreach($query2->result() as $row){
 					$sumreport = "
-						<tr>
+						<tr style='height;30px;'>
 							<th colspan='4' style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:center;'>".$row->Total."</th>
 							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumNPRICE,2)."</th>
 							<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;text-align:right;'>".number_format($row->sumTOTPRC,2)."<br>".number_format($row->sumVATPRC,2)."</th>
@@ -357,7 +356,7 @@ class ReportARfromsaleoption extends MY_Controller {
 				}
 			}
 		}else{
-			$head = "<tr>
+			$head = "<tr style='height:30px;'>
 						<th style='display:none;'>#</th>
 						<th style='vertical-align:top;'>สาขา</th>
 						<th style='vertical-align:top;'>เลขที่สัญญา</th>
@@ -469,10 +468,10 @@ class ReportARfromsaleoption extends MY_Controller {
 				<div id='table-fixed-ReportARfromsaleoption' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:8pt;'>
 					<table id='table-ReportARfromsaleoption' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 						<thead>
-						<tr>
+						<tr style='height:40px;'>
 							<th colspan=".($vat == 'showvat' ? '13' : '11')." style='font-size:12pt;border:0px;text-align:center;'>รายงานลูกหนี้คงเหลือจากการขายอุปกรณ์</th>
 						</tr>
-						<tr>
+						<tr style='height:25px;'>
 							<td colspan=".($vat == 'showvat' ? '13' : '11')." style='border-bottom:1px solid #ddd;text-align:center;'>".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head."

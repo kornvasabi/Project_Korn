@@ -333,7 +333,7 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportARkangpay_x',1,320);
+			fn_datatables('table-ReportARkangpay_x',1,280);
 			
 			$('.data-export').prepend('<img id="print-ARkangpay_x" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
 			$("#print-ARkangpay_x").hover(function() {

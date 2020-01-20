@@ -105,7 +105,7 @@ function search(){
 		success: function(data){	
 			$('#loadding').hide();	
 			Lobibox.window({
-				title: 'รายงานวิเคราะห์สภาพลูกหนี้ ณ สิ้นเดือน',
+				title: 'รายงานวิเคราะห์สภาพลูกหนี้ ณ ปัจจุบัน',
 				content: data.html,
 				height: $(window).height(),
 				width: $(window).width(),
@@ -113,7 +113,7 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportALbillcollwork',1,290);
+			fn_datatables('table-ReportALbillcollwork',1,310);
 			
 			$('.data-export').prepend('<img id="print-ALbillcollwork" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
 			$("#print-ALbillcollwork").hover(function() {

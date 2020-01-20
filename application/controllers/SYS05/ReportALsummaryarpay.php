@@ -50,7 +50,7 @@ class ReportALsummaryarpay extends MY_Controller {
 							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group'>
 									ถึงวันที่
-									<input type='text' id='TODATE' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='ถึงวันที่' value='".$this->today('endofmonth')."' style='font-size:10.5pt'>
+									<input type='text' id='TODATE' class='form-control input-sm' style='font-size:10.5pt' value='".$this->today('endofmonth')."' disabled>
 								</div>
 							</div>
 						</div>
@@ -112,83 +112,312 @@ class ReportALsummaryarpay extends MY_Controller {
 		$cond = ""; $rpcond = "";
 		
 		if($LOCAT1 != ""){
-			$cond .= " AND (m.LOCAT LIKE '%".$LOCAT1."%')";
+			$cond .= " AND (A.LOCAT LIKE '%".$LOCAT1."%')";
 			$rpcond .= "  สาขา ".$LOCAT1;
 		}
 		
 		if($BILLCOLL1 != ""){
-			$cond .= " AND (m.BILLCOLL LIKE '%".$CONTNO1."%')";
+			$cond .= " AND (A.BILLCOLL = '".$BILLCOLL1."')";
 			$rpcond .= "  พนักงานเก็บเงิน ".$BILLCOLL1;
 		}
 		
 		if($ystat == 'NO'){
-			$cond .= " AND (A.YSTAT<>'Y')";
+			$cond .= " AND (A.YDATE IS NULL OR A.YDATE >= '".$TODATE."')";
+			$rpcond .= "  ไม่รวมรถยึด";
+		}else{
+			$rpcond .= "  รวมรถยึด";
 		}
 		
 		$sql = "
-
+				IF OBJECT_ID('tempdb..#typear') IS NOT NULL DROP TABLE #typear
+				select *
+				into #typear
+				from(	
+					select 	'00' as ID,'ล่วงหน้า/ปกติ' TYPEKANG 
+					union 
+					select	'01','ค้าง 1 งวด'					
+					union 
+					select	'02','ค้าง 2 งวด'
+					union 
+					select	'03','ค้าง 3 งวด'
+					union 
+					select	'04','ค้าง 4 งวด'
+					union 
+					select	'05','ค้าง 5 งวด'
+					union 
+					select	'06','ค้าง 6 งวด'
+					union 
+					select	'07','ค้าง 7 งวด'
+					union 
+					select	'08','ค้าง 8 งวด'
+					union 
+					select	'09','ค้าง 9 งวด'
+					union 
+					select	'10','ค้าง 10 งวด'
+					union 
+					select	'11','ค้าง 11 งวด'
+					union 
+					select	'11','ค้าง 12 งวด'
+					union 
+					select	'13','ค้าง 13-18 งวด'
+					union 
+					select	'19','ค้าง 19-24 งวด'
+					union 
+					select	'25','ค้าง 25 งวดขึ้นไป'
+				)typear
 		";//echo $sql; 
 		$query = $this->db->query($sql);
 		
 		$sql = "
+				IF OBJECT_ID('tempdb..#main') IS NOT NULL DROP TABLE #main
+				select *
+				into #main
+				from(
+					SELECT A.LOCAT, A.CONTNO, A.LPAYD  
+					FROM {$this->MAuth->getdb('ARMAST')} A 
+					WHERE (A.TOTPRC > A.SMPAY OR (A.TOTPRC <= A.SMPAY  AND  (CASE WHEN (SELECT MAX(PAYDT) FROM CHQTRAN WHERE CONTNO = A.CONTNO) 
+					IS NULL THEN  SDATE ELSE (SELECT MAX(PAYDT) FROM CHQTRAN WHERE CONTNO = A.CONTNO) END) >= '".$FRMDATE."'))  ".$cond."
 
+					UNION 
+
+					SELECT A.LOCAT, A.CONTNO, A.LPAYD 
+					FROM {$this->MAuth->getdb('HARMAST')} A  
+					WHERE (A.TOTPRC > A.SMPAY OR (A.TOTPRC <= A.SMPAY  AND (CASE WHEN (SELECT MAX(PAYDT) FROM CHQTRAN WHERE CONTNO = A.CONTNO) 
+					IS NULL THEN  SDATE ELSE (SELECT MAX(PAYDT) FROM CHQTRAN WHERE CONTNO=A.CONTNO) END) >= '".$FRMDATE."')) AND CONTNO NOT IN 
+					(SELECT CONTNO FROM  ARHOLD WHERE YDATE <= '".$FRMDATE."' UNION SELECT CONTNO FROM ARLOST WHERE LOSTDT<='".$FRMDATE."'  
+					UNION SELECT CONTNO FROM ARCHAG WHERE YDATE<='".$FRMDATE."' UNION SELECT CONTNO FROM ARCLOSE WHERE CLDATE<= '".$FRMDATE."') ".$cond."
+				)main
+		";//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#damt') IS NOT NULL DROP TABLE #damt
+				select *
+				into #damt
+				from(
+					SELECT A.CONTNO, SUM(A.DAMT) AS DAMT, SUM(A.B_DAMT) AS B_DAMT, SUM(A.TOTDAMT)AS TOTDAMT 
+					FROM( 
+						SELECT CONTNO,
+						SUM(CASE WHEN (DDATE BETWEEN '".$FRMDATE."' AND '".$TODATE."' ) THEN  DAMT ELSE 0 END) AS DAMT  ,
+						SUM(CASE WHEN (DDATE < '".$FRMDATE."' ) THEN DAMT ELSE 0 END) AS B_DAMT,
+						SUM(DAMT) AS TOTDAMT  
+						FROM {$this->MAuth->getdb('ARPAY')} 
+						WHERE CONTNO in (select CONTNO from #main)
+						GROUP BY CONTNO
+						UNION  
+						SELECT CONTNO,
+						SUM(CASE WHEN (DDATE BETWEEN '".$FRMDATE."' AND '".$TODATE."' ) THEN  DAMT ELSE 0 END) AS DAMT  ,
+						SUM(CASE WHEN (DDATE < '".$FRMDATE."' ) THEN DAMT ELSE 0 END) AS B_DAMT  ,
+						SUM(DAMT) AS TOTDAMT  
+						FROM {$this->MAuth->getdb('HARPAY')} 
+						WHERE CONTNO in (select CONTNO from #main)  
+						GROUP BY CONTNO 
+					)A  
+					GROUP BY A.CONTNO
+				)damt
+		";//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#pay') IS NOT NULL DROP TABLE #pay
+				select *
+				into #pay
+				from(
+					SELECT CONTNO,
+					SUM(CASE WHEN (PAYDT < '".$FRMDATE."'  AND FLAG<>'C' AND (( PAYFOR = '006') OR ( PAYFOR = '007'))) THEN PAYAMT ELSE 0 END) AS B_PAYDAMT,
+					SUM(CASE WHEN (PAYDT BETWEEN '".$FRMDATE."' AND '".$TODATE."' AND FLAG<>'C' AND (( PAYFOR = '006') OR ( PAYFOR = '007')))THEN PAYAMT ELSE 0 END) AS PAYDAMT 
+					FROM {$this->MAuth->getdb('CHQTRAN')}  
+					WHERE  CONTNO+LOCATPAY in (select CONTNO+LOCAT from #main)  
+					GROUP BY CONTNO
+				)pay
+		";//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#main2') IS NOT NULL DROP TABLE #main2
+				select *
+				into #main2
+				from(
+					select LOCAT, a.CONTNO, LPAYD, TOTDAMT, B_DAMT, DAMT, isnull(B_PAYDAMT,0) as B_PAYDAMT, isnull(PAYDAMT,0) as PAYDAMT,
+					B_DAMT-isnull(B_PAYDAMT,0) as B_AR
+					from #main a
+					left join #damt b on a.CONTNO = b.CONTNO
+					left join #pay c on a.CONTNO = c.CONTNO
+				)main2
+		";//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#main3') IS NOT NULL DROP TABLE #main3
+				select *
+				into #main3
+				from(
+					select CONTNO, 0 as QTY
+					from #main2 where B_AR <= 0
+					union all
+					select CONTNO, count(NOPAY) as QTY
+					from(
+						select CONTNO, NOPAY
+						from {$this->MAuth->getdb('ARPAY')}
+						WHERE CONTNO in (select CONTNO from #main2 where B_AR > 0)
+						and (DDATE < '".$FRMDATE."') and (DATE1 >= '".$FRMDATE."' or DAMT - PAYMENT >0)
+						union 
+						select  CONTNO, NOPAY
+						from {$this->MAuth->getdb('HARPAY')}
+						WHERE CONTNO in (select CONTNO from #main2 where B_AR > 0)
+						and (DDATE < '".$FRMDATE."') and (DATE1 >= '".$FRMDATE."' or DAMT - PAYMENT > 0)
+					)A
+					group by CONTNO
+				)main3
+		";//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#main4') IS NOT NULL DROP TABLE #main4
+				select *
+				into #main4
+				from(
+					select TYPEKANG, ID, B_QTY, B_DAMT, B_KANG, B_RCV, B_AR,  QTY,  KANG, DAMT, PAYDAMT, AR, PERQTY, PERDAMT, PERKANG, PERPAYDAMT
+					from #typear a
+					left join(
+						select	TYPEAR, 
+								SUM(B_QTY) as B_QTY, SUM(B_RCV-B_KANG) as B_DAMT, SUM(B_KANG) as B_KANG, SUM(B_RCV) as B_RCV, SUM(B_AR) as B_AR,  
+								SUM(QTY) as QTY,  SUM(KANG) as KANG,  SUM(DAMT) as DAMT, SUM(PAYDAMT) as PAYDAMT, SUM(AR) as AR,
+								round(SUM(QTY)*100.0/nullif(SUM(B_QTY),0),0) as PERQTY,
+								round(SUM(DAMT)*100.0/nullif(SUM(B_RCV-B_KANG),0),0) as PERDAMT,
+								round(SUM(KANG)*100.0/nullif(SUM(B_KANG),0),0) as PERKANG,
+								round(SUM(PAYDAMT)*100.0/nullif(SUM(B_RCV),0),0) as PERPAYDAMT
+						from(
+							select	a.CONTNO,
+									case	
+									when QTY = 0 or QTY is null		then	'ล่วงหน้า/ปกติ'
+									when QTY = 1					then	'ค้าง 1 งวด'
+									when QTY = 2					then	'ค้าง 2 งวด'
+									when QTY = 3					then	'ค้าง 3 งวด'
+									when QTY = 4					then	'ค้าง 4 งวด'
+									when QTY = 5					then	'ค้าง 5 งวด'
+									when QTY = 6					then	'ค้าง 6 งวด'
+									when QTY = 7					then	'ค้าง 7 งวด'
+									when QTY = 8					then	'ค้าง 8 งวด'
+									when QTY = 9					then	'ค้าง 9 งวด'
+									when QTY = 10					then	'ค้าง 10 งวด'
+									when QTY = 11					then	'ค้าง 11 งวด'
+									when QTY = 12					then	'ค้าง 12 งวด'
+									when QTY between 13 and 18		then	'ค้าง 13-18 งวด'
+									when QTY between 19 and 24		then	'ค้าง 19-24 งวด'
+									when QTY >= 25					then	'ค้าง 25 งวดขึ้นไป'
+									end as TYPEAR,
+									1 as B_QTY, 
+									(case when DAMT+(B_DAMT-B_PAYDAMT) < 0 then 0 else DAMT+(B_DAMT-B_PAYDAMT) end-case when (B_DAMT-B_PAYDAMT) < 0 then 0 else B_DAMT-B_PAYDAMT end) as B_DAMT,
+									case when (B_DAMT-B_PAYDAMT) < 0 then 0 else B_DAMT-B_PAYDAMT end as B_KANG, 
+									case when DAMT+(B_DAMT-B_PAYDAMT) < 0 then 0 else DAMT+(B_DAMT-B_PAYDAMT) end as B_RCV, 
+									TOTDAMT-B_PAYDAMT as B_AR,
+									case when PAYDAMT > 0 then 1 else 0 end as QTY, 
+									case when (case when (B_DAMT-B_PAYDAMT) < 0 then 0 else B_DAMT-B_PAYDAMT end)-PAYDAMT < 0 then 0 else PAYDAMT end as KANG,
+									case when (case when (B_DAMT-B_PAYDAMT) < 0 then 0 else B_DAMT-B_PAYDAMT end)-PAYDAMT >= 0 
+									then PAYDAMT-(case when (case when (B_DAMT-B_PAYDAMT) < 0 then 0 else B_DAMT-B_PAYDAMT end)-PAYDAMT < 0 then 0 else PAYDAMT end ) else PAYDAMT end as DAMT,
+									case when PAYDAMT > 0 then PAYDAMT else 0 end as PAYDAMT,
+									TOTDAMT-(B_PAYDAMT+PAYDAMT) as AR
+							from #main2 a
+							left join #main3 b on a.CONTNO = b.CONTNO collate thai_cs_as
+						)A
+						group by TYPEAR
+					)b on a.TYPEKANG = b.TYPEAR
+				)main4
 		";//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$sql = "
-
+				select ID, TYPEKANG, B_QTY, B_DAMT, B_KANG, B_RCV, B_AR,  QTY,  KANG, DAMT, PAYDAMT, AR, PERQTY, PERDAMT, PERKANG, PERPAYDAMT 
+				from #main4
+				union all
+				select '99', 'รวมทั้งหมด' as Total, SUM(B_QTY) as B_QTY, SUM(B_DAMT) as B_DAMT, SUM(B_KANG) as B_KANG, SUM(B_RCV) as B_RCV, SUM(B_AR) as B_AR,  
+				SUM(QTY) as QTY,  SUM(KANG) as KANG,  SUM(DAMT) as DAMT, SUM(PAYDAMT) as PAYDAMT, SUM(AR) as AR,
+				round(SUM(QTY)*100.0/nullif(SUM(B_QTY),0),0) as PERQTY, round(SUM(DAMT)*100.0/nullif(SUM(B_DAMT),0),0) as PERDAMT,
+				round(SUM(KANG)*100.0/nullif(SUM(B_KANG),0),0) as PERKANG, round(SUM(PAYDAMT)*100.0/nullif(SUM(B_RCV),0),0) as PERPAYDAMT
+				from #main4 
+				order by ID
 		";//echo $sql; exit;
-		$query2 = $this->db->query($sql);
+		$query = $this->db->query($sql);
 		
 		$head = ""; $html = ""; $head2 = "";  $report = ""; $sumreport = ""; $sumreport2 = ""; $i = 0; 
 		
 		$head = "<tr style='height:25px;'>
-				<th style='display:none;'>#</th>
-				<th style='vertical-align:top;'>สาขา</th>
-				<th style='vertical-align:top;'>เลขที่สัญญา</th>
-				<th style='vertical-align:top;'>รหัสลูกค้า</th>
-				<th style='vertical-align:top;'>ชื่อ - นามสกุล</th>
-				<th style='vertical-align:top;text-align:center;'>วันที่ขาย</th>
-				<th style='vertical-align:top;text-align:right;'>ราคาขาย</th> 
-				<th style='vertical-align:top;text-align:right;'>ชำระเงินแล้ว</th>
-				<th style='vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ</th>
-				<th style='vertical-align:top;text-align:right;'>เช็ครอเรียกเก็บ</th>
-				<th style='vertical-align:top;text-align:center;'>วันที่ขาย</th>
+					<th rowspan='2' style='display:none;'></th>
+					<th rowspan='2' style='vertical-align:top;'>รายการลุกหนี้</th>
+					<th colspan='5' style='vertical-align:top;text-align:center;'>ยอดที่มีให้เก็บ</th>
+					<th colspan='5' style='vertical-align:top;text-align:center;'>ยอดที่เก็บได้</th>
+					<th colspan='4' style='vertical-align:top;text-align:center;'>เปอร์เซ็นเก็บได้</th>
+				</tr>
+				<tr style='height:25px;'>
+					<th style='vertical-align:top;text-align:right;'>จน.ราย</th>
+					<th style='vertical-align:top;text-align:right;'>จน.เงินตามดิว</th>
+					<th style='vertical-align:top;text-align:right;'>เงินค้างค่างวด</th>
+					<th style='vertical-align:top;text-align:right;'>รวมต้องเก็บ</th>
+					<th style='vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ</th> 
+					<th style='vertical-align:top;text-align:right;'>จน.ราย</th>
+					<th style='vertical-align:top;text-align:right;'>จน.เงินตามดิว</th>
+					<th style='vertical-align:top;text-align:right;'>เงินค้างค่างวด</th>
+					<th style='vertical-align:top;text-align:right;'>รวมเก็บได้</th>
+					<th style='vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ</th> 
+					<th style='vertical-align:top;text-align:right;'>จน.ราย</th>
+					<th style='vertical-align:top;text-align:right;'>จน.เงินตามดิว</th>
+					<th style='vertical-align:top;text-align:right;'>เงินค้างค่างวด</th>
+					<th style='vertical-align:top;text-align:right;'>รวมเก็บได้</th>
 				</tr>
 		";
 		
 		$head2 = "<tr>
-					<th style='vertical-align:middle;'>#</th>
-					<th style='vertical-align:top;'>สาขา</th>
-					<th style='vertical-align:top;'>เลขที่สัญญา</th>
-					<th style='vertical-align:top;'>รหัสลูกค้า</th>
-					<th style='vertical-align:top;'>ชื่อ - นามสกุล</th>
-					<th style='vertical-align:top;text-align:center;'>วันที่ขาย</th>
-					<th style='vertical-align:top;text-align:right;'>ราคาขาย</th> 
-					<th style='vertical-align:top;text-align:right;'>ชำระเงินแล้ว </th>
-					<th style='vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ</th>
-					<th style='vertical-align:top;text-align:right;'>เช็ครอเรียกเก็บ</th>
-					<th style='vertical-align:top;text-align:center;'>วันที่ขาย</th>
+					<th rowspan='2' style='vertical-align:top;'>รายการลุกหนี้</th>
+					<th colspan='5' style='vertical-align:top;text-align:center;'>ยอดที่มีให้เก็บ</th>
+					<th colspan='5' style='vertical-align:top;text-align:center;'>ยอดที่เก็บได้</th>
+					<th colspan='4' style='vertical-align:top;text-align:center;'>เปอร์เซ็นเก็บได้</th>
+				</tr>
+				<tr>
+					<th style='vertical-align:top;text-align:right;'>จน.ราย</th>
+					<th style='vertical-align:top;text-align:right;'>จน.เงินตามดิว</th>
+					<th style='vertical-align:top;text-align:right;'>เงินค้างค่างวด</th>
+					<th style='vertical-align:top;text-align:right;'>รวมต้องเก็บ</th>
+					<th style='vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ</th> 
+					<th style='vertical-align:top;text-align:right;'>จน.ราย</th>
+					<th style='vertical-align:top;text-align:right;'>จน.เงินตามดิว</th>
+					<th style='vertical-align:top;text-align:right;'>เงินค้างค่างวด</th>
+					<th style='vertical-align:top;text-align:right;'>รวมเก็บได้</th>
+					<th style='vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ</th> 
+					<th style='vertical-align:top;text-align:right;'>จน.ราย</th>
+					<th style='vertical-align:top;text-align:right;'>จน.เงินตามดิว</th>
+					<th style='vertical-align:top;text-align:right;'>เงินค้างค่างวด</th>
+					<th style='vertical-align:top;text-align:right;'>รวมเก็บได้</th>
+				</tr>
 		";
 		
 		$NRow = 1;
 		if($query->row()){
 			foreach($query->result() as $row){$i++;
+				$bgcolor = ""; 
+				if(($row->TYPEKANG) == "รวมทั้งหมด"){
+					$bgcolor = "style='background-color:#eee;'";
+				}
 				$html .= "
 					<tr class='trow' seq=".$NRow.">
-						<td seq=".$NRow++." style='display:none;'></td>
-						<td>".$row->LOCAT."</td>
-						<td>".$row->CONTNO."</td>
-						<td>".$row->CUSCOD."</td>
-						<td>".$row->CUSNAME."</td>
-						<td align='center'>".$this->Convertdate(2,$row->SDATE)."</td>
-						<td align='right'>".number_format($row->TOTPRC,2)."</td>
-						<td align='right'>".number_format($row->SMPAY,2)."</td>
-						<td align='right'>".number_format($row->TOTAR,2)."</td>
-						<td align='right'>".number_format($row->SMCHQ,2)."</td>
-						<td align='center'>".$this->Convertdate(2,$row->DUEDTS)."</td>
+						<td style='display:none;' seq=".$NRow++." ></td>
+						<td ".$bgcolor.">".$row->TYPEKANG."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->B_QTY)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->B_DAMT,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->B_KANG,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->B_RCV,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->B_AR,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->QTY)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->DAMT,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->KANG,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->PAYDAMT,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->AR,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->PERQTY,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->PERDAMT,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->PERKANG,2)."</td>
+						<td align='right' ".$bgcolor.">".number_format($row->PERPAYDAMT,2)."</td>
 					</tr>
-				";	
+				";
 			}
 		}
 		
@@ -198,48 +427,22 @@ class ReportALsummaryarpay extends MY_Controller {
 			foreach($query->result() as $row){
 				$report .= "
 					<tr class='trow'>
-						<td style='mso-number-format:\"\@\";'>".$No++."</td>
-						<td style='mso-number-format:\"\@\";'>".$row->LOCAT."</td>
-						<td style='mso-number-format:\"\@\";'>".$row->CONTNO."</td>
-						<td style='mso-number-format:\"\@\";'>".$row->CUSCOD."</td>
-						<td style='mso-number-format:\"\@\";'>".$row->CUSNAME."</td>
-						<td style='mso-number-format:\"\@\";text-align:center;'>".$this->Convertdate(2,$row->SDATE)."</td>
-						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->TOTPRC,2)."</td>
-						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->SMPAY,2)."</td>
-						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->TOTAR,2)."</td>
-						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->SMCHQ,2)."</td>
-						<td style='mso-number-format:\"\@\";text-align:center;'>".$this->Convertdate(2,$row->DUEDTS)."</td>
-					</tr>
-				";	
-			}
-		}
-		
-		if($query2->row()){
-			foreach($query2->result() as $row){
-				$sumreport = "
-					<tr style='height:25px;'>
-						<th colspan='5' style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:center;'>".$row->Total."</th>
-						<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumTOTPRC,2)."</th>
-						<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumSMPAY,2)."</th>
-						<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumTOTAR,2)."</th>
-						<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumSMCHQ,2)."</th>
-						<th style='border:0px;text-align:right;'></th>
-					</tr>
-				";	
-			}
-		}
-		
-		if($query2->row()){
-			foreach($query2->result() as $row){
-				$sumreport2 = "
-					<tr class='trow'>
-						<th style='mso-number-format:\"\@\";text-align:center;' colspan='6'>".$row->Total."</th>
-						<th style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumTOTPRC,2)."</th>
-						<th style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumSMPAY,2)."</th>
-						<th style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumTOTAR,2)."</th>
-						<th style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumSMCHQ,2)."</th>
-						<th style='mso-number-format:\"\@\";text-align:center;'></th>
-					</tr>
+						<td style='mso-number-format:\"\@\";'>".$row->TYPEKANG."</td>
+						<td style='mso-number-format:\"\#\,\#\#0\";text-align:right;'>".number_format($row->B_QTY)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;''>".number_format($row->B_DAMT,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->B_KANG,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->B_RCV,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->B_AR,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0\";text-align:right;'>".number_format($row->QTY)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->DAMT,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->KANG,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->PAYDAMT,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->AR,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->PERQTY,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->PERDAMT,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->PERKANG,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->PERPAYDAMT,2)."</td>
+						</tr>
 				";	
 			}
 		}
@@ -250,19 +453,16 @@ class ReportALsummaryarpay extends MY_Controller {
 					<table id='table-ReportALsummaryarpay' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 						<thead>
 						<tr style='height:40px;'>
-							<th colspan='10' style='font-size:12pt;border:0px;vertical-align;middle;text-align:center;'>รายงานสรุปผลการจัดเก็บ</th>
+							<th colspan='16' style='font-size:12pt;border:0px;vertical-align;middle;text-align:center;'>รายงานสรุปผลการจัดเก็บ</th>
 						</tr>
 						<tr style='height:25px;'>
-							<td colspan='10' style='border-bottom:1px solid #ddd;vertical-align;middle;text-align:center;'>จากวันที่ดิว ".$_REQUEST["FRMDATE"]." - ".$_REQUEST["TODATE"]." ".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
+							<td colspan='16' style='border-bottom:1px solid #ddd;vertical-align;middle;text-align:center;'>จากวันที่ ".$_REQUEST["FRMDATE"]." - ".$_REQUEST["TODATE"]." ".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head."
 						</thead>	
 						<tbody style='height: 10px !important; overflow: scroll;'>
 						".$html."
 						</tbody>	
-						<tfoot>
-						".$sumreport."
-						</tfoot>
 					</table>
 				</div>
 			";
@@ -275,17 +475,14 @@ class ReportALsummaryarpay extends MY_Controller {
 				<table id='table-ReportALsummaryarpay2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
 					<thead>
 						<tr>
-							<th colspan='11' style='font-size:12pt;border:0px;text-align:center;'>รายงานสรุปผลการจัดเก็บ</th>
+							<th colspan='15' style='font-size:12pt;border:0px;text-align:center;'>รายงานสรุปผลการจัดเก็บ</th>
 						</tr>
 						<tr>
-							<td colspan='11' style='border:0px;text-align:center;'>วัดผลงานจากวันที่ ".$_REQUEST["FRMDATE"]." - ".$_REQUEST["TODATE"]." ".$rpcond." ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
+							<td colspan='15' style='border:0px;text-align:center;'>จากวันที่ ".$_REQUEST["FRMDATE"]." - ".$_REQUEST["TODATE"]." ".$rpcond." ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head2."
-					</thead>	
-					<tbody>
 						".$report."
-						".$sumreport2."
-					</tbody>
+					</thead>	
 				</table>
 			</div>
 		";
@@ -319,73 +516,285 @@ class ReportALsummaryarpay extends MY_Controller {
 		
 		$cond = ""; $rpcond = "";
 		
+		if($LOCAT1 != ""){
+			$cond .= " AND (A.LOCAT LIKE '%".$LOCAT1."%')";
+			$rpcond .= "  สาขา ".$LOCAT1;
+		}
+		
+		if($BILLCOLL1 != ""){
+			$cond .= " AND (A.BILLCOLL = '".$BILLCOLL1."')";
+			$rpcond .= "  พนักงานเก็บเงิน ".$BILLCOLL1;
+		}
+		
+		if($ystat == 'NO'){
+			$cond .= " AND (A.YDATE IS NULL OR A.YDATE >= '".$TODATE."')";
+			$rpcond .= "  ไม่รวมรถยึด";
+		}else{
+			$rpcond .= "  รวมรถยึด";
+		}
+		
 		$sql = "
-
+				IF OBJECT_ID('tempdb..#typear') IS NOT NULL DROP TABLE #typear
+				select *
+				into #typear
+				from(	
+					select 	'00' as ID,'ล่วงหน้า/ปกติ' TYPEKANG 
+					union 
+					select	'01','ค้าง 1 งวด'					
+					union 
+					select	'02','ค้าง 2 งวด'
+					union 
+					select	'03','ค้าง 3 งวด'
+					union 
+					select	'04','ค้าง 4 งวด'
+					union 
+					select	'05','ค้าง 5 งวด'
+					union 
+					select	'06','ค้าง 6 งวด'
+					union 
+					select	'07','ค้าง 7 งวด'
+					union 
+					select	'08','ค้าง 8 งวด'
+					union 
+					select	'09','ค้าง 9 งวด'
+					union 
+					select	'10','ค้าง 10 งวด'
+					union 
+					select	'11','ค้าง 11 งวด'
+					union 
+					select	'11','ค้าง 12 งวด'
+					union 
+					select	'13','ค้าง 13-18 งวด'
+					union 
+					select	'19','ค้าง 19-24 งวด'
+					union 
+					select	'25','ค้าง 25 งวดขึ้นไป'
+				)typear
 		";//echo $sql; 
 		$query = $this->db->query($sql);
 		
 		$sql = "
+				IF OBJECT_ID('tempdb..#main') IS NOT NULL DROP TABLE #main
+				select *
+				into #main
+				from(
+					SELECT A.LOCAT, A.CONTNO, A.LPAYD  
+					FROM {$this->MAuth->getdb('ARMAST')} A 
+					WHERE (A.TOTPRC > A.SMPAY OR (A.TOTPRC <= A.SMPAY  AND  (CASE WHEN (SELECT MAX(PAYDT) FROM CHQTRAN WHERE CONTNO = A.CONTNO) 
+					IS NULL THEN  SDATE ELSE (SELECT MAX(PAYDT) FROM CHQTRAN WHERE CONTNO = A.CONTNO) END) >= '".$FRMDATE."'))  ".$cond."
 
+					UNION 
+
+					SELECT A.LOCAT, A.CONTNO, A.LPAYD 
+					FROM {$this->MAuth->getdb('HARMAST')} A  
+					WHERE (A.TOTPRC > A.SMPAY OR (A.TOTPRC <= A.SMPAY  AND (CASE WHEN (SELECT MAX(PAYDT) FROM CHQTRAN WHERE CONTNO = A.CONTNO) 
+					IS NULL THEN  SDATE ELSE (SELECT MAX(PAYDT) FROM CHQTRAN WHERE CONTNO=A.CONTNO) END) >= '".$FRMDATE."')) AND CONTNO NOT IN 
+					(SELECT CONTNO FROM  ARHOLD WHERE YDATE <= '".$FRMDATE."' UNION SELECT CONTNO FROM ARLOST WHERE LOSTDT<='".$FRMDATE."'  
+					UNION SELECT CONTNO FROM ARCHAG WHERE YDATE<='".$FRMDATE."' UNION SELECT CONTNO FROM ARCLOSE WHERE CLDATE<= '".$FRMDATE."') ".$cond."
+				)main
+		";//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#damt') IS NOT NULL DROP TABLE #damt
+				select *
+				into #damt
+				from(
+					SELECT A.CONTNO, SUM(A.DAMT) AS DAMT, SUM(A.B_DAMT) AS B_DAMT, SUM(A.TOTDAMT)AS TOTDAMT 
+					FROM( 
+						SELECT CONTNO,
+						SUM(CASE WHEN (DDATE BETWEEN '".$FRMDATE."' AND '".$TODATE."' ) THEN  DAMT ELSE 0 END) AS DAMT  ,
+						SUM(CASE WHEN (DDATE < '".$FRMDATE."' ) THEN DAMT ELSE 0 END) AS B_DAMT,
+						SUM(DAMT) AS TOTDAMT  
+						FROM {$this->MAuth->getdb('ARPAY')} 
+						WHERE CONTNO in (select CONTNO from #main)
+						GROUP BY CONTNO
+						UNION  
+						SELECT CONTNO,
+						SUM(CASE WHEN (DDATE BETWEEN '".$FRMDATE."' AND '".$TODATE."' ) THEN  DAMT ELSE 0 END) AS DAMT  ,
+						SUM(CASE WHEN (DDATE < '".$FRMDATE."' ) THEN DAMT ELSE 0 END) AS B_DAMT  ,
+						SUM(DAMT) AS TOTDAMT  
+						FROM {$this->MAuth->getdb('HARPAY')} 
+						WHERE CONTNO in (select CONTNO from #main)  
+						GROUP BY CONTNO 
+					)A  
+					GROUP BY A.CONTNO
+				)damt
+		";//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#pay') IS NOT NULL DROP TABLE #pay
+				select *
+				into #pay
+				from(
+					SELECT CONTNO,
+					SUM(CASE WHEN (PAYDT < '".$FRMDATE."'  AND FLAG<>'C' AND (( PAYFOR = '006') OR ( PAYFOR = '007'))) THEN PAYAMT ELSE 0 END) AS B_PAYDAMT,
+					SUM(CASE WHEN (PAYDT BETWEEN '".$FRMDATE."' AND '".$TODATE."' AND FLAG<>'C' AND (( PAYFOR = '006') OR ( PAYFOR = '007')))THEN PAYAMT ELSE 0 END) AS PAYDAMT 
+					FROM {$this->MAuth->getdb('CHQTRAN')}  
+					WHERE  CONTNO+LOCATPAY in (select CONTNO+LOCAT from #main)  
+					GROUP BY CONTNO
+				)pay
+		";//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#main2') IS NOT NULL DROP TABLE #main2
+				select *
+				into #main2
+				from(
+					select LOCAT, a.CONTNO, LPAYD, TOTDAMT, B_DAMT, DAMT, isnull(B_PAYDAMT,0) as B_PAYDAMT, isnull(PAYDAMT,0) as PAYDAMT,
+					B_DAMT-isnull(B_PAYDAMT,0) as B_AR
+					from #main a
+					left join #damt b on a.CONTNO = b.CONTNO
+					left join #pay c on a.CONTNO = c.CONTNO
+				)main2
+		";//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#main3') IS NOT NULL DROP TABLE #main3
+				select *
+				into #main3
+				from(
+					select CONTNO, 0 as QTY
+					from #main2 where B_AR <= 0
+					union all
+					select CONTNO, count(NOPAY) as QTY
+					from(
+						select CONTNO, NOPAY
+						from {$this->MAuth->getdb('ARPAY')}
+						WHERE CONTNO in (select CONTNO from #main2 where B_AR > 0)
+						and (DDATE < '".$FRMDATE."') and (DATE1 >= '".$FRMDATE."' or DAMT - PAYMENT >0)
+						union 
+						select  CONTNO, NOPAY
+						from {$this->MAuth->getdb('HARPAY')}
+						WHERE CONTNO in (select CONTNO from #main2 where B_AR > 0)
+						and (DDATE < '".$FRMDATE."') and (DATE1 >= '".$FRMDATE."' or DAMT - PAYMENT > 0)
+					)A
+					group by CONTNO
+				)main3
+		";//echo $sql; 
+		$query = $this->db->query($sql);
+		
+		$sql = "
+				IF OBJECT_ID('tempdb..#main4') IS NOT NULL DROP TABLE #main4
+				select *
+				into #main4
+				from(
+					select TYPEKANG, ID, B_QTY, B_DAMT, B_KANG, B_RCV, B_AR,  QTY,  KANG, DAMT, PAYDAMT, AR, PERQTY, PERDAMT, PERKANG, PERPAYDAMT
+					from #typear a
+					left join(
+						select	TYPEAR, 
+								SUM(B_QTY) as B_QTY, SUM(B_DAMT) as B_DAMT, SUM(B_KANG) as B_KANG, SUM(B_RCV) as B_RCV, SUM(B_AR) as B_AR,  
+								SUM(QTY) as QTY,  SUM(KANG) as KANG,  SUM(DAMT) as DAMT, SUM(PAYDAMT) as PAYDAMT, SUM(AR) as AR,
+								round(SUM(QTY)*100.0/nullif(SUM(B_QTY),0),0) as PERQTY,
+								round(SUM(DAMT)*100.0/nullif(SUM(B_DAMT),0),0) as PERDAMT,
+								round(SUM(KANG)*100.0/nullif(SUM(B_KANG),0),0) as PERKANG,
+								round(SUM(PAYDAMT)*100.0/nullif(SUM(B_RCV),0),0) as PERPAYDAMT
+						from(
+							select	a.CONTNO,
+									case	
+									when QTY = 0 or QTY is null		then	'ล่วงหน้า/ปกติ'
+									when QTY = 1					then	'ค้าง 1 งวด'
+									when QTY = 2					then	'ค้าง 2 งวด'
+									when QTY = 3					then	'ค้าง 3 งวด'
+									when QTY = 4					then	'ค้าง 4 งวด'
+									when QTY = 5					then	'ค้าง 5 งวด'
+									when QTY = 6					then	'ค้าง 6 งวด'
+									when QTY = 7					then	'ค้าง 7 งวด'
+									when QTY = 8					then	'ค้าง 8 งวด'
+									when QTY = 9					then	'ค้าง 9 งวด'
+									when QTY = 10					then	'ค้าง 10 งวด'
+									when QTY = 11					then	'ค้าง 11 งวด'
+									when QTY = 12					then	'ค้าง 12 งวด'
+									when QTY between 13 and 18		then	'ค้าง 13-18 งวด'
+									when QTY between 19 and 24		then	'ค้าง 19-24 งวด'
+									when QTY >= 25					then	'ค้าง 25 งวดขึ้นไป'
+									end as TYPEAR,
+									1 as B_QTY, DAMT as B_DAMT, 
+									case when (B_DAMT-B_PAYDAMT) < 0 then 0 else B_DAMT-B_PAYDAMT end as B_KANG, 
+									case when DAMT+(B_DAMT-B_PAYDAMT) < 0 then 0 else DAMT+(B_DAMT-B_PAYDAMT) end as B_RCV, 
+									TOTDAMT-B_PAYDAMT as B_AR,
+									case when PAYDAMT > 0 then 1 else 0 end as QTY, 
+									case when (B_DAMT+DAMT)-(B_PAYDAMT+PAYDAMT) < 0 then 0 else (B_DAMT+DAMT)-(B_PAYDAMT+PAYDAMT) end as KANG,
+									case when PAYDAMT > 0 then DAMT else 0 end as DAMT,
+									case when PAYDAMT > 0 then PAYDAMT else 0 end as PAYDAMT,
+									TOTDAMT-(B_PAYDAMT+PAYDAMT) as AR
+							from #main2 a
+							left join #main3 b on a.CONTNO = b.CONTNO collate thai_cs_as
+						)A
+						group by TYPEAR
+					)b on a.TYPEKANG = b.TYPEAR
+				)main4
 		";//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$sql = "
-
+				select ID, TYPEKANG, B_QTY, B_DAMT, B_KANG, B_RCV, B_AR,  QTY,  KANG, DAMT, PAYDAMT, AR, PERQTY, PERDAMT, PERKANG, PERPAYDAMT 
+				from #main4
+				union all
+				select '99', 'รวมทั้งหมด' as Total, SUM(B_QTY) as B_QTY, SUM(B_DAMT) as B_DAMT, SUM(B_KANG) as B_KANG, SUM(B_RCV) as B_RCV, SUM(B_AR) as B_AR,  
+				SUM(QTY) as QTY,  SUM(KANG) as KANG,  SUM(DAMT) as DAMT, SUM(PAYDAMT) as PAYDAMT, SUM(AR) as AR,
+				round(SUM(QTY)*100.0/nullif(SUM(B_QTY),0),0) as PERQTY, round(SUM(DAMT)*100.0/nullif(SUM(B_DAMT),0),0) as PERDAMT,
+				round(SUM(KANG)*100.0/nullif(SUM(B_KANG),0),0) as PERKANG, round(SUM(PAYDAMT)*100.0/nullif(SUM(B_RCV),0),0) as PERPAYDAMT
+				from #main4 
+				order by ID
 		";//echo $sql; exit;
-		$query2 = $this->db->query($sql);
+		$query = $this->db->query($sql);
 		
 		$head = ""; $html = ""; $i=0; 
 
 		$head = "
 				<tr>
-					<th style='border-bottom:0.1px solid black;text-align:left;'>#</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>สาขา</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>เลขที่สัญญา</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>รหัสลูกค้า</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>ชื่อ - นามสกุล</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:center;'>วันที่ขาย</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ราคาขาย</th> 
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ชำระเงินแล้ว </th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>เช็ครอเรียกเก็บ</th>
-					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:center;'>วันที่ขาย</th>
+					<th rowspan='2' style='border-bottom:0.1px solid black;vertical-align:top;text-align:left;'>รายการลุกหนี้</th>
+					<th colspan='5' style='border-bottom:0.1px solid black;vertical-align:top;text-align:center;'>ยอดที่มีให้เก็บ</th>
+					<th colspan='5' style='border-bottom:0.1px solid black;vertical-align:top;text-align:center;'>ยอดที่เก็บได้</th>
+					<th colspan='4' style='border-bottom:0.1px solid black;vertical-align:top;text-align:center;'>เปอร์เซ็นเก็บได้</th>
+				</tr>
+				<tr>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>จน.ราย</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>จน.เงินตามดิว</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>เงินค้างค่างวด</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>รวมต้องเก็บ</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ</th> 
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>จน.ราย</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>จน.เงินตามดิว</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>เงินค้างค่างวด</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>รวมเก็บได้</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>ลูกหนี้คงเหลือ</th> 
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>จน.ราย</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>จน.เงินตามดิว</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>เงินค้างค่างวด</th>
+					<th style='border-bottom:0.1px solid black;vertical-align:top;text-align:right;'>รวมเก็บได้</th>
 				</tr>
 		";
 		
 		$No = 1;
 		if($query->row()){
 			foreach($query->result() as $row){	
+					$border = "";
+					if(($row->TYPEKANG) == "รวมทั้งหมด"){
+						$border = "border-top:0.1px solid black;border-bottom:0.1px solid black;";
+					}
 				$html .= "
 					<tr class='trow' seq=".$No.">
-						<td style='width:30px;'>".$No++."</td>
-						<td style='width:50px;'>".$row->LOCAT."</td>
-						<td style='width:100px;'>".$row->CONTNO."</td>
-						<td style='width:100px;'>".$row->CUSCOD."</td>
-						<td style='width:250px;'>".$row->CUSNAME."</td>
-						<td style='width:150px;' align='center'>".$this->Convertdate(2,$row->SDATE)."</td>
-						<td style='width:110px;' align='right'>".number_format($row->TOTPRC,2)."</td>
-						<td style='width:110px;' align='right'>".number_format($row->SMPAY,2)."</td>
-						<td style='width:110px;' align='right'>".number_format($row->TOTAR,2)."</td>
-						<td style='width:110px;' align='right'>".number_format($row->SMCHQ,2)."</td>
-						<td style='width:150px;' align='center'>".$this->Convertdate(2,$row->DUEDTS)."</td>
-						
+						<td style='width:85px;".$border."'>".$row->TYPEKANG."</td>
+						<td style='width:50px;".$border."' align='right'>".number_format($row->B_QTY)."</td>
+						<td style='width:75px;".$border."' align='right'>".number_format($row->B_DAMT,2)."</td>
+						<td style='width:70px;".$border."' align='right'>".number_format($row->B_KANG,2)."</td>
+						<td style='width:70px;".$border."' align='right'>".number_format($row->B_RCV,2)."</td>
+						<td style='width:75px;".$border."' align='right'>".number_format($row->B_AR,2)."</td>
+						<td style='width:50px;".$border."' align='right'>".number_format($row->QTY)."</td>
+						<td style='width:75px;".$border."' align='right'>".number_format($row->DAMT,2)."</td>
+						<td style='width:70px;".$border."' align='right'>".number_format($row->KANG,2)."</td>
+						<td style='width:70px;".$border."' align='right'>".number_format($row->PAYDAMT,2)."</td>
+						<td style='width:75px;".$border."' align='right'>".number_format($row->AR,2)."</td>
+						<td style='width:50px;".$border."' align='right'>".number_format($row->PERQTY,2)."</td>
+						<td style='width:75px;".$border."' align='right'>".number_format($row->PERDAMT,2)."</td>
+						<td style='width:70px;".$border."' align='right'>".number_format($row->PERKANG,2)."</td>
+						<td style='width:70px;".$border."' align='right'>".number_format($row->PERPAYDAMT,2)."</td>
 					</tr>
-				";	
-			}
-		}
-		
-		if($query2->row()){
-			foreach($query2->result() as $row){	
-				$html .= "
-					<tr class='trow bor' style='background-color:#ebebeb;'>
-						<th colspan='6' style='text-align:center;vertical-align:middle;'>".$row->Total."</th>
-						<th align='right'>".number_format($row->sumTOTPRC,2)."</th>
-						<th align='right'>".number_format($row->sumSMPAY,2)."</th>
-						<th align='right'>".number_format($row->sumTOTAR,2)."</th>
-						<th align='right'>".number_format($row->sumSMCHQ,2)."</th>
-						<th style='text-align:center;vertical-align:middle;'></th>
-					</tr>
-					
 				";	
 			}
 		}
@@ -402,13 +811,13 @@ class ReportALsummaryarpay extends MY_Controller {
 		]);
 		
 		$content = "
-			<table class='wf' style='font-size:9pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
+			<table class='wf' style='font-size:8pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
 				<tbody>
 					<tr>
-						<th colspan='11' style='font-size:10pt;'>รายงานสรุปผลการจัดเก็บ</th>
+						<th colspan='15' style='font-size:10pt;'>รายงานสรุปผลการจัดเก็บ</th>
 					</tr>
 					<tr>
-						<td colspan='11' style='font-size:9pt;height:35px;border-bottom:0.1px solid black;text-align:center;'>".$rpcond." วัดผลงานจากวันที่ ".$tx[2]." - ".$tx[3]."</td>
+						<td colspan='15' style='font-size:9pt;height:35px;border-bottom:0.1px solid black;text-align:center;'>".$rpcond."  จากวันที่ ".$tx[2]." - ".$tx[3]."</td>
 					</tr>
 					".$head."
 					".$html."

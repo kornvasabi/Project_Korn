@@ -123,7 +123,7 @@ function search(){
 	dataToPost = new Object();
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
 	dataToPost.CONTNO1 		= (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.CONTSTAT1 	= (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
+	dataToPost.CONTSTAT1 	= (typeof $('#CONTSTAT1').find(':selected').val() === 'undefined' ? '':$('#CONTSTAT1').find(':selected').val());
 	dataToPost.report 		= report;
 	dataToPost.orderby 		= orderby;
 	
@@ -159,7 +159,7 @@ function search(){
 					draggable: false
 				});
 				
-				fn_datatables('table-ReportARkang_amt',1,310);
+				fn_datatables('table-ReportARkang_amt',1,280);
 				
 				$('.data-export').prepend('<img id="print-ARkang_amt" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
 				$("#print-ARkang_amt").hover(function() {
@@ -223,7 +223,7 @@ function printReport(){
 	dataToPost = new Object();
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
 	dataToPost.CONTNO1 		= (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.CONTSTAT1 	= (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
+	dataToPost.CONTSTAT1 	= (typeof $('#CONTSTAT1').find(':selected').val() === 'undefined' ? '':$('#CONTSTAT1').find(':selected').val());
 	dataToPost.report 		= report;
 	dataToPost.orderby 		= orderby;
 	dataToPost.layout 		= layout;

@@ -1406,4 +1406,14 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function dateofendmonth(){
+		$frmdate = $this->Convertdate(1,$_REQUEST["frmdate"]);
+		$date = "select convert(nvarchar,DATEADD(day,-1,DATEADD(month,1,substring('".$frmdate."',1,6)+'01')),112) as dateofendmonth";
+		$querydate = $this->db->query($date);
+		$rows = $querydate->row();
+		$dateofendmonth = $rows->dateofendmonth;
+		$response["dateofendmonth"] = $this->Convertdate(2,$dateofendmonth);
+		echo json_encode($response);
+	}
+	
 }

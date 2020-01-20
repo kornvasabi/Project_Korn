@@ -107,7 +107,6 @@ function search(){
 	dataToPost.BILLCOL1 	= (typeof $('#BILLCOL1').find(':selected').val() === 'undefined' ? '':$('#BILLCOL1').find(':selected').val());
 	dataToPost.GCOCE1 		= (typeof $('#GCOCE1').find(':selected').val() === 'undefined' ? '':$('#GCOCE1').find(':selected').val());
 	dataToPost.ARDATE 		= $('#ARDATE').val();
-
 	
 	$('#loadding').show();
 	reportsearch = $.ajax({
@@ -126,7 +125,7 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportARtotalsummary',1,350);
+			fn_datatables('table-ReportARtotalsummary',1,315);
 			
 			$('.data-export').prepend('<img id="print-ARtotalsummary" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
 			$("#print-ARtotalsummary").hover(function() {

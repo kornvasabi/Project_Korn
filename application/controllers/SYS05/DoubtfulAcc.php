@@ -824,6 +824,9 @@ class DoubtfulAcc extends MY_Controller {
 				delete {$this->MAuth->getdb('HARPAY')} 		where CONTNO = @CONTNO 
 				delete {$this->MAuth->getdb('HARMGAR')} 	where CONTNO = @CONTNO 
 				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS05::บันทึกรายการหนี้สงสัยจะสูญ (ลบ)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
 				insert into #DelARLOSTTemp select 'S',@CONTNO,'ลบรายการตั้งหนี้สงสัยจะสูญ เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 
 				commit tran DelARLOSTTemp;

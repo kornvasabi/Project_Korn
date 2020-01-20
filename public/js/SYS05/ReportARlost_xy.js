@@ -320,7 +320,7 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportARlost_xy',1,320);
+			fn_datatables('table-ReportARlost_xy',1,280);
 			
 			$('.data-export').prepend('<img id="print-ARlost_xy" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
 			$("#print-ARlost_xy").hover(function() {

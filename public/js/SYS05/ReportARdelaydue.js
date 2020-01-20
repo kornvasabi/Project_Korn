@@ -107,7 +107,7 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportARdelaydue',1,270);
+			fn_datatables('table-ReportARdelaydue',1,260);
 			
 			$('.data-export').prepend('<img id="print-ARdelaydue" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
 			$("#print-ARdelaydue").hover(function() {

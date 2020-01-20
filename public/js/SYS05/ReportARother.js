@@ -165,7 +165,7 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportARother',1,340);
+			fn_datatables('table-ReportARother',1,290);
 			
 			$('.data-export').prepend('<img id="print-ARothers" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
 			$("#print-ARothers").hover(function() {

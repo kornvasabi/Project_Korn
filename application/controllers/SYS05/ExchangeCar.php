@@ -933,6 +933,9 @@ class ExchangeCar extends MY_Controller {
 					--ลบ ARCHAG
 					delete {$this->MAuth->getdb('ARCHAG')} where CONTNO = @CONTNO and STRNO = @STRNO
 					
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+					values ('".$this->sess["IDNo"]."','SYS05::บันทึกรถแลกเปลี่ยน (ลบ)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+					
 					insert into #DelCHGTemp select 'S',@CONTNO,'ลบรายการแลกเปลี่ยนรถ เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 					
 				end
