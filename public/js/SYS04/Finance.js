@@ -275,6 +275,12 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		});
 	});
 	
+	$('#add_cuscod_removed').click(function(){
+		$('#add_cuscod').attr('CUSCOD','');
+		$('#add_cuscod').val('');
+	});
+	
+	
 	/*
 	$('#add_cuscod').select2({
 		placeholder: 'เลือก',
@@ -503,6 +509,10 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		});
 	});
 	
+	$('#add_recomcod_removed').click(function(){
+		$('#add_recomcod').attr('CUSCOD','');
+		$('#add_recomcod').val('');
+	});
 	
 	$('#btn_addBillDas').click(function(){
 		var data = false;

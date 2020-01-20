@@ -256,6 +256,61 @@ class RevPayment extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function get_form_payment(){
+		$html = "
+			<div>
+				<div class='col-sm-12'>	
+					<div class='form-group'>
+						ชำระค่า
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;' readonly>
+					</div>
+				</div>
+				<div class='col-sm-12'>	
+					<div class='form-group'>
+						เลขที่สัญญา
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;' readonly>
+					</div>
+				</div>
+				<div class='col-sm-12'>	
+					<div class='form-group'>
+						จำนวนชำระ
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;' readonly>
+					</div>
+				</div>
+				<div class='col-sm-12'>	
+					<div class='form-group'>
+						ส่วนลด
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;' readonly>
+					</div>
+				</div>
+				<div class='col-sm-12'>	
+					<div class='form-group'>
+						ค่าเบี้ยปรับ
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;' readonly>
+					</div>
+				</div>
+				<div class='col-sm-12'>	
+					<div class='form-group'>
+						ส่วนลดเบี้ยปรับ
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;' readonly>
+					</div>
+				</div>
+				<div class='col-sm-12'>	
+					<div class='form-group'>
+						ยอดรับสุทธิ
+						<input type='text' id='XXXXXX' class='form-control input-sm' value='' style='font-size:12pt;' readonly>
+					</div>
+				</div>
+				<div class='col-sm-12'>	
+					<i id='xxxxx' class='btn btn-xs btn-primary btn-block glyphicon glyphicon-plus' style='cursor:pointer;'> เพิ่ม  </i>
+				</div>
+			</div>
+		";
+		
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	
 }
 
 

@@ -1,5 +1,5 @@
 /********************************************************
-             ______@--/02/2018______
+             ______@08/12/2019______
             / / _ _   _ _     __ 
            / // __ \ / __ \ / __ \
        _ _/ // /_/ // / / // /_/ /
@@ -8,6 +8,7 @@
                          /___ /
 ********************************************************/
 
+var _locat  = $('.tab1[name="home"]').attr('locat');
 var _insert = $('.tab1[name="home"]').attr('cin');
 var _update = $('.tab1[name="home"]').attr('cup');
 var _delete = $('.tab1[name="home"]').attr('cdel');
@@ -15,67 +16,66 @@ var _level  = $('.tab1[name="home"]').attr('clev');
 
 $(function(){
 	if($('.tab1[name="home"]').attr('cin') == 'T'){
-		$('#add_group').attr('disabled',false);	
+		$('#add_model').attr('disabled',false);	
 	}else{
-		$('#add_group').attr('disabled',true);	
+		$('#add_model').attr('disabled',true);	
 	}
 });
 
-var jdsearch_group = null;
-$('#search_group').click(function(){
+var jdsearch_model=null;
+$('#search_model').click(function(){
 	search();
 });
 
 function search(){
 	dataToPost = new Object();
-	dataToPost.gcode = $('#gcode').val();
-	dataToPost.gdesc = $('#gdesc').val();
+	dataToPost.TYPECOD = $('#TYPECOD').val();	
+	dataToPost.MODELCOD = $('#MODELCOD').val();	
 	
 	$('#loadding').fadeIn(200);
-	jdsearch_group = $.ajax({
-		url: '../setup/CStock/groupSearch',
+	jdsearch_model = $.ajax({
+		url: '../setup/CStock/modelSearch',
 		data:dataToPost,
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
-			$('#setgroupResult').html(data.html);
+			$('#setmodelResult').html(data.html);
 			afterSearch();
-			jdsearch_group = null;
-			$('#loadding').fadeOut(200);
+			
+			jdsearch_model = null;
+			$('#loadding').fadeOut(200);			
 		},
-		beforeSend: function(){ if(jdsearch_group !== null){ jdsearch_group.abort(); } },
+		beforeSend: function(){ if(jdsearch_model !== null){ jdsearch_model.abort(); } },
 		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
-var jdadd_group= null;
-$('#add_group').click(function(){
+var jdadd_model=null;
+$('#add_model').click(function(){
 	dataToPost = new Object();
-	dataToPost.GCODE = '';
+	dataToPost.TYPECOD = '';
+	dataToPost.MODELCOD = '';
 	
-	$('.tab1').hide();
-	$('.tab2').show();		
 	$('#loadding').fadeIn(200);
-	jdadd_group = $.ajax({
-		url: '../setup/CStock/groupGetFormAE',
-		data:dataToPost,
-		type:'POST',
-		dataType:'json',
+	jdadd_model = $.ajax({
+		url: '../setup/CStock/modelGetFormAE',
+		data: dataToPost,
+		type: 'POST',
+		dataType: 'json',
 		success:function(data){
-			$('#tab2_main').find('.spinner, .spinner-backdrop').remove();
 			$('#tab2_main').html(data.html);
-			
-			$('#t2gcode').val('');
-			$('#t2gdesc').val('');
-			$('#t2memo1').val('');
 			$('#tab2save').attr('action','add');
+			if(_insert == 'T'){
+				$('#tab2save').attr('disabled',false);	
+			}else{
+				$('#tab2save').attr('disabled',true);	
+			}
 			$('#tab2del').attr('disabled',true);
-			$('#t2gcode').attr('readonly',false);
+			
 			afterSelect();
-			jdadd_group = null;
-			$('#loadding').fadeOut(200);
+			jdadd_model = null;
 		},
-		beforeSend: function(){ if(jdadd_group !== null){ jdadd_group.abort(); } },
+		beforeSend: function(){ if(jdadd_model !== null){ jdadd_model.abort(); } },
 		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
@@ -95,53 +95,82 @@ function afterSearch(){
 	});
 	
 	
+	var jdgetit = null;
 	$('.getit').click(function(){
 		dataToPost = new Object();
-		dataToPost.GCODE = $(this).attr('GCODE');
+		dataToPost.TYPECOD = $(this).attr('TYPECOD');
+		dataToPost.MODELCOD = $(this).attr('MODELCOD');
 		
-		var spinner = $('body>.spinner').clone().removeClass('hide');
-		$('#tab2_main').html('');
-		$('#tab2_main').append(spinner);
-		
-		$('.tab1').hide();
-		$('.tab2').show();
-		
-		$('#tab2save').attr('action','edit');
-		
-		$.ajax({
-			url:'../setup/CStock/groupGetFormAE',
-			data:dataToPost,
-			type:'POST',
-			dataType:'json',
+		$('#loadding').fadeIn(200);
+		jdgetit = $.ajax({
+			url: '../setup/CStock/modelGetFormAE',
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
 			success:function(data){
-				$('#tab2_main').find('.spinner, .spinner-backdrop').remove();
 				$('#tab2_main').html(data.html);
-				
 				$('#t2gcode').attr('readonly',true);
 				
-				if($('.tab1[name="home"]').attr('cup') == 'T'){
+				$('#tab2save').attr('action','edit');
+				if(_update == 'T'){
 					$('#tab2save').attr('disabled',false);	
 				}else{
 					$('#tab2save').attr('disabled',true);	
 				}
 				
-				if($('.tab1[name="home"]').attr('cdel') == 'T'){
+				if(_delete == 'T'){
 					$('#tab2del').attr('disabled',false);	
 				}else{
 					$('#tab2del').attr('disabled',true);	
 				}
 				afterSelect();
-			}
+				
+				jdgetit = null;
+				$('#loadding').fadeOut(200);
+			},
+			beforeSend: function(){ if(jdgetit !== null){ jdgetit.abort(); } },
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 }
 
 function afterSelect(){
+	$('.tab1').hide();
+	$('.tab2').show();
+	
+	//if($('#tab2save').attr('action') == "add"){
+		dataToPost = new Object();
+		dataToPost.q = '';
+		dataToPost.now = $('#t2TYPECOD').find(':selected').val();		
+		
+		$('#loadding').fadeIn(200);
+		$.ajax({
+			url:'../Cselect2/getTYPES',
+			data:dataToPost,
+			type:'POST',
+			dataType:'json',
+			success:function(data){
+				$t2TYPECOD = $('#t2TYPECOD');
+				for($i=0;$i<data.length;$i++){
+					if($i==0){ $t2TYPECOD.empty(); } // clear
+					$t2TYPECOD.append('<option value="'+data[$i].id+'"  '+(data[$i].id == dataToPost.now ? "selected":"")+'  >'+data[$i].text+'</option>');
+				}
+				$t2TYPECOD.select2({
+					disabled: ($('#tab2save').attr('action') == "add" ? false:true),
+					width: '100%'
+				});
+				$('#loadding').fadeOut(200);
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }		
+		});
+	//}
+	
 	$('#tab2back').click(function(){
 		$('.tab1').show();
 		$('.tab2').hide();
 	});
 	
+	var jdtab2save=null;
 	$('#tab2save').click(function(){
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
@@ -163,13 +192,14 @@ function afterSelect(){
 				var btnType;
 				if (type === 'ok'){
 					dataToPost = new Object();
-					dataToPost.gcode = $('#t2gcode').val();
-					dataToPost.gdesc = $('#t2gdesc').val();
-					dataToPost.memo1 = $('#t2memo1').val();
-					dataToPost.action = $('#tab2save').attr('action');
+					dataToPost.TYPECOD 	= $('#t2TYPECOD').val();
+					dataToPost.MODEL 	= $('#t2MODEL').val();
+					dataToPost.MEMO1 	= $('#t2MEMO1').val();
+					dataToPost.action 	= $('#tab2save').attr('action');
 					
-					$.ajax({
-						url:'../setup/CStock/groupSave',
+					$('#loadding').fadeIn(200);
+					jdtab2save = $.ajax({
+						url:'../setup/CStock/modelSave',
 						data:dataToPost,
 						type:'POST',
 						dataType:'json',
@@ -209,7 +239,12 @@ function afterSelect(){
 									msg: data.msg
 								});
 							}
-						}
+							
+							jdtab2save=null;
+							$('#loadding').fadeOut(200);
+						},
+						beforeSend: function(){ if(jdtab2save !== null){ jdtab2save.abort(); } },
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}else{
 					Lobibox.notify('error', {
@@ -230,7 +265,7 @@ function afterSelect(){
 		});
 	});
 	
-	
+	var jdtab2del= null;
 	$('#tab2del').click(function(){
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
@@ -252,13 +287,13 @@ function afterSelect(){
 				var btnType;
 				if (type === 'ok'){
 					dataToPost = new Object();
-					dataToPost.gcode = $('#t2gcode').val();
-					dataToPost.gdesc = $('#t2gdesc').val();
-					dataToPost.memo1 = $('#t2memo1').val();
-					//dataToPost.action = $('#tab2save').attr('action');
+					dataToPost.TYPECOD 	= $('#t2TYPECOD').val();
+					dataToPost.MODEL 	= $('#t2MODEL').val();
+					dataToPost.MEMO1 	= $('#t2MEMO1').val();
 					
-					$.ajax({
-						url:'../setup/CStock/groupDel',
+					$('#loadding').fadeIn(200);
+					jdtab2del = $.ajax({
+						url:'../setup/CStock/modelDel',
 						data:dataToPost,
 						type:'POST',
 						dataType:'json',
@@ -296,7 +331,12 @@ function afterSelect(){
 									msg: data.msg
 								});
 							}
-						}
+							
+							jdtab2del = null;
+							$('#loadding').fadeOut(200);
+						},
+						beforeSend: function(){ if(jdtab2del !== null){ jdtab2del.abort(); } },
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}else{
 					Lobibox.notify('error', {
@@ -316,25 +356,6 @@ function afterSelect(){
 		});
 	});
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

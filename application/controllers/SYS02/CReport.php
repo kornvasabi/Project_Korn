@@ -293,12 +293,6 @@ class CReport extends MY_Controller {
 					</tr>
 				";
 			}
-		}else{
-			$html .= "
-				<tr>
-					<td class='text-center' colspan='14'>ไม่พบข้อมูลตามเงื่อนไข</td>
-				</tr>
-			";
 		}
 		
 		$html = "

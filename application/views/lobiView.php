@@ -28,6 +28,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			background: transparent;
 		}
 		
+		.select2-container--open {
+			z-index:50000;
+		}
+
 		.table > tbody > tr > td
 		, .table > tbody > tr > th
 		, .table > tfoot > tr > td
@@ -338,6 +342,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	function fnAjaxERROR(jqXHR,exception){
 		var msg = '';
 		var delay = 5000;
+		var notify = 'error';
         if (jqXHR.status === 0) {
 			delay = false;
             msg = 'Not connect.\n Verify Network.';
@@ -348,16 +353,22 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             delay = false;
 			msg = 'Internal Server Error [500].';
         } else if (exception === 'parsererror') {
-            msg = 'Requested JSON parse failed.';
+			delay = 3000;
+			notify = 'warning';
+			msg = 'Requested JSON parse failed.';
         } else if (exception === 'timeout') {
-            msg = 'Time out error.';
+            delay = 3000;
+			notify = 'warning';
+			msg = 'Time out error.';
         } else if (exception === 'abort') {
-            msg = 'Ajax request aborted.';
+            delay = 3000;
+			notify = 'warning';
+			msg = 'Ajax request aborted.';
         } else {
             msg = 'Uncaught Error.\n' + jqXHR.responseText;
         }
 		
-		Lobibox.notify('error', {
+		Lobibox.notify(notify, {
 			title: 'ผิดพลาด',
 			size: 'mini',
 			closeOnClick: false,
@@ -717,7 +728,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			$scrollY = $usageHeight;
 		}
 		
-		$('#'+$tbname).DataTable({
+		var tables = $('#'+$tbname).DataTable({
 			//scrollY: ($(window).height() - 375),
 			scrollY: $scrollY,
 			scrollX: true,
@@ -754,6 +765,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			},
 			buttons: ['excel']
 		});
+		
+		//setInterval(function(){ tables.columns.adjust().draw(); },250);
 	}
 </script>
 </html>

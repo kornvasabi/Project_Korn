@@ -46,7 +46,6 @@ $('#btnt1revpayment').click(function(){
 });
 
 function fnForm(data){
-	
 	jdbtnt1revpayment = $.ajax({
 		url:'../SYS06/RevPayment/get_form_received',
 		data: data,
@@ -59,7 +58,7 @@ function fnForm(data){
 				height: $(window).height(),
 				content: data.html,
 				draggable: false,
-				closeOnEsc: true,
+				closeOnEsc: false,
 				shown: function($this){
 					fn_after($this);
 				}
@@ -74,22 +73,28 @@ function fnForm(data){
 
 function fn_after($window){
 	var jd_add_payment=null;
+	$('#add_payment').unbind('click');
 	$('#add_payment').click(function(){
 		jd_add_payment = $.ajax({
-			url:'../SYS06/RevPayment/get_form_received',
-			data: data,
+			url:'../SYS06/RevPayment/get_form_payment',
+			//data: data,
 			type:'POST',
 			dataType:'json',
 			success: function(data){
+				$('#add_payment').attr('disabled',true);
+				
 				Lobibox.window({
 					title: 'แบบฟอร์มรับชำระ',
-					width: $(window).width(),
-					height: $(window).height(),
+					//width: $(window).width(),
+					//height: $(window).height(),
 					content: data.html,
-					draggable: false,
+					draggable: true,
 					closeOnEsc: true,
 					shown: function($this){
 						fn_after($this);
+					},
+					beforeClose: function(){
+						$('#add_payment').attr('disabled',false);
 					}
 				});
 				

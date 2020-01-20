@@ -49,6 +49,8 @@ class MY_Controller extends CI_Controller {
 	public function Convertdate($param,$date){
 		// $param = 1 > to Database
 		// $param = 2 > to User Interface
+		// $param = 22 > to User Interface
+		// $param = 108 > to time User Interface
 		if($date == ''){
 			return '';
 		}else{
@@ -57,11 +59,19 @@ class MY_Controller extends CI_Controller {
 				$mm = substr($date, 3,2);
 				$yy = substr($date, 6,4) - 543;
 				return $yy.$mm.$dd;
-			}else{
+			}else if($param == 2){
 				$yy = substr($date, 0,4) + 543;
 				$mm = substr($date, 4,2);
 				$dd = substr($date, 6,2);
 				return $dd."/".$mm."/".$yy;
+			}else if($param == 103){
+				$yy = substr($date, 0,4) + 543;
+				$mm = substr($date, 5,2);
+				$dd = substr($date, 8,2);
+				return $dd."/".$mm."/".$yy;
+			}else if($param == 108){
+				$time = substr($date, 11,5);
+				return $time;
 			}
 		}
 	}
