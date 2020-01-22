@@ -231,7 +231,8 @@ function Save_alertmsg($thisWindowChange){
 									msg: data.msg
 								});
 							}
-						}
+						},
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}
 			}
@@ -288,7 +289,8 @@ function search(){
 					loadform(CONTNO,LOCAT,CREATEDT,STARTDT,ENDDT,USERID,MEMO1);
 				});
 			}		
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -376,7 +378,8 @@ function loadform(CONTNO,LOCAT,CREATEDT,STARTDT,ENDDT,USERID,MEMO1){
 					
 				}
 			});			
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -534,7 +537,8 @@ function Edit_alertmsg($thisWindowEdit, MEMOold){
 							});
 						}
 						search();
-					}
+					},
+					error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 				});
 			}
 		}

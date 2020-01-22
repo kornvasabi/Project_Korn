@@ -42,7 +42,8 @@ $('#btnt1finance').click(function(){
 		},
 		beforeSend: function(){
 			if(jd_btnt1finance !== null){ jd_btnt1finance.abort(); }
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -256,7 +257,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								},
 								beforeSend: function(){
 									if(jd_cus_search !== null){ jd_cus_search.abort(); }
-								}
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 							});
 						}
 						
@@ -268,9 +270,16 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				});
 				
 				$('#loadding').fadeOut(200);
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
+	
+	$('#add_cuscod_removed').click(function(){
+		$('#add_cuscod').attr('CUSCOD','');
+		$('#add_cuscod').val('');
+	});
+	
 	
 	/*
 	$('#add_cuscod').select2({
@@ -481,7 +490,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								},
 								beforeSend: function(){
 									if(jd_cus_search !== null){ jd_cus_search.abort(); }
-								}
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 							});
 						}
 						
@@ -494,10 +504,15 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				});
 				
 				$('#loadding').fadeOut(200);
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
+	$('#add_recomcod_removed').click(function(){
+		$('#add_recomcod').attr('CUSCOD','');
+		$('#add_recomcod').val('');
+	});
 	
 	$('#btn_addBillDas').click(function(){
 		var data = false;
@@ -654,7 +669,8 @@ function fn_calbilldas(){
 				var comment = $('#add_memo1').val().split("\n");
 				$('#add_memo1').val(data.Details+"\n"+(typeof comment[1] === 'undefined' ? '' : comment[1]));
 				$('#loadding').hide();
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		})
 	}else{
 		$('#add_free').val('0.00');

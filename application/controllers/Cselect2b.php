@@ -227,6 +227,31 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getMODELS(){
+		//รุ่นรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		
+		$sql = "
+			select top 50 MODELCOD from {$this->MAuth->getdb('SETMODEL')}
+			where MODELCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by MODELCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
+				$json[] = array('id'=>$row->MODELCOD, 'text'=>$row->MODELCOD);
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
 	function getBAAB(){
 		//แบบรถ
 		$sess = $this->session->userdata('cbjsess001');
@@ -254,6 +279,30 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getBAABS(){
+		//แบบรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		
+		$sql = "
+			select distinct BAABCOD from {$this->MAuth->getdb('SETBAAB')}
+			where BAABCOD like '%".$dataSearch."%' collate Thai_CI_AS
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
+				$json[] = array('id'=>$row->BAABCOD, 'text'=>$row->BAABCOD);
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
 	function getCOLOR(){
 		//สีรถ
 		$sess = $this->session->userdata('cbjsess001');
@@ -261,6 +310,30 @@ class Cselect2b extends MY_Controller {
 		
 		$sql = "
 			select COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
+			where COLORCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by COLORCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array('id'=>$row->COLORCOD, 'text'=>$row->COLORCOD);
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCOLORS(){
+		//สีรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		
+		$sql = "
+			select top 50 COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
 			where COLORCOD like '%".$dataSearch."%' collate Thai_CI_AS
 			order by COLORCOD
 		"; 
@@ -375,7 +448,6 @@ class Cselect2b extends MY_Controller {
 			select ACTICOD,'('+ACTICOD+') '+ACTIDES as ACTIDES
 			from {$this->MAuth->getdb('SETACTI')}
 			where 1=1 and ACTICOD='".$dataNow."' collate Thai_CI_AS 
-				
 			union
 			select ACTICOD,'('+ACTICOD+') '+ACTIDES as ACTIDES
 			from {$this->MAuth->getdb('SETACTI')}
@@ -463,6 +535,30 @@ class Cselect2b extends MY_Controller {
 		$dataSearch = trim($_GET['q']);
 		
 		$sql = "
+			select top 10 FORCODE, FORCODE+' - '+FORDESC as FORDESC
+			from {$this->MAuth->getdb('PAYFOR')} 
+			where FORCODE not like '0%' and (FORCODE like '".$dataSearch."%' or FORDESC like '%".$dataSearch."%')
+			order by FORCODE
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->FORCODE, 'text'=>$row->FORDESC];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getPAYFORnot102(){
+		//ประเภทการขาย
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		
+		$sql = "
 			select top 10 FORCODE, FORCODE+' - '+FORDESC as FORDESC, 
 			case when FORCODE = '102' then 'disabled' else '' end as disabled
 			from {$this->MAuth->getdb('PAYFOR')} 
@@ -481,7 +577,6 @@ class Cselect2b extends MY_Controller {
 		
 		echo json_encode($json);
 	}
-	
 	
 	function getCONTNO_AR(){
 		//เลขที่สัญญา
@@ -924,7 +1019,7 @@ class Cselect2b extends MY_Controller {
 		$dataSearch = trim($_REQUEST['q']);
 		
 		$sql = "
-			select  top 20 CODE, NAME+' ('+CODE +')'  as NAME, DEPCODE from {$this->MAuth->getdb('OFFICER')}
+			select  top 20 CODE, CODE+' - '+NAME  as NAME, DEPCODE from {$this->MAuth->getdb('OFFICER')}
 			where 	CODE like '%".$dataSearch."%' collate Thai_CI_AS 
 					or NAME like '%".$dataSearch."%' collate Thai_CI_AS
 		";
@@ -1102,7 +1197,91 @@ class Cselect2b extends MY_Controller {
 		$dataSearch = trim($_REQUEST['q']);
 
 		$sql = "
-				select CONTNO from {$this->MAuth->getdb('ARCRED')}
+				select top 20  CONTNO from {$this->MAuth->getdb('ARCRED')}
+				where CONTNO like '%".$dataSearch."%'
+	
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_H(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20 CONTNO from {$this->MAuth->getdb('ARMAST')}
+				where CONTNO like '%".$dataSearch."%'
+	
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_F(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20 CONTNO from {$this->MAuth->getdb('ARFINC')}
+				where CONTNO like '%".$dataSearch."%'
+	
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_A(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20  CONTNO from {$this->MAuth->getdb('AR_INVOI')}
+				where CONTNO like '%".$dataSearch."%'
+	
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCONTNO_OP(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20  CONTNO from {$this->MAuth->getdb('AROPTMST')}
 				where CONTNO like '%".$dataSearch."%'
 	
 		";//echo $sql; exit;
@@ -1140,31 +1319,6 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($json);
 	}
 	
-	function getMODELS(){
-		//รุ่นรถ
-		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_GET['q']);
-		
-		$sql = "
-			select MODELCOD from {$this->MAuth->getdb('SETMODEL')}
-			where MODELCOD like '%".$dataSearch."%' collate Thai_CI_AS
-			order by MODELCOD
-		"; 
-		//echo $sql; exit;
-		$query = $this->db->query($sql);
-		
-		$html = "";
-		$json = array();
-		if($query->row()){
-			foreach($query->result() as $row){
-				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
-				$json[] = array('id'=>$row->MODELCOD, 'text'=>$row->MODELCOD);
-			}
-		}
-		
-		echo json_encode($json);
-	}
-	
 	function getTYPCONT(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_GET['q']);
@@ -1185,6 +1339,81 @@ class Cselect2b extends MY_Controller {
 			}
 		}
 		echo json_encode($json);
+	}
+	
+	function getFINCODE(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select FINCODE, FINNAME as FINNAME 
+			from {$this->MAuth->getdb('FINMAST')}
+			where FINCODE like '%".$dataSearch."%' collate Thai_CI_AS
+				or FINNAME like '%".$dataSearch."%' collate Thai_CI_AS
+			order by FINCODE
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->FINCODE, 'text'=>$row->FINCODE.' - '.$row->FINNAME];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function getARCONT(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+
+		$sql = "
+				select top 20 ARCONT from {$this->MAuth->getdb('AROTHR')}
+				where ARCONT like '%".$dataSearch."%'
+	
+		";//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->ARCONT, 'text'=>$row->ARCONT];					
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getARGROUP(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select ARGCOD, ARGDES 
+			from {$this->MAuth->getdb('ARGROUP')}
+			where ARGCOD like '%".$dataSearch."%' collate Thai_CI_AS
+				or ARGDES like '%".$dataSearch."%' collate Thai_CI_AS
+			order by ARGCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->ARGCOD, 'text'=>$row->ARGDES];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function dateofendmonth(){
+		$frmdate = $this->Convertdate(1,$_REQUEST["frmdate"]);
+		$date = "select convert(nvarchar,DATEADD(day,-1,DATEADD(month,1,substring('".$frmdate."',1,6)+'01')),112) as dateofendmonth";
+		$querydate = $this->db->query($date);
+		$rows = $querydate->row();
+		$dateofendmonth = $rows->dateofendmonth;
+		$response["dateofendmonth"] = $this->Convertdate(2,$dateofendmonth);
+		echo json_encode($response);
 	}
 	
 }

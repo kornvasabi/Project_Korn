@@ -651,6 +651,7 @@ function loadform(CONTNO,LOCAT,CUSCOD,CUSNAME,REGNO,STRNO,TOTPRC,SMPAY,TOTBAL,EX
 							$('#MEMO').attr('disabled',true);
 						}
 					}
+					
 					$('#btnsave_holdtooldcar').click(function(){ 
 						Edit_holdtooldcar($this);
 					});

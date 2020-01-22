@@ -298,6 +298,322 @@ function Save_changecontstat($thisWindowChange){
 							$('#loadding').hide();
 							if(data.status == 'S'){
 								$thisWindowChange.destroy();
+								if(data.stat == 'Y'){
+									Add_Hold(data.contno);
+								}
+								Lobibox.notify('success', {
+									title: 'สำเร็จ',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 15000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}else if(data.status == 'W'){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 15000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}else if(data.status == 'E'){
+								Lobibox.notify('error', {
+									title: 'ผิดพลาด',
+									size: 'mini',
+									closeOnClick: false,
+									delay: false,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}
+						}
+					});
+				}
+			}
+		}
+	});
+}
+
+function Add_Hold($contno){
+	dataToPost = new Object();
+	dataToPost.level = _level;
+	$('#loadding').show();
+	$.ajax({
+		url:'../SYS05/HoldtoStock/getfromHoldtoOldcar',
+		data: dataToPost,
+		type: 'POST',
+		dataType: 'json',
+		success: function(data){
+			$('#loadding').hide();
+			Lobibox.window({
+				title: 'บันทึกเปลี่ยนรถยึดเป็นรถเก่า (เพื่อขาย)',
+				width: $(window).width(),
+				height: $(window).height(),
+				//width:'100%',
+				//height:'100%',
+				content: data.html,
+				draggable: true,
+				closeOnEsc: true,
+				shown: function($this){
+					Add_HoldtoOldcar($this,$contno);
+				}
+			});			
+		}
+	});
+}
+
+function Add_HoldtoOldcar($thisWindowChange2,$contno){
+	$('#btndel_holdtooldcar').attr('disabled',true);
+	
+	var contno =  $contno;
+	dataToPost = new Object();
+	dataToPost.contno = contno;
+	$.ajax({
+		url : '../SYS05/HoldtoStock/searchCONTNOtoOldcar',
+		data : dataToPost,
+		type : "POST",
+		dataType : "json",
+		success: function(data){
+			$('#CONTNO2').select2({
+				placeholder: 'เลือก',
+				ajax: {
+					url: '../Cselect2b/getCONTNO_HOLDTOOLDCAR',
+					data: function (params) {
+						dataToPost = new Object();
+						//dataToPost.now = $('#add_cuscod').find(':selected').val();
+						dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+						
+						return dataToPost;				
+					},
+					dataType: 'json',
+					delay: 1000,
+					processResults: function (data) {
+						return {
+							results: data
+						};
+					},
+					cache: true
+				},
+				allowClear: true,
+				multiple: false,
+				dropdownParent: $(".lobibox-body"),
+				//disabled: true,
+				//theme: 'classic',
+				width: '100%',
+			});	
+			
+			$('#GCODENEW2').select2({
+				placeholder: 'เลือก',
+				ajax: {
+					url: '../Cselect2b/getGCode_ExchangCar',
+					data: function (params) {
+						dataToPost = new Object();
+						//dataToPost.now = $('#add_cuscod').find(':selected').val();
+						dataToPost.GCODEold = (typeof $('#GCODENEW2').find(':selected').val() === 'undefined' ? '':$('#GCODENEW2').find(':selected').val());
+						dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+						return dataToPost;				
+					},
+					dataType: 'json',
+					delay: 1000,
+					processResults: function (data) {
+						return {
+							results: data
+						};
+					},
+					cache: true
+				},
+				allowClear: true,
+				multiple: false,
+				dropdownParent: $(".lobibox-body"),
+				//disabled: true,
+				//theme: 'classic',
+				dropdownAutoWidth : true,
+				width: '100%'
+			});
+			
+			$('#TYPHOLD2').select2({
+				placeholder: 'เลือก',
+				ajax: {
+					url: '../Cselect2b/getTYPHOLD',
+					data: function (params) {
+						dataToPost = new Object();
+						//dataToPost.now = $('#add_cuscod').find(':selected').val();
+						dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+						return dataToPost;				
+					},
+					dataType: 'json',
+					delay: 1000,
+					processResults: function (data) {
+						return {
+							results: data
+						};
+					},
+					cache: true
+				},
+				allowClear: true,
+				multiple: false,
+				dropdownParent: $(".lobibox-body"),
+				//disabled: true,
+				//theme: 'classic',
+				dropdownAutoWidth : false,
+				width: '100%'
+			});
+			$('#TYPHOLD2').on('select2:open', function (e) {
+			  $(".select2-results__options").height(135);
+			});
+
+			$('#Y_USER2').select2({
+				placeholder: 'เลือก',
+				ajax: {
+					url: '../Cselect2b/getOFFICER',
+					data: function (params) {
+						dataToPost = new Object();
+						//dataToPost.now = $('#add_cuscod').find(':selected').val();
+						dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+						return dataToPost;				
+					},
+					dataType: 'json',
+					delay: 1000,
+					processResults: function (data) {
+						return {
+							results: data
+						};
+					},
+					cache: true
+				},
+				allowClear: true,
+				multiple: false,
+				dropdownParent: $(".lobibox-body"),
+				//disabled: true,
+				//theme: 'classic',
+				dropdownAutoWidth : false,
+				width: '100%'
+			});
+			$('#Y_USER2').on('select2:open', function (e) {
+			  $(".select2-results__options").height(135);
+			});
+
+			$('#LOCAT2').val(data.CRLOCAT);
+			$('#CUSNAME2').val(data.CUSNAME);
+			$('#CUSCOD2').val(data.CUSCOD);
+			$('#REGNO2').val(data.REGNO);
+			$('#STRNO2').val(data.STRNO);
+			$('#PRICE2').val(data.TOTPRC);
+			$('#SMPAY2').val(data.SMPAY);
+			$('#BALANCE2').val(data.BALANCE);
+			$('#NETAR2').val(data.EXP_AMT);
+			$('#BOOKVALUE2').val(data.BOOKVALUE);
+			$('#SALEVAT2').val(data.VATPRC);
+			$('#LOCATR2').val(data.CRLOCAT);
+			$('#SALENEW2').val(data.NEWPRC);	
+			
+			newOption = new Option(data.CONTNO, data.CONTNO, false, false);
+			$('#CONTNO2').empty();
+			$('#CONTNO2').append(newOption).trigger('change'); 
+			$('#CONTNO2').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
+			
+			newOption = new Option('('+data.GCODE+') '+data.GDESC, data.GCODE, false, false);
+			$('#GCODENEW2').empty();
+			$('#GCODENEW2').append(newOption).trigger('change'); 
+			
+			newOption = new Option(data.BILLCOLL+' - '+data.NAME, data.BILLCOLL, false, false);
+			$('#Y_USER2').empty();
+			$('#Y_USER2').append(newOption).trigger('change'); 
+			
+			//_insert = 'T';
+			if(_insert == 'T'){
+				$('#btnsave_holdtooldcar').attr('disabled',false);
+			}else{
+				$('#btnsave_holdtooldcar').attr('disabled',true);
+			}
+			
+			$('#btnsave_holdtooldcar').click(function(){
+				Save_holdtooldcar($thisWindowChange2);
+			});
+		}
+	});
+}
+
+function Save_holdtooldcar($thisWindowChange2){
+	Lobibox.confirm({
+		title: 'ยืนยันการทำรายการ',
+		iconClass: false,
+		msg: 'คุณต้องการบันทึกรถเปลี่ยนรถยึดเป็นรถเก่า (เพื่อขาย) หรือไม่',
+		buttons: {
+			ok : {
+				'class': 'btn btn-primary',
+				text: 'ยืนยัน',
+				closeOnClick: true,
+			},
+			cancel : {
+				'class': 'btn btn-danger',
+				text: 'ยกเลิก',
+				closeOnClick: true
+			},
+		},
+		
+		callback: function(lobibox, type){
+			if (type === 'ok'){
+				dataToPost = new Object();
+				dataToPost.CONTNO 	= (typeof $('#CONTNO2').find(':selected').val() === 'undefined' ? '':$('#CONTNO2').find(':selected').val());
+				dataToPost.GCODENEW = (typeof $('#GCODENEW2').find(':selected').val() === 'undefined' ? '':$('#GCODENEW2').find(':selected').val());
+				dataToPost.TYPHOLD 	= (typeof $('#TYPHOLD2').find(':selected').val() === 'undefined' ? '':$('#TYPHOLD2').find(':selected').val());
+				dataToPost.Y_USER 	= (typeof $('#Y_USER2').find(':selected').val() === 'undefined' ? '':$('#Y_USER2').find(':selected').val());
+				dataToPost.STRNO 	= $('#STRNO2').val();
+				dataToPost.BOOKVAL 	= $('#BOOKVALUE2').val();
+				dataToPost.SALEVAT 	= $('#SALEVAT2').val();
+				dataToPost.COST 	= $('#COST2').val();
+				dataToPost.COSTVAT 	= $('#COSTVAT2').val();
+				dataToPost.DATECHG 	= $('#DATECHG2').val();
+				dataToPost.SALENEW 	= $('#SALENEW2').val();
+				dataToPost.MEMO 	= $('#MEMO2').val();
+				
+				if(dataToPost.BOOKVAL == "" || dataToPost.COST == "" || dataToPost.SALENEW == "" || dataToPost.TYPHOLD == ""){	
+					var $msg = "";
+					if(dataToPost.BOOKVAL == ""){
+						$msg = "กรุณาระบุ มูลค่าคงเหลือตามบัญชี";
+					}else if(dataToPost.COST == ""){
+						$msg = "กรุณาระบุ มูลค่าต้นทุน (ไม่รวม VAT)";
+					}else if(dataToPost.SALENEW == ""){
+						$msg = "กรุณาระบุ ราคาขายใหม่";
+					}else if(dataToPost.TYPHOLD == ""){
+						$msg = "กรุณาระบุ เหตุที่บอกเลิกสัญญา";
+					}
+					Lobibox.notify('warning', {
+						title: 'แจ้งเตือน',
+						size: 'mini',
+						closeOnClick: false,
+						delay: 15000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
+						soundExt: '.ogg',
+						icon: true,
+						messageHeight: '90vh',
+						msg: $msg
+					});
+				}else{
+					$('#loadding').show();
+					$.ajax({
+						url:'../SYS05/HoldtoStock/Save_holdtooldcar',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						success: function(data) {
+							$('#loadding').hide();
+							if(data.status == 'S'){
+								$thisWindowChange2.destroy();
 								Lobibox.notify('success', {
 									title: 'สำเร็จ',
 									size: 'mini',
@@ -369,7 +685,7 @@ function search(){
 			$('#resultt_HoldtoStock').html(data.html);
 			
 			$('#table-changecontstat').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-changecontstat',1,325);
+			fn_datatables('table-changecontstat',1,320);
 			
 			function redraw(){
 				$('.getit').hover(function(){
@@ -454,7 +770,6 @@ function loadform(CONTNO,YDATE,LOCAT,CUSNAME,CUSCOD,STRNO,TOTPRC,SMPAY,BALANCE,E
 					
 					$('#btnsave_holdtostock').attr('disabled',true);
 					$('#btnclr_holdtostock').attr('disabled',true);
-					
 					
 				}
 			});			

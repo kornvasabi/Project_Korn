@@ -129,7 +129,8 @@ function search(){
 					$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'white'});
 				});
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -190,7 +191,8 @@ $('#confirm_resultt1AT').click(function(){
 					success:function(data){
 						$('#resultt1received').find('.spinner, .spinner-backdrop').remove();
 						$('#resultt1received2').html(data.html);
-					}
+					},
+					error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 				});
 			}
 		}

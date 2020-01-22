@@ -49,6 +49,8 @@ class MY_Controller extends CI_Controller {
 	public function Convertdate($param,$date){
 		// $param = 1 > to Database
 		// $param = 2 > to User Interface
+		// $param = 22 > to User Interface
+		// $param = 108 > to time User Interface
 		if($date == ''){
 			return '';
 		}else{
@@ -57,11 +59,19 @@ class MY_Controller extends CI_Controller {
 				$mm = substr($date, 3,2);
 				$yy = substr($date, 6,4) - 543;
 				return $yy.$mm.$dd;
-			}else{
+			}else if($param == 2){
 				$yy = substr($date, 0,4) + 543;
 				$mm = substr($date, 4,2);
 				$dd = substr($date, 6,2);
 				return $dd."/".$mm."/".$yy;
+			}else if($param == 103){
+				$yy = substr($date, 0,4) + 543;
+				$mm = substr($date, 5,2);
+				$dd = substr($date, 8,2);
+				return $dd."/".$mm."/".$yy;
+			}else if($param == 108){
+				$time = substr($date, 11,5);
+				return $time;
 			}
 		}
 	}
@@ -192,6 +202,7 @@ class MY_Controller extends CI_Controller {
 				,convert(varchar(8),(convert(varchar(6),getdate(),112)+'01'),112) as startofmonth
 				,convert(varchar(8),getdate(),112) as today
 				,convert(varchar(8),(dateadd(day,-1,convert(varchar(6),dateadd(month,1,getdate()),112)+'01')),112) as endofmonth
+				,convert(varchar(8),dateadd(day,-1,convert(varchar(6),getdate(),112)+'01'),112) as endofmonthB1
 				,convert(varchar(8),dateadd(month,1,getdate()),112) as todaynextmonth
 		";
 		$query = $this->db->query($sql);
@@ -204,6 +215,7 @@ class MY_Controller extends CI_Controller {
 					case 'startofmonth': return $this->Convertdate(2,$row->startofmonth); break;
 					case 'today': return $this->Convertdate(2,$row->today); break;
 					case 'endofmonth': return $this->Convertdate(2,$row->endofmonth); break;
+					case 'endofmonthB1': return $this->Convertdate(2,$row->endofmonthB1); break;
 					case 'todaynextmonth': return $this->Convertdate(2,$row->todaynextmonth); break;
 				}
 			}

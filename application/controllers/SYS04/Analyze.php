@@ -759,12 +759,12 @@ class Analyze extends MY_Controller {
 								เงินดาวน์ ป.1 &emsp;
 								<div class='radio-inline' style='margin-top:-5px'>
 									<label>
-										<input type='radio' name='insuranceType' value='male' >รวม
+										<input type='radio' class='insuranceType' name='insuranceType' value='Y' >รวม
 									</label>
 								</div>
 								<div class='radio-inline' style='margin-top:-5px'>
 									<label>
-										<input type='radio' name='insuranceType' value='female' checked>แยก
+										<input type='radio' class='insuranceType' name='insuranceType' value='N' checked>แยก
 									</label>
 								</div>
 								<input type='text' id='insuranceAmt' class='form-control input-sm jzAllowNumber'>
@@ -1822,6 +1822,7 @@ class Analyze extends MY_Controller {
 		$arrs["resvno"] 	= ($_POST["resvno"] == "" ? "NULL":"'".$_POST["resvno"]."'");
 		$arrs["resvAmt"] 	= ($_POST["resvAmt"] == "" ? "NULL":"'".$_POST["resvAmt"]."'");
 		$arrs["dwnAmt"] 	= ($_POST["dwnAmt"] == "" ? "NULL":"'".$_POST["dwnAmt"]."'");
+		$arrs["insuranceType"] = ($_POST["insuranceType"] == "" ? "NULL":"'".$_POST["insuranceType"]."'");
 		$arrs["insuranceAmt"] = ($_POST["insuranceAmt"] == "" ? "NULL":"'".$_POST["insuranceAmt"]."'");
 		$arrs["nopay"] 		= "'".$_POST["nopay"]."'";
 		$arrs["strno"] 		= "'".$_POST["strno"]."'";
@@ -1926,10 +1927,10 @@ class Analyze extends MY_Controller {
 				
 				declare @id bigint;
 				insert into {$this->MAuth->getdb('ARANALYZE')} (
-					ID,LOCAT,RESVNO,RESVAMT,DWN,DWN_INSURANCE,INTEREST_RT,NOPAY,STRNO,MODEL
+					ID,LOCAT,RESVNO,RESVAMT,DWN,INSURANCE_TYP,DWN_INSURANCE,INTEREST_RT,NOPAY,STRNO,MODEL
 					,BAAB,COLOR,STAT,SDATE,YDATE,PRICE,ANSTAT,STDID,STDPLRANK,INSBY,INSDT
 				) 
-				select @ANID,".$arrs["locat"].",".$arrs["resvno"].",".$arrs["resvAmt"].",".$arrs["dwnAmt"]."
+				select @ANID,".$arrs["locat"].",".$arrs["resvno"].",".$arrs["resvAmt"].",".$arrs["dwnAmt"].",".$arrs["insuranceType"]."
 					,".$arrs["insuranceAmt"].",".$arrs["interatert"].",".$arrs["nopay"].",".$arrs["strno"].",".$arrs["model"]."
 					,".$arrs["baab"].",".$arrs["color"].",".$arrs["stat"].",".$arrs["sdateold"].",".$arrs["ydate"]."
 					,".$arrs["price"].",'I',".$arrs["stdid"].",".$arrs["stdplrank"].",'".$this->sess["IDNo"]."',getdate();
@@ -2023,12 +2024,12 @@ class Analyze extends MY_Controller {
 		//echo $sql; exit;
 		$this->db->query($sql);
 		
-		$sql 	= "select * from #transaction";   
-		$query 	= $this->db->query($sql);
+		$sql   = "select * from #transaction";
+		$query = $this->db->query($sql);
 		
-		$stat 	= true;
+		$stat  = true;
+		$msg   = '';
 		$ARANALYZE_ID  = '';
-		$msg  	= '';
 		
 		if($query->row()) {
 			foreach ($query->result() as $row) {

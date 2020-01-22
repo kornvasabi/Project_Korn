@@ -20,8 +20,7 @@ class HoldtoOldcar extends MY_Controller {
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		$sql = "
-			select * from {$this->MAuth->getdb('VATMAST')}
-			where getdate() between FRMDATE and TODATE
+			select * from {$this->MAuth->getdb('VATMAST')} where getdate() between FRMDATE and TODATE
 		";
 		$query = $this->db->query($sql);
 		$row = $query->row();
@@ -383,7 +382,7 @@ class HoldtoOldcar extends MY_Controller {
 			<div id='table-fixed-holdtooldcar' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
 				<table id='table-holdtooldcar' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
-						<tr>
+						<tr style='height:30px;'>
 							<th style='vertical-align:middle;'>#</th>
 							<th style='vertical-align:middle;'>เลขที่สัญญา</th>
 							<th style='vertical-align:middle;'>สัญญาสาขา</th>
@@ -611,6 +610,9 @@ class HoldtoOldcar extends MY_Controller {
 					
 					--อัพดท HARMAST
 					update {$this->MAuth->getdb('HARMAST')} set CLOSDT = '".$DATECHG."' where CONTNO = @CONTNO and STRNO = @STRNO
+					
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+					values ('".$this->sess["IDNo"]."','SYS05::บันทึกเปลี่ยนรถยึดเป็นรถเก่า (แก้ไข)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 	
 					insert into #EditHOLDTemp select 'S',@CONTNO,'แก้ไขเปลี่ยนรถยึดเป็นรถเก่า เลขตัวถัง '+@STRNO+' เรียบร้อย';
 					
@@ -683,6 +685,10 @@ class HoldtoOldcar extends MY_Controller {
 					
 					--ลบ ARHOLD
 					delete {$this->MAuth->getdb('ARHOLD')} where CONTNO = @CONTNO and STRNO = @STRNO
+					
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+					values ('".$this->sess["IDNo"]."','SYS05::บันทึกเปลี่ยนรถยึดเป็นรถเก่า (ลบ)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+	
 					
 					insert into #DelHoldTemp select 'S',@CONTNO,'ลบรายการเปลี่ยนรถยึดเป็นรถเก่า เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 					

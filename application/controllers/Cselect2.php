@@ -299,7 +299,7 @@ class Cselect2 extends MY_Controller {
 	function getTYPES(){
 		//รุ่นรถ
 		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_GET['q']);
+		$dataSearch = trim($_REQUEST['q']);
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		
 		$sql = "
@@ -329,12 +329,12 @@ class Cselect2 extends MY_Controller {
 	function getMODEL(){
 		//รุ่นรถ
 		$sess = $this->session->userdata('cbjsess001');
-		$dataSearch = trim($_GET['q']);
+		$dataSearch = trim($_REQUEST['q']);
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		$TYPECOD = $_REQUEST['TYPECOD'];
 		
 		$sql = "
-			select top 20 MODELCOD from {$this->MAuth->getdb('SETMODEL')}
+			select top 100 MODELCOD from {$this->MAuth->getdb('SETMODEL')}
 			where TYPECOD='".$TYPECOD."' and MODELCOD like '%".$dataSearch."%' collate Thai_CI_AS
 			order by MODELCOD
 		"; 
@@ -381,6 +381,36 @@ class Cselect2 extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getCOLORSTOCK(){
+		//สีรถ
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		//$model = (!isset($_REQUEST["model"]) ? "" : $_REQUEST["model"]);
+		//$baab  = (!isset($_REQUEST["baab"]) ? "" : $_REQUEST["baab"]);
+		
+		$sql = "
+			select COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
+			where COLORCOD = '".$dataNow."' collate Thai_CI_AS
+			union
+			select COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
+			where COLORCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by COLORCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array('id'=>str_replace(chr(0),"",$row->COLORCOD), 'text'=>str_replace(chr(0),"",$row->COLORCOD));
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
 	function getCOLOR(){
 		//สีรถ
 		$sess = $this->session->userdata('cbjsess001');
@@ -410,6 +440,109 @@ class Cselect2 extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = array('id'=>str_replace(chr(0),"",$row->COLORCOD), 'text'=>str_replace(chr(0),"",$row->COLORCOD));
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCOLOR_STD(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
+			where COLORCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by COLORCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array('id'=>str_replace(chr(0),"",$row->COLORCOD), 'text'=>str_replace(chr(0),"",$row->COLORCOD));
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getJDCOLOR(){
+		$sess 		= $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow 	= (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$MODEL 		= $_REQUEST['MODEL'];
+		$BAAB 		= $_REQUEST['BAAB'];
+		
+		$sql = "
+			select COLORCOD from {$this->MAuth->getdb('JD_SETCOLOR')}
+			where MODELCOD='{$MODEL}' collate Thai_CI_AS
+				and BAABCOD='{$BAAB}' collate Thai_CI_AS
+			order by COLORCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array('id'=>str_replace(chr(0),"",$row->COLORCOD), 'text'=>str_replace(chr(0),"",$row->COLORCOD));
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getCC(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select CCCOD from {$this->MAuth->getdb('SETCC')}
+			where cast(CCCOD as varchar) = '".$dataNow."'
+			union
+			select CCCOD from {$this->MAuth->getdb('SETCC')}
+			where cast(CCCOD as varchar) like '%".$dataSearch."%'
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array('id'=>str_replace(chr(0),"",$row->CCCOD), 'text'=>str_replace(chr(0),"",$row->CCCOD));
+			}
+		}
+		
+		echo json_encode($json);
+	}
+		
+	function getAPMAST(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select APCODE,APCODE+' '+APNAME as APNAME from {$this->MAuth->getdb('APMAST')}
+			where APCODE='".$dataNow."'
+			
+			union all
+			select APCODE,APCODE+' '+APNAME as APNAME from {$this->MAuth->getdb('APMAST')}
+			where APCODE+' '+APNAME like '%".$dataSearch."%'
+		";
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$json = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array('id'=>str_replace(chr(0),"",$row->APCODE), 'text'=>str_replace(chr(0),"",$row->APNAME));
 			}
 		}
 		

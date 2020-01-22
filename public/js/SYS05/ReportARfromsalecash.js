@@ -168,7 +168,7 @@ function search(){
 	var vat = "";
 	if($("#showvat").is(":checked")){ 
 		vat = "showvat";
-	}else if($("#contno").is(":checked")){
+	}else if($("#sumvat").is(":checked")){
 		vat = "sumvat";
 	}
 	var stat = "";
@@ -206,7 +206,7 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportARfromsalecash',1,350);
+			fn_datatables('table-ReportARfromsalecash',1,290);
 			//$('.dataTables_info').hide();
 			
 			$('.data-export').prepend('<img id="print-ARfromsalecash" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
@@ -261,7 +261,7 @@ function printReport(){
 	var vat = "";
 	if($("#showvat").is(":checked")){ 
 		vat = "showvat";
-	}else if($("#contno").is(":checked")){
+	}else if($("#sumvat").is(":checked")){
 		vat = "sumvat";
 	}
 	var stat = "";

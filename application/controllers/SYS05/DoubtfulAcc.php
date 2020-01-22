@@ -318,7 +318,7 @@ class DoubtfulAcc extends MY_Controller {
 		
 		$head = ""; $html = ""; $report = ""; $sumreport = ""; $i=0; $ii=0;
 	
-		$head = "<tr>
+		$head = "<tr style='height:30px;'>
 				<th style='vertical-align:middle;'>#</th>
 				<th style='vertical-align:middle;'>สาขา</th>
 				<th style='vertical-align:middle;'>เลขที่สัญญา</th>
@@ -759,6 +759,9 @@ class DoubtfulAcc extends MY_Controller {
 				BALPROF = ".$NPROFIT.", LOSTDT = '".$DATELOST."', LOSTCOD = '".$TYPLOST."', MEMO1 = '".$MEMO."'
 				where CONTNO like @CONTNO and STRNO like @STRNO
 				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS05::บันทึกรายการหนี้สงสัยจะสูญ (แก้ไข)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
 				insert into #EditARLOSTTemp select 'S',@CONTNO,'แก้ไขรายการตั้งหนี้สงสัยจะสูญ เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 
 				commit tran EditARLOSTTemp;
@@ -820,6 +823,9 @@ class DoubtfulAcc extends MY_Controller {
 				delete {$this->MAuth->getdb('HARMAST')} 	where CONTNO = @CONTNO and STRNO = @STRNO
 				delete {$this->MAuth->getdb('HARPAY')} 		where CONTNO = @CONTNO 
 				delete {$this->MAuth->getdb('HARMGAR')} 	where CONTNO = @CONTNO 
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS05::บันทึกรายการหนี้สงสัยจะสูญ (ลบ)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				
 				insert into #DelARLOSTTemp select 'S',@CONTNO,'ลบรายการตั้งหนี้สงสัยจะสูญ เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 

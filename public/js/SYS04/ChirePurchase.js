@@ -85,12 +85,14 @@ $('#tab21_CUSCODSearch').click(function(){
 									$this.destroy();
 									
 								});
-							}
+							},
+							error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 						});
 					});
 				}
 			});
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 

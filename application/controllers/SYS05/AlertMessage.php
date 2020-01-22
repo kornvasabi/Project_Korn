@@ -233,7 +233,7 @@ class AlertMessage extends MY_Controller {
 			<div id='table-fixed-alertmsg' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
 				<table id='table-alertmsg' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
-						<tr>
+						<tr style='height:30px;'>
 							<th style='vertical-align:middle;'>#</th>
 							<th style='vertical-align:middle;'>วันที่บันทึก</th>
 							<th style='vertical-align:middle;'>สาขา</th>
@@ -339,6 +339,9 @@ class AlertMessage extends MY_Controller {
 				where CONTNO = @CONTNO collate thai_cs_as and STARTDT = '".$STARTDT."' 
 				and ENDDT = '".$ENDDT."' and MEMO1 like '".$MEMO."%'
 				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS05::บันทึกข้อความเตือน (ลบ)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
 				insert into #DelALERTMSG select 'S',@CONTNO,'ลบข้อความแจ้งเตือน เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 				
 				commit tran DelALERTMSG;
@@ -389,6 +392,9 @@ class AlertMessage extends MY_Controller {
 				set MEMO1 = '".$MEMO."'
 				where CONTNO = @CONTNO collate thai_cs_as and STARTDT = '".$STARTDT."' 
 				and ENDDT = '".$ENDDT."' and MEMO1 like '".$MEMOold."%'
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS05::บันทึกข้อความเตือน (แก้ไข)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				
 				insert into #UpdateALERTMSG select 'S',@CONTNO,'แก้ไขข้อความแจ้งเตือน เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 				

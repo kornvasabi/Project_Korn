@@ -233,7 +233,8 @@ $("#btnt1search").click(function(){
 															},
 															beforeSend: function(){
 																if(JDapprove !== null){ JDapprove.abort(); }
-															}
+															},
+															error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 														});
 													}
 												}else{
@@ -242,7 +243,8 @@ $("#btnt1search").click(function(){
 												}
 											}
 										});
-									}
+									},
+									error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 								});
 							});
 							
@@ -250,7 +252,8 @@ $("#btnt1search").click(function(){
 						},
 						beforeSend: function(){
 							if(JDandetail !== null){ JDandetail.abort(); }
-						}
+						},
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				});						
 			}
@@ -305,7 +308,8 @@ $("#btnt1createappr").click(function(){
 			if(JDbtnt1createappr !== null){
 				JDbtnt1createappr.abort();
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -515,7 +519,8 @@ function fnload($thisForm){
 				if(JDresvno !== null){
 					JDresvno.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -691,7 +696,8 @@ function fnload($thisForm){
 					if(JDstrno !== null){
 						JDstrno.abort();
 					}
-				}
+				},
+				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 			});
 		}
 	});
@@ -912,7 +918,8 @@ function fnload($thisForm){
 				if(JDcuscod !== null){
 					JDcuscod.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -1021,7 +1028,8 @@ function fnload($thisForm){
 					if(JDis1_cuscod !== null){
 						JDis1_cuscod.abort();
 					}
-				}
+				},
+				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 			});
 		}
 	});
@@ -1143,7 +1151,8 @@ function fnload($thisForm){
 					if(JDis2_cuscod !== null){
 						JDis2_cuscod.abort();
 					}
-				}
+				},
+				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 			});
 		}
 	});
@@ -1649,17 +1658,14 @@ function fnload($thisForm){
 	});
 	
 	var JDsave = null;
-	$("#save5555").click(function(){
-		var test = $('#empIDNo').find(':selected').val();
-		alert(test);
-		//alert(data[0].test);
-	});
 	$("#save").click(function(){
+		
 		dataToPost = new Object();
 		dataToPost.locat 		= (typeof $('#locat').find(':selected').val() === 'undefined' ? '' : $('#locat').find(':selected').val());
 		dataToPost.resvno 		= (typeof $('#resvno').find(':selected').val() === 'undefined' ? '' : $('#resvno').find(':selected').val());
 		dataToPost.resvAmt 		= $('#resvAmt').val();
 		dataToPost.dwnAmt 		= $('#dwnAmt').val();
+		dataToPost.insuranceType = $('.insuranceType[name=insuranceType]:checked').val();
 		dataToPost.insuranceAmt = $('#insuranceAmt').val();
 		dataToPost.nopay		= $('#nopay').val();
 		dataToPost.strno 		= (typeof $('#strno').find(':selected').val() === 'undefined' ? '' : $('#strno').find(':selected').val());
@@ -1819,7 +1825,8 @@ function fnload($thisForm){
 							if(JDsave !== null){
 								JDsave.abort();
 							}
-						}
+						},
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}else{
 					Lobibox.notify('info', {

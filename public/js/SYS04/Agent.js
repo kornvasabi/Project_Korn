@@ -46,9 +46,8 @@ $('#btnt1search').click(function(){
 			jd_btnt1search = null;
 			$('#loadding').fadeOut(200);
 		},
-		beforeSend: function(){
-			if(jd_btnt1search !== null){ jd_btnt1search.abort(); }
-		}
+		beforeSend: function(){ if(jd_btnt1search !== null){ jd_btnt1search.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -71,15 +70,7 @@ function redraw(){
 			beforeSend: function(){
 				
 			},
-			error:function(obj,e,message){
-				Lobibox.notify('error', {
-					title: 'แจ้งเตือน',
-					size: 'mini',
-					delay: false,
-					messageHeight: '90vh',
-					msg: 'CODE '+obj.status+' :: '+message
-				});
-			}
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 }
@@ -110,9 +101,8 @@ function loadAgent($param){
 			jd_loadAgent = null;
 			$('#loadding').fadeOut(200);			
 		},
-		beforeSend: function(){
-			if(jd_loadAgent !== null){ jd_loadAgent.abort(); }
-		}
+		beforeSend: function(){  if(jd_loadAgent !== null){ jd_loadAgent.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -145,7 +135,8 @@ $('#btnt1agent').click(function(){
 		},
 		beforeSend: function(){
 			if(jd_btnt1agent !== null){ jd_btnt1agent.abort(); }
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -351,7 +342,8 @@ function wizard($param,$dataLoad,$thisWindowAgent){
 				});
 				
 				$('#loadding').fadeOut(200);
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -478,7 +470,8 @@ function wizard($param,$dataLoad,$thisWindowAgent){
 			},
 			beforeSend : function(){
 				if(jd_add_strno !== null){ jd_add_strno.abort(); }
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -558,7 +551,8 @@ function wizard($param,$dataLoad,$thisWindowAgent){
 				});
 				
 				$('#loadding').fadeOut(200);
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -658,7 +652,8 @@ function wizard($param,$dataLoad,$thisWindowAgent){
 						},
 						beforeSend: function(){
 							if(jd_add_delete !== null){ jd_add_delete.abort(); }
-						}
+						},
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}
 				
@@ -906,15 +901,7 @@ function fnSave($thisWindowAgent){
 				jd_fnSave.abort();
 			}
 		},
-		error:function(obj,e,message){
-			Lobibox.notify('error', {
-				title: 'แจ้งเตือน',
-				size: 'mini',
-				delay: false,
-				messageHeight: '90vh',
-				msg: 'CODE '+obj.status+' :: '+message
-			});
-		}
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -1117,7 +1104,8 @@ function fnCalPrice(){
 		},
 		beforeSend: function(){
 			if(calprice !== null){ calprice.abort(); }
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 

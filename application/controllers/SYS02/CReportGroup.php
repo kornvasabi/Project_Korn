@@ -74,6 +74,19 @@ class CReportGroup extends MY_Controller {
 	}
 	
 	public function search(){
+		$db = $this->param("database");
+		$thisdb = $this->sess["db"];
+		
+		$dbgrp = "";
+		foreach($db as $key => $arr){
+			if(in_array($thisdb,$arr)){
+				foreach($arr as $k => $r){
+					if($dbgrp != ""){ $dbgrp .= ","; }
+					$dbgrp .= "'".$r."'";
+				}
+			}
+		}
+		
 		$arrs = array();
 		$arrs["STRNO"] 	= $_POST["STRNO"];
 		$arrs["SDATE"] 	= $this->Convertdate(1,$_POST["SDATE"]);
@@ -109,6 +122,9 @@ class CReportGroup extends MY_Controller {
 			$condDesc .= " ผู้ทำรายการ ทั้งหมด";
 		}
 		
+		if($dbgrp != ""){
+			$cond .= " and data.dblocat in (".$dbgrp.")";
+		}
 		$condDesc .= ($cond == "" ? " แสดงรายการ 5,000 อันดับแรก":"");
 		/* 
 		$sql = "

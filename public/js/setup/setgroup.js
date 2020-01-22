@@ -21,6 +21,7 @@ $(function(){
 	}
 });
 
+var jdsearch_group = null;
 $('#search_group').click(function(){
 	search();
 });
@@ -30,32 +31,33 @@ function search(){
 	dataToPost.gcode = $('#gcode').val();
 	dataToPost.gdesc = $('#gdesc').val();
 	
-	var spinner = $('body>.spinner').clone().removeClass('hide');
-	$('#setgroupResult').html('');
-	$('#setgroupResult').append(spinner);
-	
-	$.ajax({
+	$('#loadding').fadeIn(200);
+	jdsearch_group = $.ajax({
 		url: '../setup/CStock/groupSearch',
 		data:dataToPost,
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
-			$('#setgroupResult').find('.spinner, .spinner-backdrop').remove();
 			$('#setgroupResult').html(data.html);
 			afterSearch();
-		}
+			jdsearch_group = null;
+			$('#loadding').fadeOut(200);
+		},
+		beforeSend: function(){ if(jdsearch_group !== null){ jdsearch_group.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
+var jdadd_group= null;
 $('#add_group').click(function(){
-	var spinner = $('body>.spinner').clone().removeClass('hide');
-	$('#tab2_main').html('');
-	$('#tab2_main').append(spinner);
+	dataToPost = new Object();
+	dataToPost.GCODE = '';
 	
 	$('.tab1').hide();
 	$('.tab2').show();		
-	dataToPost = new Object();
-	$.ajax({
+
+	$('#loadding').fadeIn(200);
+	jdadd_group = $.ajax({
 		url: '../setup/CStock/groupGetFormAE',
 		data:dataToPost,
 		type:'POST',
@@ -71,7 +73,11 @@ $('#add_group').click(function(){
 			$('#tab2del').attr('disabled',true);
 			$('#t2gcode').attr('readonly',false);
 			afterSelect();
-		}
+			jdadd_group = null;
+			$('#loadding').fadeOut(200);
+		},
+		beforeSend: function(){ if(jdadd_group !== null){ jdadd_group.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 

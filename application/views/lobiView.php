@@ -28,6 +28,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			background: transparent;
 		}
 		
+		.select2-container--open {
+			z-index:50000;
+		}
+
 		.table > tbody > tr > td
 		, .table > tbody > tr > th
 		, .table > tfoot > tr > td
@@ -36,7 +40,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		, .table > thead > tr > th {
 			padding: 2px;
 			line-height: 1;
-			vertical-align: text-bottom;
+			//vertical-align: text-bottom;
 			//border-top: 1px solid #ddd;
 		}
 	</style>
@@ -224,12 +228,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	</div>
 		
 	<!--Loading indicator for ajax page loading-->
-	<div class="spinner spinner-horizontal hide">
+	<!-- div class="spinner spinner-horizontal hide">
 		<span class="spinner-text">Loading...</span>
 		<div class="bounce1"></div>
 		<div class="bounce2"></div>
 		<div class="bounce3"></div>
-	</div>
+	</div -->
 	
 	<div id="loadding" hidden style="width:100vw;height:100vh;color:white;background-color:hsla(40, 14%, 21%, 0.59);position:fixed;top:0;left:0;z-index:10000;">
 		<div class="spinner spinner-horizontal">
@@ -333,6 +337,50 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	//const numberWithCommas = (x) => {
 	const numberWithCommas = function(x) {
 		return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	}
+	
+	function fnAjaxERROR(jqXHR,exception){
+		var msg = '';
+		var delay = 5000;
+		var notify = 'error';
+        if (jqXHR.status === 0) {
+			delay = false;
+            msg = 'Not connect.\n Verify Network.';
+        } else if (jqXHR.status == 404) {
+            delay = false;
+			msg = 'Requested page not found. [404]';
+        } else if (jqXHR.status == 500) {
+            delay = false;
+			msg = 'Internal Server Error [500].';
+        } else if (exception === 'parsererror') {
+			delay = 3000;
+			notify = 'warning';
+			msg = 'Requested JSON parse failed.';
+        } else if (exception === 'timeout') {
+            delay = 3000;
+			notify = 'warning';
+			msg = 'Time out error.';
+        } else if (exception === 'abort') {
+            delay = 3000;
+			notify = 'warning';
+			msg = 'Ajax request aborted.';
+        } else {
+            msg = 'Uncaught Error.\n' + jqXHR.responseText;
+        }
+		
+		Lobibox.notify(notify, {
+			title: 'ผิดพลาด',
+			size: 'mini',
+			closeOnClick: false,
+			delay: delay,
+			pauseDelayOnHover: true,
+			continueDelayOnInactiveTab: false,
+			icon: true,
+			messageHeight: '90vh',
+			msg: msg
+		});
+		
+		$('#loadding').fadeOut(200);
 	}
 	
 	var setwidth = $(window).width();
@@ -484,7 +532,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			document.body.removeChild(link);
 		}
 	})();
-		
+	
+	var fontsize=10;
 	$('body').keyup(function(e){
 		if ( e.keyCode === 27 ) { // ESC
 			$('#loadding').hide();
@@ -617,6 +666,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 					
 				}
 			});
+		}else if(e.keyCode === 119){ //F8
+			fontsize += 2;
+			if(fontsize == 14){ fontsize = 10 }
+			$('body').css({'font-size':fontsize+'pt'});
+			$('body , .form-group,table > thead,tbody,tfoot > tr > th,td').css({'font-size':fontsize+'pt'});
 		}
 	});
 	
@@ -645,10 +699,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 	function fn_datatables($tbname,$numbers,$usageHeight,$overHeight="NO"){
 		$dom = "";
 		$iDisplayLength = 100;
+		$ordering = true;
 		switch($numbers){
 			case 1: 
 				$dom = "<'row'<'col-sm-6 data-export'l><'col-sm-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>"; 
 				break; 
+			case 11: 
+				$iDisplayLength = -1;
+				$ordering = false;
+				$dom = "<'row'<'col-sm-6 data-export'l><'col-sm-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>"; 
+				break; 	
 			case 2: 
 				$dom = "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>"; 
 				break; 
@@ -668,13 +728,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			$scrollY = $usageHeight;
 		}
 		
-		$('#'+$tbname).DataTable({
+		var tables = $('#'+$tbname).DataTable({
 			//scrollY: ($(window).height() - 375),
 			scrollY: $scrollY,
 			scrollX: true,
 			autoWidth: true,
 			responsive: false,
-			ordering: true,
+			ordering: $ordering,
 			iDisplayLength: $iDisplayLength,
 			lengthChange: false,
 			aLengthMenu: [ 50, 100, 500, 1000 ],
@@ -705,6 +765,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			},
 			buttons: ['excel']
 		});
+		
+		//setInterval(function(){ tables.columns.adjust().draw(); },250);
 	}
 </script>
 </html>

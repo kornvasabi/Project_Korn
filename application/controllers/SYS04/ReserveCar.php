@@ -137,7 +137,7 @@ class ReserveCar extends MY_Controller {
 			foreach($query->result() as $row){
 				$html .= "
 					<tr class='trow' seq=".$NRow.">
-						<td class='getit resvnoClick' seq=".$NRow++."  RESVNO='".$row->RESVNO."' style='cursor: pointer; text-align: center; background-color: rgb(255, 255, 255);'><b>รายละเอียด</b></td>
+						<td class='getit resvnoClick' seq=".$NRow++."  RESVNO='".$row->RESVNO."' style='cursor: pointer; text-align: center; background-color: rgb(255, 255, 255);'><b>เลือก</b></td>
 						<!--td>
 							<i class='resvnoClick btn btn-xs btn-success glyphicon glyphicon-zoom-in' RESVNO='".$row->RESVNO."' style='cursor:pointer;'> รายละเอียด  </i>
 						</td -->
@@ -182,6 +182,7 @@ class ReserveCar extends MY_Controller {
 			</div>
 		";
 		
+		//$html = "<div>xxxxxxx</div>";
 		$response = array("html"=>$html,"status"=>true);
 		echo json_encode($response);
 	}
@@ -202,6 +203,7 @@ class ReserveCar extends MY_Controller {
 		$arrs["fVATRT"] 	= "0.00";
 		$arrs["fTAXNO"] 	= "";
 		$arrs["fTAXDT"] 	= "";
+		$arrs["STRNO"] 		= "";
 		$arrs["fSTRNO"] 	= "";
 		$arrs["fACTICOD"] 	= "";
 		$arrs["fGRPCOD"]	= "";
@@ -245,7 +247,7 @@ class ReserveCar extends MY_Controller {
 			left join {$this->MAuth->getdb('ARRESVOTH')} d on a.RESVNO=d.RESVNO collate thai_cs_as and d.REF='".strtoupper($this->sess["db"])."'
 			where a.RESVNO='{$RESVNO}'
 		";
-		//echo $sql; exit;
+		echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		if($query->row()){
@@ -261,6 +263,7 @@ class ReserveCar extends MY_Controller {
 				$arrs["fVATRT"]  	= number_format($row->VATRT,2);
 				$arrs["fTAXNO"]  	= $row->TAXNO;
 				$arrs["fTAXDT"]  	= $this->Convertdate(2,$row->TAXDT);
+				$arrs["STRNO"]  	= $row->STRNO;
 				$arrs["fSTRNO"] 	= "<option value='".$row->STRNO."'>".$row->STRNO."</option>";
 				$arrs["fACTICOD"] 	= "<option value='".$row->ACTICOD."'>".$row->ACTIDES."</option>";
 				$arrs["fGRPCOD"] 	= "<option value='".$row->GRPCOD."'>".$row->GRPDESC."</option>";
@@ -497,13 +500,11 @@ class ReserveCar extends MY_Controller {
 					</div>
 				</div>
 				
-				<div class='col-sm-3 col-sm-offset-3'>	
-					<div class='form-group'>
-						หมายเหตุ
-						<textarea id='fMEMO1' class='form-control input-sm' rows='3' style='resize:vertical;'>{$arrs["fMEMO1"]}</textarea>
-					</div>
+				<div class='col-sm-3 col-sm-offset-3'>
+					<button id='btncantStrno' strno='{$arrs["STRNO"]}' class='btn btn-xs btn-danger btn-block'>
+						<span class='glyphicon glyphicon-remove'> ยกเลิกเลขถัง</span>
+					</button>
 				</div>
-				
 			</div>
 			
 			<div class='col-sm-2 col-sm-offset-8'>
@@ -909,7 +910,13 @@ class ReserveCar extends MY_Controller {
 						end
 					end
 					else 
-					begin						
+					begin
+						update {$this->MAuth->getdb('INVTRAN')}
+						set RESVNO	= NULL,
+							RESVDT	= NULL,
+							CURSTAT	= ''
+						where STRNO=@STRNO and RESVNO='".$arrs["RESVNO"]."'
+						
 						update {$this->MAuth->getdb('INVTRAN')}
 						set RESVNO	= '".$arrs["RESVNO"]."',
 							RESVDT	= '".$arrs["RESVDT"]."',
@@ -933,7 +940,7 @@ class ReserveCar extends MY_Controller {
 				begin catch
 					rollback tran tst;
 					insert into #transaction select 'Y','',ERROR_MESSAGE();
-				end catch				
+				end catch
 			";
 		}
 		
@@ -971,7 +978,11 @@ class ReserveCar extends MY_Controller {
 					return;
 				end
 				
-				if exists (select * from {$this->MAuth->getdb('ARANALYZE')} where RESVNO='".$RESVNO."')
+				if exists (
+					select count(*) from {$this->MAuth->getdb('ARANALYZE')} where RESVNO='".$RESVNO."'
+					union
+					select count(*) from {$this->MAuth->getdb('ARMAST')} where RESVNO='".$RESVNO."'
+				)
 				begin
 					rollback tran tst;
 					insert into #transaction select 'Y' as id,'','ผิดพลาด เลขที่บิลจองถูกนำไปใช้แล้ว ไม่สามารถลบบิลจองได้' as msg;

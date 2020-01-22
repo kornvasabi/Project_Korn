@@ -94,7 +94,8 @@ $('#btnt1search').click(function(){
 			}
 			
 			$('#loadding').fadeOut(100);
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -128,7 +129,8 @@ function fn_load_formResv($this,$event){
 					$('#loadding').fadeOut(100);
 				}
 			});
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -230,7 +232,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 								},
 								beforeSend: function(){
 									if(jd_cus_search !== null){ jd_cus_search.abort(); }
-								}
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 							});
 						}
 						
@@ -242,7 +245,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				});
 				
 				$('#loadding').fadeOut(200);
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -308,7 +312,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			url: '../Cselect2/getSTRNO',
 			data: function (params) {
 				dataToPost = new Object();
-				dataToPost.now 	 = (typeof $('#fSTRNO').find(':selected').val() === 'undefined' ? '' : $('#fSTRNO').find(':selected').val());
+				dataToPost.now 	 = (typeof $('#fSTRNO').find(':selected').val() === 'undefined' ? $('#btncantStrno').attr('strno') : $('#fSTRNO').find(':selected').val());
 				dataToPost.q 	 = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = (typeof $('#fLOCAT').find(':selected').val() === 'undefined' ? '' : $('#fLOCAT').find(':selected').val());
 				
@@ -330,7 +334,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			},
 			cache: true
         },
-		allowClear: true,
+		allowClear: false,
 		multiple: false,
 		dropdownParent: $(".lobibox-body"),
 		//disabled: true,
@@ -371,8 +375,14 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				if(JDfSTRNO_select !== null){
 					JDfSTRNO_select.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
+	});
+	
+	var jdbtncantStrno = null;
+	$('#btncantStrno').click(function(){
+		$('#fSTRNO').empty().trigger('changed');
 	});
 	
 	$('#fACTICOD').select2({
@@ -654,7 +664,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 							$('#fRESPAY').focus();
 							$('#fBALANCE').val(data.price);
 						}else{
-							var bl = data.price - $('#fRESPAY').val();
+							var bl = data.price - ($('#fRESPAY').val()).replace(',','');
 							$('#fBALANCE').val(bl);
 						}						
 					}
@@ -666,7 +676,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					if(JDfSTAT_select !== null){
 						JDfSTAT_select.abort();
 					}
-				}
+				},
+				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 			});
 		}else{
 			$('#fPRICE').val('');
@@ -708,7 +719,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				if(jd_fn_balance !== null){
 					jd_fn_balance.abort();
 				}
-			}
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	}
 	
@@ -946,7 +958,8 @@ function fn_save($thisWindow,lobibox){
 			if(JD_fn_save !== null){
 				JD_fn_save.abort();
 			}
-		}
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 

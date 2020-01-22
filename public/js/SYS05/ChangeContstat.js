@@ -63,7 +63,6 @@ $('#bth1add').click(function(){
 				shown: function($this){
 					Add_ChangeContstat($this);
 				}
-	
 			});			
 		}
 	});
@@ -344,7 +343,7 @@ function search(){
 			$('#resultt_ChangeContstat').html(data.html);
 			
 			$('#table-ChangeContstat').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-ChangeContstat',1,325);
+			fn_datatables('table-ChangeContstat',1,320);
 			
 			function redraw(){
 				$('.getit').hover(function(){

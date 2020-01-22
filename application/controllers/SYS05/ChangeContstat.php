@@ -197,7 +197,7 @@ class ChangeContstat extends MY_Controller {
 		}
 		
 		if($CONTNO1 != ""){
-			$cond .= " and a.CONTNO like '%".$CONTNO1."%' collate thai_cs_as";
+			$cond .= " and a.CONTNO like '".$CONTNO1."%' collate thai_cs_as";
 		}
 		
 		if($FROMDATECHG != ""){
@@ -228,7 +228,7 @@ class ChangeContstat extends MY_Controller {
 		
 		$head = ""; $html = ""; $i=0;
 	
-		$head = "<tr>
+		$head = "<tr style='height:30px;'>
 				<th style='vertical-align:middle;'>#</th>
 				<th style='vertical-align:middle;'>สาขา</th>
 				<th style='vertical-align:middle;'>เลขที่สัญญา</th>
@@ -264,7 +264,7 @@ class ChangeContstat extends MY_Controller {
 						MEMO1		= '".$row->MEMO1."'
 						LOCAT		= '".$row->LOCAT."'
 						><b>เลือก</b></td>
-						<td align='center'>".$row->LOCAT."</td>
+						<td>".$row->LOCAT."</td>
 						<td>".$row->CONTNO."</td>
 						<td align='center'>".$row->STATFRM."</td>
 						<td align='center'>".$row->STATTO."</td>
@@ -397,13 +397,16 @@ class ChangeContstat extends MY_Controller {
 				
 				update {$this->MAuth->getdb('STATTRAN')}
 				set STATTO = '".$TOSTAT."', TOBILL = '".$TOBILL."', MEMO1 = '".$MEMO."'
-				where CONTNO like '%".$CONTNO."%' and STATFRM like '%".$FROMSTATold."%' and STATTO like '%".$TOSTATold."%' 
-				and FRMBILL like '%".$FRMBILLold."%' and TOBILL like '%".$TOBILLold."%'
+				where CONTNO like '".$CONTNO."%' and STATFRM like '".$FROMSTATold."%' and STATTO like '".$TOSTATold."%' 
+				and FRMBILL like '".$FRMBILLold."%' and TOBILL like '".$TOBILLold."%'
 
 				update {$this->MAuth->getdb('ARMAST')}
 				set CONTSTAT = '".$TOSTAT."', BILLCOLL = @BILLCOLL
 				where CONTNO = @CONTNO
-					
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS05::บันทึกเปลี่ยนสถานะสัญญา (แก้ไข)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+	
 				insert into #EditCHGSTATTemp select 'S',@CONTNO,'แก้ไขเปลี่ยนสถานะสัญญาเลขที่ '+@CONTNO+' เรียบร้อย';
 					
 				commit tran EditCHGSTATTemp;

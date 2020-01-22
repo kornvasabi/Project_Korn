@@ -13,6 +13,7 @@ var _update = $('.tab1[name="home"]').attr('cup');
 var _delete = $('.tab1[name="home"]').attr('cdel');
 var _level  = $('.tab1[name="home"]').attr('clev');
 
+var jdbtnt1transferPendding = null;
 $('#btnt1transferPendding').click(function(){
 	dataToPost = new Object();
 	dataToPost.tab11prov1 = [$('#tab11prov1').is(':checked'),$('#tab11prov1').val()];
@@ -28,16 +29,14 @@ $('#btnt1transferPendding').click(function(){
 	dataToPost.CONDSort	= $('#CONDSort').find(':selected').val();
 	dataToPost.sort 	= $('.sort[name=maxmin]:checked').val();
 	
-	$('#loadding').show();
+	$('#loadding').fadeIn(200);
 
-	$.ajax({
+	jdbtnt1transferPendding = $.ajax({
 		url: '../SYS02/CReport/MaxstockCompareSearch',
 		data: dataToPost,
 		Type: 'POST',
 		dataType:'json',
 		success: function(data){
-			$('#loadding').hide();			
-			
 			Lobibox.window({
 				title: 'รายงานการโอนย้ายรถ',
 				content: data.html,
@@ -53,12 +52,12 @@ $('#btnt1transferPendding').click(function(){
 				this.querySelector("thead").style.transform = translate;						
 			});
 			*/
-			fn_datatables('table-TransfersPenddingSearch',1,300);
+			fn_datatables('table-TransfersPenddingSearch',11,240);
 			
 			// Export data to Excel
 			$('.data-export').prepend('<img id="table-TransfersPenddingSearch-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
 			$("#table-TransfersPenddingSearch-excel").click(function(){ 	
-				tableToExcel_Export(data.html,"sheet 1","Report_MaxStock.xlsx"); 
+				tableToExcel_Export(data.html,"sheet 1","Report_MaxStock.xls"); 
 			});
 			
 			$('#table-TransfersPenddingSearch tbody tr').hover(function(){
@@ -67,7 +66,6 @@ $('#btnt1transferPendding').click(function(){
 					'background-color':'#ccc',
 					'font-weight':'bold',
 					'cursor':'pointer'
-					
 				});
 			},function(){
 				$(this).css({
@@ -77,6 +75,11 @@ $('#btnt1transferPendding').click(function(){
 					'cursor':'default'
 				});
 			});
-		}
+			
+			$('#loadding').fadeOut(200);			
+			jdbtnt1transferPendding = null;
+		},
+		beforeSend: function(){ if(jdbtnt1transferPendding !== null){ jdbtnt1transferPendding.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });

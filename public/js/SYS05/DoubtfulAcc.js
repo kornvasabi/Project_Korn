@@ -359,7 +359,7 @@ function search(){
 			$('#resultt_DoubtfulAcc').html(data.html);
 			
 			$('#table-ARlost').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-ARlost',1,340);
+			fn_datatables('table-ARlost',1,335);
 			
 			$('.data-export').prepend('<img id="print-ARlost" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(70%);">');
 			$("#print-ARlost").hover(function() {
