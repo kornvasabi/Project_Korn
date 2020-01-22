@@ -124,7 +124,6 @@ function afterSearch(){
 				}else{
 					$('#tab2save').attr('disabled',true);	
 				}
-				
 				afterSelect();
 			}
 		});
@@ -322,20 +321,22 @@ function afterSelect(){
 	});
 }
 
+
 $('#search_groupcm').click(function(){
 	searchcm();
 });
+CT_Search = null;
 function searchcm(){
 	dataToPost = new Object();
-	dataToPost.cuscod = $('#cuscod').val();
+	dataToPost.cuscod  = $('#cuscod').val();
 	dataToPost.surname = $('#surname').val();
+	dataToPost.address = $('#address').val();
 	
 	var spinner = $('body>.spinner').clone().removeClass('hide');
 	$('#setgroupResult').html('');
 	$('#setgroupResult').append(spinner);
-	
 	//$('#loadding').fadeIn(500);
-	$.ajax({
+	CT_Search = $.ajax({
 		url: '../SYS04/CUSTOMERS/groupSearchcm',
 		data:dataToPost,
 		type: 'POST',
@@ -344,21 +345,26 @@ function searchcm(){
 			$('#setgroupResult').find('.spinner, .spinner-backdrop').remove();
 			$('#setgroupResult').html(data.html);
 			afterSearchcm();
-			showAddrcm();
 			
 			$('.btnDetail').unbind('click');
 			$('.btnDetail').click(function(){
 				fn_load_formeditcm($(this),'edit');
 			});
 			//$('#loadding').fadeOut(100);
+			CT_Search = null;
+		},
+		beforeSend: function(){
+			if(CT_Search !== null){
+				CT_Search.abort();
+			}
 		}
 	});
 }
-
 function afterSearchcm(){
 	document.getElementById("tbScroll").addEventListener("scroll", function(){
-		var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
-		this.querySelector("thead").style.transform = translate;						
+		var translate = "translate(0,"+(this.scrollTop - 2)+"px)";
+		this.querySelector("thead").style.transform = translate;
+		this.querySelector("thead").style.zIndex = 100;
 	});
 	$('.getit').hover(function(){
 		$(this).css({'background-color':'#c7c7ff'});
@@ -368,7 +374,6 @@ function afterSearchcm(){
 		$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':''});
 	});
 }
-
 function showAddrcm(){
 	$('.btnshow_Addr').click(function(){
 		dataToPost = new Object();
@@ -394,7 +399,6 @@ function showAddrcm(){
 		});
 	});
 }
-
 $("#add_custmast").click(function(){
 	fn_load_formaddcm($(this),'add');
 });
@@ -433,7 +437,6 @@ function fn_load_formaddcm($this,$event){
 		}
 	});
 }
-
 function fn_load_formeditcm($this,$event){
 	dataToPost = new Object();
 	dataToPost.CUSCOD = (typeof $this.attr('CUSCOD') === 'undefined' ? '':$this.attr('CUSCOD'));
@@ -457,7 +460,7 @@ function fn_load_formeditcm($this,$event){
 					/*
 					$('#add_save').attr('action','add');
 					$('#add_update').attr('action','edit');
-					
+					*/
 					
 					if(_insert == 'T'){
 						$('#add_save').attr('disabled',false);	
@@ -476,7 +479,6 @@ function fn_load_formeditcm($this,$event){
 					}else{
 						$('#add_update').attr('disabled',true);	
 					}
-					*/
 					//$('#btn_Delete').attr('disabled',false);
 					
 					fn_loadPropoties($this)
@@ -489,6 +491,27 @@ function fn_load_formeditcm($this,$event){
 	});
 }
 function fn_loadPropoties($window){
+	var Age = null;
+	$('#BIRTHDT').change(function(){
+		dataToPost = new Object();
+		dataToPost.BIRTHDT = $('#BIRTHDT').val();
+		//alert(dataToPost.BIRTHDT);
+		Age = $.ajax({
+			url: '../SYS04/CUSTOMERS/getAge', 
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				$('#AGE').val(data.getdate);
+				Age = null;
+			},
+			beforeSend: function(){
+				if(Age !== null){
+					Age.abort();
+				}
+			}
+		});
+	});
 	$('#add_contno').val('Auto Genarate');
 	$('#add_contno').attr('readonly',true);
 	$('#add_locat').select2({
@@ -1109,7 +1132,6 @@ function fn_loadPropotiesAddr($window,$action,$this){
 		}
 	});
 }
-
 function fn_reactive_addr(){
 	OBJeditaddress = null;
 	$('.btnEditAddrTable').unbind("click");
@@ -1147,7 +1169,6 @@ function fn_reactive_addr(){
 		});
 	});
 }
-
 function CloseLobiwindow(address_ae,event){
     var OBJbtncloseAddr = null;
     if(event != "cancel"){
@@ -1202,7 +1223,6 @@ function CloseLobiwindow(address_ae,event){
         }
     });
 }
-
 function fn_address($action){
     $('#addrno1').empty().trigger('change');
     $('#addrno2').empty().trigger('change');
@@ -1217,7 +1237,6 @@ function fn_address($action){
         $('#addrno3').append(newOption).trigger('change');
     });
 }
-
 var KB_fn_save = null;
 function fn_save($window){
 	dataToPost = new Object();
@@ -1345,8 +1364,6 @@ function fn_save($window){
 		}
 	});
 }
-
-
 var KB_fn_update = null;
 function fn_update($window){
 	dataToPost = new Object();

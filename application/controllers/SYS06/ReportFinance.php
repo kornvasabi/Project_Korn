@@ -1739,7 +1739,7 @@ class ReportFinance extends MY_Controller {
 			$arrs['NPROF']   = '0.00';
 			$arrs['PERC50']  = '0.00';
 		}
-		if($arrs['INTAMT'] =="0.00"){
+		if($arrs['INTAMT'] == "0.00"){
 			$response["error"] = true;
 			$response["msg"] = "ไม่มีข้อมูลครับ";
 			echo json_encode ($response); exit;
@@ -1911,9 +1911,15 @@ class ReportFinance extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){$i++;
 				//print_r($row->DESC1);
+				$css = "color:black";
+				$css2 = "color:blue";
+				if($row->FL == "*"){
+					$css = "color:red";
+					$css2 = "color:red";
+				}
 				$cusbuy .= "
-					<tr class='trow' seq='old'>
-						<td class='getit' style='cursor:pointer;color:blue;'
+					<tr style='{$css}'>
+						<td class='getit' style='cursor:pointer;{$css2}'
 							CONTNO = '".str_replace(chr(0),'',$row->CONTNO)."' 
 							CUSCOD = '".str_replace(chr(0),'',$row->CUSCOD)."'
 							STRNO  = '".str_replace(chr(0),'',$row->STRNO)."'
@@ -2830,6 +2836,7 @@ class ReportFinance extends MY_Controller {
 				,RECVNO,GCODE from {$this->MAuth->getdb('HINVTRAN')} where STRNO = '".$STRNOS."'
 			)CDT
 		";
+		echo $sql2; exit;
 		$query2 = $this->db->query($sql2);
 		
 		$sql2_1 = "select * from #CDT";

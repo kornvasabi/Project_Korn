@@ -196,7 +196,7 @@ $(function(){
 	$('#CODE').select2({
 		placeholder: 'เลือก',
 		ajax: {
-			url: '../Cselect2K/getCODE',
+			url: '../Cselect2K/getOFFICER',
 			data: function (params){
 				dataToPost = new Object();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
@@ -223,6 +223,11 @@ $(function(){
 $('#btnreport').click(function(){
 	printReport();
 });
+/*
+$('#DATE1').change(function(){
+	alert('korn');
+});
+*/
 function printReport(){
 	var report = "";
 	if($('#one').is(":checked")){ 

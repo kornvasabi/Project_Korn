@@ -138,7 +138,6 @@ class Cselect2K extends MY_Controller {
         $sql = "
             select AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
             where AUMPCOD='".$dataNow."' 
-
             union
             select top 20 AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
             where AUMPDES like '%".$dataSearch."%' ".$cond."
@@ -398,7 +397,7 @@ class Cselect2K extends MY_Controller {
 			$cond .= "and C.NAME1 like '%".$s_name1."%'";
 		}
 		if($s_name2 != ""){
-			$cond .= "and C.NAME1 like '%".$s_name2."%'";
+			$cond .= "and C.NAME2 like '%".$s_name2."%'";
 		}
 		$sql = "
 			select top 100 A.CONTNO,A.LOCAT,C.SNAM+C.NAME1+' '+C.NAME2+'' as CUSNAME from ARMAST A
@@ -414,7 +413,7 @@ class Cselect2K extends MY_Controller {
 			foreach($query->result() as $row){
 				$html .="
 					<tr class='trow' seq='".$NRow."'>
-						<td class='getit' seq='".$NRow++."'
+						<td  style='cursor:pointer;' class='getit' seq='".$NRow++."'
 							CONTNO ='".$row->CONTNO."'
 						><b>เลือก</b></td>
 						<td>".$row->CONTNO."</td>
@@ -491,7 +490,7 @@ class Cselect2K extends MY_Controller {
 			foreach($query->result() as $row){
 				$html .="
 					<tr class='trow' seq='".$NRow."'>
-						<td class='getit' seq='".$NRow++."'
+						<td  style='cursor:pointer;' class='getit' seq='".$NRow++."'
 							CONTNO ='".$row->CONTNO."'
 							CREATEDT = '".$this->Convertdate(2,$row->CREATEDT)."'
 							STARTDT = '".$this->Convertdate(2,$row->STARTDT)."'
@@ -604,7 +603,7 @@ class Cselect2K extends MY_Controller {
 		}
 		echo json_encode($json);
 	}
-	function getCODE(){
+	function getOFFICER(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_REQUEST['q']);
 		
@@ -622,6 +621,188 @@ class Cselect2K extends MY_Controller {
 			}
 		}
 		echo json_encode($json);
+	}
+	function getResultCONTNO_R(){
+		$s_contno = $_POST['s_contno'];
+		$s_name1  = $_POST['s_name1'];
+		$s_name2  = $_POST['s_name2'];
+		$price    = $_POST['price'];
+		
+		$cond = "";
+		if($s_contno != ""){
+			$cond .= "and A.CONTNO like '%".$s_contno."%'"; 
+		}
+		if($s_name1 != ""){
+			$cond .= "and B.NAME1 like '%".$s_name1."%'";
+		}
+		if($s_name2 != ""){
+			$cond .= "and B.NAME2 like '%".$s_name2."%'";
+		}
+		if ($price == "P1"){
+			$sql = "
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from ARCRED A 
+				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 and A.TOTPRC > A.SMPAY ".$cond." 
+				ORDER BY A.CONTNO,A.LOCAT
+			";
+		}else if($price == "P2"){
+			$sql = "
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from ARMAST A 
+				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 and A.TOTPRC > A.SMPAY ".$cond."
+				ORDER BY A.CONTNO,A.LOCAT
+			";
+		}else if($price == "P3"){
+			$sql = "
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from ARFINC A 
+				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 ".$cond."
+				ORDER BY A.CONTNO,A.LOCAT
+			";
+		}else if($price == "P4"){
+			$sql = "
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from AR_INVOI A 
+				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 and A.TOTPRC > A.SMPAY ".$cond." 
+				ORDER BY A.CONTNO,A.LOCAT
+			";
+		}else if($price == "P5"){
+			$sql = "
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from AROPTMST A 
+				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 and A.OPTPTOT > A.SMPAY ".$cond." 
+				ORDER BY A.CONTNO,A.LOCAT
+			";
+		}else if($price == "P6"){
+			$sql = "
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from AROTHR A 
+				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 and A.PAYAMT > A.SMPAY ".$cond."
+				ORDER BY A.ARCONT,A.LOCAT
+			";
+			
+		}
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trow' seq='".$NRow."'>
+						<td style='cursor:pointer;' class='getit' seq='".$NRow++."'
+							CONTNO ='".$row->CONTNO."'
+							LOCAT  ='".$row->LOCAT."'
+							CUSNAME='".$row->CUSNAME."'
+						><b>เลือก</b></td>
+						<td>".$row->CONTNO."</td>
+						<td>".$row->LOCAT."</td>
+						<td>".$row->CUSNAME."</td>
+					</tr>
+				";
+			}
+		}
+		$html = "
+			<div id='tbcont' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>เลขที่สัญญา</th>
+							<th>สาขา</th>
+							<th>ชื่อ-สกุล</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getfromCUSCOD(){
+		$html = "
+			<div class='row'>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						รหัสลูกค้า
+						<input type='text' id='cuscod' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						ชื่อ
+						<input type='text' id='name1' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						นามสกุล
+						<input type='text' id='name2' class='form-control'>
+					</div>
+				</div>
+				
+				<div class='col-sm-12'>
+					<button id='btnsearch' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'>ค้นหา</span></button>
+				</div>
+				<br>
+				<div id='cus_result' class='col-sm-12'></div>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getResultCUSTMAST(){
+		$cuscod = $_POST['cuscod'];
+		$name1  = $_POST['name1'];
+		$name2  = $_POST['name2'];
+		
+		$cond = "";
+		if($cuscod != ""){
+			$cond .= "and CUSCOD like '%".$cuscod."%'"; 
+		}
+		if($name1 != ""){
+			$cond .= "and NAME1 like '%".$name1."%'";
+		}
+		if($name2 != ""){
+			$cond .= "and NAME2 like '%".$name2."%'";
+		}		
+		$sql = "
+			select top 100 CUSCOD,SNAM+NAME1+' '+NAME2+''as CUSNAME from CUSTMAST
+			where 1=1  ".$cond." 
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trow' seq='".$NRow."'>
+						<td style='cursor:pointer;' class='getit' seq='".$NRow++."'
+							CUSCOD ='".$row->CUSCOD."'
+							CUSNAME  ='".$row->CUSNAME."'
+						><b>เลือก</b></td>
+						<td>".$row->CUSCOD."</td>
+						<td>".$row->CUSNAME."</td>
+					</tr>
+				";
+			}
+		}
+		$html = "
+			<div id='tbcont' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>รหัสลูกค้า</th>
+							<th>ชื่อ-สกุล</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
 	}
 }
 	

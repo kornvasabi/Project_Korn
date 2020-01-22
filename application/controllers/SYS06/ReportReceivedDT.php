@@ -364,21 +364,65 @@ class ReportReceivedDT extends MY_Controller {
 		";
 		$query2 = $this->db->query($sql);
 		$sql = "
-			declare @A1 decimal(12) = (select COUNT(PAYAMT) from #ONE); 
-			declare @B1 decimal(12) = (select COUNT(PAYAMT) from #ONE where FLAG = 'C'); 
-			declare @A2 decimal(12,2) = (select SUM(PAYAMT) from #ONE); 
-			declare @B2 decimal(12,2) = (select SUM(PAYAMT) from #ONE where FLAG = 'C'); 
-			declare @A3 decimal(12,2) = (select SUM(DISCT) from #ONE); 
-			declare @B3 decimal(12,2) = (select SUM(DISCT) from #ONE where FLAG = 'C'); 
-			declare @A4 decimal(12,2) = (select SUM(NPAYINT) from #ONE); 
-			declare @B4 decimal(12,2) = (select SUM(NPAYINT) from #ONE where FLAG = 'C'); 
-			declare @A5 decimal(12,2) = (select SUM(NETPAY) from #ONE); 
-			declare @B5 decimal(12,2) = (select SUM(NETPAY) from #ONE where FLAG = 'C'); 
+			declare @A1 decimal(12) = (select coalesce(COUNT(PAYAMT),0) from #ONE); 
+			declare @B1 decimal(12) = (select coalesce(COUNT(PAYAMT),0) from #ONE where FLAG = 'C'); 
+			declare @A2 decimal(12,2) = (select coalesce(SUM(PAYAMT),0) from #ONE); 
+			declare @B2 decimal(12,2) = (select coalesce(SUM(PAYAMT),0) from #ONE where FLAG = 'C'); 
+			declare @A3 decimal(12,2) = (select coalesce(SUM(DISCT),0) from #ONE); 
+			declare @B3 decimal(12,2) = (select coalesce(SUM(DISCT),0) from #ONE where FLAG = 'C'); 
+			declare @A4 decimal(12,2) = (select coalesce(SUM(NPAYINT),0) from #ONE); 
+			declare @B4 decimal(12,2) = (select coalesce(SUM(NPAYINT),0) from #ONE where FLAG = 'C'); 
+			declare @A5 decimal(12,2) = (select coalesce(SUM(NETPAY),0) from #ONE); 
+			declare @B5 decimal(12,2) = (select coalesce(SUM(NETPAY),0) from #ONE where FLAG = 'C'); 
 
 			select @A1-@B1 as RESULT,@A2-@B2 as PAYAMT,@A3-@B3 as DISCT,@A4-@B4 as NPAYINT,@A5-@B5 as NETPAY
 		";
 		$query3 = $this->db->query($sql);
-		
+		$sql = "
+			select top 20 PAYCODE,PAYDESC from {$this->MAuth->getdb('PAYTYP')} 
+			where PAYCODE = '".$PAYTYP."'
+		";
+		$PAYDESC = "";
+		$query4 = $this->db->query($sql);
+		if($query4->row()){
+			foreach($query4->result() as $row){
+				$PAYDESC = $row->PAYDESC;
+			}
+		}
+		$sql = "
+			select top 20 FORCODE,FORDESC from {$this->MAuth->getdb('PAYFOR')} 
+			where FORCODE = '".$PAYFOR."'
+		";
+		$FORDESC = "";
+		$query5 = $this->db->query($sql);
+		if($query5->row()){
+			foreach($query5->result() as $row){
+				$FORDESC = $row->FORDESC;
+			}
+		}
+		$sql = "
+			select USERID,USERNAME from {$this->MAuth->getdb('PASSWRD')} 
+			where USERID = '".$USERID."'
+		";
+		//echo $sql; exit;
+		$USERNAME = "";
+		$query6 = $this->db->query($sql);
+		if($query6->row()){
+			foreach($query6->result() as $row){
+				$USERNAME = $row->USERNAME;
+			}
+		}
+		$sql = "
+			select ARGCOD,ARGDES from {$this->MAuth->getdb('ARGROUP')}
+            where ARGCOD = '".$GROUP1."' 
+		";
+		$ARGDES = "";
+		$query7 = $this->db->query($sql);
+		if($query7->row()){
+			foreach($query7->result() as $row){
+				$ARGDES = $row->ARGDES;
+			}
+		}
 		$head = ""; $html = ""; 
 		$head = "
 			<tr class='wm'>
@@ -389,8 +433,7 @@ class ReportReceivedDT extends MY_Controller {
 				<th style='border-bottom:0.1px solid black;text-align:left;'>เลขใบรับเงิน<br>ชั่วคราว</th>
 				<th style='border-bottom:0.1px solid black;text-align:left;'>วันที่รับชำระ</th>
 				<th style='border-bottom:0.1px solid black;text-align:left;'>เลขที่สัญญา</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'>ชื่อ-นามสกุล</th>
-				<th style='border-bottom:0.1px solid black;text-align:left;'></th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>ชื่อ-นามสกุล</th>			
 				<th style='border-bottom:0.1px solid black;text-align:left;'>ชำระโดย</th> 
 				<th style='border-bottom:0.1px solid black;text-align:left;'>ชำระค่า</th> 
 				<th style='border-bottom:0.1px solid black;text-align:right;'>ยอดหักลูกหนี้</th>
@@ -401,6 +444,7 @@ class ReportReceivedDT extends MY_Controller {
 				<th style='border-bottom:0.1px solid black;text-align:right;'>ล/น เหลือ<br>ณ วันพิมพ์</th>
 				<th style='border-bottom:0.1px solid black;text-align:right;'>UserID</th>
 				<th style='border-bottom:0.1px solid black;text-align:right;'>วันเวลาบันทึก</th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'></th>
 			</tr>
 			<tr>
 			</tr>
@@ -415,22 +459,22 @@ class ReportReceivedDT extends MY_Controller {
 				}
 				$html .= "
 					<tr class='trow'>
-						<td style='width:50px;'>".$row->LOCATRECV."</td>
-						<td style='width:90px;'>".$row->TMBILL."</td>
-						<td style='width:50px;'>".$this->Convertdate(2,$row->TMBILDT)."</td>
-						<td style='width:90spx;'>".$row->CONTNO."</td>
-						<td colspan='2' style='width:120px;'>".$row->NAME."</td>
-						<td style='width:50px;' align='center'>".$row->PAYTYP."</td>
-						<td style='width:50px;' align='center'>".$row->PAYFOR."</td>
-						<td style='width:50px;' align='right'>".number_format($row->PAYAMT,2)."</td>
-						<td style='width:50px;' align='right'>".number_format($row->DISCT,2)."</td>
-						<td style='width:50px;' align='right'>".number_format($row->NPAYINT,2)."</td>
-						<td style='width:50px;' align='right'>".number_format($row->NETPAY,2)."</td>
-						<td style='width:50px;' align='right'>".$row->BILLCOLL."</td>
-						<td style='width:50px;' align='right'>".number_format($row->BAL,2)."</td>
-						<td style='width:50px;' align='right'>".$row->USERID."</td>
-						<td style='width:240px;' align='right'>".$this->Convertdate(2,$row->INPTIME_D)." ".$row->INPTIME_T."".$status."</td>
-
+						<td style='width:50px;text-align:left;'>".$row->LOCATRECV."</td>
+						<td style='width:80px;text-align:left;'>".$row->TMBILL."</td>
+						<td style='width:50px;text-align:left;'>".$this->Convertdate(2,$row->TMBILDT)."</td>
+						<td style='width:80spx;text-align:left;'>".$row->CONTNO."</td>
+						<td style='width:150px;text-align:left;'>".$row->NAME."</td>
+						<td style='width:50px;text-align:left;'>".$row->PAYTYP."</td>
+						<td style='width:50px;text-align:left;'>".$row->PAYFOR."</td>
+						<td style='width:50px;text-align:right;'>".number_format($row->PAYAMT,2)."</td>
+						<td style='width:50px;text-align:right;'>".number_format($row->DISCT,2)."</td>
+						<td style='width:50px;text-align:right;'>".number_format($row->NPAYINT,2)."</td>
+						<td style='width:50px;text-align:right;'>".number_format($row->NETPAY,2)."</td>
+						<td style='width:50px;text-align:right;'>".$row->BILLCOLL."</td>
+						<td style='width:50px;text-align:right;'>".number_format($row->BAL,2)."</td>
+						<td style='width:50px;text-align:right;'>".$row->USERID."</td>
+						<td style='width:240px;text-align:right;'>".$this->Convertdate(2,$row->INPTIME_D)." ".$row->INPTIME_T."</td>
+						<td style='width:50px;text-align:right;'>".$status."</td>
 					</tr>
 				";	
 			}
@@ -441,7 +485,7 @@ class ReportReceivedDT extends MY_Controller {
 					<tr class='trow'>
 						<th align='right' colspan='3'>รวมทั้งสิ้น</th>
 						<td align='right'>".$row->countorder."&nbsp;&nbsp;<b>รายการ</b></td>
-						<td align='right' colspan='5'>".number_format($row->Total,2)."</td>
+						<td align='right' colspan='4'>".number_format($row->Total,2)."</td>
 						<td align='right'>".number_format($row->DISCT,2)."</td>
 						<td align='right'>".number_format($row->NPAYINT,2)."</td>
 						<td align='right'>".number_format($row->NETPAY,2)."</td>
@@ -455,7 +499,7 @@ class ReportReceivedDT extends MY_Controller {
 					<tr class='trow'>
 						<th align='right' colspan='3'>รายการที่ยกเลิก</th>
 						<td align='right'>".$row->countorder."&nbsp;&nbsp;<b>รายการ</b></td>
-						<td align='right' colspan='5'>".number_format($row->Total,2)."</td>
+						<td align='right' colspan='4'>".number_format($row->Total,2)."</td>
 						<td align='right'>".number_format($row->DISCT,2)."</td>
 						<td align='right'>".number_format($row->NPAYINT,2)."</td>
 						<td align='right'>".number_format($row->NETPAY,2)."</td>
@@ -469,7 +513,7 @@ class ReportReceivedDT extends MY_Controller {
 					<tr class='trow'>
 						<th align='right' colspan='3'>รายการรับสุทธิ</th>
 						<td align='right'>".$row->RESULT."<b>&nbsp;&nbsp;รายการ</b></td>
-						<td align='right' colspan='5'>".number_format($row->PAYAMT,2)."</td>
+						<td align='right' colspan='4'>".number_format($row->PAYAMT,2)."</td>
 						<td align='right'>".number_format($row->DISCT,2)."</td>
 						<td align='right'>".number_format($row->NPAYINT,2)."</td>
 						<td align='right'>".number_format($row->NETPAY,2)."</td>
@@ -491,25 +535,28 @@ class ReportReceivedDT extends MY_Controller {
 			<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
 				<tbody>
 					<tr>
-						<th colspan='17' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
+						<th colspan='16' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
 					</tr>
 					<tr>
-						<th colspan='17' style='font-size:9pt;'>รายงานการรับชำระตามวันที่ใบรับ</th>
+						<th colspan='16' style='font-size:9pt;'>รายงานการรับชำระตามวันที่ใบรับ</th>
 					</tr>
 					<tr>
-						<th style='text-align:left;' colspan='3'></th>
-						<th style='text-align:left;' colspan='3'>สาขาที่รับชำระ &nbsp;&nbsp;".$LOCATRECV."</th>
-						<th style='text-align:left;' colspan='3'>ชำระเพื่อ บ/ช สาขา &nbsp;&nbsp;".$LOCATPAY."</th>
-						<th style='text-align:left;' colspan='3'>จากวันที่ &nbsp;&nbsp;".$DATE1."</th>
-						<th style='text-align:left;' colspan='2'>ถึงวันที่ &nbsp;&nbsp;".$DATE2."</th>
+						<td style='text-align:center;' colspan='16'>
+							<b>สาขาที่รับชำระ</b> &nbsp;&nbsp;".$LOCATRECV."&nbsp;&nbsp;
+							<b>ชำระเพื่อ บ/ช สาขา</b>&nbsp;&nbsp;".$LOCATPAY."&nbsp;&nbsp;
+							<b>จากวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE1)."&nbsp;&nbsp;
+							<b>ถึงวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE2)."&nbsp;&nbsp;
+						</td>
 					</tr>
 					<tr>
-						<th style='text-align:left;' colspan='3'>Scrt By :&nbsp;&nbsp;".$SCRT."</th>
-						<th style='text-align:left;' colspan='3'>ชำระโดย &nbsp;&nbsp;".$PAYTYP."</th>
-						<th style='text-align:left;' colspan='3'>ชำระค่า &nbsp;&nbsp;".$PAYFOR."</th>
-						<th style='text-align:left;' colspan='4'>พนักงานบันทึกข้อมูล &nbsp;&nbsp;".$USERID."</th>
-						<th style='text-align:left;' colspan='2'>กลุ่มลูกค้า &nbsp;&nbsp;".$GROUP1."</th>
-						<td style='text-align:right;' colspan=''>RpRec13</td>
+						<td style='text-align:left;' colspan='3'><b>Scrt By :</b>&nbsp;&nbsp;".$SCRT."</td>
+						<td style='text-align:center;' colspan='10'>
+							<b>ชำระโดย</b>&nbsp;&nbsp;".$PAYDESC."&nbsp;&nbsp;
+							<b>ชำระค่า</b>&nbsp;&nbsp;".$FORDESC."&nbsp;&nbsp;
+							<b>พนักงานบันทึกข้อมูล</b>&nbsp;&nbsp;".$USERNAME."&nbsp;&nbsp;
+							<b>กลุ่มลูกค้า</b>&nbsp;&nbsp;".$ARGDES."&nbsp;&nbsp;
+						</td>
+						<td style='text-align:right;' colspan='3'>RpRec13</td>
 					</tr>
 					".$head."
 					".$html."
@@ -679,33 +726,78 @@ class ReportReceivedDT extends MY_Controller {
 		";
 		$query2 = $this->db->query($sql);
 		$sql = "
-			declare @A1 decimal(12,2) = (select SUM(PAYAMT) from #ALL); 
-			declare @B1 decimal(12,2) = (select SUM(PAYAMT) from #ALL where FLAG = 'C'); 
-			declare @A2 decimal(12,2) = (select SUM(PAYAMT_V) from #ALL); 
-			declare @B2 decimal(12,2) = (select SUM(PAYAMT_V) from #ALL where FLAG = 'C'); 
-			declare @A3 decimal(12,2) = (select SUM(DISCT) from #ALL); 
-			declare @B3 decimal(12,2) = (select SUM(DISCT) from #ALL where FLAG = 'C'); 
-			declare @A4 decimal(12,2) = (select SUM(INT) from #ALL); 
-			declare @B4 decimal(12,2) = (select SUM(INT) from #ALL where FLAG = 'C'); 
-			declare @A5 decimal(12,2) = (select SUM(NETPAY) from #ALL); 
-			declare @B5 decimal(12,2) = (select SUM(NETPAY) from #ALL where FLAG = 'C'); 
+			declare @A1 decimal(12,2) = (select coalesce(SUM(PAYAMT),0) from #ALL); 
+			declare @B1 decimal(12,2) = (select coalesce(SUM(PAYAMT),0) from #ALL where FLAG = 'C'); 
+			declare @A2 decimal(12,2) = (select coalesce(SUM(PAYAMT_V),0) from #ALL); 
+			declare @B2 decimal(12,2) = (select coalesce(SUM(PAYAMT_V),0) from #ALL where FLAG = 'C'); 
+			declare @A3 decimal(12,2) = (select coalesce(SUM(DISCT),0) from #ALL); 
+			declare @B3 decimal(12,2) = (select coalesce(SUM(DISCT),0) from #ALL where FLAG = 'C'); 
+			declare @A4 decimal(12,2) = (select coalesce(SUM(INT),0) from #ALL); 
+			declare @B4 decimal(12,2) = (select coalesce(SUM(INT),0) from #ALL where FLAG = 'C'); 
+			declare @A5 decimal(12,2) = (select coalesce(SUM(NETPAY),0) from #ALL); 
+			declare @B5 decimal(12,2) = (select coalesce(SUM(NETPAY),0) from #ALL where FLAG = 'C'); 
 
 			select @A1-@B1 as RESULT,@A2-@B2 as PAYAMT,@A3-@B3 as DISCT,@A4-@B4 as INT,@A5-@B5 as NETPAY
 		";
 		$query3 = $this->db->query($sql);
+		$sql = "
+			select top 20 PAYCODE,PAYDESC from {$this->MAuth->getdb('PAYTYP')} 
+			where PAYCODE = '".$PAYTYP."'
+		";
+		$PAYDESC = "";
+		$query4 = $this->db->query($sql);
+		if($query4->row()){
+			foreach($query4->result() as $row){
+				$PAYDESC = $row->PAYDESC;
+			}
+		}
+		$sql = "
+			select top 20 FORCODE,FORDESC from {$this->MAuth->getdb('PAYFOR')} 
+			where FORCODE = '".$PAYFOR."'
+		";
+		$FORDESC = "";
+		$query5 = $this->db->query($sql);
+		if($query5->row()){
+			foreach($query5->result() as $row){
+				$FORDESC = $row->FORDESC;
+			}
+		}
+		$sql = "
+			select USERID,USERNAME from {$this->MAuth->getdb('PASSWRD')} 
+			where USERID = '".$USERID."'
+		";
+		//echo $sql; exit;
+		$USERNAME = "";
+		$query6 = $this->db->query($sql);
+		if($query6->row()){
+			foreach($query6->result() as $row){
+				$USERNAME = $row->USERNAME;
+			}
+		}
+		$sql = "
+			select ARGCOD,ARGDES from {$this->MAuth->getdb('ARGROUP')}
+            where ARGCOD = '".$GROUP1."' 
+		";
+		$ARGDES = "";
+		$query7 = $this->db->query($sql);
+		if($query7->row()){
+			foreach($query7->result() as $row){
+				$ARGDES = $row->ARGDES;
+			}
+		}
 		$head = ""; $html = ""; 
 		$head = "
 			<tr class='wm'>
 				<td class='wf' style='height:1px;border-top:0.1px solid black;' colspan='13'></td>
 			</tr>
 			<tr>
-				<th style='border-bottom:0.1px solid black;text-align:right;'>สาขา</th>
-				<th style='border-bottom:0.1px solid black;text-align:right;'>เลขใบรับเงินชั่วคราว<br>เลขที่สัญญา</th>
-				<th style='border-bottom:0.1px solid black;text-align:right;'>วันที่รับชำระ<br>ชื่อ-นามสกุล</th>
-				<th style='border-bottom:0.1px solid black;text-align:right;'>เลขที่ใบเสร็จรับเงิน</th>
-				<th style='border-bottom:0.1px solid black;text-align:right;'>วันที่ใบเสร็จรับเงิน<br>ชำระค่า</th> 
-				<th style='border-bottom:0.1px solid black;text-align:right;'>ชำโดย</th> 
-				<th style='border-bottom:0.1px solid black;text-align:right;'>เลขที่เช็ค<br>Billcoll</th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>สาขา</th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>เลขใบรับเงินชั่วคราว<br>เลขที่สัญญา</th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>วันที่รับชำระ<br>ชื่อ-นามสกุล</th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>เลขที่ใบเสร็จรับเงิน</th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>วันที่ใบเสร็จรับเงิน<br>ชำระค่า</th> 
+				<th style='border-bottom:0.1px solid black;text-align:left;'>ชำโดย</th> 
+				<th style='border-bottom:0.1px solid black;text-align:left;'>เลขที่เช็ค<br>Billcoll</th>
 				<th style='border-bottom:0.1px solid black;text-align:right;'><br>ยอกหักลูกหนี้</th>
 				<th style='border-bottom:0.1px solid black;text-align:right;'>เช็คธนาคาร<br>ภาษีมูลค่าเพิ่ม</th>
 				<th style='border-bottom:0.1px solid black;text-align:right;'>จำนวนเงินทั้งหมด<br>ส่วนลด</th>
@@ -727,19 +819,19 @@ class ReportReceivedDT extends MY_Controller {
 				}
 				$html .= "
 					<tr>
-						<th style='width:40px;text-align:right;'>".$row->LOCATRECV."</th>
-						<th style='width:40px;text-align:right;'>".$row->TMBILL."<br>".$row->CONTNO."</th>
-						<th style='width:400px;text-align:right;'>".$this->Convertdate(2,$row->TMBILDT)."<br>".$row->NAM."</th>
-						<th style='width:10px;text-align:right;'>".$row->BILLNO."</th>
-						<th style='width:300px;text-align:right;'>".$this->Convertdate(2,$row->BILLDT)."<br>".$row->FORDESC."</th> 
-						<th style='width:40px;text-align:right;'>".$row->PAYTYP."</th> 
-						<th style='width:80px;text-align:right;'>".$row->CHQNO."<br>".$row->BILLCOLL."</th>
+						<th style='width:40px;text-align:left;'>".$row->LOCATRECV."</th>
+						<th style='width:40px;text-align:left;'>".$row->TMBILL."<br>".$row->CONTNO."</th>
+						<th style='width:400px;text-align:left;'>".$this->Convertdate(2,$row->TMBILDT)."<br>".$row->NAM."</th>
+						<th style='width:10px;text-align:left;'>".$row->BILLNO."</th>
+						<th style='width:300px;text-align:left;'>".$this->Convertdate(2,$row->BILLDT)."<br>".$row->FORDESC."</th> 
+						<th style='width:40px;text-align:left;'>".$row->PAYTYP."</th> 
+						<th style='width:80px;text-align:left;'>".$row->CHQNO."<br>".$row->BILLCOLL."</th>
 						<th style='width:40px;text-align:right;'><br>".number_format($row->PAYAMT,2)."</th>
 						<th style='width:40px;text-align:right;'>".$row->CHQBK."<br>".number_format($row->PAYAMT_V,2)."</th>
 						<th style='width:40px;text-align:right;'>".number_format($row->CHQAMT,2)."<br>".number_format($row->DISCT,2)."</th>
 						<th style='width:40px;text-align:right;'>".$row->USERID."<br>".number_format($row->DISCT,2)."</th>
 						<th style='width:80px;text-align:right;'>".$this->Convertdate(2,$row->INPDT)."<br>".$row->NETPAY."</th>
-						<th style='width:40px;text-align:right;'>".$status."<br>".number_format($row->XBAL,2)."<br><br><br></th>
+						<th style='width:40px;text-align:right;'>".$status."<br>".number_format($row->XBAL,2)."</th>
 					</tr>
 				";
 			}
@@ -817,27 +909,29 @@ class ReportReceivedDT extends MY_Controller {
 			<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
 				<tbody>
 					<tr>
-						<th colspan='13' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
+						<th colspan='13' style='font-size:10pt;text-align:center;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
 					</tr>
 					<tr>
 						<th colspan='13' style='font-size:9pt;'>รายงานการรับชำระตามวันที่ใบรับ</th>
 					</tr>
 					<tr>
-						<th style='text-align:left;' colspan='3'></th>
-						<th style='text-align:left;' colspan='1'>สาขาที่รับชำระ &nbsp;&nbsp;".$LOCATRECV."</th>
-						<th style='text-align:left;' colspan='2'>ชำระเพื่อ บ/ช สาขา &nbsp;&nbsp;".$LOCATPAY."</th>
-						<th style='text-align:left;' colspan='3'>จากวันที่ &nbsp;&nbsp;".$DATE1."</th>
-						<th style='text-align:left;' colspan='1'>ถึงวันที่ &nbsp;&nbsp;".$DATE2."</th>
+						<td style='text-align:center;' colspan='13'>
+							<b>สาขาที่รับชำระ</b> &nbsp;&nbsp;".$LOCATRECV."&nbsp;&nbsp;
+							<b>ชำระเพื่อ บ/ช สาขา</b>&nbsp;&nbsp;".$LOCATPAY."&nbsp;&nbsp;
+							<b>จากวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE1)."&nbsp;&nbsp;
+							<b>ถึงวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE2)."&nbsp;&nbsp;
+						</td>
 					</tr>
 					<tr>
-						<th style='text-align:left;' colspan='3'>Scrt By :&nbsp;&nbsp;".$SCRT."</th>
-						<th style='text-align:left;' colspan=''>ชำระโดย &nbsp;&nbsp;".$PAYTYP."</th>
-						<th style='text-align:left;' colspan='3'>ชำระค่า &nbsp;&nbsp;".$PAYFOR."</th>
-						<th style='text-align:left;' colspan='3'>พนักงานบันทึกข้อมูล &nbsp;&nbsp;".$USERID."</th>
-						<th style='text-align:left;' colspan='2'>กลุ่มลูกค้า &nbsp;&nbsp;".$GROUP1."</th>
-						<td style='text-align:right;' colspan=''>RpRec11</td>
+						<td style='text-align:left;' colspan='2'><b>Scrt By :</b>&nbsp;&nbsp;".$SCRT."</th>
+						<td style='text-align:center;' colspan='9'>
+							<b>ชำระโดย</b>&nbsp;&nbsp;".$PAYDESC."&nbsp;&nbsp;
+							<b>ชำระค่า</b>&nbsp;&nbsp;".$FORDESC."&nbsp;&nbsp;
+							<b>พนักงานบันทึกข้อมูล</b>&nbsp;&nbsp;".$USERNAME."&nbsp;&nbsp;
+							<b>กลุ่มลูกค้า</b>&nbsp;&nbsp;".$ARGDES."&nbsp;&nbsp;
+						</td>
+						<td style='text-align:right;' colspan='2'>RpRec11</td>
 					</tr>
-					<br><br>
 					".$head."
 					".$html."
 				</tbody>
@@ -932,6 +1026,51 @@ class ReportReceivedDT extends MY_Controller {
 			from #PAY
 		";
 		$query2 = $this->db->query($sql); 
+		$sql = "
+			select top 20 PAYCODE,PAYDESC from {$this->MAuth->getdb('PAYTYP')} 
+			where PAYCODE = '".$PAYTYP."'
+		";
+		$PAYDESC = "";
+		$query3 = $this->db->query($sql);
+		if($query3->row()){
+			foreach($query3->result() as $row){
+				$PAYDESC = $row->PAYDESC;
+			}
+		}
+		$sql = "
+			select top 20 FORCODE,FORDESC from {$this->MAuth->getdb('PAYFOR')} 
+			where FORCODE = '".$PAYFOR."'
+		";
+		$FORDESC = "";
+		$query4 = $this->db->query($sql);
+		if($query4->row()){
+			foreach($query4->result() as $row){
+				$FORDESC = $row->FORDESC;
+			}
+		}
+		$sql = "
+			select USERID,USERNAME from {$this->MAuth->getdb('PASSWRD')} 
+			where USERID = '".$USERID."'
+		";
+		//echo $sql; exit;
+		$USERNAME = "";
+		$query5 = $this->db->query($sql);
+		if($query5->row()){
+			foreach($query5->result() as $row){
+				$USERNAME = $row->USERNAME;
+			}
+		}
+		$sql = "
+			select ARGCOD,ARGDES from {$this->MAuth->getdb('ARGROUP')}
+            where ARGCOD = '".$GROUP1."' 
+		";
+		$ARGDES = "";
+		$query6 = $this->db->query($sql);
+		if($query6->row()){
+			foreach($query6->result() as $row){
+				$ARGDES = $row->ARGDES;
+			}
+		}
 		$head = ""; $html = ""; 
 		$head = "
 			<tr class='wm'>
@@ -1040,19 +1179,21 @@ class ReportReceivedDT extends MY_Controller {
 						<th colspan='18' style='font-size:9pt;'>รายงานการรับชำระตามวันที่ใบรับ</th>
 					</tr>
 					<tr>
-						<th style='text-align:left;' colspan='4'></th>
-						<th style='text-align:left;' colspan='3'>สาขาที่รับชำระ &nbsp;&nbsp;".$LOCATRECV."</th>
-						<th style='text-align:left;' colspan='3'>ชำระเพื่อ บ/ช สาขา &nbsp;&nbsp;".$LOCATPAY."</th>
-						<th style='text-align:left;' colspan='3'>จากวันที่ &nbsp;&nbsp;".$DATE1."</th>
-						<th style='text-align:left;' colspan='3'>ถึงวันที่ &nbsp;&nbsp;".$DATE2."</th>
+						<td style='text-align:center;' colspan='18'>
+							<b>สาขาที่รับชำระ</b> &nbsp;&nbsp;".$LOCATRECV."&nbsp;&nbsp;
+							<b>ชำระเพื่อ บ/ช สาขา</b>&nbsp;&nbsp;".$LOCATPAY."&nbsp;&nbsp;
+							<b>จากวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE1)."&nbsp;&nbsp;
+							<b>ถึงวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE2)."&nbsp;&nbsp;
+						</td>
 					</tr>
 					<tr>
-						<th style='text-align:left;' colspan='4'></th>
-						<th style='text-align:left;' colspan='3'>ชำระโดย &nbsp;&nbsp;".$PAYTYP."</th>
-						<th style='text-align:left;' colspan='3'>ชำระค่า &nbsp;&nbsp;".$PAYFOR."</th>
-						<th style='text-align:left;' colspan='4'>พนักงานบันทึกข้อมูล &nbsp;&nbsp;".$USERID."</th>
-						<th style='text-align:left;' colspan='3'>กลุ่มลูกค้า &nbsp;&nbsp;".$GROUP1."</th>
-						<td style='text-align:right;' colspan=''>RpRec11</td>
+						<td style='text-align:center;' colspan='17'>
+							<b>ชำระโดย</b>&nbsp;&nbsp;".$PAYDESC."&nbsp;&nbsp;
+							<b>ชำระค่า</b>&nbsp;&nbsp;".$FORDESC."&nbsp;&nbsp;
+							<b>พนักงานบันทึกข้อมูล</b>&nbsp;&nbsp;".$USERNAME."&nbsp;&nbsp;
+							<b>กลุ่มลูกค้า</b>&nbsp;&nbsp;".$ARGDES."&nbsp;&nbsp;
+						</td>
+						<td style='text-align:right;' colspan='1'>RpRec11</td>
 					</tr>
 					<br><br>
 					".$head."
@@ -1060,7 +1201,6 @@ class ReportReceivedDT extends MY_Controller {
 				</tbody>
 			</table>
 		";
-		
 		$stylesheet = "
 			<style>
 				body { font-family: garuda;font-size:10pt; }

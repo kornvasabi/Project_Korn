@@ -31,10 +31,16 @@ class CUSTOMERS extends MY_Controller {
 								<input type='text' id='cuscod' class='form-control input-sm' placeholder='รหัสลูกค้า' >
 							</div>
 						</div>
-						<div class=' col-sm-6'>	
+						<div class=' col-sm-3'>	
 							<div class='form-group'>
 								ชื่อ-สกุล  ลูกค้า
 								<input type='text' id='surname' class='form-control input-sm' placeholder='ชื่อ-สกุล ลูกค้า' >
+							</div>
+						</div>
+						<div class=' col-sm-3'>	
+							<div class='form-group'>
+								ที่อยู่ลูกค้า
+								<input type='text' id='address' class='form-control input-sm' placeholder='ที่อยู่ลูกค้า' >
 							</div>
 						</div>
 						<div class=' col-sm-2'>	
@@ -54,7 +60,6 @@ class CUSTOMERS extends MY_Controller {
 				</div>
 			</div>
 		";
-		
 		$html.= "<script src='".base_url('public/js/SYS04/CUSTOMERS.js')."'></script>";
 		echo $html;
 	}
@@ -62,45 +67,110 @@ class CUSTOMERS extends MY_Controller {
 		$arrs = array();
 		$arrs['cuscod'] = !isset($_REQUEST['cuscod']) ? '' : $_REQUEST['cuscod'];
 		$arrs['surname'] = !isset($_REQUEST['surname']) ? '' : $_REQUEST['surname'];
-		
+		$arrs['address'] = !isset($_REQUEST['address']) ? '' : $_REQUEST['address'];
+		$top = "";
 		$cond = "";
 		if($arrs['cuscod'] != ''){
 			$cond .= " and CUSCOD like '%".$arrs['cuscod']."%'";
+			$top = "";
+		}else{
+			$top = "top 100";
 		}
-		
 		if($arrs['surname'] != ''){
 			$cond .= " and NAME1 like '%".$arrs['surname']."%'";
+			$top = "";
+		}else{
+			$top = "top 100";
 		}
 		if($arrs['surname'] != ''){
 			$cond .= " or NAME2 like '%".$arrs['surname']."%'";
+			$top = "";
+		}else{
+			$top = "top 100";
 		}
-		
+		if($arrs['address'] != ''){
+			$cond .= " and ADDR like '%".$arrs['address']."%'";
+			$top = "";
+		}else{
+			$top = "top 100";
+		}
 		$sql = "
-			select top 20 * from {$this->MAuth->getdb('CUSTMAST')}
+			select ".$top." * from (
+				select replace(STUFF(
+					(
+						select '๛' 
+						+' '+ CONVERT(nvarchar(20),CC.ADDRNO)
+						+'. '+'บ้านเลขที่ '+ convert(nvarchar(20),CC.ADDR1) 
+						+' '+'ซอย '+ convert(nvarchar(20),CC.SOI)
+						+' '+'ถนน '+ convert(nvarchar(20),CC.ADDR2)
+						+' '+'หมู่บ้าน '+ CONVERT(nvarchar(20),CC.MOOBAN)
+						+' '+'ตำบล '+ convert(nvarchar(20),CC.TUMB)
+						+' '+'อำเภอ '+ convert(nvarchar(20),B.AUMPDES)
+						+' '+'จังหวัด '+ convert(nvarchar(20),C.PROVDES)
+						+' '+'รหัสไปรษณีย์ '+ CONVERT(nvarchar(20),CC.ZIP)
+						+' '+'เบอร์โทร '+ CONVERT(nvarchar(20),CC.TELP)
+						from {$this->MAuth->getdb('CUSTADDR')} CC left join {$this->MAuth->getdb('SETAUMP')} B on 
+						CC.AUMPCOD = B.AUMPCOD 
+						left join {$this->MAuth->getdb('SETPROV')} C on CC.PROVCOD=C.PROVCOD
+						where A.CUSCOD = CC.CUSCOD FOR XML path('') 
+					),1, 1, ''
+				),'๛','<br>') as ADDR,CONVERT(varchar(8),BIRTHDT,112) as BIRT,* from {$this->MAuth->getdb('CUSTMAST')} A 
+			)A
 			where 1=1 ".$cond." order by CUSCOD
 		";
-		//echo $sql ; exit;
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
-				
-		//$NRow = 1;
-		
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
-				$html .= "
+				$html .="
 					<tr>
-						<td><button CUSCOD ='".$row->CUSCOD."' class='btnDetail btn btn-xs btn-info btn btn-cyan' style='width:100%'><span class='fa fa-edit'><b>รายละเอียด</b></span></button></td>
-						<td>".$row->CUSCOD."</td>
-						<td>".$row->NAME1." ".$row->NAME2."</td>
-						<td>".$this->dateselectshow($row->BIRTHDT)."</td>
-						<td>".$row->AGE."</td>
-						<td>".$row->OCCUP."</td>
-						<td><button CUSCOD ='".$row->CUSCOD."' class='btnshow_Addr btn btn-xs btn-info' style='width:100%'><span class='fa fa-folder-open'><b>แสดงที่อยู่</b></span></button></td>
+						<td style='width:70px;text-align:left;'>
+							<button CUSCOD ='{$row->CUSCOD}' class='btnDetail btn btn-xs btn-info' style='width:100%;color:'>
+								<span class='fa fa-edit'><b>รายละเอียด</b></span>
+							</button>
+						</td>
+						<td style='width:70px;text-align:center;'>".$row->CUSCOD."</td>
+						<td style='width:70px;text-align:left;'>".$row->NAME1." ".$row->NAME2."</td>
+						<td style='width:70px;text-align:center;'>".$this->Convertdate(2,$row->BIRT)."</td>
+						<td style='width:70px;text-align:center;'>".$row->AGE."</td>
+						<td style='width:70px;text-align:left;'>".$row->OCCUP."</td>
+						<td style='width:70px;text-align:left;'>".$row->ADDR."</td>
 					</tr>
 				";
 			}
 		}
-		
+		/*
+		$sql = "select top 20 * from CUSTMAST where 1=1 ".$cond." order by CUSCOD";
+		$query = $this->db->query($sql);
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$sql2  = "
+					select * from CUSTADDR where 1=1 and CUSCOD = '{$row->CUSCOD}' 
+				";
+				$query2 = $this->db->query($sql2);
+				$addr  = "";
+				if($query2->row()){
+					foreach($query2->result() as $row2){
+						if($addr <> '') { $addr .= "<br>"; }
+						$addr .= "{$row2->ADDR1} {$row2->ADDR2}";
+					}
+				}
+				$html .= "
+					<tr>
+						<td style='width:70px;text-align:left;'><button CUSCOD ='".$row->CUSCOD."' class='btnDetail btn btn-xs btn-info btn btn-cyan' style='width:100%'><span class='fa fa-edit'><b>รายละเอียด</b></span></button></td>
+						<td style='width:70px;text-align:center;'>".$row->CUSCOD."</td>
+						<td style='width:70px;text-align:left;'>".$row->NAME1." ".$row->NAME2."</td>
+						<td style='width:70px;text-align:center;'>".$this->dateselectshow($row->BIRTHDT)."</td>
+						<td style='width:70px;text-align:center;'>".$row->AGE."</td>
+						<td style='width:70px;text-align:center;'>".$row->OCCUP."</td>
+						<td style='width:70px;text-align:left;'>".$addr."</td>
+					</tr>
+				";
+			}
+		}
+		*/
 		$html = "
 			<div id='tbScroll' class='col-sm-12' style='height:calc(100% - 30px);width:100%;overflow:auto;font-size:8pt;'>
 				<table id='data-table-example2' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
@@ -111,6 +181,9 @@ class CUSTOMERS extends MY_Controller {
 								<span style='cursor:pointer;'>PDF</span>
 							</th>
 						</tr -->
+						<tr>
+							<th style='text-align:center;color:blue;' colspan='7'>ประวัติลูกค้า</th>
+						</tr>
 						<tr>
 							<th>#</th>
 							<th>รหัสลูกค้า</th>
@@ -127,7 +200,6 @@ class CUSTOMERS extends MY_Controller {
 				</table>
 			</div>
 		";
-		
 		$response = array();
 		$response['html'] = $html;
 		echo json_encode($response);
@@ -173,7 +245,6 @@ class CUSTOMERS extends MY_Controller {
 				";
 			}
 		}
-		
 		$html = "
 			<div id='tbScroll' class='col-sm-12'>
 				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered table-hover' cellspacing='0' width='100%'>
@@ -197,7 +268,6 @@ class CUSTOMERS extends MY_Controller {
 				</table>
 			</div>
 		";
-		
 		$response = array();
 		$response['html'] = $html;
 		echo json_encode($response);
@@ -232,9 +302,6 @@ class CUSTOMERS extends MY_Controller {
 		$arrs['ADDRNO2']    = "";
 		$arrs['ADDRNO3']    = "";
 		$arrs['MEMOADD']   	= "";
-		
-		
-		
 		$sql = "
 			select * from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD = '".$CUSCOD."'
 		";
@@ -273,14 +340,13 @@ class CUSTOMERS extends MY_Controller {
 		$sqlA = "
 			select * from {$this->MAuth->getdb('CUSTMAST')} A
             left join {$this->MAuth->getdb('ARGROUP')} B on A.GROUP1=B.ARGCOD where A.CUSCOD = '".$CUSCOD."' 
-			";
+		";
         $queryA = $this->db->query($sqlA);
         if($queryA->row()){
 			foreach($queryA->result() as $rowA){
 				$arrs['GROUP1'] = "<option value='".str_replace(chr(0),"",$rowA->ARGCOD)."'>".str_replace(chr(0),"",$rowA->ARGDES)."</option>";
 			}
 		}
-		
 		$sqlB ="
 			select * from {$this->MAuth->getdb('CUSTMAST')} A
             left join {$this->MAuth->getdb('SETGRADCUS')} B on A.GRADE=B.GRDCOD where A.CUSCOD ='".$CUSCOD."'
@@ -314,6 +380,7 @@ class CUSTOMERS extends MY_Controller {
 			where CUSCOD='".$CUSCOD."'
 			order by ADDRNO
 		";
+		//echo $sqlD; exit;
 		$tbody ="";
 		$addrno1="";
 		$addrno2="";
@@ -571,7 +638,6 @@ class CUSTOMERS extends MY_Controller {
 				</div>
 			</div>
         ";
-		
 		if($EVENT == "add"){
 			$html .="
 				<div class='col-sm-10 col-sm-offset-9'>
@@ -599,7 +665,21 @@ class CUSTOMERS extends MY_Controller {
         $response = array("html"=>$html);
         echo json_encode($response);
 	}
-	
+	function getAge(){
+		$response = array();
+		$BIRTHDT = $this->Convertdate(1,$_POST['BIRTHDT']);
+		//echo $BIRTHDT;
+		$sql = "
+			select datediff(month,'".$BIRTHDT."',getdate())/12 as GETAGE 
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response['getdate'] = $row->GETAGE;
+			}
+		}
+		echo json_encode($response);
+	}
 	function getFormAddressCM(){
 		$arrs = array();
         $arrs["ADDRNO"]	  = (!isset($_POST["ADDRNO"])?  "":$_POST["ADDRNO"]);
@@ -785,7 +865,6 @@ class CUSTOMERS extends MY_Controller {
 			$response["msg"] = "กรุณกรอกเบอร์โทรศัพท์ก่อนครับ";
 			echo json_encode ($response); exit;
 		}
-		
         $address = "";
         if($arrs["ADDR1"] != ""){
 			$address .= "บ้านเลขที่ ".$arrs["ADDR1"];
@@ -1122,7 +1201,6 @@ class CUSTOMERS extends MY_Controller {
 				)
 			";
         }
-		
 		$sql ="
 			if OBJECT_ID('tempdb..#custmastTemp') is not null drop table #custmastTemp;
 			create table #custmastTemp (id varchar(1),msg varchar(max));
@@ -1147,7 +1225,7 @@ class CUSTOMERS extends MY_Controller {
 				
 				declare @isval int = isnull((select count(*) from {$this->MAuth->getdb('CUSTMAST')} where IDNO='".$arrs['IDNO']."'),0);
 				
-				declare @sircod varchar(2) = (select SIRCOD from SIRNAM where SIRNAM = '".$arrs['SNAM']."');
+				declare @sircod varchar(2) = (select SIRCOD from {$this->MAuth->getdb('SIRNAM')} where SIRNAM = '".$arrs['SNAM']."');
 				
 				BEGIN
 					set @TAXNO = null;
@@ -1209,7 +1287,6 @@ class CUSTOMERS extends MY_Controller {
 		}
 		echo json_encode($response);
 	}
-	
 	function updateCustomerHistory($arrs,$ADDR){
 		//echo $ADDR[0][1]; exit;
 		$SWIN = "";
@@ -1247,7 +1324,6 @@ class CUSTOMERS extends MY_Controller {
 			end	
 			";
         }
-		
 		$sql ="
 			if OBJECT_ID('tempdb..#custmastTemp') is not null drop table #custmastTemp;
 			create table #custmastTemp (id varchar(1),msg varchar(max));
@@ -1275,7 +1351,6 @@ class CUSTOMERS extends MY_Controller {
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','SYS04::แก้ไขประวัติลูกค้า','".$arrs['CUSCOD']."'+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 			end
-			
 			else
 			begin
 				rollback tran custmastTran;
