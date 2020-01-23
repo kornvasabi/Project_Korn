@@ -11,8 +11,10 @@ var _level  = $('.tab1[name="home"]').attr('clev');
 
 $(function(){
 	if(_insert == 'T'){
+		$('#add_custmast').attr('disabled',false);	
 		$('#add_groupsn').attr('disabled',false);	
 	}else{
+		$('#add_custmast').attr('disabled',true);	
 		$('#add_groupsn').attr('disabled',true);	
 	}
 });
@@ -21,6 +23,7 @@ $('#search_groupsn').click(function(){
 	searchsn();
 });
 
+var JDsearchsn = null;
 function searchsn(){
 	dataToPost = new Object();
 	dataToPost.sircod = $('#sircod').val();
@@ -30,7 +33,7 @@ function searchsn(){
 	$('#setgroupResult').html('');
 	$('#setgroupResult').append(spinner);
 	
-	$.ajax({
+	JDsearchsn = $.ajax({
 		url: '../SYS04/CUSTOMERS/groupSearchsn',
 		data:dataToPost,
 		type: 'POST',
@@ -39,7 +42,10 @@ function searchsn(){
 			$('#setgroupResult').find('.spinner, .spinner-backdrop').remove();
 			$('#setgroupResult').html(data.html);
 			afterSearch();
-		}
+			
+			JDsearchsn = null;
+		},
+		beforeSend: function(){ if(JDsearchsn !== null){ JDsearchsn.abort(); } }
 	});
 }
 
@@ -331,11 +337,12 @@ function searchcm(){
 	dataToPost.cuscod  = $('#cuscod').val();
 	dataToPost.surname = $('#surname').val();
 	dataToPost.address = $('#address').val();
-	
+	/* 
 	var spinner = $('body>.spinner').clone().removeClass('hide');
 	$('#setgroupResult').html('');
 	$('#setgroupResult').append(spinner);
-	//$('#loadding').fadeIn(500);
+	*/
+	$('#loadding').fadeIn(200);
 	CT_Search = $.ajax({
 		url: '../SYS04/CUSTOMERS/groupSearchcm',
 		data:dataToPost,
@@ -350,14 +357,10 @@ function searchcm(){
 			$('.btnDetail').click(function(){
 				fn_load_formeditcm($(this),'edit');
 			});
-			//$('#loadding').fadeOut(100);
 			CT_Search = null;
+			$('#loadding').fadeOut(200);
 		},
-		beforeSend: function(){
-			if(CT_Search !== null){
-				CT_Search.abort();
-			}
-		}
+		beforeSend: function(){ if(CT_Search !== null){ CT_Search.abort(); } }
 	});
 }
 function afterSearchcm(){

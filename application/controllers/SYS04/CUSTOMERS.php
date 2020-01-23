@@ -640,26 +640,28 @@ class CUSTOMERS extends MY_Controller {
         ";
 		if($EVENT == "add"){
 			$html .="
-				<div class='col-sm-10 col-sm-offset-9'>
+				<div class='col-sm-10 col-sm-offset-1'>
 					<div class='row'><br>
-						<div class='col-sm-3'>
+						<div class='col-sm-3 col-sm-offset-9'>
 							<button type='button' id='add_save' class='btn btn-sm btn-primary btn-block fa fa-floppy-o'>บันทึก</button>
 						</div>
 					</div>    
 				</div>
+				<div class='col-sm-12'>&emsp;</div>
 			";
 		}else{
 			$html .="
-				<div class='col-sm-10 col-sm-offset-7'>
+				<div class='col-sm-10 col-sm-offset-1'>
 					<div class='row'><br>
-						<div class='col-sm-3'>
+						<div class='col-sm-3 col-sm-offset-6'>
 							<button type='button' id='add_update' class='btn btn-sm btn-primary btn-block fa fa-floppy-o'>บันทึก</button>
 						</div>
 						<div class='col-sm-3'>
 							<button type='button' id='btn_Delete' class='btn btn-sm btn-danger btn-block fa fa-trash'>ลบ</button>
-						</div><br><br>
+						</div>
 					</div>    
 				</div>
+				<div class='col-sm-12'>&emsp;</div>
 			";
 		}
         $response = array("html"=>$html);
@@ -1388,8 +1390,8 @@ class CUSTOMERS extends MY_Controller {
 		$sql ="
 			if object_id('tempdb..#temp') is not null drop table #temp;
 			select ROW_NUMBER() over(order by _table) r,* into #temp from (
-				select a.name as _table,b.name as _column from sys.tables a
-				left join sys.columns b on a.object_id=b.object_id
+				select a.name as _table,b.name as _column from ".$this->sess["db"].".sys.tables a
+				left join ".$this->sess["db"].".sys.columns b on a.object_id=b.object_id
 			) a
 			where a._column='CUSCOD' and a._table not in ('CUSTMAST','CUSTADDR')
 
@@ -1441,6 +1443,7 @@ class CUSTOMERS extends MY_Controller {
 				insert into #custmastTemp select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
 			end catch
 		";
+		//echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "select * from #custmastTemp";
 		$query = $this->db->query($sql);

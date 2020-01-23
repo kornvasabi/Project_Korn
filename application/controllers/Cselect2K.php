@@ -90,7 +90,7 @@ class Cselect2K extends MY_Controller {
             foreach($query->result() as $row){
                 $json[] = array(
                     "id" =>str_replace(chr(0),"",$row->GRDCOD),
-                    "text" =>str_replace(chr(0),"",$row->GRDCOD).str_replace(chr(0),"",$row->GRDDES),					 
+                    "text" =>str_replace(chr(0),"",$row->GRDCOD)."  ".str_replace(chr(0),"",$row->GRDDES),					 
                 );
             }
         }
