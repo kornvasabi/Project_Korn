@@ -557,7 +557,8 @@ function fnload($thisForm){
 		dataToPost.q 		= "";
 		dataToPost.TYPECOD 	= "HONDA";
 		dataToPost.MODEL 	= (typeof $('#FMODEL').find(':selected').val() === 'undefined' ? "" : $('#FMODEL').find(':selected').val());
-		
+		dataToPost.BAAB 	= "";
+		dataToPost.NOTB 	= "YES";
 		$.ajax({
 			url: '../Cselect2/getBAAB',
 			data: dataToPost,
@@ -575,6 +576,22 @@ function fnload($thisForm){
 		});
 		
 		$.ajax({
+			url: '../Cselect2/getJDCOLOR',
+			data: dataToPost,
+			tyle: 'POST',
+			dataType: 'json',
+			success: function(data){
+				let size = data.length;
+				for(let i=0;i<size;i++){
+					if(i==0){ FCOLOR.empty(); }
+					FCOLOR.append('<option value="'+data[i].id+'">'+data[i].text+'</option>');
+				}				
+				FCOLOR.bootstrapDualListbox('refresh', true);
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		});
+		
+		$.ajax({
 			url:'../SYS04/Standard/getSTDID',
 			data: dataToPost,
 			type: 'POST',
@@ -585,6 +602,32 @@ function fnload($thisForm){
 			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 		
+	});
+	
+	FBAAB.change(function(){
+		dataToPost = new Object();
+		dataToPost.now 		= "";
+		dataToPost.q 		= "";
+		dataToPost.TYPECOD 	= "HONDA";
+		dataToPost.MODEL 	= (typeof $('#FMODEL').find(':selected').val() === 'undefined' ? "" : $('#FMODEL').find(':selected').val());
+		dataToPost.BAAB 	= $(this).val();
+		dataToPost.NOTB 	= "YES";
+		
+		$.ajax({
+			url: '../Cselect2/getJDCOLOR',
+			data: dataToPost,
+			tyle: 'POST',
+			dataType: 'json',
+			success: function(data){
+				let size = data.length;
+				for(let i=0;i<size;i++){
+					if(i==0){ FCOLOR.empty(); }
+					FCOLOR.append('<option value="'+data[i].id+'">'+data[i].text+'</option>');
+				}				
+				FCOLOR.bootstrapDualListbox('refresh', true);
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		});
 	});
 	
 	
@@ -1639,6 +1682,8 @@ $("#btnt1import").click(function(){
 								$this.destroy();
 								
 								$("#loadding").fadeOut(200);
+								
+								fn_afterimport();
 							}
 							
 						}
@@ -1658,9 +1703,39 @@ $("#btnt1import").click(function(){
 	});
 });
 
-
-
-
+function fn_afterimport(){
+	var JDstd_import = null;
+	$('#std_import').click(function(){
+		dataToPost = new Object();
+		dataToPost.dt = '';
+		
+		$('#loadding').fadeIn(200);
+		JDstd_import = $.ajax({
+			url:'../SYS04/Standard/import_save',
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				Lobibox.notify('warning', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					msg: data.errorMsg
+				});
+				
+				JDstd_import = null;
+				$('#loadding').fadeOut(200);
+			},
+			beforeSend: function(){ if(JDstd_import !== null){ JDstd_import.abort(); } },
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		});
+	});
+}
 
 
 

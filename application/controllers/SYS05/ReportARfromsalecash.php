@@ -685,7 +685,7 @@ class ReportARfromsalecash extends MY_Controller {
 					".$cond."
 				)SALE
 		";
-		//echo $sql; 
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$sql = "
