@@ -84,9 +84,13 @@ class MMAIN extends CI_Model {
 	}
 	
 	public function Option_get_color($selected,$model,$baab){
+		//echo implode("','",$selected); exit;
+		if(!is_array($model)){ $model = array('๛',$model); }
+		if(!is_array($baab)){ $baab = array('๛',$baab); }
+		
 		$sql = "
 			select COLORCOD from {$this->MAuth->getdb('JD_SETCOLOR')}
-			where MODELCOD='{$model}' and BAABCOD='{$baab}'
+			where MODELCOD in ('".implode("','",$model)."') and BAABCOD in ('".implode("','",$baab)."') 
 			order by COLORCOD
 		";
 		$query = $this->db->query($sql);
