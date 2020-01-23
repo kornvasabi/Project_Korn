@@ -587,7 +587,7 @@ function search(){
 			$('#resultt_ChangeBillcolector').html(data.html);
 			
 			$('#table-CHGBILLC').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-CHGBILLC',1,345);
+			fn_datatables('table-CHGBILLC',1,335);
 
 			function redraw(){
 				$('.getit').hover(function(){

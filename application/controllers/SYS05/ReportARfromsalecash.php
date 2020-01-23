@@ -24,7 +24,7 @@ class ReportARfromsalecash extends MY_Controller {
 			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
 				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
 					<div class='row' style='height:90%;'>
-						<div class='col-sm-12 col-xs-12' style='background-color:#3d9690;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
+						<div class='col-sm-12 col-xs-12' style='background-color:#0067a5;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
 							<br>รายงานลูกหนี้คงเหลือจากการขายสด<br>
 						</div>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>	
@@ -44,7 +44,7 @@ class ReportARfromsalecash extends MY_Controller {
 							<div class='col-sm-4 col-xs-4'>	
 								<div class='form-group'>
 									ลูกหนี้ ณ วันที่
-									<input type='text' id='ARDATE' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='ถึงวันที่' value='".$this->today('today')."' style='font-size:10.5pt'>
+									<input type='text' id='ARDATE' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='ลูกหนี้ ณ วันที่' value='".$this->today('today')."' style='font-size:10.5pt'>
 								</div>
 							</div>
 							<div class='col-sm-4 col-xs-4'>	
@@ -143,7 +143,7 @@ class ReportARfromsalecash extends MY_Controller {
 					</div>
 					<div class='row' style='height:10%;'>
 						<div class='col-sm-12 col-xs-12'><br>	
-							<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'><span class='glyphicon glyphicon-search'> แสดง</span></button>
+							<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%;font-size:10.5pt;'><span class='glyphicon glyphicon-search'> แสดง</span></button>
 						</div>
 					</div>
 				</div>
@@ -203,10 +203,7 @@ class ReportARfromsalecash extends MY_Controller {
 			$rpcond .= "  รุ่น ".$MODEL1;
 		}
 		
-		if($GCODE1 == "N"){
-			$cond .= " AND (C.GCODE LIKE '%".$GCODE1."%')";
-			$rpcond .= "  สถานะสินค้า ".$GCODE1;
-		}else if($GCODE1 == "O"){
+		if($GCODE1 != ""){
 			$cond .= " AND (C.GCODE LIKE '%".$GCODE1."%')";
 			$rpcond .= "  สถานะสินค้า ".$GCODE1;
 		}else{
@@ -221,16 +218,16 @@ class ReportARfromsalecash extends MY_Controller {
 					select A.LOCAT, A.CONTNO, A.CUSCOD, A.SDATE, B.SNAM+B.NAME1+'  '+B.NAME2 as CUSNAME, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, A.VATPRES, 
 					A.TOTPRES, A.SMPAY, A.SMCHQ
 					from {$this->MAuth->getdb('ARCRED')} A
-					left join CUSTMAST B on A.CUSCOD = B.CUSCOD
-					left join INVTRAN C on A.STRNO = C.STRNO
+					left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD
+					left join {$this->MAuth->getdb('INVTRAN')} C on A.STRNO = C.STRNO
 					where (A.SDATE <= '".$ARDATES."')  AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYDT > '".$ARDATES."')) 
 					".$cond."
 					union
 					select A.LOCAT, A.CONTNO, A.CUSCOD, A.SDATE, B.SNAM+B.NAME1+'  '+B.NAME2 as CUSNAME, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, A.VATPRES, 
 					A.TOTPRES, A.SMPAY, A.SMCHQ
 					from {$this->MAuth->getdb('HARCRED')} A
-					left join CUSTMAST B on A.CUSCOD = B.CUSCOD
-					left join HINVTRAN C on A.STRNO = C.STRNO
+					left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD
+					left join {$this->MAuth->getdb('HINVTRAN')} C on A.STRNO = C.STRNO
 					where (A.SDATE <= '".$ARDATES."') AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYDT > '".$ARDATES."')) 
 					".$cond."
 				)SALE
@@ -248,7 +245,7 @@ class ReportARfromsalecash extends MY_Controller {
 					sum(CASE WHEN ((A.PAYDT > '".$ARDATES."' OR A.PAYDT IS NULL) AND A.PAYTYP = '02' AND A.TMBILDT <= '".$ARDATES."') THEN  A.PAYAMT ELSE 0 END) AS SNETP1,
 					sum(CASE WHEN (A.PAYDT <= '".$ARDATES."') THEN  A.PAYAMT_V ELSE 0 END) AS VPY  ,
 					sum(CASE WHEN ((A.PAYDT > '".$ARDATES."' OR A.PAYDT IS NULL) AND A.PAYTYP = '02' AND A.TMBILDT <= '".$ARDATES."') THEN  A.PAYAMT_V ELSE 0 END) AS VCQ  
-					from CHQTRAN A
+					from {$this->MAuth->getdb('CHQTRAN')} A
 					where  A.FLAG != 'C' AND A.CONTNO in (select CONTNO from #SALE)
 					group by A.CONTNO
 				)VAT
@@ -548,13 +545,13 @@ class ReportARfromsalecash extends MY_Controller {
 		
 		if($i>0){
 			$html = "
-				<div id='table-fixed-ReportARfromsalecash' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:9pt;'>
+				<div id='table-fixed-ReportARfromsalecash' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:8pt;'>
 					<table id='table-ReportARfromsalecash' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 						<thead>
-						<tr>
+						<tr style='height:40px;'>
 							<th colspan=".($vat == 'showvat' ? '23' : '11')." style='font-size:12pt;border:0px;text-align:center;'>รายงานลูกหนี้คงเหลือจากการขายสด</th>
 						</tr>
-						<tr>
+						<tr style='height:25px;'>
 							<td colspan=".($vat == 'showvat' ? '23' : '11')." style='border-bottom:1px solid #ddd;text-align:center;'>".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head."
@@ -659,10 +656,7 @@ class ReportARfromsalecash extends MY_Controller {
 			$rpcond .= "  รุ่น ".$MODEL1;
 		}
 		
-		if($GCODE1 == "N"){
-			$cond .= " AND (C.GCODE LIKE '%".$GCODE1."%')";
-			$rpcond .= "  สถานะสินค้า ".$GCODE1;
-		}else if($GCODE1 == "O"){
+		if($GCODE1 != ""){
 			$cond .= " AND (C.GCODE LIKE '%".$GCODE1."%')";
 			$rpcond .= "  สถานะสินค้า ".$GCODE1;
 		}else{
@@ -677,21 +671,21 @@ class ReportARfromsalecash extends MY_Controller {
 					select A.LOCAT, A.CONTNO, A.CUSCOD, A.SDATE, B.SNAM+B.NAME1+'  '+B.NAME2 as CUSNAME, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, A.VATPRES, 
 					A.TOTPRES, A.SMPAY, A.SMCHQ
 					from {$this->MAuth->getdb('ARCRED')} A
-					left join CUSTMAST B on A.CUSCOD = B.CUSCOD
-					left join INVTRAN C on A.STRNO = C.STRNO
+					left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD
+					left join {$this->MAuth->getdb('INVTRAN')} C on A.STRNO = C.STRNO
 					where (A.SDATE <= '".$ARDATES."')  AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYDT > '".$ARDATES."')) 
 					".$cond."
 					union
 					select A.LOCAT, A.CONTNO, A.CUSCOD, A.SDATE, B.SNAM+B.NAME1+'  '+B.NAME2 as CUSNAME, A.NPRICE, A.VATPRC, A.TOTPRC, A.NPAYRES, A.VATPRES, 
 					A.TOTPRES, A.SMPAY, A.SMCHQ
 					from {$this->MAuth->getdb('HARCRED')} A
-					left join CUSTMAST B on A.CUSCOD = B.CUSCOD
-					left join HINVTRAN C on A.STRNO = C.STRNO
+					left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD
+					left join {$this->MAuth->getdb('HINVTRAN')} C on A.STRNO = C.STRNO
 					where (A.SDATE <= '".$ARDATES."') AND A.TOTPRC > 0 AND (A.TOTPRC > A.SMPAY OR (A.TOTPRC = A.SMPAY AND A.LPAYDT > '".$ARDATES."')) 
 					".$cond."
 				)SALE
 		";
-		//echo $sql; 
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$sql = "
@@ -704,7 +698,7 @@ class ReportARfromsalecash extends MY_Controller {
 					sum(CASE WHEN ((A.PAYDT > '".$ARDATES."' OR A.PAYDT IS NULL) AND A.PAYTYP = '02' AND A.TMBILDT <= '".$ARDATES."') THEN  A.PAYAMT ELSE 0 END) AS SNETP1,
 					sum(CASE WHEN (A.PAYDT <= '".$ARDATES."') THEN  A.PAYAMT_V ELSE 0 END) AS VPY  ,
 					sum(CASE WHEN ((A.PAYDT > '".$ARDATES."' OR A.PAYDT IS NULL) AND A.PAYTYP = '02' AND A.TMBILDT <= '".$ARDATES."') THEN  A.PAYAMT_V ELSE 0 END) AS VCQ  
-					from CHQTRAN A
+					from {$this->MAuth->getdb('CHQTRAN')} A
 					where  A.FLAG != 'C' AND A.CONTNO in (select CONTNO from #SALE)
 					group by A.CONTNO
 				)VAT
@@ -862,8 +856,8 @@ class ReportARfromsalecash extends MY_Controller {
 			'mode' => 'utf-8', 
 			'format' => $layout,
 			'margin_top' => 10, 	//default = 16
-			'margin_left' => 10, 	//default = 15
-			'margin_right' => 10, 	//default = 15
+			'margin_left' => 8, 	//default = 15
+			'margin_right' => 8, 	//default = 15
 			'margin_bottom' => 10, 	//default = 16
 			'margin_header' => 9, 	//default = 9
 			'margin_footer' => 9, 	//default = 9

@@ -22,15 +22,13 @@ class ReportHoldtoStock extends MY_Controller {
 
 		$html = "
 			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div class='col-sm-12 col-xs-12' style='overflow:auto;font-size:11pt;'>					
-					<div class='row'>
-						<div class='col-sm-12 col-xs-12' style='background-color:#637b9a;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
+				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:11pt;'>					
+					<div class='row' style='height:90%;'>
+						<div class='col-sm-12 col-xs-12' style='background-color:#0067a5;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
 							<br>รายงานรถยึดรอไถ่ถอน<br>
 						</div>
-					</div>
-					<br>
-					<div class='row'>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>	
+							<br>
 							<div class='col-sm-4 col-xs-4'>	
 								<div class='form-group'>
 									สาขา
@@ -50,19 +48,17 @@ class ReportHoldtoStock extends MY_Controller {
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class='row'>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>	
-							<div class='col-sm-8 col-xs-8'>	
+							<div class='col-sm-12 col-xs-12'>	
 								<div class='form-group'>
 									รูปแบบการพิมพ์
 									<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #d6d6d6;'>	
-										<div class='col-sm-6 col-xs-6'>
+										<div class='col-sm-4 col-xs-4'>
 											<div class='form-group'><br>
 												<input type= 'radio' id='ver' name='layout' checked> แนวตั้ง
 											</div>
 										</div>
-										<div class='col-sm-6 col-xs-6'>
+										<div class='col-sm-4 col-xs-4'>
 											<div class='form-group'><br>
 												<input type= 'radio' id='hor' name='layout'> แนวนอน
 											</div>
@@ -71,8 +67,6 @@ class ReportHoldtoStock extends MY_Controller {
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class='row'>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'><br>	
 							<div class='col-sm-12 col-xs-12'>	
 								<div class='form-group'>
@@ -98,10 +92,9 @@ class ReportHoldtoStock extends MY_Controller {
 							</div>
 						</div>
 					</div>
-					<div class='row'>
+					<div class='row' style='height:10%;'>
 						<div class='col-sm-12 col-xs-12'><br>	
 							<div class='form-group'>
-								<br>
 								<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'><span class='glyphicon glyphicon-search'> แสดง</span></button>
 							</div>
 						</div>
@@ -178,8 +171,8 @@ class ReportHoldtoStock extends MY_Controller {
 				<th style='vertical-align:middle;'>วันทำสัญญา</th>
 				<th style='vertical-align:middle;'>ราคาขาย</th>
 				<th style='vertical-align:middle;'>ชำระแล้ว</th>
-				<th style='vertical-align:middle;'>ค้างชำระ<br>(บาท)</th>
-				<th style='vertical-align:middle;'>ค้างชำระ<br>(งวด)</th>
+				<th style='vertical-align:middle;text-align:right;'>ค้างชำระ<br>(บาท)</th>
+				<th style='vertical-align:middle;text-align:center;'>ค้างชำระ<br>(งวด)</th>
 				<th style='vertical-align:middle;'>วันที่ยึด</th>
 				<th style='vertical-align:middle;'>สาขาที่เก็บ</th>
 				<th style='vertical-align:middle;'>Billcoll</th>
@@ -201,7 +194,7 @@ class ReportHoldtoStock extends MY_Controller {
 						<td align='right'>".number_format($row->TOTPRC,2)."</td>
 						<td align='right'>".number_format($row->SMPAY,2)."</td>
 						<td align='right'>".number_format($row->EXP_AMT,2)."</td>
-						<td align='right'>".number_format($row->EXP_PRD)."</td>
+						<td align='center'>".number_format($row->EXP_PRD)."</td>
 						<td>".$row->YDATES."</td>
 						<td>".$row->CRLOCAT."</td>
 						<td>".$row->BILLCOLL."</td>
@@ -240,10 +233,10 @@ class ReportHoldtoStock extends MY_Controller {
 				<div id='table-fixed-ReportHoldtoStock' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:9pt;'>
 					<table id='table-ReportHoldtoStock' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 						<thead>
-						<tr>
+						<tr style='height:40px;'>
 							<th colspan='14' style='font-size:12pt;border:0px;text-align:center;'>รายงานรถยึดรอไถ่ถอน</th>
 						</tr>
-						<tr>
+						<tr style='height:25px;'>
 							<td colspan='14' style='border-bottom:1px solid #ddd;text-align:center;'>".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head."

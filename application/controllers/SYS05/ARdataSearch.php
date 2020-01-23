@@ -14,7 +14,6 @@ class ARdataSearch extends MY_Controller {
             }
 		}
 	}
-	
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
@@ -95,20 +94,20 @@ class ARdataSearch extends MY_Controller {
 							</div>
 						</div>
 						<br>
-						<div class='row' style='height:30%;border:0.1px solid #bdbdbd;background-color:#eee;'>
+						<div class='row' style='height:25%;border:0.1px solid #bdbdbd;background-color:#eee;'>
 							<div class='col-sm-12 col-xs-12' style='height:100%;'>
 								<div id='dataTable-fixed-cusdata' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
 									<table id='dataTables-cusdata' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' cellspacing='0' width='calc(100% - 1px)'>
 										<thead>
-											<tr role='row' style='font-size:8pt;background-color:#666666;color:white;'>
-												<th width='12.5%'>เลขที่สัญญา</th>
-												<th width='12.5%'>สาขา</th>
-												<th width='12.5%'>ประเภทการขาย</th>
-												<th width='12.5%' style='text-align:right;'>ราคาขาย</th>
-												<th width='12.5%' style='text-align:right;'>ชำระแล้ว</th>
-												<th width='12.5%' style='text-align:right;'>ลูกหนี้คงเหลือ</th>
-												<th width='12.5%' style='text-align:right;'>เช็ครอเรียกเก็บ</th>
-												<th width='12.5%' style='text-align:right;'>ยอดคงเหลือหักเช็ค</th>
+											<tr role='row' style='height:30px;font-size:8pt;background-color:#666666;color:white;'>
+												<th width='12.5%' style='vertical-align:middle;'>เลขที่สัญญา</th>
+												<th width='12.5%' style='vertical-align:middle;'>สาขา</th>
+												<th width='12.5%' style='vertical-align:middle;'>ประเภทการขาย</th>
+												<th width='12.5%' style='text-align:right;vertical-align:middle;'>ราคาขาย</th>
+												<th width='12.5%' style='text-align:right;vertical-align:middle;'>ชำระแล้ว</th>
+												<th width='12.5%' style='text-align:right;vertical-align:middle;'>ลูกหนี้คงเหลือ</th>
+												<th width='12.5%' style='text-align:right;vertical-align:middle;'>เช็ครอเรียกเก็บ</th>
+												<th width='12.5%' style='text-align:right;vertical-align:middle;'>ยอดคงเหลือหักเช็ค</th>
 											</tr>
 										</thead>
 										<tbody style='white-space:nowrap;background-color:white;font-size:9pt;'></tbody>
@@ -207,16 +206,16 @@ class ARdataSearch extends MY_Controller {
 								<div id='dataTable-fixed-detail' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
 									<table id='dataTables-detail' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' cellspacing='0' width='calc(100% - 1px)'>
 										<thead>
-											<tr role='row' style='font-size:8pt;background-color:#666666;color:white;'>
-												<th width='12.5%'>เลขตัวถัง</th>
-												<th width='12.5%'>เลขเครื่อง</th>
-												<th width='12.5%'>ยี่ห้อ</th>
-												<th width='12.5%'>รุ่น</th>
-												<th width='12.5%'>แบบ</th>
-												<th width='12.5%'>สี</th>
-												<th width='6.25%'>ขนาด</th>
-												<th width='6.25%'>สถาพ</th>
-												<th width='12.5%'>วันเดือนปีที่ขาย</th>
+											<tr role='row' style='height:30px;font-size:8pt;background-color:#666666;color:white;'>
+												<th width='12.5%' style='vertical-align:middle;'>เลขตัวถัง</th>
+												<th width='12.5%' style='vertical-align:middle;'>เลขเครื่อง</th>
+												<th width='12.5%' style='vertical-align:middle;'>ยี่ห้อ</th>
+												<th width='12.5%' style='vertical-align:middle;'>รุ่น</th>
+												<th width='12.5%' style='vertical-align:middle;'>แบบ</th>
+												<th width='12.5%' style='vertical-align:middle;'>สี</th>
+												<th width='6.25%' style='vertical-align:middle;'>ขนาด</th>
+												<th width='6.25%' style='vertical-align:middle;'>สถาพ</th>
+												<th width='12.5%' style='vertical-align:middle;'>วันเดือนปีที่ขาย</th>
 											</tr>
 										</thead>
 										<tbody style='white-space:nowrap;background-color:white;font-size:9pt;'></tbody>
@@ -241,15 +240,15 @@ class ARdataSearch extends MY_Controller {
 								<div id='dataTable-fixed-options' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
 									<table id='dataTables-options' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' cellspacing='0' width='calc(100% - 1px)'>
 										<thead>
-											<tr role='row' style='font-size:8pt;background-color:#666666;color:white;'>
-												<th>เลขที่สัญญา</th>
-												<th>สาขา</th>
-												<th>ประเภทการขาย</th>
-												<th>รหัสอุปกรณ์</th>
-												<th>ชื่ออุปกรณ์</th>
-												<th width='12.5%' style='text-align:right;'>ราคาต่อหน่วย</th>
-												<th width='12.5%' style='text-align:right;'>จำนวน</th>
-												<th width='12.5%' style='text-align:right;'>ราคารวม</th>
+											<tr role='row' style='height:30px;font-size:8pt;background-color:#666666;color:white;'>
+												<th style='vertical-align:middle;'>เลขที่สัญญา</th>
+												<th style='vertical-align:middle;'>สาขา</th>
+												<th style='vertical-align:middle;'>ประเภทการขาย</th>
+												<th style='vertical-align:middle;'>รหัสอุปกรณ์</th>
+												<th style='vertical-align:middle;'>ชื่ออุปกรณ์</th>
+												<th width='12.5%' style='vertical-align:middle;text-align:right;'>ราคาต่อหน่วย</th>
+												<th width='12.5%' style='vertical-align:middle;text-align:right;'>จำนวน</th>
+												<th width='12.5%' style='vertical-align:middle;text-align:right;'>ราคารวม</th>
 											</tr>
 										</thead>
 										<tbody style='white-space:nowrap;background-color:white;font-size:9pt;'></tbody>
@@ -396,18 +395,18 @@ class ARdataSearch extends MY_Controller {
 							</div>
 						</div>
 					</div>	
-					<div style='float:left;height:25%;padding-right:15px;' class='col-sm-6 col-xs-6'><br>						
+					<div style='float:left;height:22%;padding-right:15px;' class='col-sm-6 col-xs-6'><br>						
 						<div class='row' style='height:100%;background-color:#96ded1;'><center><font color='#004957'>รายการผู้ค้ำประกัน</font></center>
 							<div class='col-sm-12 col-xs-12' style='height:100%;border:0.1px solid #bdbdbd;background-color:#eee;'>
 								<div id='dataTable-fixed-armgar' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
 									<table id='dataTables-armgar' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' width='calc(100% - 1px)'>
 										<thead>
-											<tr role='row' style='font-size:8pt;background-color:#666666;color:white;'>
-												<th>รหัสผู้ค้ำประกัน</th>
-												<th>ชื่อ</th>
-												<th>สกุล</th>
-												<th>ความสัมพันธ์</th>
-												<th>ผู้ค้ำคนที่</th>
+											<tr role='row' style='height:30px;font-size:8pt;background-color:#666666;color:white;'>
+												<th style='vertical-align:middle;'>รหัสผู้ค้ำประกัน</th>
+												<th style='vertical-align:middle;'>ชื่อ</th>
+												<th style='vertical-align:middle;'>สกุล</th>
+												<th style='vertical-align:middle;'>ความสัมพันธ์</th>
+												<th style='vertical-align:middle;'>ผู้ค้ำคนที่</th>
 											</tr>
 										</thead>
 										<tbody style='white-space:nowrap;background-color:white;'></tbody>
@@ -416,17 +415,17 @@ class ARdataSearch extends MY_Controller {
 							</div>
 						</div>
 					</div>	
-					<div style='float:left;height:25%;padding-left:15px;' class='col-sm-6 col-xs-6'><br>				
+					<div style='float:left;height:22%;padding-left:15px;' class='col-sm-6 col-xs-6'><br>				
 						<div class='row' style='height:100%;background-color:#96ded1;'><center><font color='#004957'>หลักทรัพย์ค้ำประกัน</font></center>
 							<div class='col-sm-12 col-xs-12' style='height:100%;border:0.1px solid #bdbdbd;background-color:#eee;'>
 								<div id='dataTable-fixed-optarmgar' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
 									<table id='dataTables-optarmgar' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' width='calc(100% - 1px)'>
 										<thead>
-											<tr role='row' style='font-size:8pt;background-color:#666666;color:white;'>
-												<th>รหัสหลักทรัพย์</th>
-												<th>รายการ</th>
-												<th>หมายเลขประจำตัวหลักทรัพย์</th>
-												<th>รายการที่</th>
+											<tr role='row' style='height:30px;font-size:8pt;background-color:#666666;color:white;'>
+												<th style='vertical-align:middle;'>รหัสหลักทรัพย์</th>
+												<th style='vertical-align:middle;'>รายการ</th>
+												<th style='vertical-align:middle;'>หมายเลขประจำตัวหลักทรัพย์</th>
+												<th style='vertical-align:middle;'>รายการที่</th>
 											</tr>
 										</thead>
 										<tbody style='white-space:nowrap;background-color:white;'></tbody>
@@ -456,7 +455,7 @@ class ARdataSearch extends MY_Controller {
 			<div class='tab-pane' name='tab44' style='height:calc(100vh - 220px);overflow:auto;'>
 				<fieldset style='height:100%'>
 					<div style='float:left;height:100%;' class='col-sm-12 col-xs-12'>	
-						<div class='row'>เงื่อนไข</div>
+						<!--div class='row'>เงื่อนไข</div--!>
 						<div class='row'>
 							<div class=' col-sm-10 col-xs-10 col-sm-offset-1'>
 								<div class=' col-sm-4 col-xs-4 col-sm-offset-1'>	
@@ -485,16 +484,16 @@ class ARdataSearch extends MY_Controller {
 								<div id='dataTable-fixed-arothers' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
 									<table id='dataTables-arothers' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' cellspacing='0' width='calc(100% - 1px)'>
 										<thead>
-											<tr role='row' style='font-size:8pt;background-color:#666666;color:white;'>
-												<th>เลขที่สัญญาลูกหนี้อื่น</th>
-												<th>เลขที่สัญญา</th>
-												<th>สาขา</th>
-												<th>ค้างชำระค่า</th>
-												<th width='11%' style='text-align:right;'>ยอดตั้งลูกหนี้</th>
-												<th width='11%' style='text-align:right;'>ชำระแล้ว</th>
-												<th width='11%' style='text-align:right;'>ลูกหนี้คงเหลือ</th>
-												<th width='11%' style='text-align:right;'>เช็ครอเรียกเก็บ</th>
-												<th width='11%' style='text-align:right;'>ยอดคงเหลือหักเช็ค</th>
+											<tr role='row' style='height:30px;font-size:8pt;background-color:#666666;color:white;'>
+												<th style='vertical-align:middle;'>เลขที่สัญญาลูกหนี้อื่น</th>
+												<th style='vertical-align:middle;'>เลขที่สัญญา</th>
+												<th style='vertical-align:middle;'>สาขา</th>
+												<th style='vertical-align:middle;'>ค้างชำระค่า</th>
+												<th width='11%' style='text-align:right;vertical-align:middle;'>ยอดตั้งลูกหนี้</th>
+												<th width='11%' style='text-align:right;vertical-align:middle;'>ชำระแล้ว</th>
+												<th width='11%' style='text-align:right;vertical-align:middle;'>ลูกหนี้คงเหลือ</th>
+												<th width='11%' style='text-align:right;vertical-align:middle;'>เช็ครอเรียกเก็บ</th>
+												<th width='11%' style='text-align:right;vertical-align:middle;'>ยอดคงเหลือหักเช็ค</th>
 											</tr>
 										</thead>
 										<tbody style='white-space:nowrap;background-color:white;'></tbody>
@@ -765,7 +764,7 @@ class ARdataSearch extends MY_Controller {
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				select * from #CUSDATA order by CUSCOD ,CONTNO, TSALE
+			select * from #CUSDATA order by CUSCOD ,CONTNO, TSALE
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);

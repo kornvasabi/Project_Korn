@@ -22,15 +22,13 @@ class ReportHoldtoOldcar extends MY_Controller {
 		
 		$html = "
 			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
-				<div class='col-sm-12 col-xs-12' style='overflow:auto;font-size:10.5pt;'>					
-					<div class='row'>
-						<div class='col-sm-12 col-xs-12' style='background-color:#637b9a;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
+				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
+					<div class='row' style='height:90%;'>
+						<div class='col-sm-12 col-xs-12' style='background-color:#0067a5;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
 							<br>รายงานรถยึดเปลี่ยนเป็นรถเก่า<br>
 						</div>
-					</div>
-					<br>
-					<div class='row'>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>	
+							<br>
 							<div class='col-sm-4 col-xs-4'>	
 								<div class='form-group'>
 									สาขา
@@ -68,8 +66,6 @@ class ReportHoldtoOldcar extends MY_Controller {
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class='row'>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>	
 							<div class='col-sm-12 col-xs-12'>	
 								<div class='form-group'>
@@ -89,8 +85,6 @@ class ReportHoldtoOldcar extends MY_Controller {
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class='row'>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'><br>	
 							<div class='col-sm-12 col-xs-12'>	
 								<div class='form-group'>
@@ -110,8 +104,6 @@ class ReportHoldtoOldcar extends MY_Controller {
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class='row'>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'><br>	
 							<div class='col-sm-12 col-xs-12'>	
 								<div class='form-group'>
@@ -131,8 +123,6 @@ class ReportHoldtoOldcar extends MY_Controller {
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class='row'>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'><br>	
 							<div class='col-sm-12 col-xs-12'>	
 								<div class='form-group'>
@@ -163,12 +153,9 @@ class ReportHoldtoOldcar extends MY_Controller {
 							</div>
 						</div>
 					</div>
-					<div class='row'>
+					<div class='row' style='height:10%;'>
 						<div class='col-sm-12 col-xs-12'><br>		
-							<div class='form-group'>
-								<br><br>
-								<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'><span class='glyphicon glyphicon-search'> แสดง</span></button>
-							</div>
+							<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'><span class='glyphicon glyphicon-search'> แสดง</span></button>
 						</div>
 					</div>
 				</div>
@@ -280,16 +267,16 @@ class ReportHoldtoOldcar extends MY_Controller {
 				<th style='vertical-align:top;'>เลขที่สัญญา /<br>ชื่อ - นามสกุล</th>
 				<th style='vertical-align:top;'>เลขตัวถัง /<br>พนักงานยึด</th>
 				<th style='vertical-align:top;'>วันขาย /<br>วันเปลี่ยนสภาพ</th>
-				<th style='vertical-align:top;'>ชำระแล้ว</th>
-				<th style='vertical-align:top;'>ลูกหนี้<br>คงเหลือ</th>
-				<th style='vertical-align:top;'>เงินต้น<br>คงเหลือ</th>
-				<th style='vertical-align:top;'>ดอกผล<br>คงเหลือ</th>
-				<th style='vertical-align:top;'>ค้างชำระ</th>
-				<th style='vertical-align:top;'>ราคา<br>ตามบัญชี</th>
-				<th style='vertical-align:top;'>ภาษี<br>ตามบัญชี</th>
-				<th style='vertical-align:top;'>ราคา<br>ประเมิน</th>
-				<th style='vertical-align:top;'>ภาษี</th>
-				<th style='vertical-align:top;'>รวมราคา<br>ประเมิน</th>
+				<th style='vertical-align:top;text-align:right;'>ชำระแล้ว</th>
+				<th style='vertical-align:top;text-align:right;'>ลูกหนี้<br>คงเหลือ</th>
+				<th style='vertical-align:top;text-align:right;'>เงินต้น<br>คงเหลือ</th>
+				<th style='vertical-align:top;text-align:right;'>ดอกผล<br>คงเหลือ</th>
+				<th style='vertical-align:top;text-align:right;'>ค้างชำระ</th>
+				<th style='vertical-align:top;text-align:right;'>ราคา<br>ตามบัญชี</th>
+				<th style='vertical-align:top;text-align:right;'>ภาษี<br>ตามบัญชี</th>
+				<th style='vertical-align:top;text-align:right;'>ราคา<br>ประเมิน</th>
+				<th style='vertical-align:top;text-align:right;'>ภาษี</th>
+				<th style='vertical-align:top;text-align:right;'>รวมราคา<br>ประเมิน</th>
 				</tr>
 		";
 		
@@ -392,10 +379,10 @@ class ReportHoldtoOldcar extends MY_Controller {
 				<div id='table-fixed-ReportHoldtoOldcar' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:8pt;'>
 					<table id='table-ReportHoldtoOldcar' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 						<thead>
-						<tr>
+						<tr style='height:40px;'>
 							<th colspan='14' style='font-size:12pt;border:0px;text-align:center;'>รายงานรถยึดเปลี่ยนเป็นรถเก่า</th>
 						</tr>
-						<tr>
+						<tr style='height:25px;'>
 							<td colspan='14' style='border-bottom:1px solid #ddd;text-align:center;'>รายงาน ".$calcul." ".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head."

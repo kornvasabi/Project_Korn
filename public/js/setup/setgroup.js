@@ -55,6 +55,7 @@ $('#add_group').click(function(){
 	
 	$('.tab1').hide();
 	$('.tab2').show();		
+
 	$('#loadding').fadeIn(200);
 	jdadd_group = $.ajax({
 		url: '../setup/CStock/groupGetFormAE',

@@ -21,7 +21,7 @@ class ARother extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "
-			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
 				<div class='col-sm-12 col-xs-12'>
 					<div class='row'>
 						<div class='col-sm-2 col-xs-2'>	
@@ -260,7 +260,7 @@ class ARother extends MY_Controller {
 		}
 		
 		if($AROTHR != ""){
-			$cond .= " and a.ARCONT like '%".$AROTHR."%' collate thai_cs_as";
+			$cond .= " and a.ARCONT like '".$AROTHR."%' collate thai_cs_as";
 		}
 		
 		if($CUSCOD != ""){
@@ -268,7 +268,7 @@ class ARother extends MY_Controller {
 		}
 		
 		if($CONTNO != ""){
-			$cond .= " and a.CONTNO like '%".$CONTNO."%' collate thai_cs_as";
+			$cond .= " and a.CONTNO like '".$CONTNO."%' collate thai_cs_as";
 		}
 		
 		if($TSALE != ""){
@@ -343,7 +343,7 @@ class ARother extends MY_Controller {
 			<div id='table-fixed-ARother' class='col-sm-12'>
 				<table id='table-ARother' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 					<thead>
-						<tr>
+						<tr style='height:30px;'>
 							<th style='vertical-align:middle;'>#</th>
 							<th style='vertical-align:middle;'>เลขที่สัญญาลูกหนี้อื่น</th>
 							<th style='vertical-align:middle;'>สาขา</th>
@@ -637,6 +637,9 @@ class ARother extends MY_Controller {
 				
 				delete YTKManagement.dbo.AROTHR_UPLOAD
 				where config_id = @id and arcont = @CONTNO
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS05::บันทึกลูกหนี้อื่น (ลบ)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 
 				insert into #DelAROYHTemp select 'S',@CONTNO,'ลบลูกหนี้อื่น เลขที่สัญญา '+@CONTNO+' เรียบร้อย';
 				

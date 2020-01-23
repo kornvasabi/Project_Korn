@@ -101,9 +101,9 @@ function search(){
 				$('#resultt_AOsale').html(data.html2);
 				$('#resultt_ARmgra').html(data.html3);
 				
-				fn_datatables('table-HCsale',3,680);
-				fn_datatables('table-AOsale',3,680,);
-				fn_datatables('table-ARmgra',3,680,);
+				fn_datatables('table-HCsale',3,735);
+				fn_datatables('table-AOsale',3,735,);
+				fn_datatables('table-ARmgra',3,735,);
 
 				$('.dataTables_paginate').hide();
 				$('.dataTables_info').hide();
