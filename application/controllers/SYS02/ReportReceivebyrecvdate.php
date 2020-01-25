@@ -413,7 +413,7 @@ class ReportReceivebyrecvdate extends MY_Controller {
 		$COLOR1 	= str_replace(chr(0),'',$tx[5]);
 		$FRMDATE 	= $this->Convertdate(1,$tx[6]);
 		$TODATE 	= $this->Convertdate(1,$tx[7]);
-		$ystat 		= $tx[8];
+		$stat 		= $tx[8];
 		$orderby 	= $tx[9];
 		$layout 	= $tx[10];
 		

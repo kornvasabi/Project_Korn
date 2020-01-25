@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 //BEE+
-class ReportReceivebydatereceipt extends MY_Controller {
+class ReportInventorykang extends MY_Controller {
 	private $sess = array(); 
 	
 	function __construct(){
@@ -25,76 +25,62 @@ class ReportReceivebydatereceipt extends MY_Controller {
 				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
 					<div class='row' style='height:90%;'>
 						<div class='col-sm-12 col-xs-12' style='background-color:#0067a5;border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
-							<br>รายงานตรวจสอบการรับสินค้า<br>
+							<br>รายงานสินค้าค้างในสต็อกเกิน x วัน<br>
 						</div>
-						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>
+						<div class='col-sm-6 col-xs-6 col-sm-offset-3'>
 							<br>
-							<div class='col-sm-4 col-xs-4'>	
+							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group'>
 									สถานที่รับรถ
 									<select id='LOCAT1' class='form-control input-sm' data-placeholder='สถานที่รับรถ'></select>
 								</div>
 							</div>
-						</div>
-						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>
-							<div class='col-sm-4 col-xs-4'>	
-								<div class='form-group'>
-									จากวันที่
-									<input type='text' id='FRMDATE' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='จากวันที่' value='".$this->today('today')."' style='font-size:10.5pt'>
-								</div>
-							</div>
-							<div class='col-sm-4 col-xs-4'>	
-								<div class='form-group'>
-									ถึงวันที่
-									<input type='text' id='TODATE' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='ถึงวันที่' value='".$this->today('today')."' style='font-size:10.5pt'>
-								</div>
-							</div>
-							<div class='col-sm-4 col-xs-4'>	
-								<div class='form-group' >
-									เจ้าหนี้
-									<select id='APCODE1' class='form-control input-sm' data-placeholder='เจ้าหนี้'></select>
-								</div>
-							</div>
-							<div class='col-sm-4 col-xs-4'>	
-								<div class='form-group' >
-									ยี่ห้อ
-									<select id='TYPE1' class='form-control input-sm' data-placeholder='ยี่ห้อ'></select>
-								</div>
-							</div>
-							<div class='col-sm-4 col-xs-4'>	
+							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group' >
 									กลุ่มสินค้า
 									<select id='GCOCE1' class='form-control input-sm' data-placeholder='กลุ่มสินค้า'></select>
 								</div>
 							</div>
-							<div class='col-sm-4 col-xs-4'>	
+							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group' >
-									แบบ
-									<select id='BAAB1' class='form-control input-sm' data-placeholder='แบบ'></select>
+									ยี่ห้อ
+									<select id='TYPE1' class='form-control input-sm' data-placeholder='ยี่ห้อ'></select>
 								</div>
 							</div>
-							<div class='col-sm-4 col-xs-4'>	
+							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group' >
 									รุ่น
 									<select id='MODEL1' class='form-control input-sm' data-placeholder='รุ่น'></select>
 								</div>
 							</div>
-							<div class='col-sm-4 col-xs-4'>	
+							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group' >
-									ขนาด>=
-									<select id='CC1' class='form-control input-sm' data-placeholder='ขนาด'></select>
+									แบบ
+									<select id='BAAB1' class='form-control input-sm' data-placeholder='แบบ'></select>
 								</div>
 							</div>
-							<div class='col-sm-4 col-xs-4'>	
+							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group' >
 									สี
 									<select id='COLOR1' class='form-control input-sm' data-placeholder='สี'></select>
 								</div>
 							</div>
+							<div class='col-sm-6 col-xs-6'>	
+								<div class='form-group' >
+									ขนาด>=
+									<select id='CC1' class='form-control input-sm' data-placeholder='ขนาด'></select>
+								</div>
+							</div>
+							<div class='col-sm-6 col-xs-6'>	
+								<div class='form-group' >
+									เกินกว่า (วัน)
+									<input type='number' id='daykang' class='form-control input-sm' min='0' max='1000000' value='1'>
+								</div>
+							</div>
 						</div>
-						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>
+						<div class='col-sm-6 col-xs-6 col-sm-offset-3'>
 							<br>
-							<div class='col-sm-4 col-xs-4'>	
+							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group'>
 									รูปแบบการพิมพ์
 									<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #d6d6d6;'>	
@@ -104,13 +90,13 @@ class ReportReceivebydatereceipt extends MY_Controller {
 												<input type= 'radio' id='hor' name='layout' checked> แนวนอน
 												<br>
 												<input type= 'radio' id='ver' name='layout'> แนวตั้ง
-												<br><br><br>
+												<br><br>
 											</div>
 										</div>
 									</div>
 								</div>
 							</div>
-							<div class='col-sm-4 col-xs-4'>	
+							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group'>
 									สถานะสินค้า
 									<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #d6d6d6;'>	
@@ -122,26 +108,6 @@ class ReportReceivebydatereceipt extends MY_Controller {
 												<input type= 'radio' id='old' name='stat'> เก่า
 												<br>
 												<input type= 'radio' id='all' name='stat' checked> ทั้งหมด
-												<br><br>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-							<div class='col-sm-4 col-xs-4'>
-								<div class='form-group'>
-									เรียงลำดับข้อมูล
-									<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #d6d6d6;'>	
-										<div class='col-sm-12 col-xs-12'>
-											<div class='form-group'>
-												<br>
-												<input type= 'radio' id='rcvno' name='orderby' checked> ตามใบรับ, เลขตัวถัง
-												<br>
-												<input type= 'radio' id='rcvdate' name='orderby'> ตามวันที่ใบรับ
-												<br>
-												<input type= 'radio' id='strno' name='orderby'> ตามเลขตัวถัง
-												<br>
-												<input type= 'radio' id='types' name='orderby'> ตามยี่ห้อ รุ่น แบบ สี
 											</div>
 										</div>
 									</div>
@@ -158,7 +124,7 @@ class ReportReceivebydatereceipt extends MY_Controller {
 			</div>
 		";
 		
-		$html.= "<script src='".base_url('public/js/SYS02/ReportReceivebydatereceipt.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/SYS02/ReportInventorykang.js')."'></script>";
 		echo $html;
 	}
 	
@@ -172,7 +138,6 @@ class ReportReceivebydatereceipt extends MY_Controller {
 		$CC1 		= str_replace(chr(0),'',$_REQUEST["CC1"]);
 		$COLOR1 	= str_replace(chr(0),'',$_REQUEST["COLOR1"]);
 		$FRMDATE 	= $this->Convertdate(1,$_REQUEST["FRMDATE"]);
-		$TODATE 	= $this->Convertdate(1,$_REQUEST["TODATE"]);
 		$stat 		= $_REQUEST["stat"];
 		$orderby 	= $_REQUEST["orderby"];
 		
@@ -219,30 +184,17 @@ class ReportReceivebydatereceipt extends MY_Controller {
 		}
 		
 		$sql = "
-				IF OBJECT_ID('tempdb..#main') IS NOT NULL DROP TABLE #main
-				select *
-				into #main
-				from(
-					SELECT V.RECVNO, V.RECVDT, CONVERT(char,V.RECVDT,112) as RECVDTS, V.INVNO, CONVERT(char,V.INVDT,112) as INVDT, 
-					V.TAXNO, CONVERT(char,V.TAXDT,112) as TAXDT, V.LOCAT, V.APCODE, T.RVCODE, T.STAT, T.GCODE, T.TYPE, T.MODEL, 
-					T.BAAB, T.COLOR, T.CC, T.STRNO, T.ENGNO, T.MILERT
-					FROM {$this->MAuth->getdb('INVINVO')} V
-					LEFT JOIN {$this->MAuth->getdb('INVTRAN')} T ON V.RECVNO=T.RECVNO AND V.LOCAT=T.RVLOCAT
-					WHERE (V.RECVDT BETWEEN '".$FRMDATE."' AND '".$TODATE."') ".$cond."
-				)main 
+
 		";//echo $sql; 
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				SELECT  RECVNO, RECVDTS, INVNO, INVDT, TAXNO, TAXDT, LOCAT, APCODE, RVCODE, STAT, GCODE, TYPE, MODEL, 
-				BAAB, COLOR, CC, STRNO, ENGNO, MILERT
-				FROM #main
-				ORDER BY ".$orderby."
+
 		";//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				SELECT 'รวมทั้งหมด  '+convert(nvarchar,COUNT(RECVNO+STRNO+GCODE))+' คัน' as Total FROM #main
+
 		";//echo $sql; exit;
 		$query2 = $this->db->query($sql);
 		
@@ -360,14 +312,14 @@ class ReportReceivebydatereceipt extends MY_Controller {
 		
 		if($i>0){
 			$html = "
-				<div id='table-fixed-ReportReceivebydatereceipt' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:9pt;'>
-					<table id='table-ReportReceivebydatereceipt' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
+				<div id='table-fixed-ReportInventorykang' class='col-sm-12' style='height:100%;width:100%;overflow:auto;font-size:9pt;'>
+					<table id='table-ReportInventorykang' style='background-color:white;' class='col-sm-12 display table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
 						<thead>
 						<tr style='height:40px;'>
-							<th colspan='10' style='font-size:12pt;border:0px;vertical-align;middle;text-align:center;'>รายงานตรวจสอบการรับสินค้า</th>
+							<th colspan='10' style='font-size:12pt;border:0px;vertical-align;middle;text-align:center;'>รายงานสินค้าค้างในสต็อกเกิน x วัน</th>
 						</tr>
 						<tr style='height:25px;'>
-							<td colspan='10' style='border-bottom:1px solid #ddd;vertical-align;middle;text-align:center;'>จากวันที่ ".$_REQUEST["FRMDATE"]." - ".$_REQUEST["TODATE"]." ".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
+							<td colspan='10' style='border-bottom:1px solid #ddd;vertical-align;middle;text-align:center;'>คงเหลือ ณ วันที่  ".$_REQUEST["FRMDATE"]." ".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head."
 						</thead>	
@@ -385,14 +337,14 @@ class ReportReceivebydatereceipt extends MY_Controller {
 		}
 		
 		$report = "
-			<div id='table-fixed-ReportReceivebydatereceipt2' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
-				<table id='table-ReportReceivebydatereceipt2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+			<div id='table-fixed-ReportInventorykang2' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
+				<table id='table-ReportInventorykang2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
 					<thead>
 						<tr>
-							<th colspan='20' style='font-size:12pt;border:0px;text-align:center;'>รายงานตรวจสอบการรับสินค้า</th>
+							<th colspan='20' style='font-size:12pt;border:0px;text-align:center;'>รายงานสินค้าค้างในสต็อกเกิน x วัน</th>
 						</tr>
 						<tr>
-							<td colspan='20' style='border:0px;text-align:center;'>จากวันที่ ".$_REQUEST["FRMDATE"]." - ".$_REQUEST["TODATE"]." ".$rpcond." ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
+							<td colspan='20' style='border:0px;text-align:center;'>คงเหลือ ณ วันที่  ".$_REQUEST["FRMDATE"]." ".$rpcond."  ออกรายงาน ณ วันที่ ".$this->today('today')."</td>
 						</tr>
 						".$head2."
 					</thead>	
@@ -420,7 +372,6 @@ class ReportReceivebydatereceipt extends MY_Controller {
 						$_REQUEST["CC1"].'||'.
 						$_REQUEST["COLOR1"].'||'.
 						$_REQUEST["FRMDATE"].'||'.
-						$_REQUEST["TODATE"].'||'.
 						$_REQUEST["stat"].'||'.
 						$_REQUEST["orderby"].'||'.
 						$_REQUEST["layout"]
@@ -446,78 +397,25 @@ class ReportReceivebydatereceipt extends MY_Controller {
 		$CC1 		= str_replace(chr(0),'',$tx[6]);
 		$COLOR1 	= str_replace(chr(0),'',$tx[7]);
 		$FRMDATE 	= $this->Convertdate(1,$tx[8]);
-		$TODATE 	= $this->Convertdate(1,$tx[9]);
-		$stat 		= $tx[10];
-		$orderby 	= $tx[11];
-		$layout 	= $tx[12];
+		$stat 		= $tx[9];
+		$orderby 	= $tx[10];
+		$layout 	= $tx[11];
 		
 		$cond = ""; $rpcond = "";
 		
-		if($LOCAT1 != ""){
-			$cond .= " AND (T.RVLOCAT LIKE '".$LOCAT1."%')";
-			$rpcond .= "  สถานที่รับรถ ".$LOCAT1;
-		}
-		
-		if($APCODE1 != ""){
-			$cond .= " AND (V.APCODE LIKE '".$APCODE1."%') ";
-			$rpcond .= "  รหัสเจ้าหนี้ ".$APCODE1;
-		}
-		
-		if($TYPE1 != ""){
-			$cond .= " AND (T.TYPE LIKE '".$TYPE1."%')";
-		}
-		
-		if($GCOCE1 != ""){
-			$cond .= " AND ( T.GCODE LIKE '".$GCOCE1."%') ";
-		}
-		
-		if($BAAB1 != ""){
-			$cond .= " AND (T.BAAB LIKE '".$BAAB1."%')";
-		}
-		
-		if($MODEL1 != ""){
-			$cond .= " AND (T.MODEL LIKE '".$MODEL1."%') ";
-		}
-		
-		if($CC1 != ""){
-			$cond .= " AND (T.CC >= ".$CC1." ) ";
-		}else{
-			$cond .= " AND (T.CC >= 0 ) ";
-		}
-		
-		if($COLOR1 != ""){
-			$cond .= " AND (T.COLOR LIKE '".$COLOR1."%') ";
-		}
-		
-		if($stat != ""){
-			$cond .= " AND (T.STAT LIKE '".$stat."%')";
-		}
 		
 		$sql = "
-				IF OBJECT_ID('tempdb..#main') IS NOT NULL DROP TABLE #main
-				select *
-				into #main
-				from(
-					SELECT V.RECVNO, V.RECVDT, CONVERT(char,V.RECVDT,112) as RECVDTS, V.INVNO, CONVERT(char,V.INVDT,112) as INVDT, 
-					V.TAXNO, CONVERT(char,V.TAXDT,112) as TAXDT, V.LOCAT, V.APCODE, T.RVCODE, T.STAT, T.GCODE, T.TYPE, T.MODEL, 
-					T.BAAB, T.COLOR, T.CC, T.STRNO, T.ENGNO, T.MILERT
-					FROM {$this->MAuth->getdb('INVINVO')} V
-					LEFT JOIN {$this->MAuth->getdb('INVTRAN')} T ON V.RECVNO=T.RECVNO AND V.LOCAT=T.RVLOCAT
-					WHERE (V.RECVDT BETWEEN '".$FRMDATE."' AND '".$TODATE."') ".$cond."
-				)main 
+
 		";//echo $sql; 
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				SELECT  RECVNO, RECVDTS, INVNO, INVDT, TAXNO, TAXDT, LOCAT, APCODE, RVCODE, STAT, GCODE, TYPE, MODEL, 
-				BAAB, COLOR, CC, STRNO, ENGNO, MILERT
-				FROM #main
-				ORDER BY ".$orderby."
+
 		";//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$sql = "
-				SELECT 'รวมทั้งหมด  '+convert(nvarchar,COUNT(RECVNO+STRNO+GCODE))+' คัน' as Total FROM #main
+
 		";//echo $sql; exit;
 		$query2 = $this->db->query($sql);
 		
@@ -586,10 +484,10 @@ class ReportReceivebydatereceipt extends MY_Controller {
 			<table class='wf' style='font-size:8pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
 				<tbody>
 					<tr>
-						<th colspan='11' style='font-size:10pt;'>รายงานตรวจสอบการรับสินค้า</th>
+						<th colspan='11' style='font-size:10pt;'>รายงานสินค้าค้างในสต็อกเกิน x วัน</th>
 					</tr>
 					<tr>
-						<td colspan='11' style='font-size:9pt;height:35px;border-bottom:0.1px solid black;text-align:center;'>จากวันที่ ".$tx[8]." - ".$tx[9]." ".$rpcond."</td>
+						<td colspan='11' style='font-size:9pt;height:35px;border-bottom:0.1px solid black;text-align:center;'>คงเหลือ ณ วันที่ ".$tx[8]." ".$rpcond."</td>
 					</tr>
 					".$head."
 					".$html."

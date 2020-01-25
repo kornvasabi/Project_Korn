@@ -44,7 +44,7 @@ class CustomerData extends MY_Controller {
 						</div>
 					</div>
 					<br><b>การเป็นผู้ซื้อ</b>
-					<div class='row' style='height:52%;border:0.1px dotted #bdbdbd;'>
+					<div class='row' style='height:51%;border:0.1px dotted #bdbdbd;'>
 						<div class='col-sm-12 col-xs-12' style='height:50%;border:5px solid white;'>
 							<div id='dataTable-fixed-HCsale' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
 								<table id='dataTables-HCsale' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' cellspacing='0' width='calc(100% - 1px)'>

@@ -358,7 +358,7 @@ class ReportReceivecost extends MY_Controller {
 				$sumreport2 = "
 					<tr class='trow'>
 						<th style='mso-number-format:\"\@\";text-align:left;' colspan='16'>".$row->Total."</th>
-						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumCRCOST,2)."</td>
+						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumCRCOST,2)."</th>
 						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumDISCT,2)."</td>
 						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumNETCOST,2)."</td>
 						<td style='mso-number-format:\"\#\,\#\#0.00\";text-align:right;'>".number_format($row->sumCRVAT,2)."</td>
@@ -455,7 +455,7 @@ class ReportReceivecost extends MY_Controller {
 		$COLOR1 	= str_replace(chr(0),'',$tx[6]);
 		$FRMDATE 	= $this->Convertdate(1,$tx[7]);
 		$TODATE 	= $this->Convertdate(1,$tx[8]);
-		$ystat 		= $tx[9];
+		$stat 		= $tx[9];
 		$orderby 	= $tx[10];
 		$layout 	= $tx[11];
 		
