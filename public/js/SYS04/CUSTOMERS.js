@@ -979,6 +979,7 @@ function fn_loadPropotiesAddr($window,$action,$this){
 /**********************************************************************************************************************/	
 	
 	var OBJbtnAddAddr = null;
+	$('#btnAddTableHtml').unbind('click');
 	$('#btnAddTableHtml').click(function(){		//เพิ่ม
         dataToPost = new Object();
         dataToPost.CUSCOD   = $("#CUSCOD").val();
@@ -1034,6 +1035,7 @@ function fn_loadPropotiesAddr($window,$action,$this){
 	});
 	
 	var OBJbtneditAdrr = null;
+	$('#btneditTableHtml').unbind('click');
 	$('#btneditTableHtml').click(function(){		//แก้ไข
 		dataToPost = new Object();
         dataToPost.CUSCOD   = $("#CUSCOD").val();
@@ -1088,6 +1090,7 @@ function fn_loadPropotiesAddr($window,$action,$this){
         });
 	});
 	
+	$('#btnWACloseAdd').unbind('click');
 	$('#btnWACloseAdd').click(function(){
 		$window.destroy();
 	});
