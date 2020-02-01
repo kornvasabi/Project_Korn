@@ -22,17 +22,17 @@ class CustomerData extends MY_Controller {
 		
 		$html = "
 			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:#fcfcfc;'>
-				<div class='col-sm-12 col-xs-12' style='overflow:auto;'>					
-					<div class='row' style='background-color:#dbefff;border:0.5px solid #d1ebff;'>
+				<div class='col-sm-12 col-xs-12' style='overflow:auto;height:100%;border:4px solid white;'>					
+					<div class='row' style='height:11%;background-color:#fef5c3;border:0.5px solid #eee;border-radius:8px;'>
 						<div class='col-sm-3 col-xs-3'>	
-							<div class='form-group'>
-								<b><font color='blue'>ลูกค้า</font></b>
+							<div class='form-group text-primary'>
+								<b>ลูกค้า</b>
 								<select id='CUSCOD1' class='form-control input-sm' data-placeholder='ลูกค้า'></select>
 							</div>
 						</div>
 						<div class='col-sm-6 col-xs-6'>	
-							<div class='form-group'>
-								<font color='blue'>รายละเอียดลูกค้า</font>
+							<div class='form-group text-primary'>
+								รายละเอียดลูกค้า
 								<input type='text' id='DESCRIPTION' class='form-control input-sm' placeholder='รายละเอียด' readonly>
 							</div>
 						</div>
@@ -42,25 +42,68 @@ class CustomerData extends MY_Controller {
 								<button id='btnt1search' class='btn btn-primary btn-sm' style='width:100%'><span class='glyphicon glyphicon-search'> สอบถาม</span></button>
 							</div>
 						</div>
-					</div><br>
-					<div class='row'>
-						<div id='resultt_sale' class='col-sm-12 col-xs-12'><b>การเป็นผู้ซื้อ</b>
-							<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #cccccc;'>	
-								<div class='form-group'>
-									<div id='resultt_HCsale' style='height:165px;'></div>
-									<br>
-									<div id='resultt_AOsale' style='height:165px;'></div>
-								</div>
+					</div>
+					<br><b>การเป็นผู้ซื้อ</b>
+					<div class='row' style='height:51%;border:0.1px dotted #bdbdbd;'>
+						<div class='col-sm-12 col-xs-12' style='height:50%;border:5px solid white;'>
+							<div id='dataTable-fixed-HCsale' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
+								<table id='dataTables-HCsale' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' cellspacing='0' width='calc(100% - 1px)'>
+									<thead>
+										<tr role='row' style='height:25px;font-size:8pt;background-color:#2fa39d;color:white;'>
+											<th width='6%' style='text-align:center;'>#</th>
+											<th width='11%' style='text-align:center;'>สาขา</th>
+											<th width='11%' style='text-align:center;'>เลขที่สัญญา</th>
+											<th width='11%' style='text-align:center;'>วันขาย</th>
+											<th width='11%' style='text-align:center;'>เลขตัวถัง</th>
+											<th width='11%' style='text-align:center;'>ราคาขาย</th>
+											<th width='11%' style='text-align:center;'>รับชำระแล้ว</th>
+											<th width='11%' style='text-align:center;'>เช็ครอเรียกเก็บ</th>
+											<th width='11%' style='text-align:center;'>พนักงานขาย</th>
+											<th width='6%' style='text-align:center;'>Tsale</th>
+										</tr>
+									</thead>
+									<tbody style='white-space:nowrap;background-color:white;font-size:9pt;'></tbody>
+								</table>
 							</div>
 						</div>
-					</div><br>
-					<div class='row'>
-						<div class='col-sm-12 col-xs-12'><b>การเป็นผู้ค้ำ</b>
-							<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #cccccc;'>	
-								<div class='form-group'>
-									<br>
-									<div id='resultt_ARmgra' style='height:165px;'></div>
-								</div>
+						<div class='col-sm-12 col-xs-12' style='height:50%;;border:5px solid white;'>
+							<div id='dataTable-fixed-AOsale' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
+								<table id='dataTables-AOsale' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' cellspacing='0' width='calc(100% - 1px)'>
+									<thead>
+										<tr role='row' style='height:25px;font-size:8pt;background-color:#2fa39d;color:white;'>
+											<th width='6%' style='text-align:center;'>#</th>
+											<th width='11%' style='text-align:center;'>สาขา</th>
+											<th width='11%' style='text-align:center;'>เลขที่สัญญา</th>
+											<th width='11%' style='text-align:center;'>วันขาย</th>
+											<th width='11%' style='text-align:center;'>เลขตัวถัง</th>
+											<th width='11%' style='text-align:center;'>ราคาขาย</th>
+											<th width='11%' style='text-align:center;'>รับชำระแล้ว</th>
+											<th width='11%' style='text-align:center;'>เช็ครอเรียกเก็บ</th>
+											<th width='11%' style='text-align:center;'>พนักงานขาย</th>
+											<th width='6%' style='text-align:center;'>Tsale</th>
+										</tr>
+									</thead>
+									<tbody style='white-space:nowrap;background-color:white;font-size:9pt;'></tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<br><b>การเป็นผู้ค้ำ</b>
+					<div class='row' style='height:25%;border:0.1px dotted #bdbdbd;'>
+						<div class='col-sm-12 col-xs-12' style='height:100%;border:5px solid white;'>
+							<div id='dataTable-fixed-ARmgra' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
+								<table id='dataTables-ARmgra' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' cellspacing='0' width='calc(100% - 1px)'>
+									<thead>
+										<tr role='row' style='height:25px;font-size:8pt;background-color:#1ba0b7;color:white;'>
+											<th width='6%' style='text-align:center;'>#</th>
+											<th width='11%' style='text-align:center;'>ผู้ค้ำคนที่</th>
+											<th width='11%' style='text-align:center;'>สาขา</th>
+											<th width='22%' style='text-align:center;'>เลขที่สัญญา</th>
+											<th width='50%' style='text-align:center;'>ความสัมพันธ์กับผู้ซื้อ</th>
+										</tr>
+									</thead>
+									<tbody style='white-space:nowrap;background-color:white;font-size:9pt;'></tbody>
+								</table>
 							</div>
 						</div>
 					</div>
@@ -186,6 +229,8 @@ class CustomerData extends MY_Controller {
 					</tr>
 				";	
 			}
+		}else{
+			$html .= "<tr class='trow text-gray' ><td colspan='10'>ไม่พบข้อมูล</td></tr>";	
 		}
 		
 		$html2 = ""; $NRow2 = 1; $No2 = 1;
@@ -206,6 +251,8 @@ class CustomerData extends MY_Controller {
 					</tr>
 				";	
 			}
+		}else{
+			$html2 .= "<tr class='trow text-gray' ><td colspan='10'>ไม่พบข้อมูล</td></tr>";
 		}
 		
 		$html3 = ""; $NRow3 = 1; $No3 = 1;
@@ -221,50 +268,11 @@ class CustomerData extends MY_Controller {
 					</tr>
 				";	
 			}
+		}else{
+			$html3 .= "<tr class='trow text-gray' ><td colspan='5'>ไม่พบข้อมูล</td></tr>";
 		}
 
-		$html1 = "
-			<div id='table-fixed-HCsale' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
-			ขายผ่อน ขายสด ขายไฟแนนซ์
-			<table id='table-HCsale' class='col-sm-12 display table-bordered ' cellspacing='0' width='calc(100% - 1px)' style='background-color:#fafaff;'>
-				<thead>
-					".$head."
-				</thead>	
-				<tbody style='height: 10px !important; overflow: scroll;'>
-					".$html."
-				</tbody>
-			</table>
-		</div>
-		";
-		
-		$html2 = "
-			<div id='table-fixed-AOsale' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
-			ขายส่งเอเยนต์ ขายอุปกรณ์
-			<table id='table-AOsale' class='col-sm-12 display table-bordered ' cellspacing='0' width='calc(100% - 1px)' style='background-color:#fafaff;'>
-				<thead>
-					".$head."
-				</thead>	
-				<tbody style='height: 10px !important; overflow: scroll;'>
-					".$html2."
-				</tbody>
-			</table>
-		</div>
-		";
-		
-		$html3 = "
-			<div id='table-fixed-ARmgra' class='col-sm-12' style='height:100%;width:100%;overflow:auto;'>
-			<table id='table-ARmgra' class='col-sm-12 display table-bordered ' cellspacing='0' width='calc(100% - 1px)' style='background-color:#f7fdfd;'>
-				<thead>
-					".$head2."
-				</thead>	
-				<tbody style='height: 10px !important; overflow: scroll;'>
-					".$html3."
-				</tbody>
-			</table>
-		</div>
-		";
-
-		$response = array("html1"=>$html1, "html2"=>$html2, "html3"=>$html3);
+		$response = array("html1"=>$html, "html2"=>$html2, "html3"=>$html3);
 		echo json_encode($response);
 	}
 }
