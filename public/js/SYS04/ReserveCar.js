@@ -364,8 +364,11 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				$('#fBAAB').empty().append(newOption).trigger('change');
 				newOption = new Option(data.COLOR, data.COLOR, false, false);
 				$('#fCOLOR').empty().append(newOption).trigger('change');
+				/*
 				newOption = new Option(data.CC, data.CC, false, false);
 				$('#fCC').empty().append(newOption).trigger('change');
+				*/
+				$('#fCC').val(data.CC).trigger('change');
 				$('#fSTAT').val(data.STAT).trigger('select2:select'); //event select action
 				$('#fSTAT').val(data.STAT).trigger('change'); // change form interface selected
 				
@@ -413,7 +416,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 		width: '100%'
 	});
 	
-	$('#fACTICOD').on("select2:select",function(){ restd(); });
+	$('#fACTICOD ,#fGRPCOD ,#fTYPE ,#fMODEL ,#fBAAB ,#fCOLOR').on("select2:select",function(){ restd(); });
+	
 	
 	function restd(){
 		$('#fSTAT').trigger('select2:select');
@@ -559,14 +563,14 @@ function fn_loadPropoties($thisWindow,$EVENT){
 	$('#fCOLOR').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2/getCOLOR',
+			url: '../Cselect2/getJDCOLOR',
 			data: function (params) {
 				dataToPost = new Object();
 				dataToPost.now 	 = (typeof $('#fCOLOR').find(':selected').val() === 'undefined' ? '' : $('#fCOLOR').find(':selected').val());
 				dataToPost.q 	 = (typeof params.term === 'undefined' ? '' : params.term);
 				
-				dataToPost.model = (typeof $('#fMODEL').find(':selected').val() === 'undefined' ? '' : $('#fMODEL').find(':selected').val());
-				dataToPost.baab	 = (typeof $('#fBAAB').find(':selected').val() === 'undefined' ? '' : $('#fBAAB').find(':selected').val());
+				dataToPost.MODEL = (typeof $('#fMODEL').find(':selected').val() === 'undefined' ? '' : $('#fMODEL').find(':selected').val());
+				dataToPost.BAAB	 = (typeof $('#fBAAB').find(':selected').val() === 'undefined' ? '' : $('#fBAAB').find(':selected').val());
 				
 				$('#loadding').fadeIn(200);
 				
@@ -620,7 +624,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 	$('#fSTAT').on("select2:select",function(){
 		$valued = $(this).find(':selected').val();
 		
-		if($valued == 'N'){
+		
 			dataToPost = new Object();
 			dataToPost.RESVDT   = $('#fRESVDT').val();
 			dataToPost.ACTICOD  = (typeof $('#fACTICOD').find(':selected').val() === "undefined" ? "":$('#fACTICOD').find(':selected').val());
@@ -628,6 +632,9 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			dataToPost.MODEL 	= (typeof $('#fMODEL').find(':selected').val() === "undefined" ? "":$('#fMODEL').find(':selected').val());
 			dataToPost.BAAB  	= (typeof $('#fBAAB').find(':selected').val() === "undefined" ? "":$('#fBAAB').find(':selected').val());
 			dataToPost.COLOR 	= (typeof $('#fCOLOR').find(':selected').val() === "undefined" ? "":$('#fCOLOR').find(':selected').val());
+			dataToPost.LOCAT 	= (typeof $('#fLOCAT').find(':selected').val() === "undefined" ? "":$('#fLOCAT').find(':selected').val());
+			dataToPost.GCODE 	= (typeof $('#fGRPCOD').find(':selected').val() === "undefined" ? "":$('#fGRPCOD').find(':selected').val());
+			dataToPost.STAT 	= $valued;
 			
 			JDfSTAT_select = $.ajax({
 				url:'../SYS04/ReserveCar/getStandart',
@@ -639,7 +646,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					if(data.error){
 						$('#fPRICE').val('');
 						$('#fPRICE').attr('stdid','');
-						$('#fPRICE').attr('stdplrank','');
+						$('#fPRICE').attr('subid','');
 						$('#fPRICE').attr('disabled',false);
 						$('#fBALANCE').val('');
 						
@@ -647,7 +654,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 							title: 'แจ้งเตือน',
 							size: 'mini',
 							closeOnClick: false,
-							delay: 5000,
+							delay: false,
 							pauseDelayOnHover: true,
 							continueDelayOnInactiveTab: false,
 							icon: true,
@@ -655,9 +662,9 @@ function fn_loadPropoties($thisWindow,$EVENT){
 							msg: data.msg
 						});
 					}else{
-						$('#fPRICE').val(data.price);
-						$('#fPRICE').attr('stdid',data.stdid);
-						$('#fPRICE').attr('stdplrank',data.stdplrank);
+						$('#fPRICE').val(data.PRICE);
+						$('#fPRICE').attr('stdid',data.STDID);
+						$('#fPRICE').attr('subid',data.SUBID);
 						
 						if($('#fRESPAY').val() == ''){
 							$('#fRESPAY').val();
@@ -679,11 +686,6 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				},
 				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 			});
-		}else{
-			$('#fPRICE').val('');
-			$('#fPRICE').attr('disabled',false);
-			$('#fPRICE').focus();
-		}
 	});
 	
 	$('#fSTAT').on("select2:unselect",function(){
@@ -806,13 +808,13 @@ function fn_loadPropoties($thisWindow,$EVENT){
 	$('#btnClear').click(function(){
 		$('#fCUSCOD').attr('CUSCOD','');
 		$('#fCUSCOD').val('');
-		$('#fSTRNO').empty().trigger('change');
-		$('#fACTICOD').empty().trigger('change');
-		$('#fGRPCOD').empty().trigger('change');
-		$('#fMODEL').empty().trigger('change');
-		$('#fBAAB').empty().trigger('change');
-		$('#fCOLOR').empty().trigger('change');
-		$('#fCC').empty().trigger('change');
+		$('#fSTRNO').val(null).trigger('change');
+		$('#fACTICOD').val(null).trigger('change');
+		$('#fGRPCOD').val(null).trigger('change');
+		$('#fMODEL').val(null).trigger('change');
+		$('#fBAAB').val(null).trigger('change');
+		$('#fCOLOR').val(null).trigger('change');
+		$('#fCC').val(null).trigger('change');
 		$('#fSTAT').val('').trigger('change');
 		$('#fPRICE').val();
 		$('#fRESPAY').val();
@@ -907,7 +909,7 @@ function fn_save($thisWindow,lobibox){
 	dataToPost.STAT 	= (typeof $('#fSTAT').find(':selected').val() === 'undefined' ? '':$('#fSTAT').find(':selected').val());
 	dataToPost.PRICE 	= $('#fPRICE').val();
 	dataToPost.STDID 	= (typeof $('#fPRICE').attr('stdid') === 'undefined' ? '':$('#fPRICE').attr('stdid'));
-	dataToPost.STDPLRANK = (typeof $('#fPRICE').attr('stdplrank') === 'undefined' ? '':$('#fPRICE').attr('stdplrank'));
+	dataToPost.SUBID	= (typeof $('#fPRICE').attr('subid') === 'undefined' ? '':$('#fPRICE').attr('subid'));
 	dataToPost.RESPAY 	= $('#fRESPAY').val();
 	dataToPost.BALANCE 	= $('#fBALANCE').val();
 	dataToPost.RECVDUE 	= $('#fRECVDUE').val();

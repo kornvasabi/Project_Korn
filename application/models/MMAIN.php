@@ -37,6 +37,25 @@ class MMAIN extends CI_Model {
 		return $opt;
 	}
 	
+	public function Option_get_type($selected){
+		$opt = "";
+		if(isset($selected[0])){
+			$arrs = array(
+				$selected[0] => $selected[0],
+				$selected[0] => $selected[0]
+			);
+			foreach($arrs as $key => $val){
+				$opt .= "
+					<option value='{$key}' ".(in_array($key,$selected) ? "selected":"").">
+						{$val}
+					</option>
+				";
+			}
+		}
+		
+		return $opt;
+	}
+	
 	public function Option_get_model($selected){
 		$opt = "";
 		if(isset($selected[0])){
@@ -157,11 +176,12 @@ class MMAIN extends CI_Model {
 	
 	public function Option_get_groupcode($selected){
 		$opt = "";
-		if(isset($selected["model"])){
+		if(isset($selected)){
 			$sql = "
 				select GCODE,'('+GCODE+') '+GDESC as GDESC from {$this->MAuth->getdb('SETGROUP')} 
 				order by GCODE
 			";
+			//echo $sql; exit;
 			$query = $this->db->query($sql);
 			
 			if($query->row()){

@@ -236,7 +236,7 @@ class ReserveCar extends MY_Controller {
 				 ) as ACTIDES
 				,a.GRPCOD ,'('+a.GRPCOD+') '+c.GDESC as GRPDESC
 				,a.TYPE ,a.MODEL ,a.BAAB ,a.COLOR ,a.CC ,a.STAT 
-				,a.PRICE ,d.STDID ,d.STDPLRANK,a.RESPAY ,a.BALANCE 
+				,a.PRICE ,d.STDID ,d.SUBID,a.RESPAY ,a.BALANCE 
 				,convert(varchar(8),a.RECVDUE,112) as RECVDUE 
 				,convert(varchar(8),a.RECVDT,112) as RECVDT 
 				,a.SMPAY ,a.SMCHQ ,a.MEMO1
@@ -247,7 +247,7 @@ class ReserveCar extends MY_Controller {
 			left join {$this->MAuth->getdb('ARRESVOTH')} d on a.RESVNO=d.RESVNO collate thai_cs_as and d.REF='".strtoupper($this->sess["db"])."'
 			where a.RESVNO='{$RESVNO}'
 		";
-		echo $sql; exit;
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		if($query->row()){
@@ -275,7 +275,7 @@ class ReserveCar extends MY_Controller {
 				$arrs["fSTAT"] 		= $this->opt('STAT',$row->STAT);
 				$arrs["fPRICE"]  	= number_format($row->PRICE,2);
 				$arrs["fSTDID"]		= $row->STDID;
-				$arrs["fSTDPLRANK"]	= $row->STDPLRANK;
+				$arrs["fSUBID"]		= $row->SUBID;
 				$arrs["fRESPAY"]  	= number_format($row->RESPAY,2);
 				$arrs["fBALANCE"]  	= number_format($row->BALANCE,2);
 				$arrs["fRECVDUE"]  	= $this->Convertdate(2,$row->RECVDUE);
@@ -445,7 +445,7 @@ class ReserveCar extends MY_Controller {
 					<div class='form-group'>
 						ราคาขายรวมภาษี
 						<input type='text' id='fPRICE' class='form-control input-sm jzAllowNumber' value='{$arrs["fPRICE"]}'
-							stdid='".$arrs["fSTDID"]."' stdplrank='".$arrs["fSTDPLRANK"]."'>
+							stdid='".$arrs["fSTDID"]."' stdplrank='".$arrs["fSUBID"]."'>
 					</div>
 				</div>
 				<div class='col-sm-3'>	
@@ -539,37 +539,49 @@ class ReserveCar extends MY_Controller {
 		$arrs["MODEL"] 	 = $_POST["MODEL"];
 		$arrs["BAAB"] 	 = $_POST["BAAB"];
 		$arrs["COLOR"] 	 = $_POST["COLOR"];
+		$arrs["STAT"]	 = (isset($_POST["STAT"]) ? $_POST["STAT"] : "");
+		$arrs["LOCAT"]	 = $_POST["LOCAT"];
+		$arrs["GCODE"]	 = $_POST["GCODE"];
+		
 		
 		if($arrs["RESVDT"] == ""){
-			$response["error"] = true;
+			$response["error"] = false;
 			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุวันที่จองรถ";
 			echo json_encode($response); exit;
 		}
 		
 		if($arrs["ACTICOD"] == ""){
-			$response["error"] = true;
+			$response["error"] = false;
 			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุกิจกรรมการขาย";
 			echo json_encode($response); exit;
 		}
 		
 		if($arrs["MODEL"] == ""){
-			$response["error"] = true;
+			$response["error"] = false;
 			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุรุ่น";
 			echo json_encode($response); exit;
 		}
 		
 		if($arrs["BAAB"] == ""){
-			$response["error"] = true;
+			$response["error"] = false;
 			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุแบบ";
 			echo json_encode($response); exit;
 		}
 		
 		if($arrs["COLOR"] == ""){
-			$response["error"] = true;
+			$response["error"] = false;
 			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุสี";
 			echo json_encode($response); exit;
 		}
 		
+		if($arrs["STAT"] == ""){
+			$response["error"] = false;
+			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุสถานะรถ";
+			echo json_encode($response); exit;
+		}
+		
+		
+		/*
 		$sql = "
 			if exists(
 				select * from {$this->MAuth->getdb('std_vehicles')} a
@@ -632,19 +644,64 @@ class ReserveCar extends MY_Controller {
 				where a.model='{$arrs["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
 			end
 		";
-		//echo $sql; exit;
+		*/
+		$sql = "
+			select * from {$this->MAuth->getdb('fn_STDVehicles')}('{$arrs["MODEL"]}','{$arrs["BAAB"]}','{$arrs["COLOR"]}','{$arrs["STAT"]}','{$arrs["ACTICOD"]}','{$arrs["LOCAT"]}','{$arrs["RESVDT"]}')
+		";
+		//echo $sql; //exit;
 		$query = $this->db->query($sql);
 			
 		if($query->row()){
 			foreach($query->result() as $row){
+				if($row->STAT == "N"){
+					$sql = "
+						select STDID,SUBID,PRICE from {$this->MAuth->getdb('STDVehiclesPRICE')}
+						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
+					";
+				}else{
+					$sql = "
+						select a.ID as STDID,b.OPRICE as PRICE,'' as SUBID
+						from {$this->MAuth->getdb('STDSHCAR')} a
+						left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
+						left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
+						left join {$this->MAuth->getdb('STDSHCARLocats')} d on a.ID=d.ID
+						where b.ACTIVE='yes' collate thai_ci_as 
+							and a.MODEL='".$row->MODEL."' collate thai_cs_as
+							and a.BAAB='".$row->BAAB."' collate thai_cs_as 
+							and (case when c.COLOR = 'ALL' then '".$row->COLOR."' else c.COLOR end) = '".$row->COLOR."' collate thai_cs_as 
+							and (case when d.LOCAT = 'ALL' then '".$row->LOCAT."' else d.LOCAT end) = '".$row->LOCAT."' collate thai_cs_as
+							and a.GCODE='".$arrs["GCODE"]."'
+					";
+				}
+				//echo $sql; exit;
+				$query = $this->db->query($sql);
+				
+				if($query->row()){
+					foreach($query->result() as $row){
+						$response["STDID"] = $row->STDID;
+						$response["SUBID"] = $row->SUBID;
+						$response["PRICE"] = $row->PRICE;
+					}
+				}else{
+					$response["error"] = true;
+					$response["msg"] = "
+						ผิดพลาด ไม่พบราคาในสแตนดาร์ด <br>โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+						รุ่น :: ".$arrs["MODEL"]."<br>
+						แบบ :: ".$arrs["BAAB"]."<br>
+						สี :: ".$arrs["COLOR"]."<br>
+						กิจกรรมการขาย :: ".$arrs["ACTIDES"]."
+					";
+				}
+				/*
 				$response["price"] = $row->price;
 				$response["stdid"] = $row->id;
 				$response["stdplrank"] = $row->plrank;
+				*/
 			}
 		}else{
 			$response["error"] = true;
 			$response["msg"] = "
-				ผิดพลาด ไม่พบราคาขายรถใหม่ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+				ผิดพลาด ไม่พบราคาในสแตนดาร์ด <br>โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
 				รุ่น :: ".$arrs["MODEL"]."<br>
 				แบบ :: ".$arrs["BAAB"]."<br>
 				สี :: ".$arrs["COLOR"]."<br>
@@ -715,7 +772,7 @@ class ReserveCar extends MY_Controller {
 		$arrs["STAT"] 		= $_POST["STAT"];
 		$arrs["PRICE"] 		= $_POST["PRICE"];
 		$arrs["STDID"] 		= $_POST["STDID"];
-		$arrs["STDPLRANK"] 	= $_POST["STDPLRANK"];
+		$arrs["SUBID"] 		= $_POST["SUBID"];
 		$arrs["RESPAY"] 	= $_POST["RESPAY"];
 		$arrs["BALANCE"] 	= $_POST["BALANCE"];
 		$arrs["RECVDUE"] 	= $this->Convertdate(1,$_POST["RECVDUE"]);
@@ -828,7 +885,7 @@ class ReserveCar extends MY_Controller {
 						end
 					end
 					
-					if('".$arrs["STAT"]."' = 'N' and ('".$arrs["STDID"]."' = '' or '".$arrs["STDPLRANK"]."' = ''))
+					if('".$arrs["STAT"]."' = 'N' and ('".$arrs["STDID"]."' = '' or '".$arrs["SUBID"]."' = ''))
 					begin 
 						rollback tran tst;
 						insert into #transaction select 'Y' as id,'','ผิดพลาด จองรถใหม่ ไม่ได้ดึงราคา std. มาใช้งาน โปรดทำรายการใหม่อีกครั้ง' as msg;
@@ -852,9 +909,9 @@ class ReserveCar extends MY_Controller {
 						)
 						
 						insert into {$this->MAuth->getdb('ARRESVOTH')} ( 
-							RESVNO ,ACTICOD ,STDID ,STDPLRANK ,REF ,INSBY ,INSDT 
+							RESVNO ,ACTICOD ,STDID ,SUBID ,REF ,INSBY ,INSDT 
 						) values (
-							@RESVNO,'".$arrs["ACTICOD"]."','".$arrs["STDID"]."','".$arrs["STDPLRANK"]."','".strtoupper($this->sess["db"])."','".$this->sess["IDNo"]."',getdate()
+							@RESVNO,'".$arrs["ACTICOD"]."','".$arrs["STDID"]."','".$arrs["SUBID"]."','".strtoupper($this->sess["db"])."','".$this->sess["IDNo"]."',getdate()
 						)
 						
 						if ('".$arrs["STRNO"]."' != '')
@@ -979,9 +1036,9 @@ class ReserveCar extends MY_Controller {
 				end
 				
 				if exists (
-					select count(*) from {$this->MAuth->getdb('ARANALYZE')} where RESVNO='".$RESVNO."'
+					select 1 from {$this->MAuth->getdb('ARANALYZE')} where RESVNO='".$RESVNO."'
 					union
-					select count(*) from {$this->MAuth->getdb('ARMAST')} where RESVNO='".$RESVNO."'
+					select 1 from {$this->MAuth->getdb('ARMAST')} where RESVNO='".$RESVNO."'
 				)
 				begin
 					rollback tran tst;
@@ -1013,6 +1070,7 @@ class ReserveCar extends MY_Controller {
 				insert into #transaction select 'Y','',ERROR_MESSAGE();
 			end catch	
 		";
+		//echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "select * from #transaction";
 		$query = $this->db->query($sql);
