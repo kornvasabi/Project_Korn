@@ -251,8 +251,14 @@ class HoldtoOldcar extends MY_Controller {
 		$contno	= $_REQUEST["contno"];
 
 		$sql = "
+				declare @NPROF decimal(8,2)	= ( select convert(decimal(12,2),round(SUM(NPROF),2)) AS NPROF 
+				from(
+					select CONTNO, CASE WHEN PAYMENT > 0 THEN (NPROF/DAMT)*PAYMENT ELSE NPROF END AS  NPROF  
+					from {$this->MAuth->getdb('ARPAY')}  WHERE CONTNO = '".$contno."' and PAYMENT < DAMT
+				)A)
+				
 				select b.CONTNO, b.CRLOCAT, isnull(b.REGNO,'') as REGNO, b.STRNO , b.STAT, b.GCODE, d.GDESC, c.SNAM, c.NAME1, c.NAME2, a.CUSCOD, a.TOTPRC, a.SMPAY+a.SMCHQ as SMPAY, 
-				a.TOTPRC - a.SMPAY - a.SMCHQ as BALANC, a.EXP_AMT, a.NKANG+a.TOTDWN-a.SMPAY-a.SMCHQ as BOOKVAL, a.VKANG, b.STDPRC, a.VATRT, a.BILLCOLL, e.NAME
+				a.TOTPRC - a.SMPAY - a.SMCHQ as BALANC, a.EXP_AMT, a.NKANG+a.TOTDWN-a.SMPAY-a.SMCHQ-@NPROF as BOOKVAL, a.VKANG, b.STDPRC, a.VATRT, a.BILLCOLL, e.NAME
 				from {$this->MAuth->getdb('ARMAST')} a
 				left join {$this->MAuth->getdb('INVTRAN')} b on a.CONTNO = b.CONTNO 
 				left join {$this->MAuth->getdb('CUSTMAST')} c on a.CUSCOD = c.CUSCOD 

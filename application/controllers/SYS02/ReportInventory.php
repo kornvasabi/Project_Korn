@@ -28,7 +28,6 @@ class ReportInventory extends MY_Controller {
 							<br>รายงานสินค้าคงเหลือ (รถ)<br>
 						</div>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>
-							<br>
 							<div class='col-sm-4 col-xs-4'>	
 								<div class='form-group'>
 									ณ วันที่

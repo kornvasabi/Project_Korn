@@ -323,7 +323,7 @@ class HoldtoStock extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	function Save_changecontstat(){
+	function Save_holdtostock(){
 		$CONTNO 	= $_REQUEST["CONTNO"];
 		$CUSCOD 	= $_REQUEST["CUSCOD"];
 		$STRNO 		= $_REQUEST["STRNO"];
@@ -378,6 +378,66 @@ class HoldtoStock extends MY_Controller {
 		
 		$this->db->query($sql);
 		$sql = "select * from #AddHoldtoStock";
+		$query = $this->db->query($sql);
+	  
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["status"] = $row->id;
+				$response["contno"] = $row->contno;
+				$response["msg"] = $row->msg;
+				$response["stat"] = $YSTAT;
+			}
+		}else{
+			$response["status"] = false;
+			$response["contno"] = '';
+			$response["msg"] = 'ผิดพลาดไม่สามารถบันทึกเปลี่ยนสถานะสัญญาได้ โปรดติดต่อฝ่ายไอที';
+			$response["stat"] = $row->msg;
+			$response["stat"] = $YSTAT;
+		}
+		
+		echo json_encode($response);
+	}
+	
+	function Edit_holdtostock(){
+		$CONTNO 	= $_REQUEST["CONTNO"];
+		$CUSCOD 	= $_REQUEST["CUSCOD"];
+		$STRNO 		= $_REQUEST["STRNO"];
+		$YSTAT		= $_REQUEST["YSTAT"];
+		$RVLOCAT	= $_REQUEST["RVLOCAT"];
+		//echo $DATEHOLD; exit;
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#Editholdtostock') is not null drop table #Editholdtostock;
+			create table #Editholdtostock (id varchar(20),contno varchar(20),msg varchar(max));
+			
+			begin tran Editholdtostock
+			begin try
+			
+				declare @CONTNO varchar(20) = '".$CONTNO."';
+				declare @CUSCOD varchar(20) = '".$CUSCOD."';
+				declare @STRNO 	varchar(max) = '".$STRNO."';
+				
+				update {$this->MAuth->getdb('INVTRAN')}
+				set CRLOCAT = '".$RVLOCAT."', CURSTAT = '', YSTAT = ''
+				where CONTNO = @CONTNO and STRNO = @STRNO
+
+				update {$this->MAuth->getdb('ARMAST')} 
+				set YSTAT = 'N', YDATE = NULL
+				where CONTNO = @CONTNO and CUSCOD = @CUSCOD
+					
+				insert into #Editholdtostock select 'S',@CONTNO,'แก้ไขรายการรถยึดเข้าสต็อก เลขตัวถังรถ '+@STRNO+' เรียบร้อย';
+					
+				commit tran Editholdtostock;
+			end try
+			begin catch
+				rollback tran Editholdtostock;
+				insert into #Editholdtostock select 'E','',ERROR_MESSAGE();
+			end catch
+		";
+		//echo $sql; exit;
+		
+		$this->db->query($sql);
+		$sql = "select * from #Editholdtostock";
 		$query = $this->db->query($sql);
 	  
 		if($query->row()){
@@ -573,8 +633,14 @@ class HoldtoStock extends MY_Controller {
 		$contno	= $_REQUEST["contno"];
 
 		$sql = "
+				declare @NPROF decimal(8,2)	= ( select convert(decimal(12,2),round(SUM(NPROF),2)) AS NPROF 
+				from(
+					select CONTNO, CASE WHEN PAYMENT > 0 THEN (NPROF/DAMT)*PAYMENT ELSE NPROF END AS  NPROF  
+					from {$this->MAuth->getdb('ARPAY')}  WHERE CONTNO = '".$contno."' and PAYMENT < DAMT
+				)A)
+				
 				select b.CONTNO, b.CRLOCAT, isnull(b.REGNO,'') as REGNO, b.STRNO , b.STAT, b.GCODE, d.GDESC, c.SNAM, c.NAME1, c.NAME2, a.CUSCOD, a.TOTPRC, a.SMPAY+a.SMCHQ as SMPAY, 
-				a.TOTPRC - a.SMPAY - a.SMCHQ as BALANC, a.EXP_AMT, a.NKANG+a.TOTDWN-a.SMPAY-a.SMCHQ as BOOKVAL, a.VKANG, b.STDPRC, a.VATRT, a.BILLCOLL, e.NAME
+				a.TOTPRC - a.SMPAY - a.SMCHQ as BALANC, a.EXP_AMT, a.NKANG+a.TOTDWN-a.SMPAY-a.SMCHQ-@NPROF as BOOKVAL, a.VKANG, b.STDPRC, a.VATRT, a.BILLCOLL, e.NAME
 				from {$this->MAuth->getdb('ARMAST')} a
 				left join {$this->MAuth->getdb('INVTRAN')} b on a.CONTNO = b.CONTNO 
 				left join {$this->MAuth->getdb('CUSTMAST')} c on a.CUSCOD = c.CUSCOD 

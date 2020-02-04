@@ -206,7 +206,7 @@ function Add_HoldtoStock($thisWindowChange){
 	}
 	
 	$('#btnsave_holdtostock').click(function(){
-		Save_changecontstat($thisWindowChange);
+		Save_holdtostock($thisWindowChange);
 		$('#resultt_HoldtoStock').hide(); 
 	});
 	
@@ -227,7 +227,7 @@ function Add_HoldtoStock($thisWindowChange){
 	});
 }
 
-function Save_changecontstat($thisWindowChange){
+function Save_holdtostock($thisWindowChange){
 	dataToPost = new Object();
 	var YSTAT = "";
 	if($("#YSTAT_Y").is(":checked")){ YSTAT = "Y";}
@@ -290,7 +290,7 @@ function Save_changecontstat($thisWindowChange){
 				}else{
 					$('#loadding').show();
 					$.ajax({
-						url:'../SYS05/HoldtoStock/Save_changecontstat',
+						url:'../SYS05/HoldtoStock/Save_holdtostock',
 						data: dataToPost,
 						type: 'POST',
 						dataType: 'json',
@@ -764,15 +764,135 @@ function loadform(CONTNO,YDATE,LOCAT,CUSNAME,CUSCOD,STRNO,TOTPRC,SMPAY,BALANCE,E
 					
 					$('#CONTNO').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
 					$('#RVLOCAT').select2({ disabled: true,dropdownParent: $(document.body).offset(),width: '100%' });
-					$('#YSTAT_Y').attr('disabled',true);
-					$('#YSTAT_N').attr('disabled',true);
 					$('#DATEHOLD').attr('disabled',true);
 					
-					$('#btnsave_holdtostock').attr('disabled',true);
 					$('#btnclr_holdtostock').attr('disabled',true);
+					
+					//var _update = 'T';
+					if(_level == '1'){
+						$('#btnsave_holdtostock').attr('disabled',false);
+					}else{
+						if(_update == 'T'){ //มีสิทธิ์แก้ไขไหม
+							if(_locat == LOCAT){ //เป็นสาขาตัวเองหรือไม่ ถ้าไม่ใช่ ห้ามแก้ไข
+								$('#btnsave_holdtostock').attr('disabled',false);
+							}else{
+								$('#btnsave_holdtostock').attr('disabled',true);
+								$('#YSTAT_Y').attr('disabled',true);
+								$('#YSTAT_N').attr('disabled',true);
+							}
+						}else{
+							$('#btnsave_holdtostock').attr('disabled',true);
+							$('#YSTAT_Y').attr('disabled',true);
+							$('#YSTAT_N').attr('disabled',true);
+						}
+					}
+					
+					$('#btnsave_holdtostock').click(function(){ 
+						Edit_holdtostock($this);
+					});
 					
 				}
 			});			
+		}
+	});
+}
+
+function Edit_holdtostock($thisWindowChange3){
+	dataToPost = new Object();
+	var YSTAT = "";
+	if($("#YSTAT_Y").is(":checked")){ YSTAT = "Y";}
+	if($("#YSTAT_N").is(":checked")){ YSTAT = "N";}
+	dataToPost.CONTNO 	= (typeof $('#CONTNO').find(':selected').val() === 'undefined' ? '':$('#CONTNO').find(':selected').val());
+	dataToPost.RVLOCAT 	= (typeof $('#RVLOCAT').find(':selected').val() === 'undefined' ? '':$('#RVLOCAT').find(':selected').val());
+	dataToPost.CUSCOD 	= $('#CUSCOD').val();
+	dataToPost.STRNO 	= $('#STRNO').val();
+	dataToPost.YSTAT 	= YSTAT;
+
+	Lobibox.confirm({
+		title: 'ยืนยันการทำรายการ',
+		iconClass: false,
+		msg: 'คุณต้องการแก้ไขรถยึดเข้าสต็อก (รอไถ่ถอน) หรือไม่' ,
+		buttons: {
+			ok : {
+				'class': 'btn btn-primary',
+				text: 'ยืนยัน',
+				closeOnClick: true,
+			},
+			cancel : {
+				'class': 'btn btn-danger',
+				text: 'ยกเลิก',
+				closeOnClick: true
+			},
+		},
+		
+		callback: function(lobibox, type){
+			if (type === 'ok'){
+				if(dataToPost.YSTAT == "Y"){
+					Lobibox.notify('warning', {
+						title: 'แจ้งเตือน',
+						size: 'mini',
+						closeOnClick: false,
+						delay: 15000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
+						soundExt: '.ogg',
+						icon: true,
+						messageHeight: '90vh',
+						msg: 'สัญญานี้อยู่ในสถานะ รถยึดเข้าสต็อก (รอไถ่ถอน) แล้ว'
+					});
+				}else{
+					$('#loadding').show();
+					$.ajax({
+						url:'../SYS05/HoldtoStock/Edit_holdtostock',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						success: function(data) {
+							$('#loadding').hide();
+							if(data.status == 'S'){
+								$thisWindowChange3.destroy();
+								Lobibox.notify('success', {
+									title: 'สำเร็จ',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 15000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}else if(data.status == 'W'){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 15000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}else if(data.status == 'E'){
+								Lobibox.notify('error', {
+									title: 'ผิดพลาด',
+									size: 'mini',
+									closeOnClick: false,
+									delay: false,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}
+							search();
+						}
+					});
+				}
+			}
 		}
 	});
 }

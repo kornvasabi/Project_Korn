@@ -1507,16 +1507,22 @@ class ARdataSearch extends MY_Controller {
 			begin try
 	
 				declare @contno varchar(12) = '".$CONTNO."'
+				declare @day varchar(10) = '".$DATESEARCH."'
+				
+				/*
+				--คำนวณวันล่าช้าและเบี้ยปรับ
 				declare @delayrate decimal(6,4) = (select DELYRT*0.01 from {$this->MAuth->getdb('ARMAST')} where CONTNO = @contno)
 				declare @delayday decimal(6,0) = (select DLDAY from {$this->MAuth->getdb('ARMAST')} where CONTNO = @contno)
 				declare @locat varchar(10) = (select LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO = @contno)
-				declare @day varchar(10) = '".$DATESEARCH."'
-
+				
 				update {$this->MAuth->getdb('ARPAY')}
 				set DELAY	=	DATEDIFF(DAY,DDATE,@day),
 					INTAMT	=	case when DATEDIFF(DAY,DDATE,@day) > @delayday	then round((((DAMT-PAYMENT)*@delayrate)/30)*(DATEDIFF(DAY,DDATE,@day)),0)
 								when DATEDIFF(DAY,DDATE,@day) <= @delayday	then 0 end
 				where CONTNO = @contno and LOCAT = @locat and DDATE < @day and PAYMENT < DAMT 
+				*/
+				
+				exec [dbo].[FN_JD_LatePenalty] @contno = @contno, @dt = @day
 				
 				insert into #updateintamt select 'S',@CONTNO,'อัพเดทวันล้าช้าและเบี้ยปรับล่าช้าแล้ว';
 				
@@ -1526,8 +1532,7 @@ class ARdataSearch extends MY_Controller {
 				rollback tran updateintamt;
 				insert into #updateintamt select 'E','',ERROR_MESSAGE();
 			end catch
-		";
-		//echo $sql; exit;
+		";//echo $sql; exit;
 		
 		$this->db->query($sql);
 		$sql = "select * from #updateintamt";
@@ -1575,7 +1580,7 @@ class ARdataSearch extends MY_Controller {
 						<td align='right'>".number_format($row->DAMT,2)."</td>
 						<td align='center'>".$row->DATE1."</td>
 						<td align='right'>".number_format($row->PAYMENT,2)."</td>
-						<td align='center'>".$row->DELAY."</td>
+						<td align='center'>".number_format($row->DELAY)."</td>
 						<td align='right'>".number_format($row->INTAMT,2)."</td>
 						<td align='center'>".$row->GRDCOD."</td>
 					</tr>
@@ -2172,7 +2177,7 @@ class ARdataSearch extends MY_Controller {
 
 				select T_NOPAY, @NOPAYED as NOPAYED, @DISPAY as DISPAY, case when @DISPAY > 0 then 30 else 0 end as PERCDIS,
 				case when @DISPAY > 0 then @NPROF*0.3 else 0 end as PERC30, NPRICE, VATPRC, TOTPRC, NCSHPRC, VCSHPRC, TCSHPRC, TOTDWN, INTRT, NPAYRES, VATPRES, SMPAY, 
-				NPRICE-NPAYRES as ARBALANC, VATPRC-VATPRES as VATBALANC, TOTPRC-SMPAY-SMCHQ as TOTAR,  case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3) 
+				TOTPRC-SMPAY-SMCHQ as ARBALANC, 0 as VATBALANC, TOTPRC-SMPAY-SMCHQ as TOTAR,  case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3) 
 				else TOTPRC-SMPAY-SMCHQ end as TOTPAY, @INTAMT-@PAID as INTAMT, @AROTH as AROTH, case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3)+(@INTAMT-@PAID)+@AROTH 
 				else TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH  end as NETPAY, convert(nvarchar,SDATE,112) as SDATE,
 				case when isnull(@NPROF,0) = 0 then @NPROF2 else @NPROF end as NPROF, case when isnull(@NPROF,0) = 0 then @NPROF2*0.5 else @NPROF*0.5 end as PERC50
@@ -2371,14 +2376,14 @@ class ARdataSearch extends MY_Controller {
 					</tr>
 					<tr class='wm'> 
 						<td class='wf pd'>มูลค่าชำระแล้ว</td>
-						<td class='wf pd tr'>{$data[24]} บาท</td>
+						<td class='wf pd tr'>{$data[26]} บาท</td>
 						<td class='wf pd'>ภาษีชำระแล้ว</td>
-						<td class='wf pd tr'>{$data[25]} บาท</td>
+						<td class='wf pd tr'>0.00 บาท</td>
 						<td class='wf pd'>ชำระเงินแล้ว</td>
 						<td class='wf pd tr'>{$data[26]} บาท</td>
 					</tr>
 					<tr class='wm'> 
-						<td class='wf pd'>มูลค่าลุกหนี้คงเหลือ</td>
+						<td class='wf pd'>มูลค่าลูกหนี้คงเหลือ</td>
 						<td class='wf pd tr'>{$data[27]} บาท</td>
 						<td class='wf pd'>ภาษีคงเหลือ</td>
 						<td class='wf pd tr'>{$data[28]} บาท</td>
