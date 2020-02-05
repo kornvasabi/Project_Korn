@@ -905,6 +905,12 @@ class Cselect2 extends MY_Controller {
 		$lname = $_POST['lname'];
 		$idno  = $_POST['idno'];
 		
+		$cuscod = array();
+		$cuscod[] = (isset($_POST['cuscod']) ? $_POST['cuscod']:'');
+		$cuscod[] = (isset($_POST['is1_cuscod']) ? $_POST['is1_cuscod']:'');
+		$cuscod[] = (isset($_POST['is2_cuscod']) ? $_POST['is2_cuscod']:'');
+		$cuscod[] = (isset($_POST['is3_cuscod']) ? $_POST['is3_cuscod']:'');
+		
 		$cond = "";
 		if($fname != ""){
 			$cond .= " and a.NAME1 like '%".$fname."%'";
@@ -915,7 +921,6 @@ class Cselect2 extends MY_Controller {
 		if($idno != ""){
 			$cond .= " and a.IDNo like '%".$idno."%'";
 		}
-		
 		
 		$sql = "
 			select top 100 a.CUSCOD,a.SNAM+a.NAME1+' '+a.NAME2 as CUSNAME,a.GRADE
@@ -942,6 +947,8 @@ class Cselect2 extends MY_Controller {
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
+				if(in_array($row->CUSCOD,$cuscod)){ $row->GRADESTAT = 'F'; }
+				
 				$html .= "
 					<tr style='".($row->GRADESTAT == 'F' ? "color:#aaa;":"")."'>
 						<td style='width:40px;'>

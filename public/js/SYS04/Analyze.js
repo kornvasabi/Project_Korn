@@ -418,7 +418,7 @@ function fnload($thisForm){
 		dataToPost.resvno = (typeof $(this).find(':selected').val() === "undefined" ? "" : $(this).find(':selected').val());
 		dataToPost.acticod	= (typeof $("#acticod").find(':selected').val() === "undefined" ? "ALL" : $("#acticod").find(':selected').val());
 		
-		$('#loadding').fadeIn(500);
+		$('#loadding').fadeIn(200);
 		JDresvno = $.ajax({
 			url:'../SYS04/Analyze/dataResv',
 			data: dataToPost,
@@ -458,8 +458,9 @@ function fnload($thisForm){
 					$("#ydate").val((typeof data.html["YDATE"] === 'undefined' ? "": data.html["YDATE"]));
 					
 					var newOption = new Option(data.html["CUSNAME"], data.html["CUSCOD"], true, true);
-					$('#cuscod').empty().append(newOption).trigger('change');
-					$('#cuscod').trigger('select2:select');
+					$('#cuscod').val(data.html["CUSNAME"]);
+					$('#cuscod').attr("CUSCOD",data.html["CUSCOD"]);
+					
 					$("#idno").val((typeof data.html["IDNO"] === 'undefined' ? "": data.html["IDNO"]));
 					$('#idnoBirth').val(data.html["BIRTHDT"]);
 					$('#idnoExpire').val(data.html["EXPDT"]);
@@ -599,7 +600,6 @@ function fnload($thisForm){
 	});
 	
 	var JDstrno = null;
-	//$('#strno').on('select2:select', function (e) {
 	$('#strno').on("select2:select",function(){
 		dataToPost = new Object();
 		dataToPost.dwnAmt 	  = $('#dwnAmt').val();
@@ -629,7 +629,7 @@ function fnload($thisForm){
 							msg: data.msg
 						});
 					}else{
-						if($("#locat").find(':selected').val() == data.html["CRLOCAT"]){
+						if($("#locat").find(':selected').val() == data.html["LOCAT"]){
 							var newOption = new Option(data.html["MODEL"], data.html["MODEL"], true, true);
 							$('#model').empty().append(newOption).trigger('change');
 							var newOption = new Option(data.html["BAAB"], data.html["BAAB"], true, true);
@@ -639,7 +639,8 @@ function fnload($thisForm){
 							$("#stat").val((typeof data.html["STAT"] === 'undefined' ? "": data.html["STAT"]));
 							$("#sdateold").val((typeof data.html["SDATE"] === 'undefined' ? "": data.html["SDATE"]));
 							$("#ydate").val((typeof data.html["YDATE"] === 'undefined' ? "": data.html["YDATE"]));
-							$('#price').val(data.html["price"]);
+							$('#price_add').val(data.html["PRICE_ADD"]);
+							$('#price').val(data.html["PRICE"]);
 							$('#price').attr("stdid",data.html["stdid"]);
 							$('#price').attr("stdplrank",data.html["stdplrank"]);
 							$('#interatert').val(data.html["interest_rate"]);
@@ -648,6 +649,7 @@ function fnload($thisForm){
 								$('#model').attr("disabled",false).trigger('change');
 								$('#baab').attr("disabled",false).trigger('change');
 								$('#color').attr("disabled",false).trigger('change');					
+								$('#price_add').attr("disabled",false);
 								$('#price').attr("disabled",false);
 								$('#price').attr("stdid","");
 								$('#price').attr("stdplrank","");
@@ -656,13 +658,9 @@ function fnload($thisForm){
 								$('#model').attr("disabled",true).trigger('change');
 								$('#baab').attr("disabled",true).trigger('change');
 								$('#color').attr("disabled",true).trigger('change');
-								if(data.html["STAT"] == "รถใหม่"){
-									$('#price').attr("disabled",true);
-									$('#interatert').attr("disabled",true);
-								}else{
-									$('#price').attr("disabled",false);
-									$('#interatert').attr("disabled",false);
-								}
+								$('#price_add').attr("disabled",true);
+								$('#price').attr("disabled",true);
+								$('#interatert').attr("disabled",true);
 							}					
 						}else{
 							/*
@@ -684,7 +682,7 @@ function fnload($thisForm){
 								continueDelayOnInactiveTab: false,
 								icon: true,
 								messageHeight: '90vh',
-								msg: "ผิดพลาด รถอยู่ที่สาขา ["+data.html["CRLOCAT"]+"] ไม่สามารถคีย์ขายที่สาขา [" +$("#locat").find(':selected').val()+"] ได้ครับ"
+								msg: "ผิดพลาด รถอยู่ที่สาขา ["+data.html["LOCAT"]+"] ไม่สามารถคีย์ขายที่สาขา [" +$("#locat").find(':selected').val()+"] ได้ครับ"
 							});
 						}
 					}
@@ -808,834 +806,16 @@ function fnload($thisForm){
 		width: '100%'
 	});
 	
-	$('#cuscod').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERS',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#cuscod').find(':selected').val() === 'undefined' ? '' : $('#cuscod').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $('#cuscod').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	var JDcuscod = null;
-	//$('#cuscod').change(function(){
-	$('#cuscod').on("select2:select",function(){
-		dataToPost = new Object();
-		dataToPost.cuscod = (typeof $(this).find(':selected').val() === "undefined" ? "" : $(this).find(':selected').val());
-		$('#loadding').fadeIn(0);
-		
-		JDcuscod = $.ajax({
-			url:'../SYS04/Analyze/dataCUS',
-			data: dataToPost,
-			type: 'POST',
-			dataType: 'json',
-			success: function(data){
-				$('#loadding').fadeOut(0);
-				
-				$("#idno").val((typeof data.html["IDNO"] === 'undefined' ? "": data.html["IDNO"]));
-				$('#idnoBirth').val(data.html["BIRTHDT"]);
-				$('#idnoExpire').val(data.html["EXPDT"]);
-				$('#idnoAge').val(data.html["AGE"]);
-				
-				var newOption = new Option(data.html["ADDR"], data.html["ADDRNO"], true, true);
-				$('#addr1').empty().append(newOption).trigger('change');
-				var newOption = new Option(data.html["ADDR"], data.html["ADDRNO"], true, true);
-				$('#addr2').empty().append(newOption).trigger('change');
-				$('#career').val(data.html["OCCUP"]);
-				$('#careerOffice').val(data.html["OFFIC"]);
-				
-				$('#phoneNumber').val(data.html["MOBILENO"]);
-				$('#income').val(data.html["MREVENU"]);
-				
-				if(typeof data.html["CUSCOD"] === 'undefined'){
-					$("#idno").attr("disabled",false);
-					$('#idnoBirth').attr("disabled",false);
-					$('#idnoExpire').attr("disabled",false);
-					$('#idnoAge').attr("disabled",false);
-				}else{
-					$("#idno").attr("disabled",true);
-					$('#idnoBirth').attr("disabled",true);
-					$('#idnoExpire').attr("disabled",true);
-					$('#idnoAge').attr("disabled",true);
-				}
-				
-			
-				// กรณีติด F ให้บันทึกข้อมูลมาได้ แต่ฝ่ายวิเคราะห์ จะมีหน้าที่ตรวจสอบอีกทีว่าจะอนุมัติขายหรือไม่
-				// if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
-					// resvnull();
-					// Lobibox.notify('error', {
-						// title: 'แจ้งเตือน',
-						// size: 'mini',
-						// closeOnClick: false,
-						// delay: false,
-						// pauseDelayOnHover: true,
-						// continueDelayOnInactiveTab: false,
-						// icon: true,
-						// messageHeight: '90vh',
-						// msg: $("#cuscod").find(':selected').text()+"<br>ผู้เช่าซื้ออยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
-					// });
-					
-					// $('#cuscod').val(null).trigger('change');
-				// }
-				
-				//เช่าซื้อภายใน 7 วัน
-				if(data.html["ARM"] > 0){
-					Lobibox.notify('warning', {
-						title: 'แจ้งเตือน',
-						size: 'mini',
-						closeOnClick: false,
-						delay: 15000,
-						pauseDelayOnHover: true,
-						continueDelayOnInactiveTab: false,
-						icon: true,
-						messageHeight: '90vh',
-						msg: "ลูกค้า "+$("#cuscod").find(':selected').text()+" ได้มีการทำรายการเช่าซื้อภายใน 7 วันที่ผ่านมา"
-					});
-				}
-				
-				JDcuscod = null;
-			},
-			beforeSend: function(){
-				if(JDcuscod !== null){
-					JDcuscod.abort();
-				}
-			},
-			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
-		});
-	});
-	
-	$('#is1_cuscod').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERS',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#is1_cuscod').find(':selected').val() === 'undefined' ? '' : $('#is1_cuscod').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $('#is1_cuscod').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	var JDis1_cuscod = null;
-	$('#is1_cuscod').on('select2:select', function (e) {
-		data = new Object();
-		data.cuscod 	= (typeof $('#cuscod').find(':selected').val() === "undefined" ? "" : $('#cuscod').find(':selected').val());
-		data.is1_cuscod = (typeof $('#is1_cuscod').find(':selected').val() === "undefined" ? "" : $('#is1_cuscod').find(':selected').val());
-		
-		if(data.cuscod == data.is1_cuscod){
-			$msg = "ผิดพลาด ผู้เช่าซื้อ จะมาเป็นผู้ค้ำประกันไม่ได้จ้า";
-			$obj = data;
-			clearIS1_CUSCOD($msg,$obj);	
-		}else{
-			dataToPost = new Object();
-			dataToPost.cuscod = (typeof $(this).find(':selected').val() === "undefined" ? "" : $(this).find(':selected').val());
-			$('#loadding').fadeIn(0);
-			
-			JDis1_cuscod = $.ajax({
-				url:'../SYS04/Analyze/dataCUS',
-				data: dataToPost,
-				type: 'POST',
-				dataType: 'json',
-				success: function(data){
-					$('#loadding').fadeOut(0);
-					
-					$("#is1_idno").val((typeof data.html["IDNO"] === 'undefined' ? "": data.html["IDNO"]));
-					$('#is1_idnoBirth').val(data.html["BIRTHDT"]);
-					$('#is1_idnoExpire').val(data.html["EXPDT"]);
-					$('#is1_idnoAge').val(data.html["AGE"]);
-					
-					var newOption = new Option(data.html["ADDR"], data.html["ADDRNO"], true, true);
-					$('#is1_addr1').empty().append(newOption).trigger('change');
-					var newOption = new Option(data.html["ADDR"], data.html["ADDRNO"], true, true);
-					$('#is1_addr2').empty().append(newOption).trigger('change');
-					$('#is1_career').val(data.html["OCCUP"]);
-					$('#is1_careerOffice').val(data.html["OFFIC"]);
-					
-					$('#is1_phoneNumber').val(data.html["MOBILENO"]);
-					$('#is1_income').val(data.html["MREVENU"]);
-					
-					if(typeof data.html["CUSCOD"] === 'undefined'){
-						$("#is1_idno").attr("disabled",false);
-						$('#is1_idnoBirth').attr("disabled",false);
-						$('#is1_idnoExpire').attr("disabled",false);
-						$('#is1_idnoAge').attr("disabled",false);
-					}else{
-						$("#is1_idno").attr("disabled",true);
-						$('#is1_idnoBirth').attr("disabled",true);
-						$('#is1_idnoExpire').attr("disabled",true);
-						$('#is1_idnoAge').attr("disabled",true);
-					}
-					
-					//กรณีติด F ให้บันทึกข้อมูลมาได้ แต่ฝ่ายวิเคราะห์ จะมีหน้าที่ตรวจสอบอีกทีว่าจะอนุมัติขายหรือไม่
-					// if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
-						// $msg = $("#is1_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 1 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์";
-						// clearIS1_CUSCOD($msg,$obj);	
-						// /*
-						// Lobibox.notify('error', {
-							// title: 'แจ้งเตือน',
-							// size: 'mini',
-							// closeOnClick: false,
-							// delay: false,
-							// pauseDelayOnHover: true,
-							// continueDelayOnInactiveTab: false,
-							// icon: true,
-							// messageHeight: '90vh',
-							// msg: $("#is1_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 1 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
-						// });
-						
-						// $('#is1_cuscod').val(null).trigger('change');
-						// */
-					// }
-					
-					JDis1_cuscod = null;
-				},
-				beforeSend: function(){
-					if(JDis1_cuscod !== null){
-						JDis1_cuscod.abort();
-					}
-				},
-				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
-			});
-		}
-	});
-	
-	$('#is2_cuscod').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERS',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#is2_cuscod').find(':selected').val() === 'undefined' ? '' : $('#is2_cuscod').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $('#is2_cuscod').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	var JDis2_cuscod = null;
-	$('#is2_cuscod').on('select2:select', function (e) {
-		data = new Object();
-		data.cuscod 	= (typeof $('#cuscod').find(':selected').val() === "undefined" ? "" : $('#cuscod').find(':selected').val());
-		data.is1_cuscod = (typeof $('#is1_cuscod').find(':selected').val() === "undefined" ? "" : $('#is1_cuscod').find(':selected').val());
-		data.is2_cuscod = (typeof $('#is2_cuscod').find(':selected').val() === "undefined" ? "" : $('#is2_cuscod').find(':selected').val());
-		
-		//ตรวจสอบว่าเลือกคนค้ำคนแรกยัง ถ้ายังให้ไปเลือกคนแรกก่อน
-		if(data.is1_cuscod == ''){
-			$msg = "ผิดพลาด คุณยังไม่ระบุผู้ค้ำประกัน 1 <br>ไม่สามารถเลือกผู้ค้ำประกัน 2 ได้จ้า";
-			$obj = data;
-			clearIS2_CUSCOD($msg,$obj);	
-		}else if(data.cuscod == data.is2_cuscod){
-			$msg = "ผิดพลาด ผู้เช่าซื้อ จะมาเป็นผู้ค้ำประกันไม่ได้จ้า";
-			$obj = data;
-			clearIS2_CUSCOD($msg,$obj);	
-		}else if(data.is1_cuscod == data.is2_cuscod){
-			$msg = "ผิดพลาด คุณระบุผู้ค้ำประกันคนนี้แล้ว ไม่สามารถระบุซ้ำได้จ้า";
-			$obj = data;
-			clearIS2_CUSCOD($msg,$obj);
-		}else{
-			dataToPost = new Object();
-			dataToPost.cuscod = (typeof $(this).find(':selected').val() === "undefined" ? "" : $(this).find(':selected').val());
-			$('#loadding').fadeIn(0);
-			
-			JDis2_cuscod = $.ajax({
-				url:'../SYS04/Analyze/dataCUS',
-				data: dataToPost,
-				type: 'POST',
-				dataType: 'json',
-				success: function(data){
-					$('#loadding').fadeOut(0);
-					
-					$("#is2_idno").val((typeof data.html["IDNO"] === 'undefined' ? "": data.html["IDNO"]));
-					$('#is2_idnoBirth').val(data.html["BIRTHDT"]);
-					$('#is2_idnoExpire').val(data.html["EXPDT"]);
-					$('#is2_idnoAge').val(data.html["AGE"]);
-					
-					var newOption = new Option(data.html["ADDR"], data.html["ADDRNO"], true, true);
-					$('#is2_addr1').empty().append(newOption).trigger('change');
-					var newOption = new Option(data.html["ADDR"], data.html["ADDRNO"], true, true);
-					$('#is2_addr2').empty().append(newOption).trigger('change');
-					$('#is2_career').val(data.html["OCCUP"]);
-					$('#is2_careerOffice').val(data.html["OFFIC"]);
-					
-					$('#is2_phoneNumber').val(data.html["MOBILENO"]);
-					$('#is2_income').val(data.html["MREVENU"]);
-					
-					if(typeof data.html["CUSCOD"] === 'undefined'){
-						$("#is2_idno").attr("disabled",false);
-						$('#is2_idnoBirth').attr("disabled",false);
-						$('#is2_idnoExpire').attr("disabled",false);
-						$('#is2_idnoAge').attr("disabled",false);
-					}else{
-						$("#is2_idno").attr("disabled",true);
-						$('#is2_idnoBirth').attr("disabled",true);
-						$('#is2_idnoExpire').attr("disabled",true);
-						$('#is2_idnoAge').attr("disabled",true);
-					}
-					
-					//กรณีติด F ให้บันทึกข้อมูลมาได้ แต่ฝ่ายวิเคราะห์ จะมีหน้าที่ตรวจสอบอีกทีว่าจะอนุมัติขายหรือไม่
-					// if (data.html["GRADE"] == "F" || data.html["GRADE"] == "FF" ){
-						
-						// $msg = $("#is2_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 2 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์";
-						// clearIS2_CUSCOD($msg,$obj);	
-						
-						// /*
-						// Lobibox.notify('error', {
-							// title: 'แจ้งเตือน',
-							// size: 'mini',
-							// closeOnClick: false,
-							// delay: false,
-							// pauseDelayOnHover: true,
-							// continueDelayOnInactiveTab: false,
-							// icon: true,
-							// messageHeight: '90vh',
-							// msg: $("#is2_cuscod").find(':selected').text()+"<br>ผู้ค้ำประกัน 2 อยู่ในกลุ่มเสี่ยง ("+data.html["GRADE"]+") ไม่สามารถเลือกได้ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์"
-						// });
-						
-						// $('#is2_cuscod').val(null).trigger('change');
-						// */
-					// }
-					
-					JDis2_cuscod = null;
-				},
-				beforeSend: function(){
-					if(JDis2_cuscod !== null){
-						JDis2_cuscod.abort();
-					}
-				},
-				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
-			});
-		}
-	});
-	
-	$('#cuscod').on('select2:unselect', function (e) {
-		$("#idno").val("");
-		$('#idnoBirth').val("");
-		$('#idnoExpire').val("");
-		$('#idnoAge').val("");
-		$('#addr1').val(null).trigger('change');
-		$('#addr2').val(null).trigger('change');
-		$('#idnoStat').val(null).trigger('change');
-		$('#phoneNumber').val("");
-		$('#baby').val("");		
-		$('#income').val("");
-		
-		$("#idno").attr("disabled",false);
-		$('#idnoBirth').attr("disabled",false);
-		$('#idnoExpire').attr("disabled",false);
-		$('#idnoAge').attr("disabled",false);
-	});
-	
-	$('#is1_cuscod').on('select2:unselect', function (e) {
-		$("#is1_idno").val("");
-		$('#is1_idnoBirth').val("");
-		$('#is1_idnoExpire').val("");
-		$('#is1_idnoAge').val("");
-		$('#is1_addr1').val(null).trigger('change');
-		$('#is1_addr2').val(null).trigger('change');
-		$('#is1_idnoStat').val(null).trigger('change');
-		$('#is1_phoneNumber').val("");
-		$('#is1_baby').val("");		
-		$('#is1_income').val("");
-		
-		$("#is1_idno").attr("disabled",false);
-		$('#is1_idnoBirth').attr("disabled",false);
-		$('#is1_idnoExpire').attr("disabled",false);
-		$('#is1_idnoAge').attr("disabled",false);
-		
-		$("#is2_idno").val("");
-		$('#is2_idnoBirth').val("");
-		$('#is2_idnoExpire').val("");
-		$('#is2_idnoAge').val("");
-		$('#is2_addr1').val(null).trigger('change');
-		$('#is2_addr2').val(null).trigger('change');
-		$('#is2_idnoStat').val(null).trigger('change');
-		$('#is2_phoneNumber').val("");
-		$('#is2_baby').val("");		
-		$('#is2_income').val("");
-		
-		$("#is2_idno").attr("disabled",false);
-		$('#is2_idnoBirth').attr("disabled",false);
-		$('#is2_idnoExpire').attr("disabled",false);
-		$('#is2_idnoAge').attr("disabled",false);
-		
-		$("#is2_cuscod").val(null).trigger("change");
-	});
-	
-	$('#is2_cuscod').on('select2:unselect', function (e) {
-		$("#is2_idno").val("");
-		$('#is2_idnoBirth').val("");
-		$('#is2_idnoExpire').val("");
-		$('#is2_idnoAge').val("");
-		$('#is2_addr1').val(null).trigger('change');
-		$('#is2_addr2').val(null).trigger('change');
-		$('#is2_idnoStat').val(null).trigger('change');
-		$('#is2_phoneNumber').val("");
-		$('#is2_baby').val("");		
-		$('#is2_income').val("");
-		
-		$("#is2_idno").attr("disabled",false);
-		$('#is2_idnoBirth').attr("disabled",false);
-		$('#is2_idnoExpire').attr("disabled",false);
-		$('#is2_idnoAge').attr("disabled",false);
-	});
-	
-	function clearIS1_CUSCOD($msg,$obj){
-		Lobibox.notify('warning', {
-			title: 'แจ้งเตือน',
-			size: 'mini',
-			closeOnClick: false,
-			delay: 5000,
-			pauseDelayOnHover: true,
-			continueDelayOnInactiveTab: false,
-			icon: true,
-			messageHeight: '90vh',
-			msg: $msg
-		});
-		
-		$("#is1_idno").val("");
-		$('#is1_idnoBirth').val("");
-		$('#is1_idnoExpire').val("");
-		$('#is1_idnoAge').val("");
-		$('#is1_addr1').val(null).trigger('change');
-		$('#is1_addr2').val(null).trigger('change');
-		$('#is1_phoneNumber').val("");
-		$('#is1_income').val("");
-		
-		$("#is1_idno").attr("disabled",false);
-		$('#is1_idnoBirth').attr("disabled",false);
-		$('#is1_idnoExpire').attr("disabled",false);
-		$('#is1_idnoAge').attr("disabled",false);
-		
-		$("#is2_idno").val("");
-		$('#is2_idnoBirth').val("");
-		$('#is2_idnoExpire').val("");
-		$('#is2_idnoAge').val("");
-		$('#is2_addr1').val(null).trigger('change');
-		$('#is2_addr2').val(null).trigger('change');
-		$('#is2_phoneNumber').val("");
-		$('#is2_income').val("");
-		
-		$("#is2_idno").attr("disabled",false);
-		$('#is2_idnoBirth').attr("disabled",false);
-		$('#is2_idnoExpire').attr("disabled",false);
-		$('#is2_idnoAge').attr("disabled",false);
-		//เปลี่ยนเป็นค่าว่าง		
-		if($obj.is1_cuscod != ''){ $('#is1_cuscod').val(null).trigger('change'); }
-	}
-	
-	function clearIS2_CUSCOD($msg,$obj){
-		Lobibox.notify('warning', {
-			title: 'แจ้งเตือน',
-			size: 'mini',
-			closeOnClick: false,
-			delay: 5000,
-			pauseDelayOnHover: true,
-			continueDelayOnInactiveTab: false,
-			icon: true,
-			messageHeight: '90vh',
-			msg: $msg
-		});
-		
-		$("#is2_idno").val("");
-		$('#is2_idnoBirth').val("");
-		$('#is2_idnoExpire').val("");
-		$('#is2_idnoAge').val("");
-		$('#is2_addr1').val(null).trigger('change');
-		$('#is2_addr2').val(null).trigger('change');
-		$('#is2_phoneNumber').val("");
-		$('#is2_income').val("");
-		
-		$("#is2_idno").attr("disabled",false);
-		$('#is2_idnoBirth').attr("disabled",false);
-		$('#is2_idnoExpire').attr("disabled",false);
-		$('#is2_idnoAge').attr("disabled",false);
-		//เปลี่ยนเป็นค่าว่าง		
-		if($obj.is2_cuscod != ''){ $('#is2_cuscod').val(null).trigger('change'); }
-	}
-	
 	$('#idnoStat').select2({ placeholder: 'เลือก',dropdownParent: $('#idnoStat').parent().parent(),minimumResultsForSearch: -1,width: '100%' });
 	$('#idnoStat').val(null).trigger('change');
 	$('#is1_idnoStat').select2({ placeholder: 'เลือก',dropdownParent: $('#is1_idnoStat').parent().parent(),minimumResultsForSearch: -1,width: '100%' });
 	$('#is1_idnoStat').val(null).trigger('change');
 	$('#is2_idnoStat').select2({ placeholder: 'เลือก',dropdownParent: $('#is2_idnoStat').parent().parent(),minimumResultsForSearch: -1,width: '100%' });
 	$('#is2_idnoStat').val(null).trigger('change');
+	$('#is3_idnoStat').select2({ placeholder: 'เลือก',dropdownParent: $('#is2_idnoStat').parent().parent(),minimumResultsForSearch: -1,width: '100%' });
+	$('#is3_idnoStat').val(null).trigger('change');
 	
-	$('#addr1').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERSADDRNo',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#addr1').find(':selected').val() === 'undefined' ? '' : $('#addr1').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				dataToPost.cuscod = (typeof $('#cuscod').find(':selected').val() === 'undefined' ? '' : $('#cuscod').find(':selected').val());
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: false,
-		multiple: false,
-		dropdownParent: $('#addr1').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
 	
-	$('#is1_addr1').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERSADDRNo',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#is1_addr1').find(':selected').val() === 'undefined' ? '' : $('#is1_addr1').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				dataToPost.cuscod = (typeof $('#is1_cuscod').find(':selected').val() === 'undefined' ? '' : $('#is1_cuscod').find(':selected').val());
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: false,
-		multiple: false,
-		dropdownParent: $('#is1_addr1').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('#is2_addr1').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERSADDRNo',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#is2_addr1').find(':selected').val() === 'undefined' ? '' : $('#is2_addr1').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				dataToPost.cuscod = (typeof $('#is2_cuscod').find(':selected').val() === 'undefined' ? '' : $('#is2_cuscod').find(':selected').val());
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: false,
-		multiple: false,
-		dropdownParent: $('#is2_addr1').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('#addr2').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERSADDRNo',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#addr2').find(':selected').val() === 'undefined' ? '' : $('#addr2').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				dataToPost.cuscod = (typeof $('#cuscod').find(':selected').val() === 'undefined' ? '' : $('#cuscod').find(':selected').val());
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: false,
-		multiple: false,
-		dropdownParent: $('#addr2').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('#is1_addr2').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERSADDRNo',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#is1_addr2').find(':selected').val() === 'undefined' ? '' : $('#is1_addr2').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				dataToPost.cuscod = (typeof $('#is1_cuscod').find(':selected').val() === 'undefined' ? '' : $('#is1_cuscod').find(':selected').val());
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: false,
-		multiple: false,
-		dropdownParent: $('#is1_addr2').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('#is2_addr2').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERSADDRNo',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#is2_addr2').find(':selected').val() === 'undefined' ? '' : $('#is2_addr2').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				dataToPost.cuscod = (typeof $('#is2_cuscod').find(':selected').val() === 'undefined' ? '' : $('#is2_cuscod').find(':selected').val());
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: false,
-		multiple: false,
-		dropdownParent: $('#is2_addr2').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('#empRelation').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getVUSER',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#empRelation').find(':selected').val() === 'undefined' ? '' : $('#empRelation').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $('#empRelation').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('#is1_empRelation').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getVUSER',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#is1_empRelation').find(':selected').val() === 'undefined' ? '' : $('#is1_empRelation').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $('#is1_empRelation').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('#is2_empRelation').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getVUSER',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = (typeof $('#is2_empRelation').find(':selected').val() === 'undefined' ? '' : $('#is2_empRelation').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $('#is2_empRelation').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('#empIDNo').select2({
-		placeholder: 'เลือก',
-		tags: true,
-		//tokenSeparators: [","],
-		createTag: function (params) {
-			var term = $.trim(params.term);
-			if (term === '') { return null; }
-			return {id: term,text: term + ' (พนักงานใหม่)'};
-		},
-		ajax: {
-			url: '../Cselect2/getVUSER',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = $('#empIDNo').find(':selected').val();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $('#empIDNo').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('#mngIDNo').select2({
-		placeholder: 'เลือก',
-		ajax: {
-			url: '../Cselect2/getVUSER',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = $('#mngIDNo').find(':selected').val();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		tags: true,
-		createTag: function (params) {
-			var term = $.trim(params.term);
-			if (term === '') { return null; }
-			return {id: term,text: term + ' (พนักงานใหม่)'};
-		},
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $('#mngIDNo').parent().parent(),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
 	
 	$(".toggleData").click(function(){
 		var thisc = $(this).attr('thisc');
@@ -1659,7 +839,6 @@ function fnload($thisForm){
 	
 	var JDsave = null;
 	$("#save").click(function(){
-		
 		dataToPost = new Object();
 		dataToPost.locat 		= (typeof $('#locat').find(':selected').val() === 'undefined' ? '' : $('#locat').find(':selected').val());
 		dataToPost.resvno 		= (typeof $('#resvno').find(':selected').val() === 'undefined' ? '' : $('#resvno').find(':selected').val());
@@ -1680,7 +859,7 @@ function fnload($thisForm){
 		dataToPost.stdplrank	= $('#price').attr('stdplrank');
 		dataToPost.interatert	= $('#interatert').val();
 		
-		dataToPost.cuscod 		= (typeof $('#cuscod').find(':selected').val() === 'undefined' ? '' : $('#cuscod').find(':selected').val());
+		dataToPost.cuscod 		= $('#cuscod').attr('cuscod');
 		dataToPost.idno			= $('#idno').val();
 		dataToPost.idnoBirth	= $('#idnoBirth').val();
 		dataToPost.idnoExpire	= $('#idnoExpire').val();
@@ -1702,7 +881,7 @@ function fnload($thisForm){
 		dataToPost.empRelation	= (typeof $('#empRelation').find(':selected').val() === 'undefined' ? '' : $('#empRelation').find(':selected').val());
 		dataToPost.reference	= $('#reference').val();
 		
-		dataToPost.is1_cuscod 		= (typeof $('#is1_cuscod').find(':selected').val() === 'undefined' ? '' : $('#is1_cuscod').find(':selected').val());
+		dataToPost.is1_cuscod 		= $('#is1_cuscod').attr('cuscod');
 		dataToPost.is1_idno			= $('#is1_idno').val();
 		dataToPost.is1_idnoBirth	= $('#is1_idnoBirth').val();
 		dataToPost.is1_idnoExpire	= $('#is1_idnoExpire').val();
@@ -1724,7 +903,7 @@ function fnload($thisForm){
 		dataToPost.is1_empRelation	= (typeof $('#is1_empRelation').find(':selected').val() === 'undefined' ? '' : $('#is1_empRelation').find(':selected').val());
 		dataToPost.is1_reference	= $('#is1_reference').val();
 		
-		dataToPost.is2_cuscod 		= (typeof $('#is2_cuscod').find(':selected').val() === 'undefined' ? '' : $('#is2_cuscod').find(':selected').val());
+		dataToPost.is2_cuscod 		= $('#is2_cuscod').attr('cuscod');
 		dataToPost.is2_idno			= $('#is2_idno').val();
 		dataToPost.is2_idnoBirth	= $('#is2_idnoBirth').val();
 		dataToPost.is2_idnoExpire	= $('#is2_idnoExpire').val();
@@ -1745,6 +924,28 @@ function fnload($thisForm){
 		dataToPost.is2_hostRelation	= $('#is2_hostRelation').val();
 		dataToPost.is2_empRelation	= (typeof $('#is2_empRelation').find(':selected').val() === 'undefined' ? '' : $('#is2_empRelation').find(':selected').val());
 		dataToPost.is2_reference	= $('#is2_reference').val();
+		
+		dataToPost.is3_cuscod 		= $('#is3_cuscod').attr('cuscod');
+		dataToPost.is3_idno			= $('#is3_idno').val();
+		dataToPost.is3_idnoBirth	= $('#is3_idnoBirth').val();
+		dataToPost.is3_idnoExpire	= $('#is3_idnoExpire').val();
+		dataToPost.is3_idnoAge		= $('#is3_idnoAge').val();
+		dataToPost.is3_idnoStat 	= (typeof $('#is3_idnoStat').find(':selected').val() === 'undefined' ? '' : $('#is3_idnoStat').find(':selected').val());
+		dataToPost.is3_addr1 		= (typeof $('#is3_addr1').find(':selected').val() === 'undefined' ? '' : $('#is3_addr1').find(':selected').val());
+		dataToPost.is3_addr2 		= (typeof $('#is3_addr2').find(':selected').val() === 'undefined' ? '' : $('#is3_addr2').find(':selected').val());
+		dataToPost.is3_phoneNumber	= $('#is3_phoneNumber').val();
+		dataToPost.is3_baby			= $('#is3_baby').val();
+		dataToPost.is3_socialSecurity	= $('#is3_socialSecurity').val();
+		dataToPost.is3_career		= $('#is3_career').val();
+		dataToPost.is3_careerOffice	= $('#is3_careerOffice').val();
+		dataToPost.is3_careerPhone	= $('#is3_careerPhone').val();
+		dataToPost.is3_income		= $('#is3_income').val();
+		dataToPost.is3_hostName		= $('#is3_hostName').val();
+		dataToPost.is3_hostIDNo		= $('#is3_hostIDNo').val();
+		dataToPost.is3_hostPhone	= $('#is3_hostPhone').val();
+		dataToPost.is3_hostRelation	= $('#is3_hostRelation').val();
+		dataToPost.is3_empRelation	= (typeof $('#is3_empRelation').find(':selected').val() === 'undefined' ? '' : $('#is3_empRelation').find(':selected').val());
+		dataToPost.is3_reference	= $('#is3_reference').val();
 		
 		dataToPost.empIDNo	= (typeof $('#empIDNo').find(':selected').val() === 'undefined' ? '' : $('#empIDNo').find(':selected').val());
 		dataToPost.empTel	= $('#empTel').val();
@@ -1844,7 +1045,387 @@ function fnload($thisForm){
 			}
 		});
 	});
+	
+	fn_select2_multiples();
 }
+
+function fn_select2_multiples(){
+	/*20200203*/
+	$('.select2_addrno').select2({
+		placeholder: 'เลือก',
+		ajax: {
+			url: '../Cselect2/getCUSTOMERSADDRNo',
+			data: function (params) {
+				$tags = $(this).attr('data-jd-tags');
+				
+				dataToPost = new Object();
+				dataToPost.now 		= (typeof $('#'+$tags+'addr1').find(':selected').val() === 'undefined' ? '' : $('#'+$tags+'addr1').find(':selected').val());
+				dataToPost.q	 	= (typeof params.term === 'undefined' ? '' : params.term);
+				dataToPost.cuscod 	= $('#'+$tags+'cuscod').attr('cuscod');
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+		},
+		allowClear: false,
+		multiple: false,
+		//dropdownParent: $('.lobibox-body'),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
+	$('.select2_empRelation').select2({
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2/getVUSER',
+			data: function (params) {
+				$tags = $(this).attr('data-jd-tags');
+				
+				dataToPost = new Object();
+				dataToPost.now = (typeof $('#'+$tags+'empRelation').find(':selected').val() === 'undefined' ? '' : $('#'+$tags+'empRelation').find(':selected').val());
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: true,
+		multiple: false,
+		//dropdownParent: $('#empRelation').parent().parent(),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
+	$('#empIDNo').select2({
+		placeholder: 'เลือก',
+		tags: true,
+		//tokenSeparators: [","],
+		createTag: function (params) {
+			var term = $.trim(params.term);
+			if (term === '') { return null; }
+			return {id: term,text: term + ' (พนักงานใหม่)'};
+		},
+		ajax: {
+			url: '../Cselect2/getVUSER',
+			data: function (params) {
+				dataToPost = new Object();
+				dataToPost.now = $('#empIDNo').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: true,
+		multiple: false,
+		//dropdownParent: $('#empIDNo').parent().parent(),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
+	$('#mngIDNo').select2({
+		placeholder: 'เลือก',
+		ajax: {
+			url: '../Cselect2/getVUSER',
+			data: function (params) {
+				dataToPost = new Object();
+				dataToPost.now = $('#mngIDNo').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		tags: true,
+		createTag: function (params) {
+			var term = $.trim(params.term);
+			if (term === '') { return null; }
+			return {id: term,text: term + ' (พนักงานใหม่)'};
+		},
+		allowClear: true,
+		multiple: false,
+		//dropdownParent: $('#mngIDNo').parent().parent(),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
+	var JD_CUSCOD = null;
+	$('#cuscod, #is1_cuscod, #is2_cuscod, #is3_cuscod').click(function(){
+		$tags = $(this).attr('tags');		
+		
+		$('#loadding').fadeIn(200);		
+		JD_CUSCOD = $.ajax({
+			url:'../Cselect2/getfromCUSTOMER',
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				$('#'+$tags+'cuscod').attr('disabled',true);
+				
+				Lobibox.window({
+					title: 'FORM CUSTOMER',
+					//width: $(window).width(),
+					//height: $(window).height(),
+					content: data.html,
+					draggable: false,
+					closeOnEsc: true,
+					shown: function($thisCUS){
+						var jd_cus_search = null;
+						$('#cus_fname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_lname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_idno').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_search').click(function(){ fnResultCUSTOMER(); });
+						
+						function fnResultCUSTOMER(){
+							data = new Object();
+							data.fname 		= $('#cus_fname').val();
+							data.lname 		= $('#cus_lname').val();
+							data.idno 		= $('#cus_idno').val();
+							data.cuscod 	= $('#cuscod').attr('cuscod');
+							data.is1_cuscod = $('#is1_cuscod').attr('cuscod');
+							data.is2_cuscod = $('#is2_cuscod').attr('cuscod');
+							data.is3_cuscod = $('#is3_cuscod').attr('cuscod');
+							
+							$('#loadding').fadeIn(200);
+							jd_cus_search = $.ajax({
+								url:'../Cselect2/getResultCUSTOMER',
+								data:data,
+								type: 'POST',
+								dataType: 'json',
+								success: function(data){
+									$('#cus_result').html(data.html);
+									
+									$('.CUSDetails').unbind('click');
+									var JDfn_getdata_customers = null;
+									$('.CUSDetails').click(function(){
+										dtp = new Object();
+										dtp.cuscod  = $(this).attr('CUSCOD');
+										dtp.cusname = $(this).attr('CUSNAMES');
+										
+										$('#'+$tags+'cuscod').attr('CUSCOD',dtp.cuscod);
+										$('#'+$tags+'cuscod').val(dtp.cusname);
+										
+										dataToPost = new Object();
+										dataToPost.cuscod = dtp.cuscod;
+										$('#loadding').fadeIn(200);	
+										JDfn_getdata_customers = $.ajax({
+											url:'../SYS04/Analyze/dataCUS',
+											data: dataToPost,
+											type: 'POST',
+											dataType: 'json',
+											success: function(data){
+												$('#loadding').fadeOut(200);			
+												JDfn_getdata_customers = null;
+												
+												$('#'+$tags+'idno').val(data.html["IDNO"]);
+												$('#'+$tags+'idnoBirth').val(data.html["BIRTHDT"]);
+												$('#'+$tags+'idnoExpire').val(data.html["EXPDT"]);
+												$('#'+$tags+'idnoAge').val(data.html["AGE"]);
+												
+												var newOption = new Option(data.html["ADDR"], data.html["ADDRNO"], true, true);
+												$('#'+$tags+'addr1').empty().append(newOption).trigger('change');
+												var newOption = new Option(data.html["ADDR"], data.html["ADDRNO"], true, true);
+												$('#'+$tags+'addr2').empty().append(newOption).trigger('change');
+												
+												
+												$('#'+$tags+'career').val(data.html["OCCUP"]);
+												$('#'+$tags+'careerOffice').val(data.html["OFFIC"]);
+												
+												$('#'+$tags+'phoneNumber').val(data.html["MOBILENO"]);
+												$('#'+$tags+'income').val(data.html["MREVENU"]);
+												
+												if(typeof data.html["CUSCOD"] === 'undefined'){
+													$('#'+$tags+'idno').attr("disabled",false);
+													$('#'+$tags+'idnoBirth').attr("disabled",false);
+													$('#'+$tags+'idnoExpire').attr("disabled",false);
+													$('#'+$tags+'idnoAge').attr("disabled",false);
+												}else{
+													$('#'+$tags+'idno').attr("disabled",true);
+													$('#'+$tags+'idnoBirth').attr("disabled",true);
+													$('#'+$tags+'idnoExpire').attr("disabled",true);
+													$('#'+$tags+'idnoAge').attr("disabled",true);
+												}
+												
+											},
+											beforeSend: function(){ if(JDfn_getdata_customers !== null){ JDfn_getdata_customers.abort(); } },
+											error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+										});
+										
+										$thisCUS.destroy();
+									});
+									
+									$('#loadding').fadeOut(200);
+									jd_cus_search = null;
+								},
+								beforeSend: function(){
+									if(jd_cus_search !== null){ jd_cus_search.abort(); }
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+							});
+						}
+					},
+					beforeClose : function(){
+						$('#'+$tags+'cuscod').attr('disabled',false);
+					}
+				});
+				
+				JD_CUSCOD = null;
+				$('#loadding').fadeOut(200);
+			},
+			beforeSend: function(){ if(JD_CUSCOD!==null){ JD_CUSCOD.abort(); } },
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		});
+	});
+	
+	$('#cuscod_removed,#is1_cuscod_removed,#is2_cuscod_removed,#is3_cuscod_removed').click(function(){
+		$tags = $(this).attr('tags');
+		$('#'+$tags+'cuscod').attr('CUSCOD','');
+		$('#'+$tags+'cuscod').val('');
+		
+		$('#'+$tags+'idno').val("");
+		$('#'+$tags+'idnoBirth').val("");
+		$('#'+$tags+'idnoExpire').val("");
+		$('#'+$tags+'idnoAge').val("");
+		$('#'+$tags+'idnoStat').val(null).trigger('change');
+		$('#'+$tags+'addr1').val(null).trigger('change');
+		$('#'+$tags+'addr2').val(null).trigger('change');
+		$('#'+$tags+'phoneNumber').val("");
+		$('#'+$tags+'baby').val("");
+		$('#'+$tags+'socialSecurity').val("");
+		$('#'+$tags+'career').val("");
+		$('#'+$tags+'careerOffice').val("");
+		$('#'+$tags+'careerPhone').val("");
+		$('#'+$tags+'income').val("");
+		$('#'+$tags+'hostName').val("");
+		$('#'+$tags+'hostIDNo').val("");
+		$('#'+$tags+'hostPhone').val("");
+		$('#'+$tags+'hostRelation').val("");
+		$('#'+$tags+'empRelation').val(null).trigger('change');
+		$('#'+$tags+'reference').val("");
+		
+		$('#'+$tags+'idno').attr("disabled",false);
+		$('#'+$tags+'idnoBirth').attr("disabled",false);
+		$('#'+$tags+'idnoExpire').attr("disabled",false);
+		$('#'+$tags+'idnoAge').attr("disabled",false);
+	});
+	
+	
+	$('#picture_form').click(function(){
+		Lobibox.window({
+			title: 'form upload',
+			//width: $(window).width(),
+			//height: $(window).height(),
+			content: '<div id="upload_file"></div>',
+			draggable: false,
+			closeOnEsc: false,
+			shown: function($this){
+				$('#upload_file').uploadFile({
+					url:'../SYS04/Analyze/test'
+					,fileName: 'myfile'
+					,maxFileCount: 1
+					,multiple: false
+					,maxFileSize: 10240*1024 // Allow size 10MB
+					,showProgress: true
+					,allowedTypes: "jpg,jpeg,png,pdf,xls,xlsx,"
+					,acceptFiles: 'image/*,application/pdf/vnd.ms-excel,application'
+					,dynamicFormData: function(){
+						var data = { 
+							Collectors 	: '',
+							Years 		: '',
+							Months 		: ''
+						}
+						return data;
+					}
+					,showPreview:true
+					,previewHeight: '150px'
+					,previewWidth: '150px'
+					,dragDropStr: 'เลือกไฟล์'
+					,abortStr:'เลือกไฟล์'
+					,cancelStr:'ยกเลิก'
+					,doneStr:'ผิดพลาด :: doneStr'
+					,multiDragErrorStr: 'ผิดพลาด :: ลากวางได้ครั้งละ 1 รูป'
+					,extErrorStr:'ผิดพลาด :: ต้องเป็นไฟล์ '
+					,sizeErrorStr:'ผิดพลาด sizeErrorStr'
+					,uploadErrorStr:'ผิดพลาด uploadErrorStr'
+					,maxFileCountErrorStr: 'กรุณายกเลิกไฟล์เดิมก่อน ไม่อนุญาติให้เพิ่มไฟล์ อนุญาติให้อัพโหลดไฟล์ได้ :'
+					,uploadStr:'เลือกไฟล์'					
+					,onSuccess:function(files,data,xhr,pd) {
+						var name = $('.ajax-file-upload-filename').html(); 
+						var json = JSON.parse(data.trim());
+
+						if (json["error"]){
+							file.reset();
+							Lobibox.notify('error', {
+								title: 'ผิดพลาด'
+								,height: '400'
+								,width: '400'								
+								,closeOnClick: false
+								,delay: false
+								,pauseDelayOnHover: true
+								,continueDelayOnInactiveTab: false
+								,img: base_url()+'../images/call-data-tracker.jpg'
+								,msg: 'อัพโหลดไม่สำเร็จ'
+								,sound: false
+							});
+						}else{ 
+							name = name.replace(json['origin'][0],json['new'][0]);  
+							$('.ajax-file-upload-filename').first().html(name);
+							
+							Lobibox.notify('success', {
+								title: 'แจ้งเตือน'
+								,height: '400'
+								,width: '400'
+								,closeOnClick: false
+								,delay: 2000
+								,pauseDelayOnHover: true
+								,continueDelayOnInactiveTab: false
+								,img: base_url()+'../images/call-data-tracker.jpg'
+								,msg: 'อัพโหลดสำเร็จ'
+								,sound: false
+							});
+						}
+					}
+					,showStatusAfterSuccess: true
+					,autoSubmit:true
+				});
+			}
+		});
+	});
+	/*20200203*/	
+}
+
+
 
 
 

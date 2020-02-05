@@ -3579,6 +3579,7 @@ class Standard extends MY_Controller {
 
 			declare @tbACTI table (ACTICOD varchar(20));
 			insert into @tbACTI select * from #tempACTI
+			declare @TYPECOD varchar(20) = 'HONDA';
 			declare @MODEL varchar(20) = '".$MODEL."';
 			declare @tbBAAB table (BAAB varchar(20));
 			insert into @tbBAAB select * from #tempBAAB
@@ -3628,10 +3629,18 @@ class Standard extends MY_Controller {
 			begin try
 				if (@STDID = 'Auto Genarate')
 				begin 
+					if not exists (select 1 from {$this->MAuth->getdb('SETMODEL')} where MODELCOD=@MODEL)
+					begin
+						rollback tran tsins;
+						insert into #tempResult 
+						select 'y','ผิดพลาด รุ่นที่คุณระบุมายังไม่มีในระบบ โปรดแจ้งฝ่ายเช่าซื้อ เพื่อเพิ่มรุ่น';
+						return;
+					end
+			
 					set @STDID = isnull((select MAX(STDID)+1 from {$this->MAuth->getdb('STDVehicles')}),1);
 					
 					insert into {$this->MAuth->getdb('STDVehicles')}
-					select @STDID,@MODEL,@insby,@insdt
+					select @STDID,@TYPECOD,@MODEL,@insby,@insdt 
 				end
 				
 				if (@SUBID = 'Auto Genarate')
@@ -3773,6 +3782,7 @@ class Standard extends MY_Controller {
 				insert into #tempResult select 'y',ERROR_MESSAGE();
 			end catch
 		";			
+		//echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "select * from #tempResult";
 		$query = $this->db->query($sql);

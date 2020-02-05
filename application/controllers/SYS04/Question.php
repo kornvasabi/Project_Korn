@@ -631,6 +631,7 @@ class Question extends MY_Controller {
 	}
 	
 	function group_ins(){
+		echo "อยู่ระหว่างการพัฒนาโปรแกรม"; exit;
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
@@ -699,6 +700,7 @@ class Question extends MY_Controller {
 	}
 	
 	function cancelcont(){
+		echo "อยู่ระหว่างการพัฒนาโปรแกรม"; exit;
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
@@ -767,6 +769,7 @@ class Question extends MY_Controller {
 	}
 	
 	function outsyscont(){
+		echo "อยู่ระหว่างการพัฒนาโปรแกรม"; exit;
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		

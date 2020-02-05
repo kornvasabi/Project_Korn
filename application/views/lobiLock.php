@@ -129,20 +129,31 @@
 
                 })();
                 //Initialize carousel and catch form submit
+				var timeout;
                 (function () {
                     var $lock = $('.lock-screen');
                     var $car = $lock.find('.carousel');
                     $car.click(function () {
-                        $car.parent().addClass('slideOutUp').removeClass('slideInDown');
-                        setTimeout(function () {
-                            $('.lock-screen .carousel-wrapper').removeClass('slideOutUp').addClass('slideInDown');
-                        }, CONFIG.showLockScreenTimeout);
+                        $car.parent().addClass('slideOutUp').removeClass('slideInDown');                        
+						jd_create_waitkey();
                     });
                     $car.carousel({
                         pause: false,
                         interval: 8000
                     });
-                })();				
+                })();
+				
+				function jd_create_waitkey(){
+					timeout = setTimeout(function () {
+						$('.lock-screen .carousel-wrapper').removeClass('slideOutUp').addClass('slideInDown');
+					}, CONFIG.showLockScreenTimeout);
+				}
+				
+				$('#pass').keypress(function(){
+					clearTimeout(timeout);					
+					$('.lock-screen .carousel-wrapper').addClass('slideOutUp').removeClass('slideInDown');                        
+					jd_create_waitkey();
+				});
             });
         </script>
     </body>

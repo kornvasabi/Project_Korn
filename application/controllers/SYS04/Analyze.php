@@ -23,7 +23,7 @@ class Analyze extends MY_Controller {
 		}
 	}
 	
-	function index(){
+	function index(){		
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		// style='height:calc(100vh - 132px);overflow:auto;background-color:white;'
@@ -701,6 +701,7 @@ class Analyze extends MY_Controller {
 				".$this->_formCUS()."
 				".$this->_formGRT1()."
 				".$this->_formGRT2()."
+				".$this->_formGRT3()."
 				".$this->_formEMP()."
 				
 				<div class='row' style='padding-top:30px;padding-bottom:30px;'>
@@ -836,6 +837,12 @@ class Analyze extends MY_Controller {
 						</div>
 						<div class='col-sm-2'>	
 							<div class='form-group'>
+								<span class='text-red'>+ ราคารถภายใน 1 ปี</span>
+								<input type='text' id='price_add' class='form-control input-sm jzAllowNumber'> 
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
 								ราคารถ(สด) ก่อนหักส่วนลด
 								<input type='text' id='price' class='form-control input-sm jzAllowNumber' stdid='' stdplrank=''> 
 							</div>
@@ -867,7 +874,14 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-2 col-sm-offset-1'>	
 							<div class='form-group'>
 								ชื่อ-สกุล ลูกค้า
-								<select id='cuscod' class='form-control input-sm select2'></select>	
+								<!-- select id='cuscod' class='form-control input-sm select2'></select-->	
+								<div class='input-group'>
+								   <input type='text' id='cuscod' CUSCOD='' tags='' class='form-control input-sm' placeholder='ลูกค้า'  value=''>
+								   <span class='input-group-btn'>
+								   <button id='cuscod_removed' tags='' class='btn btn-danger btn-sm' type='button'>
+										<span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button>
+								   </span>
+								</div>
 							</div>
 						</div>
 						<div class='col-sm-2'>	
@@ -915,13 +929,13 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-3 col-sm-offset-1'>	
 							<div class='form-group'>
 								ที่อยู่ตาม ทบ.บ้าน
-								<select id='addr1' class='form-control input-sm select2'></select>	
+								<select id='addr1' data-jd-tags='' class='select2_addrno form-control input-sm select2'></select>	
 							</div>
 						</div>
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								ที่อยู่ส่งเอกสาร
-								<select id='addr2' class='form-control input-sm select2'></select>	
+								<select id='addr2' data-jd-tags='' class='select2_addrno form-control input-sm select2'></select>	
 							</div>
 						</div>
 						<div class='col-sm-2'>	
@@ -999,13 +1013,24 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								ความสัมพันธ์กับพนักงาน
-								<select id='empRelation' class='form-control input-sm select2'></select>	
+								<select id='empRelation' data-jd-tags='' class='select2_empRelation form-control input-sm select2'></select>	
 							</div>
 						</div>
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								บุคคลอ้างอิง
 								<input type='text' id='reference' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								แนบรูป
+								<div class='input-group'>
+									<input type='text' id='picture' class='form-control input-sm' readonly='' style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' class='addpic input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -1028,7 +1053,14 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-2 col-sm-offset-1'>	
 							<div class='form-group'>
 								ชื่อ-สกุล ลูกค้า
-								<select id='is1_cuscod' class='form-control input-sm select2'></select>	
+								<!-- select id='is1_cuscod' class='form-control input-sm select2'></select --> 	
+								<div class='input-group'>
+								   <input type='text' id='is1_cuscod' CUSCOD='' tags='is1_' class='form-control input-sm' placeholder='ลูกค้า'  value=''>
+								   <span class='input-group-btn'>
+								   <button id='is1_cuscod_removed' tags='is1_' class='btn btn-danger btn-sm' type='button'>
+										<span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button>
+								   </span>
+								</div>
 							</div>
 						</div>
 						<div class='col-sm-2'>	
@@ -1076,13 +1108,13 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-3 col-sm-offset-1'>	
 							<div class='form-group'>
 								ที่อยู่ตาม ทบ.บ้าน
-								<select id='is1_addr1' class='form-control input-sm select2'></select>	
+								<select id='is1_addr1' data-jd-tags='is1_' class='select2_addrno form-control input-sm select2'></select>	
 							</div>
 						</div>
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								ที่อยู่ส่งเอกสาร
-								<select id='is1_addr2' class='form-control input-sm select2'></select>	
+								<select id='is1_addr2' data-jd-tags='is1_' class='select2_addrno form-control input-sm select2'></select>	
 							</div>
 						</div>
 						<div class='col-sm-2'>	
@@ -1160,7 +1192,7 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								ความสัมพันธ์กับพนักงาน
-								<select id='is1_empRelation' class='form-control input-sm select2'></select>	
+								<select id='is1_empRelation' data-jd-tags='is1_' class='select2_empRelation form-control input-sm select2'></select>	
 							</div>
 						</div>
 						<div class='col-sm-3'>
@@ -1173,7 +1205,12 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-2 col-sm-offset-1'>	
 							<div class='form-group'>
 								แนบรูป
-								<input type='text' id='is1_reference' class='form-control input-sm'>
+								<div class='input-group'>
+									<input type='text' id='is1_picture' class='form-control input-sm' readonly='' style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='is1_picture_form' class='addpic input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -1197,7 +1234,14 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-2 col-sm-offset-1'>	
 							<div class='form-group'>
 								ชื่อ-สกุล ลูกค้า
-								<select id='is2_cuscod' class='form-control input-sm select2'></select>	
+								<!--select id='is2_cuscod' class='form-control input-sm select2'></select-->	
+								<div class='input-group'>
+								   <input type='text' id='is2_cuscod' CUSCOD='' tags='is2_' class='form-control input-sm' placeholder='ลูกค้า'  value=''>
+								   <span class='input-group-btn'>
+								   <button id='is2_cuscod_removed' tags='is2_' class='btn btn-danger btn-sm' type='button'>
+										<span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button>
+								   </span>
+								</div>
 							</div>
 						</div>
 						<div class='col-sm-2'>	
@@ -1245,13 +1289,13 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-3 col-sm-offset-1'>	
 							<div class='form-group'>
 								ที่อยู่ตาม ทบ.บ้าน
-								<select id='is2_addr1' class='form-control input-sm select2'></select>	
+								<select id='is2_addr1' data-jd-tags='is2_' class='select2_addrno form-control input-sm select2'></select>	
 							</div>
 						</div>
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								ที่อยู่ส่งเอกสาร
-								<select id='is2_addr2' class='form-control input-sm select2'></select>	
+								<select id='is2_addr2' data-jd-tags='is2_' class='select2_addrno form-control input-sm select2'></select>	
 							</div>
 						</div>
 						<div class='col-sm-2'>	
@@ -1329,13 +1373,207 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								ความสัมพันธ์กับพนักงาน
-								<select id='is2_empRelation' class='form-control input-sm select2'></select>	
+								<select id='is2_empRelation' data-jd-tags='is2_' class='select2_empRelation form-control input-sm select2'></select>	
 							</div>
 						</div>
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								บุคคลอ้างอิง
 								<input type='text' id='is2_reference' class='form-control input-sm'>
+							</div>
+						</div>
+						
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								แนบรูป
+								<div class='input-group'>
+									<input type='text' id='is2_picture' class='form-control input-sm' readonly='' style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='is2_picture_form' class='addpic input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		";
+		
+		return $html;
+	}
+	
+	//Grantor	 ผู้ยินยอม
+	function _formGRT3(){
+		$html = "
+			<div class='row' style='border:1px dotted #aaa;background-color:#c8baf2;'>
+				<h3>
+					<div class='col-sm-10 col-sm-offset-1 text-primary'>
+						<span class='toggleData glyphicon glyphicon-plus' thisc='toggleData5' style='cursor:pointer;'>&emsp;ผู้ยินยอม</span>
+					</div>
+				</h3>
+				<div class='toggleData5' isshow=0 hidden>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								ชื่อ-สกุล ลูกค้า
+								<!--select id='is3_cuscod' class='form-control input-sm select2'></select --> 	
+								<div class='input-group'>
+								   <input type='text' id='is3_cuscod' CUSCOD='' tags='is3_' class='form-control input-sm' placeholder='ลูกค้า'  value=''>
+								   <span class='input-group-btn'>
+								   <button id='is3_cuscod_removed' tags='is3_' class='btn btn-danger btn-sm' type='button'>
+										<span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button>
+								   </span>
+								</div>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เลข ปชช.
+								<input type='text' id='is3_idno' class='form-control input-sm' value=''>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								วันเกิด
+								<input type='text' id='is3_idnoBirth' class='form-control input-sm datepicker'>
+							</div>
+						</div>
+						<div class='col-sm-2'>
+							<div class='form-group'>
+								วันหมดอายุบัตร
+								<input type='text' id='is3_idnoExpire' class='form-control input-sm datepicker'>
+							</div>
+						</div>
+						<div class='col-sm-2'>
+							<div class='row'>
+								<div class='col-sm-6'>
+									<div class='form-group'>
+										อายุ
+										<input type='text' id='is3_idnoAge' class='form-control input-sm'>
+									</div>
+								</div>
+								<div class='col-sm-6'>
+									<div class='form-group'>
+										สถานะ
+										<select id='is3_idnoStat' class='form-control input-sm select2'>
+											<option value='1'>โสด</option>
+											<option value='2'>สมรส</option>
+											<option value='3'>หม้าย</option>
+											<option value='4'>หย่า</option>
+											<option value='5'>แยกกันอยู่</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-3 col-sm-offset-1'>	
+							<div class='form-group'>
+								ที่อยู่ตาม ทบ.บ้าน
+								<select id='is3_addr1' data-jd-tags='is3_' class='select2_addrno form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ที่อยู่ส่งเอกสาร
+								<select id='is3_addr2' data-jd-tags='is3_' class='select2_addrno form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								เบอร์ติดต่อ
+								<input type='text' id='is3_phoneNumber' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								จำนวนบุตร
+								<input type='text' id='is3_baby' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								ประกันสังคม
+								<input type='text' id='is3_socialSecurity' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>	
+							<div class='form-group'>
+								อาชีพ
+								<input type='text' id='is3_career' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-5'>
+							<div class='form-group'>
+								ที่อยู๋ที่ทำงาน
+								<input type='text' id='is3_careerOffice' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								เบอร์ติดต่อที่ทำงาน
+								<input type='text' id='is3_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								รายได้/เดือน
+								<input type='text' id='is3_income' class='form-control input-sm jzAllowNumber'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
+								<input type='text' id='is3_hostName' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								เลข ปชช.(เจ้าบ้าน)
+								<input type='text' id='is3_hostIDNo' class='form-control input-sm'>
+							</div>
+						</div>
+					</div>
+					<div class='row'>
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								เบอร์ติดต่อที่ (เจ้าบ้าน)
+								<input type='text' id='is3_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+							</div>
+						</div>
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								ความสัมพันธ์กับเจ้าบ้าน
+								<input type='text' id='is3_hostRelation' class='form-control input-sm'>
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								ความสัมพันธ์กับพนักงาน
+								<select id='is3_empRelation' data-jd-tags='is3_' class='select2_empRelation form-control input-sm select2'></select>	
+							</div>
+						</div>
+						<div class='col-sm-3'>
+							<div class='form-group'>
+								บุคคลอ้างอิง
+								<input type='text' id='is3_reference' class='form-control input-sm'>
+							</div>							
+						</div>
+						
+						<div class='col-sm-2 col-sm-offset-1'>	
+							<div class='form-group'>
+								แนบรูป
+								<div class='input-group'>
+									<input type='text' id='is3_picture' class='form-control input-sm' readonly='' style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='is3_picture_form' class='addpic input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -1351,10 +1589,10 @@ class Analyze extends MY_Controller {
 			<div class='row' style='border:1px dotted #aaa;background-color:#baeff2;'>
 				<h3>
 					<div class='col-sm-10 col-sm-offset-1 text-primary'>
-						<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData5' style='cursor:pointer;'>&emsp;สาขา</span>
+						<span class='toggleData glyphicon glyphicon-minus' thisc='toggleData6' style='cursor:pointer;'>&emsp;สาขา</span>
 					</div>
 				</h3>
-				<div class='toggleData5' isshow=1>
+				<div class='toggleData6' isshow=1>
 					<div class='row'>
 						<div class='col-sm-3 col-sm-offset-1'>	
 							<div class='form-group'>
@@ -1416,6 +1654,7 @@ class Analyze extends MY_Controller {
 			select a.RESVNO,a.RESPAY,a.STRNO,a.MODEL,a.BAAB,a.COLOR
 				,case when a.STAT='N' then 'รถใหม่'  else 'รถเก่า' end as STAT
 				,a.STAT as STATEN
+				,a.LOCAT				
 				,convert(varchar(8),a.RESVDT,112) as RESVDT
 				,convert(varchar(8),b.SDATE,112) as SDATE
 				,convert(varchar(8),b.YDATE,112) as YDATE
@@ -1433,7 +1672,7 @@ class Analyze extends MY_Controller {
 				,'('+g.ACTICOD+') '+h.ACTIDES collate thai_cs_as as ACTIDES
 				,case when i.price is null then a.PRICE else i.price end as price
 				,isnull(g.STDID,'') as stdid
-				,isnull(cast(g.STDPLRANK as varchar),'') as stdplrank
+				,isnull(cast(g.SUBID as varchar),'') as SUBID
 				,a.RESPAY - (isnull(a.SMPAY,0) + isnull(a.SMCHQ,0)) as BALANCE
 			from {$this->MAuth->getdb('ARRESV')} a 
 			left join (
@@ -1446,7 +1685,7 @@ class Analyze extends MY_Controller {
 			left join {$this->MAuth->getdb('SETPROV')} f on e.PROVCOD=f.PROVCOD
 			left join {$this->MAuth->getdb('ARRESVOTH')} g on a.RESVNO=g.RESVNO collate thai_cs_as
 			left join {$this->MAuth->getdb('SETACTI')} h on g.ACTICOD=h.ACTICOD collate thai_cs_as
-			left join {$this->MAuth->getdb('std_pricelist')} i on g.STDID=i.id and g.STDPLRANK=i.plrank 
+			left join {$this->MAuth->getdb('STDVehiclesPRICE')} i on g.STDID=i.STDID and g.SUBID=i.SUBID 
 			where a.RESVNO='".$resvno."'
 		";
 		//echo $sql; exit;
@@ -1464,6 +1703,7 @@ class Analyze extends MY_Controller {
 						case 'MREVENU': $data[$key] = number_format($val,2); break;
 						case 'ACTICOD': $data[$key] = str_replace(chr(0),"",$val); break;
 						case 'ACTIDES': $data[$key] = str_replace(chr(0),"",$val); break;
+						case 'RESVDT': $data["DT"] = $val; break;
 						default:  $data[$key] = $val; break;
 					}
 				}
@@ -1477,113 +1717,100 @@ class Analyze extends MY_Controller {
 			echo json_encode($response); exit;	
 		}	
 	
-		if($data["STATEN"] == "N" and ($data["stdid"] == "" or $data["stdplrank"] == "")){
-			$sql = "
-				if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				end
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$data["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
-				end
-			";
-			$query = $this->db->query($sql);
+		$sql = "select * from {$this->MAuth->getdb('fn_STDVehicles')}('{$data["MODEL"]}','{$data["BAAB"]}','{$data["COLOR"]}','{$data["STATEN"]}','{$data["ACTICOD"]}','{$data["LOCAT"]}','{$data["DT"]}')";
+		$query = $this->db->query($sql);
 			
-			if($query->row()){
-				foreach($query->result() as $row){
+		$data["mainstdid"] = "";
+		$data["mainsubid"] = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["mainstdid"] = $row->STDID;
+				$data["mainsubid"] = $row->SUBID;
+				
+				if($row->STAT == "N"){
+					$sql = "
+						select STDID,SUBID,PRICE from {$this->MAuth->getdb('STDVehiclesPRICE')}
+						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
+					";
+				}else{
+					$sql = "
+						select a.ID as STDID,b.OPRICE as PRICE,'' as SUBID
+						from {$this->MAuth->getdb('STDSHCAR')} a
+						left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
+						left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
+						left join {$this->MAuth->getdb('STDSHCARLocats')} d on a.ID=d.ID
+						where b.ACTIVE='yes' collate thai_ci_as 
+							and a.MODEL='".$row->MODEL."' collate thai_cs_as
+							and a.BAAB='".$row->BAAB."' collate thai_cs_as 
+							and (case when c.COLOR = 'ALL' then '".$row->COLOR."' else c.COLOR end) = '".$row->COLOR."' collate thai_cs_as 
+							and (case when d.LOCAT = 'ALL' then '".$row->LOCAT."' else d.LOCAT end) = '".$row->LOCAT."' collate thai_cs_as
+							and a.GCODE='".$data["GCODE"]."'
+					";
+				}
+				//echo $sql; exit;
+				$query = $this->db->query($sql);
+				
+				if($query->row()){
+					foreach($query->result() as $row){
+						$data["STDID"] = $row->STDID;
+						$data["SUBID"] = $row->SUBID;
+						$data["PRICE"] = $row->PRICE;
+					}
+				}else{
+					$response["error"] = true;
+					$response["msg"] = "
+						ผิดพลาด ไม่พบราคาในสแตนดาร์ด <br>โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+						รุ่น :: ".$data["MODEL"]."<br>
+						แบบ :: ".$data["BAAB"]."<br>
+						สี :: ".$data["COLOR"]."<br>
+						กิจกรรมการขาย :: ".$data["ACTIDES"]."
+					";
+				}
+				
+				/*
 					$data["stdid"] 		= $row->id;
 					$data["stdplrank"] 	= $row->plrank;
 					$data["price"] 		= $row->price;
 				}
-			}else{
-				$response["error"] = true;
-				$response["msg"] = "
-					ผิดพลาด ไม่พบราคาขายรถใหม่ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
-					รุ่น :: ".$data["MODEL"]."<br>
-					แบบ :: ".$data["BAAB"]."<br>
-					สี :: ".$data["COLOR"]."<br>
-					วันที่จอง :: ".$this->Convertdate(2,$data["RESVDT"])."
-				";
+				*/
 			}
+		}else{
+			$response["error"] = true;
+			$response["msg"] = "
+				ผิดพลาด ไม่พบราคาขายรถใหม่ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+				รุ่น :: ".$data["MODEL"]."<br>
+				แบบ :: ".$data["BAAB"]."<br>
+				สี :: ".$data["COLOR"]."<br>
+				วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
+			";
+			echo json_encode($response); exit;
 		}
 		
-		$data["interest_rate"]  = 0;
-		$data["interest_rate2"] = 0;
-		if($data["STATEN"] == "N"){
-			$sql = "
-				select * from {$this->MAuth->getdb('std_down')} a
-				where id='".$data["stdid"]."' and plrank='".$data["stdplrank"]."' and '".$dwnAmt."' between dwnrate_s and isnull(dwnrate_e,'".$data["price"]."')
-			";
-			$query = $this->db->query($sql);
-			
-			if($query->row()){
-				foreach($query->result() as $row){
-					$data["interest_rate"] 	= $row->interest_rate;
-					$data["interest_rate2"]	= $row->interest_rate2;
-				}
-			}else{
-				$response["error"] = true;
-				$response["msg"] = "
-					ผิดพลาด ไม่พบขั้นเงินดาวน์ที่ระบุมา โปรดตรวจสอบข้อมูลใหม่อีกครั้ง<br><br>
-					รุ่น :: ".$data["MODEL"]."<br>
-					แบบ :: ".$data["BAAB"]."<br>
-					สี :: ".$data["COLOR"]."<br>
-					วันที่จอง :: ".$this->Convertdate(2,$data["RESVDT"])."
-				";
+		$sql = "
+			select * from {$this->MAuth->getdb('STDVehiclesDown')} a
+			where STDID='".$data["mainstdid"]."' 
+				and SUBID='".$data["mainsubid"]."' and '".$dwnAmt."' between DOWNS and isnull(DOWNE,'".$dwnAmt."')
+				and '".$data["PRICE"]."' between PRICES and isnull(PRICEE,'".$data["PRICE"]."')
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["interest_rate"] 	= $row->INTERESTRT;
+				$data["interest_rate2"]	= $row->INTERESTRT_GVM;
 			}
+		}else{
+			$response["error"] = true;
+			$response["msg"] = "
+				ผิดพลาด ไม่พบขั้นเงินดาวน์ที่ระบุมา โปรดตรวจสอบข้อมูลใหม่อีกครั้ง<br><br>
+				รุ่น :: ".$data["MODEL"]."<br>
+				แบบ :: ".$data["BAAB"]."<br>
+				สี :: ".$data["COLOR"]."<br>
+				วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
+			";
+			
+			echo json_encode($response); exit;
 		}
 		
 		$response["html"] = $data;
@@ -1609,7 +1836,10 @@ class Analyze extends MY_Controller {
 				,a.STAT as STATEN
 				,convert(varchar(8),b.SDATE,112) as SDATE
 				,convert(varchar(8),b.YDATE,112) as YDATE
-				,a.CRLOCAT
+				,a.CRLOCAT as LOCAT
+				,a.GCODE
+				,datediff(day,b.SDATE,b.YDATE) as daysy
+				,b.CONTNO
 			from {$this->MAuth->getdb('INVTRAN')} a
 			left join (
 				select ROW_NUMBER() over(partition by STRNO order by STRNO,sdate desc) r,* 
@@ -1621,6 +1851,8 @@ class Analyze extends MY_Controller {
 		$query = $this->db->query($sql);
 		
 		$data = array();
+		$data["ACTICOD"] = $acticod;
+		$data["DT"] 	 = $createDate;
 		if($query->row()){
 			foreach($query->result() as $row){
 				foreach($row as $key => $val){
@@ -1635,114 +1867,109 @@ class Analyze extends MY_Controller {
 		
 		$data["interest_rate"] 	= "";
 		$data["interest_rate2"]	= "";
-		if($data["STATEN"] == "N"){
-			$sql = "
-				if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				end
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$createDate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
-				end
-			";
-			//echo $sql; exit;
-			$query = $this->db->query($sql);
-			
-			if($query->row()){
-				foreach($query->result() as $row){
-					$data["stdid"] = $row->id;
-					$data["stdplrank"] = $row->plrank;
-					$data["price"] = $row->price;
-				}
-			}else{
-				$response["error"] = true;
-				$response["msg"] = "
-					ผิดพลาด ไม่พบราคาขายรถใหม่ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
-					รุ่น :: ".$data["MODEL"]."<br>
-					แบบ :: ".$data["BAAB"]."<br>
-					สี :: ".$data["COLOR"]."<br>
-					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
-				";
-				echo json_encode($response); exit;
-			}
-			
-			$sql = "
-				select * from {$this->MAuth->getdb('std_down')} a
-				where id='".$data["stdid"]."' and plrank='".$data["stdplrank"]."' and '".$dwnAmt."' between dwnrate_s and isnull(dwnrate_e,'".$data["price"]."')
-			";
-			$query = $this->db->query($sql);
-			
-			if($query->row()){
-				foreach($query->result() as $row){
-					$data["interest_rate"] 	= $row->interest_rate;
-					$data["interest_rate2"]	= $row->interest_rate2;
-				}
-			}else{
-				$response["error"] = true;
-				$response["msg"] = "
-					ผิดพลาด ไม่พบขั้นเงินดาวน์ที่ระบุมา โปรดตรวจสอบข้อมูลใหม่อีกครั้ง<br><br>
-					รุ่น :: ".$data["MODEL"]."<br>
-					แบบ :: ".$data["BAAB"]."<br>
-					สี :: ".$data["COLOR"]."<br>
-					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
-				";
+		
+		$sql = "select * from {$this->MAuth->getdb('fn_STDVehicles')}('{$data["MODEL"]}','{$data["BAAB"]}','{$data["COLOR"]}','{$data["STATEN"]}','{$data["ACTICOD"]}','{$data["LOCAT"]}','{$data["DT"]}')";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$data["mainstdid"] = "";
+		$data["mainsubid"] = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["mainstdid"] = $row->STDID;
+				$data["mainsubid"] = $row->SUBID;
 				
-				echo json_encode($response); exit;
+				if($row->STAT == "N"){
+					$sql = "
+						select STDID,SUBID,PRICE,0 as PRICE_ADD from {$this->MAuth->getdb('STDVehiclesPRICE')}
+						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
+					";
+				}else{
+					$sql = "
+						declare @CONTNO varchar(12) = '".$data["CONTNO"]."';
+						declare @STAT varchar(1)  = (case when @CONTNO = '' 
+							then 'O' else (select STAT from {$this->MAuth->getdb('HINVTRAN')} where CONTNO=@CONTNO) end);
+						declare @price_add decimal(18,2) = (
+							select price_add from {$this->MAuth->getdb('config_addpricesale')}
+							where getdate() between event_st and isnull(event_ed,getdate()) 
+								and '".$data["daysy"]."' between in_sday and in_eday
+						);
+						
+						select a.ID as STDID,b.OPRICE as PRICE,'' as SUBID
+							,case when @STAT = 'N'
+								then (case when @price_add is null then 0 else @price_add end) else 0 end as PRICE_ADD
+						from {$this->MAuth->getdb('STDSHCAR')} a
+						left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
+						left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
+						left join {$this->MAuth->getdb('STDSHCARLocats')} d on a.ID=d.ID
+						where b.ACTIVE='yes' collate thai_ci_as 
+							and a.MODEL='".$row->MODEL."' collate thai_cs_as
+							and a.BAAB='".$row->BAAB."' collate thai_cs_as 
+							and (case when c.COLOR = 'ALL' then '".$row->COLOR."' else c.COLOR end) = '".$row->COLOR."' collate thai_cs_as 
+							and (case when d.LOCAT = 'ALL' then '".$row->LOCAT."' else d.LOCAT end) = '".$row->LOCAT."' collate thai_cs_as
+							and a.GCODE='".$data["GCODE"]."'
+					";
+				}
+				//echo $sql; exit;
+				$query = $this->db->query($sql);
+				
+				if($query->row()){
+					foreach($query->result() as $row){
+						$data["STDID"] = $row->STDID;
+						$data["SUBID"] = $row->SUBID;
+						$data["PRICE"] = ($row->PRICE+$row->PRICE_ADD);
+						$data["PRICE_ADD"] = number_format($row->PRICE_ADD,2);
+					}
+				}else{
+					$response["error"] = true;
+					$response["msg"] = "
+						ผิดพลาด ไม่พบราคาในสแตนดาร์ด <br>โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+						รุ่น :: ".$data["MODEL"]."<br>
+						แบบ :: ".$data["BAAB"]."<br>
+						สี :: ".$data["COLOR"]."<br>
+						กิจกรรมการขาย :: ".$data["ACTIDES"]."
+					";
+				}
 			}
+		}else{
+			$response["error"] = true;
+			$response["msg"] = "
+				ผิดพลาด ไม่พบราคาขายรถ <br>โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+				รุ่น :: ".$data["MODEL"]."<br>
+				แบบ :: ".$data["BAAB"]."<br>
+				สี :: ".$data["COLOR"]."<br>
+				วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
+			";
+			echo json_encode($response); exit;
 		}
+		
+		$sql = "
+			select * from {$this->MAuth->getdb('STDVehiclesDown')} a
+			where STDID='".$data["mainstdid"]."' 
+				and SUBID='".$data["mainsubid"]."' and '".$dwnAmt."' between DOWNS and isnull(DOWNE,'".$dwnAmt."')
+				and '".$data["PRICE"]."' between PRICES and isnull(PRICEE,'".$data["PRICE"]."')
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["interest_rate"] 	= $row->INTERESTRT;
+				$data["interest_rate2"]	= $row->INTERESTRT_GVM;
+			}
+		}else{
+			$response["error"] = true;
+			$response["msg"] = "
+				ผิดพลาด ไม่พบขั้นเงินดาวน์ที่ระบุมา โปรดตรวจสอบข้อมูลใหม่อีกครั้ง<br><br>
+				รุ่น :: ".$data["MODEL"]."<br>
+				แบบ :: ".$data["BAAB"]."<br>
+				สี :: ".$data["COLOR"]."<br>
+				วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
+			";
+			
+			echo json_encode($response); exit;
+		}
+		
 		
 		$response["html"] = $data;
 		echo json_encode($response);
@@ -1903,6 +2130,28 @@ class Analyze extends MY_Controller {
 		$arrs["is2_empRelation"] 	= "'".$_POST["is2_empRelation"]."'";
 		$arrs["is2_reference"] 		= "'".$_POST["is2_reference"]."'";
 		
+		$arrs["is3_cuscod"] 	= "'".$_POST["is3_cuscod"]."'";
+		$arrs["is3_idno"] 		= "'".$_POST["is3_idno"]."'";
+		$arrs["is3_idnoBirth"] 	= ($_POST["is3_idnoBirth"] == "" ? "NULL":"'".$_POST["is3_idnoBirth"]."'");
+		$arrs["is3_idnoExpire"] = ($_POST["is3_idnoExpire"] == "" ? "NULL":"'".$_POST["is3_idnoExpire"]."'");
+		$arrs["is3_idnoAge"] 	= "'".$_POST["is3_idnoAge"]."'";
+		$arrs["is3_idnoStat"] 	= "'".$_POST["is3_idnoStat"]."'";
+		$arrs["is3_addr1"] 		= "'".$_POST["is3_addr1"]."'";
+		$arrs["is3_addr2"] 		= "'".$_POST["is3_addr2"]."'";
+		$arrs["is3_phoneNumber"] 	= "'".$_POST["is3_phoneNumber"]."'";
+		$arrs["is3_baby"] 			= "'".$_POST["is3_baby"]."'";		
+		$arrs["is3_socialSecurity"] = "'".$_POST["is3_socialSecurity"]."'";
+		$arrs["is3_career"] 		= "'".$_POST["is3_career"]."'";
+		$arrs["is3_careerOffice"] 	= "'".$_POST["is3_careerOffice"]."'";
+		$arrs["is3_careerPhone"] 	= "'".$_POST["is3_careerPhone"]."'";
+		$arrs["is3_income"] 		= "'".str_replace(",","",$_POST["is3_income"])."'";
+		$arrs["is3_hostName"] 		= "'".$_POST["is3_hostName"]."'";
+		$arrs["is3_hostIDNo"] 		= "'".$_POST["is3_hostIDNo"]."'";
+		$arrs["is3_hostPhone"] 		= "'".$_POST["is3_hostPhone"]."'";
+		$arrs["is3_hostRelation"] 	= "'".$_POST["is3_hostRelation"]."'";
+		$arrs["is3_empRelation"] 	= "'".$_POST["is3_empRelation"]."'";
+		$arrs["is3_reference"] 		= "'".$_POST["is3_reference"]."'";
+		
 		$arrs["empIDNo"] 	= "'".$_POST["empIDNo"]."'";
 		$arrs["empTel"] 	= "'".$_POST["empTel"]."'";
 		$arrs["mngIDNo"] 	= "'".$_POST["mngIDNo"]."'";
@@ -1993,7 +2242,28 @@ class Analyze extends MY_Controller {
 						,AGE=".$arrs["is2_idnoAge"]."
 						,MREVENU=".$arrs["is2_income"]."
 					where CUSCOD=".$arrs["is2_cuscod"]."
-				end			
+				end	
+
+				if(".$arrs["is3_cuscod"]." <> '')
+				begin 
+					insert into {$this->MAuth->getdb('ARANALYZEREF')} (
+						ID,CUSCOD,CUSTYPE,CUSSTAT,CUSBABY,ADDRNO,ADDRDOCNO,SOCAILSECURITY,CAREER,CAREERADDR,
+						CAREERTEL,HOSTNAME,HOSTIDNO,HOSTTEL,HOSTRELATION,EMPRELATION,REFERANT
+					)
+					select @ANID,".$arrs["is3_cuscod"].",3,".$arrs["is3_idnoStat"].",".$arrs["is3_baby"].",".$arrs["is3_addr1"]."
+						,".$arrs["is3_addr2"].",".$arrs["is3_socialSecurity"].",".$arrs["is3_career"].",".$arrs["is3_careerOffice"]."
+						,".$arrs["is3_careerPhone"].",".$arrs["is3_hostName"].",".$arrs["is3_hostIDNo"]."
+						,".$arrs["is3_hostPhone"].",".$arrs["is3_hostRelation"].",".$arrs["is3_empRelation"]."
+						,".$arrs["is3_reference"].";
+						
+					update {$this->MAuth->getdb('CUSTMAST')}
+					set MOBILENO=".$arrs["is3_phoneNumber"]."
+						,OCCUP=".$arrs["is3_career"]."
+						,OFFIC=".$arrs["is3_careerOffice"]."
+						,AGE=".$arrs["is3_idnoAge"]."
+						,MREVENU=".$arrs["is3_income"]."
+					where CUSCOD=".$arrs["is3_cuscod"]."
+				end		
 				
 				if exists(select * from {$this->MAuth->getdb('ARANALYZEDATA')} where ID=@ANID)
 				begin 
@@ -2065,6 +2335,7 @@ class Analyze extends MY_Controller {
 			$response["error"] = true; 
 			$response["msg"][] = "คุณระบุเงินดาวน์รถไม่ถูกต้อง"; 
 		}
+		
 		if($_POST["insuranceAmt"] == ""){ 
 			$response["error"] = true; 
 			$response["msg"][] = "คุณยังไม่ระบุเงินดาวน์ ป1"; 
@@ -2439,6 +2710,55 @@ class Analyze extends MY_Controller {
 		
 		$response = array("html"=>$html,"tableName"=>$tableid);
 		echo json_encode($response);
+	}
+	
+	function test(){
+		//$this->load->library('Resize.php'); 
+		
+		$file 		 = $_FILES["myfile"];
+		$targetFile  = $file["tmp_name"];
+		$size		 = GetimageSize($targetFile);
+		$width		 = 200;
+		$height	  	 = round($width*$size[1]/$size[0]);
+		
+		$config = array();
+		$config['image_library']	= 'gd2';
+		$config['source_image'] 	= $targetFile;
+		$config['create_thumb'] 	= TRUE;
+		$config['maintain_ratio'] 	= TRUE;
+		$config['width']         	= $width;
+		$config['height']       	= $height;
+
+		$this->load->library('image_lib', $config);
+
+		$this->image_lib->resize();
+		
+		
+		
+		//echo $size[1]."   ".$size[0]; exit;
+		
+		//$resizeObj = new resize($images);
+		//$resizeObj->resizeImage($width, $height, 'crop');
+		//$resizeObj->saveImage('sample-resizeda.jpg', 1000);
+		
+		/*
+		
+		$images		 = $_FILES["myfile"]["tmp_name"];
+		$new_images  = "MyResize/mygirl.jpg";
+		$width		 = 200;
+		$size		 = GetimageSize($images);
+		$height	  	 = round($width*$size[1]/$size[0]);
+		$images_orig = ImageCreateFromJPEG($images);
+		$photoX 	 = ImagesX($images_orig);
+		$photoY 	 = ImagesY($images_orig);
+		$images_fin  = ImageCreateTrueColor($width, $height);
+		ImageCopyResampled($images_fin, $images_orig, 0, 0, 0, 0, $width+1, $height+1, $photoX, $photoY);
+		ImageJPEG($images_fin,$new_images);
+		ImageDestroy($images_orig);
+		ImageDestroy($images_fin);
+		echo json_encode(array("error"=>false,"new"=>array("xxx"),"origin"=>array("ori")));
+		//print_r($file);
+		*/
 	}
 	
 }

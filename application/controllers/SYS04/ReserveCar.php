@@ -215,7 +215,7 @@ class ReserveCar extends MY_Controller {
 		$arrs["fSTAT"] 		= $this->opt('STAT','');
 		$arrs["fPRICE"] 	= "";
 		$arrs["fSTDID"] 	= "";
-		$arrs["fSTDPLRANK"] = "";
+		$arrs["fSUBID"] 	= "";
 		$arrs["fRESPAY"] 	= "";
 		$arrs["fBALANCE"] 	= "";
 		$arrs["fRECVDUE"] 	= "";
@@ -530,7 +530,7 @@ class ReserveCar extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	function getStandart(){
+	function getStandard(){
 		$response = array("error"=>false,"msg"=>"");
 		
 		$arrs["RESVDT"]  = $this->Convertdate(1,$_POST["RESVDT"]);

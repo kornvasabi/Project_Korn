@@ -637,7 +637,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			dataToPost.STAT 	= $valued;
 			
 			JDfSTAT_select = $.ajax({
-				url:'../SYS04/ReserveCar/getStandart',
+				url:'../SYS04/ReserveCar/getStandard',
 				data: dataToPost,
 				type: 'POST',
 				dataType: 'json',
