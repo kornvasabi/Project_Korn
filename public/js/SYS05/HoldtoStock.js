@@ -1,4 +1,4 @@
-//BEE+
+//BEE+ 
 // หน้าแรก  
 var _locat  	= $('.b_tab1[name="home"]').attr('locat');
 var _insert 	= $('.b_tab1[name="home"]').attr('cin');
@@ -130,6 +130,7 @@ function Add_HoldtoStock($thisWindowChange){
 						$('#DATEHOLD').attr('disabled',true);
 					}else{
 						document.getElementById("YSTAT_N").checked = true;
+						$('#DATEHOLD').attr('disabled',false);
 					}
 					
 					$('#DATEHOLD').change(function(){
@@ -367,6 +368,10 @@ function Add_Hold($contno){
 				closeOnEsc: true,
 				shown: function($this){
 					Add_HoldtoOldcar($this,$contno);
+					
+					$('#DATECHG2').change(function(){ 
+						Add_HoldtoOldcar($this,$contno);
+					});	
 				}
 			});			
 		}
@@ -375,10 +380,11 @@ function Add_Hold($contno){
 
 function Add_HoldtoOldcar($thisWindowChange2,$contno){
 	$('#btndel_holdtooldcar').attr('disabled',true);
-	
 	var contno =  $contno;
+	var dateY =  $('#DATECHG2').val();
 	dataToPost = new Object();
 	dataToPost.contno = contno;
+	dataToPost.dateY = dateY;
 	$.ajax({
 		url : '../SYS05/HoldtoStock/searchCONTNOtoOldcar',
 		data : dataToPost,
@@ -441,6 +447,9 @@ function Add_HoldtoOldcar($thisWindowChange2,$contno){
 				dropdownAutoWidth : true,
 				width: '100%'
 			});
+			$('#GCODENEW2').on('select2:open', function (e) {
+			  $(".select2-results__options").height(100);
+			});
 			
 			$('#TYPHOLD2').select2({
 				placeholder: 'เลือก',
@@ -470,7 +479,7 @@ function Add_HoldtoOldcar($thisWindowChange2,$contno){
 				width: '100%'
 			});
 			$('#TYPHOLD2').on('select2:open', function (e) {
-			  $(".select2-results__options").height(135);
+			  $(".select2-results__options").height(100);
 			});
 
 			$('#Y_USER2').select2({
@@ -501,7 +510,7 @@ function Add_HoldtoOldcar($thisWindowChange2,$contno){
 				width: '100%'
 			});
 			$('#Y_USER2').on('select2:open', function (e) {
-			  $(".select2-results__options").height(135);
+			  $(".select2-results__options").height(100);
 			});
 
 			$('#LOCAT2').val(data.CRLOCAT);
@@ -517,6 +526,8 @@ function Add_HoldtoOldcar($thisWindowChange2,$contno){
 			$('#SALEVAT2').val(data.VATPRC);
 			$('#LOCATR2').val(data.CRLOCAT);
 			$('#SALENEW2').val(data.NEWPRC);	
+			$('#SDATE2').val(data.SDATE);	
+			$('#DATEDIFF2').val(data.DAYDAIFF);
 			
 			newOption = new Option(data.CONTNO, data.CONTNO, false, false);
 			$('#CONTNO2').empty();
