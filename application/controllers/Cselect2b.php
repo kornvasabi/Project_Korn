@@ -1486,4 +1486,25 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($json);
 	}
 	
+	function getTAXNO(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select top 50 TAXNO
+			from {$this->MAuth->getdb('TAXTRAN')}
+			where TAXNO like '%".$dataSearch."%' collate Thai_CI_AS
+			ORDER BY FLAG, TAXDT
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->TAXNO, 'text'=>$row->TAXNO];
+			}
+		}
+		echo json_encode($json);
+	}
+	
 }
