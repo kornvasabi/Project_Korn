@@ -137,8 +137,8 @@ class ReportReceivedCN extends MY_Controller {
 	}
 	function conditiontopdf(){
 		$data = array();
-		$data[] = urlencode($_REQUEST["CONTNO"].'||'.$_REQUEST["LOCAT"].'||'.$_REQUEST["CUSNAME"].'||'.$_REQUEST["order"]
-		.'||'.$_REQUEST["price"]);
+		$data[] = urlencode($_REQUEST["CONTNO"].'||'.$_REQUEST["LOCAT"]
+		.'||'.$_REQUEST["CUSNAME"].'||'.$_REQUEST["order"].'||'.$_REQUEST["price"]);
 		echo json_encode($this->generateData($data,"encode"));
 	}
 	function pdf(){
@@ -208,13 +208,14 @@ class ReportReceivedCN extends MY_Controller {
 			";
 		}
 		$query1 = $this->db->query($sql);
-		$TSALE = "";
+		$contno = ""; $locat = ""; $tsale = ""; 
 		if($query1->row()){
 			foreach($query1->result() as $row){
-				$TSALE = $row->TSALE;
+				$contno = str_replace(chr(0),'',$row->CONTNO);
+				$locat  = str_replace(chr(0),'',$row->LOCAT);
+				$tsale  = str_replace(chr(0),'',$row->TSALE);
 			}
 		}
-		
 		$sql = "
 			IF OBJECT_ID('tempdb..#RCN') IS NOT NULL DROP TABLE #RCN
 			select LOCATPAY,TMBILL,PAYAMT,DISCT,PAYINT,DSCINT,NETPAY,PAYFOR
@@ -226,13 +227,12 @@ class ReportReceivedCN extends MY_Controller {
 				,M.FLAG,M.BILLNO,convert(varchar(8),M.BILLDT,112) as BILLDT,convert(varchar(8),M.PAYDT,112) as PAYDT 
 				from {$this->MAuth->getdb('CHQTRAN')} T
 				left join {$this->MAuth->getdb('CHQMAS')} M on T.TMBILL = M.TMBILL 
-				where (T.LOCATRECV = M.LOCATRECV) and (T.CONTNO = '".$CONTNO."' or T.CONTNO = '') 
-				and (T.LOCATPAY = '".$LOCAT."') and (T.TSALE = '".$TSALE."' or T.TSALE = 'R') --order by T.TMBILL
+				where (T.LOCATRECV = M.LOCATRECV) and (T.CONTNO = '".$contno."' or T.CONTNO = '') 
+				and (T.LOCATPAY = '".$locat."') and (T.TSALE = '".$tsale."' or T.TSALE = 'R') --order by T.TMBILL
 			)RCN
 		";
 		//echo $sql; exit;
 		$query2 = $this->db->query($sql);
-		
 		$sql = "
 			select * from #RCN order by ".$order."
 		";
@@ -265,7 +265,7 @@ class ReportReceivedCN extends MY_Controller {
 		";
 		//echo $sql; exit;
 		$query6 = $this->db->query($sql);
-		$head = ""; $html = ""; 
+		$head = ""; $html = ""; $i = 0;
 		$head = "
 			<tr class='wm'>
 				<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='17'></td>
@@ -295,7 +295,7 @@ class ReportReceivedCN extends MY_Controller {
 		";
 		$status = "";
 		if($query3->row()){
-			foreach($query3->result() as $row){
+			foreach($query3->result() as $row){$i++;
 				if($row->FLAG == 'C'){
 					$status = "*ยกเลิก*";
 				}else{
@@ -394,30 +394,40 @@ class ReportReceivedCN extends MY_Controller {
 			'margin_header' => 9, 	//default = 9
 			'margin_footer' => 9, 	//default = 9
 		]);
-		$content = "
-			<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
-				<tbody>
-					<tr>
-						<th colspan='17' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
-					</tr>
-					<tr>
-						<th colspan='17' style='font-size:9pt;'>รายงานการรับชำระตามเลขที่สัญญา</th>
-					</tr>
-					<tr>
-						<td  colspan='17' style='font-size:9pt;text-align:center;'>
-							<b>เลขที่สัญญา</b>&nbsp;&nbsp;".$CONTNO."&nbsp;&nbsp;&nbsp;&nbsp;<b>ชื่อ - นามสกุล</b> ".$CUSNAME."&nbsp;&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td style='text-align:left;font-size:8pt;' colspan='2'><b>Scrt By :</b>&nbsp;&nbsp;".$orderth."</td>
-						<td style='text-align:center;font-size:9pt;' colspan='13'><b>ทำสัญญาที่สาขา</b>&nbsp;&nbsp;".$locatnm."</td>
-						<td style='text-align:right;font-size:8pt;' colspan='2'>RpRec31</td>
-					</tr>
-					".$head."
-					".$html."
-				</tbody>
-			</table>
-		";
+		if($i > 0){
+			$content = "
+				<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
+					<tbody>
+						<tr>
+							<th colspan='17' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
+						</tr>
+						<tr>
+							<th colspan='17' style='font-size:9pt;'>รายงานการรับชำระตามเลขที่สัญญา</th>
+						</tr>
+						<tr>
+							<td  colspan='17' style='font-size:9pt;text-align:center;'>
+								<b>เลขที่สัญญา</b>&nbsp;&nbsp;".$CONTNO."&nbsp;&nbsp;&nbsp;&nbsp;<b>ชื่อ - นามสกุล</b> ".$CUSNAME."&nbsp;&nbsp;
+							</td>
+						</tr>
+						<tr>
+							<td style='text-align:left;font-size:8pt;' colspan='2'><b>Scrt By :</b>&nbsp;&nbsp;".$orderth."</td>
+							<td style='text-align:center;font-size:9pt;' colspan='13'><b>ทำสัญญาที่สาขา</b>&nbsp;&nbsp;".$locatnm."</td>
+							<td style='text-align:right;font-size:8pt;' colspan='2'>RpRec31</td>
+						</tr>
+						".$head."
+						".$html."
+					</tbody>
+				</table>
+			";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
+			";
+		}else{
+			$content = "<font style='color:red;'>ไม่พบข้อมูลตามเงื่อนไข</font>";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'></div>
+			";
+		}
 		$stylesheet = "
 			<style>
 				body { font-family: garuda;font-size:10pt; }
@@ -430,10 +440,6 @@ class ReportReceivedCN extends MY_Controller {
 			</style>
 		";
 		$content = $content.$stylesheet;
-		
-		$head = "
-			<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
-		";
 		$mpdf->SetHTMLHeader($head);	
 		$mpdf->WriteHTML($content);	
 		$mpdf->Output();

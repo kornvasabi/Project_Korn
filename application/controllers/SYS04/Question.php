@@ -530,7 +530,6 @@ class Question extends MY_Controller {
 		$html.= "<script src='".base_url('public/js/SYS04/QuestionCustomersINS.js')."'></script>";
 		echo $html;
 	}
-	
 	function customer_ins_detail(){
 		$cusdetail 	= $this->cusdetail();
 		$cusins 	= $this->cusins();		

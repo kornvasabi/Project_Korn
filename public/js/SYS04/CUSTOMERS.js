@@ -327,6 +327,7 @@ $('#search_groupcm').click(function(){
 });
 CT_Search = null;
 function searchcm(){
+	$('#loadding').fadeIn(200);
 	dataToPost = new Object();
 	dataToPost.cuscod  = $('#cuscod').val();
 	dataToPost.surname = $('#surname').val();
@@ -335,22 +336,39 @@ function searchcm(){
 	var spinner = $('body>.spinner').clone().removeClass('hide');
 	$('#setgroupResult').html('');
 	$('#setgroupResult').append(spinner);
-	//$('#loadding').fadeIn(500);
 	CT_Search = $.ajax({
 		url: '../SYS04/CUSTOMERS/groupSearchcm',
 		data:dataToPost,
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
+			if(data.error){
+				Lobibox.notify('error', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					msg: data.msg
+				});
+			}
+			$('#loadding').fadeOut(300);
 			$('#setgroupResult').find('.spinner, .spinner-backdrop').remove();
 			$('#setgroupResult').html(data.html);
+			
+			fn_datatables('data-table-example2',1,360,'NO');
+			
 			afterSearchcm();
 			
-			$('.btnDetail').unbind('click');
+			//$('#tbScroll').on('draw.dt',function(){ afterSearchcm(); });
+			
+			//$('.btnDetail').unbind('click');
 			$('.btnDetail').click(function(){
 				fn_load_formeditcm($(this),'edit');
 			});
-			//$('#loadding').fadeOut(100);
 			CT_Search = null;
 		},
 		beforeSend: function(){
@@ -361,11 +379,6 @@ function searchcm(){
 	});
 }
 function afterSearchcm(){
-	document.getElementById("tbScroll").addEventListener("scroll", function(){
-		var translate = "translate(0,"+(this.scrollTop - 2)+"px)";
-		this.querySelector("thead").style.transform = translate;
-		this.querySelector("thead").style.zIndex = 100;
-	});
 	$('.getit').hover(function(){
 		$(this).css({'background-color':'#c7c7ff'});
 		$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#c7ffff'});
@@ -467,19 +480,31 @@ function fn_load_formeditcm($this,$event){
 					}else{
 						$('#add_save').attr('disabled',true);	
 					}
-					
 					if(_delete == 'T'){
 						$('#btn_Delete').attr('disabled',false);	
 					}else{
 						$('#btn_Delete').attr('disabled',true);	
 					}
-					
 					if(_update == 'T'){
 						$('#add_update').attr('disabled',false);	
 					}else{
 						$('#add_update').attr('disabled',true);	
 					}
-					//$('#btn_Delete').attr('disabled',false);
+					if(_insert == 'T'){
+						$('#btnAddAddressFirst').attr('disabled',false);
+					}else{
+						$('#btnAddAddressFirst').attr('disabled',true);
+					}
+					if(_update == 'T'){
+						$('#btnEditAddrTable').attr('disabled',false);
+					}else{
+						$('#btnEditAddrTable').attr('disabled',true);
+					}
+					if(_delete == 'T'){
+						$('#btnDelAddrTable').attr('disabled',false);
+					}else{
+						$('#btnDelAddrTable').attr('disabled',true);
+					}
 					
 					fn_loadPropoties($this)
 					$('#loadding').fadeOut(100);

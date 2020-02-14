@@ -223,11 +223,7 @@ $(function(){
 $('#btnreport').click(function(){
 	printReport();
 });
-/*
-$('#DATE1').change(function(){
-	alert('korn');
-});
-*/
+DT_Report = null;
 function printReport(){
 	var report = "";
 	if($('#one').is(":checked")){ 
@@ -277,7 +273,7 @@ function printReport(){
 	dataToPost.dt	 	 = dt;
 	dataToPost.sort	     = sort;
 	if(report == "one"){
-		$.ajax({
+		DT_Report = $.ajax({
 			url: '../SYS06/ReportReceivedDT/conditiontopdf',
 			data: dataToPost,
 			type:'POST',
@@ -293,10 +289,16 @@ function printReport(){
 					height: $(window).height(),
 					width: $(window).width()
 				});
+				DT_Report = null;
+			},
+			beforeSend:function(){
+				if(DT_Report !== null){
+					DT_Report.abort();
+				}
 			}
 		});
 	}else if(report == "all"){
-		$.ajax({
+		DT_Report = $.ajax({
 			url: '../SYS06/ReportReceivedDT/conditiontopdf',
 			data: dataToPost,
 			type:'POST',
@@ -312,10 +314,16 @@ function printReport(){
 					height: $(window).height(),
 					width: $(window).width()
 				});
+				DT_Report = null;
+			},
+			beforeSend:function(){
+				if(DT_Report !== null){
+					DT_Report.abort();
+				}
 			}
 		});
 	}else if(report == "pay"){
-		$.ajax({
+		DT_Report = $.ajax({
 			url: '../SYS06/ReportReceivedDT/conditiontopdf',
 			data: dataToPost,
 			type:'POST',
@@ -331,6 +339,12 @@ function printReport(){
 					height: $(window).height(),
 					width: $(window).width()
 				});
+				DT_Report = null;
+			},
+			beforeSend:function(){
+				if(DT_Report !== null){
+					DT_Report.abort();
+				}
 			}
 		});
 	}

@@ -145,6 +145,7 @@ $(function(){
 $('#btnreportAD').click(function(){
 	printReport();
 });
+AD_Report = null;
 function printReport(){
 	var report = "";
 	if($('#R1').is(":checked")){ 
@@ -154,9 +155,9 @@ function printReport(){
 	}
 	var dat = "";
 	if($('#D1').is(":checked")){
-		dat = "D1";
-	}else if($('#D2')){
-		dat = "D2";
+		dat = "INPDT";
+	}else if($('#D2').is(":checked")){
+		dat = "TMBILDT";
 	}
 	var order = "";
 	if($('#OR1').is(':checked')){
@@ -183,7 +184,7 @@ function printReport(){
 	dataToPost.dat	     = dat;
 	dataToPost.order	 = order;
 	if(report == "R1"){
-		$.ajax({
+		AD_Report = $.ajax({
 			url: '../SYS06/ReportReceivedAD/conditiontopdf',
 			data: dataToPost,
 			type:'POST',
@@ -199,10 +200,16 @@ function printReport(){
 					height: $(window).height(),
 					width: $(window).width()
 				});
+				AD_Report = null;
+			},
+			beforeSend: function(){
+				if(AD_Report !== null){
+					AD_Report.abort();
+				}
 			}
 		});
 	}else if(report = "R2"){
-		$.ajax({
+		AD_Report = $.ajax({
 			url: '../SYS06/ReportReceivedAD/conditiontopdf',
 			data: dataToPost,
 			type:'POST',
@@ -218,6 +225,12 @@ function printReport(){
 					height: $(window).height(),
 					width: $(window).width()
 				});
+				AD_Report = null;
+			},
+			beforeSend: function(){
+				if(AD_Report !== null){
+					AD_Report.abort();
+				}
 			}
 		});
 	}

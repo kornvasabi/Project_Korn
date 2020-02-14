@@ -197,6 +197,7 @@ $(function(){
 $('#btnreportBC').click(function(){
 	printReport();
 });
+BC_Report = null;
 function printReport(){
 	var order = "";
 	if($('#OR1').is(':checked')){
@@ -226,7 +227,7 @@ function printReport(){
 	dataToPost.PROVCOD   = (typeof $('#PROVCOD').find(':selected').val() === 'undefined' ? '':$('#PROVCOD').find(':selected').val());
 	dataToPost.PERSEN    = $('#PERSEN').val();
 	dataToPost.order	 = order;
-	$.ajax({
+	BC_Report = $.ajax({
 		url: '../SYS06/ReportReceivedBC/conditiontopdf',
 		data: dataToPost,
 		type:'POST',
@@ -242,7 +243,9 @@ function printReport(){
 				height: $(window).height(),
 				width: $(window).width()
 			});
-		}
+			BC_Report = null;
+		},
+		beforeSend:function(){if(BC_Report !== null){BC_Report.abort();}}
 	});
 
 }

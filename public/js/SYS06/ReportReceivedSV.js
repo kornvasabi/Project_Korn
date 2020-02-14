@@ -169,7 +169,7 @@ $(function(){
 	$('#CODE').select2({
 		placeholder: 'เลือก',
 		ajax: {
-			url: '../Cselect2K/getCODE',
+			url: '../Cselect2K/getOFFICER',
 			data: function (params){
 				dataToPost = new Object();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
@@ -196,6 +196,7 @@ $(function(){
 $('#btnreport').click(function(){
 	printReport();
 });
+SV_Report = null;
 function printReport(){
 	var report = "";
 	if($('#all').is(":checked")){ 
@@ -233,7 +234,7 @@ function printReport(){
 	dataToPost.sort	     = sort;
 	//alert(report); 
 	if(report == "all"){
-		$.ajax({
+		SV_Report = $.ajax({
 			url: '../SYS06/ReportReceivedSV/conditiontopdf',
 			data: dataToPost,
 			type:'POST',
@@ -249,10 +250,16 @@ function printReport(){
 					height: $(window).height(),
 					width: $(window).width()
 				});
+				SV_Report = null;
+			},
+			beforeSend:function(){
+				if(SV_Report !== null){
+					SV_Report.abort();
+				}
 			}
 		});
 	}else if(report = "pay"){
-		$.ajax({
+		SV_Report = $.ajax({
 			url: '../SYS06/ReportReceivedSV/conditiontopdf',
 			data: dataToPost,
 			type:'POST',
@@ -268,6 +275,12 @@ function printReport(){
 					height: $(window).height(),
 					width: $(window).width()
 				});
+				SV_Report = null;
+			},
+			beforeSend:function(){
+				if(SV_Report !== null){
+					SV_Report:abort();
+				}
 			}
 		});
 	}

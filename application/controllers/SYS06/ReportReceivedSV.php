@@ -308,7 +308,6 @@ class ReportReceivedSV extends MY_Controller {
 		$sql = "
 			select COUNT(PAYAMT) as countPAYAMT,SUM(PAYAMT) as sumPAYAMT,SUM(PAYAMT_V) as sumPAYAMT_V,SUM(DISCT) as sumDISCT 
 			,SUM(PAYINT) as sumPAYINT,SUM(DSCINT) as sumDSCINT,SUM(NETPAY) as sumNETPAY from #ALLR
-
 		";
 		$query2 = $this->db->query($sql);
 		$sql = "
@@ -330,7 +329,7 @@ class ReportReceivedSV extends MY_Controller {
 			declare @A6 decimal(12,2) = (select coalesce(SUM(NETPAY),0) from #ALLR); 
 			declare @B6 decimal(12,2) = (select coalesce(SUM(NETPAY),0) from #ALLR where FLAG = 'C'); 
 
-			select @A1-@B1 as PAYAMT,@A2-@B2 as PAYAMT_V,@A3-@B3 as DISCT,@A4-@B4 as PAYINT,@A5-@B5 as DSCINT,@A6-@A6 as NETPAY
+			select @A1-@B1 as PAYAMT,@A2-@B2 as PAYAMT_V,@A3-@B3 as DISCT,@A4-@B4 as PAYINT,@A5-@B5 as DSCINT,@A6-@B6 as NETPAY
 		";
 		$query4 = $this->db->query($sql);
 		$sql = "
@@ -379,7 +378,7 @@ class ReportReceivedSV extends MY_Controller {
 			}
 		}
 		
-		$head = ""; $html = ""; 
+		$head = ""; $html = ""; $i = 0;
 		$head = "
 			<tr class='wm'>
 				<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='14'></td>
@@ -405,7 +404,7 @@ class ReportReceivedSV extends MY_Controller {
 		";
 		$status = "";
 		if($query1->row()){
-			foreach($query1->result() as $row){
+			foreach($query1->result() as $row){$i++;
 				if($row->FLAG == 'C'){
 					$status = "*ยกเลิก*";
 				}else{
@@ -503,38 +502,48 @@ class ReportReceivedSV extends MY_Controller {
 			'margin_header' => 9, 	//default = 9
 			'margin_footer' => 9, 	//default = 9
 		]);
-		$content = "
-			<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
-				<tbody>
-					<tr>
-						<th colspan='14' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
-					</tr>
-					<tr>
-						<th colspan='14' style='font-size:9pt;'>รายงานการรับชำระตามวันที่บันทึก</th>
-					</tr>
-					<tr>
-						<td style='text-align:center;' colspan='16'>
-							<b>สาขาที่รับชำระ</b> &nbsp;&nbsp;".$LOCATRECV."&nbsp;&nbsp;
-							<b>ชำระเพื่อ บ/ช สาขา</b>&nbsp;&nbsp;".$LOCATPAY."&nbsp;&nbsp;
-							<b>จากวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE1)."&nbsp;&nbsp;
-							<b>ถึงวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE2)."&nbsp;&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td style='text-align:left;' colspan='2'><b>Scrt By :</b>&nbsp;&nbsp;".$SCRT."</td>
-						<td style='text-align:center;' colspan='10'>
-							<b>ชำระโดย</b>&nbsp;&nbsp;".$PAYDESC."&nbsp;&nbsp;
-							<b>ชำระค่า</b>&nbsp;&nbsp;".$FORDESC."&nbsp;&nbsp;
-							<b>พนักงานบันทึกข้อมูล</b>&nbsp;&nbsp;".$USERNAME."&nbsp;&nbsp;
-							<b>กลุ่มลูกค้า</b>&nbsp;&nbsp;".$ARGDES."&nbsp;&nbsp;
-						</td>
-						<td style='text-align:right;' colspan='2'>RpRec21</td>
-					</tr>
-					".$head."
-					".$html."
-				</tbody>
-			</table>
-		";
+		if($i > 0){
+			$content = "
+				<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
+					<tbody>
+						<tr>
+							<th colspan='14' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
+						</tr>
+						<tr>
+							<th colspan='14' style='font-size:9pt;'>รายงานการรับชำระตามวันที่บันทึก</th>
+						</tr>
+						<tr>
+							<td style='text-align:center;' colspan='16'>
+								<b>สาขาที่รับชำระ</b> &nbsp;&nbsp;".$LOCATRECV."&nbsp;&nbsp;
+								<b>ชำระเพื่อ บ/ช สาขา</b>&nbsp;&nbsp;".$LOCATPAY."&nbsp;&nbsp;
+								<b>จากวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE1)."&nbsp;&nbsp;
+								<b>ถึงวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE2)."&nbsp;&nbsp;
+							</td>
+						</tr>
+						<tr>
+							<td style='text-align:left;' colspan='2'><b>Scrt By :</b>&nbsp;&nbsp;".$SCRT."</td>
+							<td style='text-align:center;' colspan='10'>
+								<b>ชำระโดย</b>&nbsp;&nbsp;".$PAYDESC."&nbsp;&nbsp;
+								<b>ชำระค่า</b>&nbsp;&nbsp;".$FORDESC."&nbsp;&nbsp;
+								<b>พนักงานบันทึกข้อมูล</b>&nbsp;&nbsp;".$USERNAME."&nbsp;&nbsp;
+								<b>กลุ่มลูกค้า</b>&nbsp;&nbsp;".$ARGDES."&nbsp;&nbsp;
+							</td>
+							<td style='text-align:right;' colspan='2'>RpRec21</td>
+						</tr>
+						".$head."
+						".$html."
+					</tbody>
+				</table>
+			";			
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
+			";
+		}else{
+			$content = "<font style='color:red;'>ไม่พบข้อมูล</font>";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'></div>
+			";
+		}
 		$stylesheet = "
 			<style>
 				body { font-family: garuda;font-size:10pt; }
@@ -547,10 +556,6 @@ class ReportReceivedSV extends MY_Controller {
 			</style>
 		";
 		$content = $content.$stylesheet;
-		
-		$head = "
-			<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
-		";
 		$mpdf->SetHTMLHeader($head);	
 		$mpdf->WriteHTML($content);	
 		$mpdf->Output();
@@ -572,7 +577,6 @@ class ReportReceivedSV extends MY_Controller {
 		$GROUP1 	= $tx[7];
 		$CODE 	    = $tx[8];
 		$sort 	    = $tx[9];
-		
 		$sql = "
 			IF OBJECT_ID('tempdb..#PAY') IS NOT NULL DROP TABLE #PAY
 			select PAYFOR,FORDESC,T01,N01,V01,D01,I01,NET01,T02,N02,V02,D02,I02,NET02,T03,N03,V03
@@ -580,29 +584,32 @@ class ReportReceivedSV extends MY_Controller {
 			into #PAY
 			FROM(
 				select A.PAYFOR,B.FORDESC
-				,sum(case when (A.PAYTYP = '01') then A.PAYAMT else 0 end) as T01
-				,sum(case when (A.PAYTYP = '01') then A.PAYAMT_N else 0 end) as N01 
-				,sum(case when (A.PAYTYP = '01') then A.PAYAMT_V else 0 end) as V01 
-				,sum(case when (A.PAYTYP = '01') then A.DISCT else 0 end) as D01
-				,sum(case when (A.PAYTYP = '01') then (A.PAYINT-A.DSCINT) else 0 end) as I01 
-				,sum(case when (A.PAYTYP = '01') then A.NETPAY else 0 end) as NET01 
-				,sum(case when (A.PAYTYP = '02') then A.PAYAMT else 0 end) as T02 
-				,sum(case when (A.PAYTYP = '02') then A.PAYAMT_N else 0 end) as N02 
-				,sum(case when (A.PAYTYP = '02') then A.PAYAMT_V else 0 end) as V02 
-				,sum(case when (A.PAYTYP = '02') then A.DISCT else 0 end) as D02 
-				,sum(case when (A.PAYTYP = '02') then (A.PAYINT-A.DSCINT) else 0 end) as I02 
-				,sum(case when (A.PAYTYP = '02') then A.NETPAY else 0 end) as NET02 
-				,sum(case when (A.PAYTYP not in ('01','02')) then A.PAYAMT else 0 end) as T03 
-				,sum(case when (A.PAYTYP not in ('01','02')) then A.PAYAMT_N else 0 end) as N03 
-				,sum(case when (A.PAYTYP not in ('01','02')) then A.PAYAMT_V else 0 end) as V03 
-				,sum(case when (A.PAYTYP not in ('01','02')) then A.DISCT else 0 end) as D03 
-				,sum(case when (A.PAYTYP not in ('01','02')) then (A.PAYINT-A.DSCINT) else 0 end) as I03 
-				,sum(case when (A.PAYTYP not in ('01','02')) then A.NETPAY else 0 end) as NET03 
-				,sum(A.PAYAMT) as T04 ,sum(A.PAYAMT_N) as N04 ,sum(A.PAYAMT_V) AS V04 ,sum(A.DISCT) as D04 ,sum(A.PAYINT-A.DSCINT) as I04 
-				,sum(A.NETPAY) as NET04 from {$this->MAuth->getdb('CHQTRAN')} A  
+					,sum(case when (A.PAYTYP = '01') then A.PAYAMT else 0 end) as T01
+					,sum(case when (A.PAYTYP = '01') then A.PAYAMT_N else 0 end) as N01 
+					,sum(case when (A.PAYTYP = '01') then A.PAYAMT_V else 0 end) as V01 
+					,sum(case when (A.PAYTYP = '01') then A.DISCT else 0 end) as D01
+					,sum(case when (A.PAYTYP = '01') then (A.PAYINT-A.DSCINT) else 0 end) as I01 
+					,sum(case when (A.PAYTYP = '01') then A.NETPAY else 0 end) as NET01 
+					,sum(case when (A.PAYTYP = '02') then A.PAYAMT else 0 end) as T02 
+					,sum(case when (A.PAYTYP = '02') then A.PAYAMT_N else 0 end) as N02 
+					,sum(case when (A.PAYTYP = '02') then A.PAYAMT_V else 0 end) as V02 
+					,sum(case when (A.PAYTYP = '02') then A.DISCT else 0 end) as D02 
+					,sum(case when (A.PAYTYP = '02') then (A.PAYINT-A.DSCINT) else 0 end) as I02 
+					,sum(case when (A.PAYTYP = '02') then A.NETPAY else 0 end) as NET02 
+					,sum(case when (A.PAYTYP not in ('01','02')) then A.PAYAMT else 0 end) as T03 
+					,sum(case when (A.PAYTYP not in ('01','02')) then A.PAYAMT_N else 0 end) as N03 
+					,sum(case when (A.PAYTYP not in ('01','02')) then A.PAYAMT_V else 0 end) as V03 
+					,sum(case when (A.PAYTYP not in ('01','02')) then A.DISCT else 0 end) as D03 
+					,sum(case when (A.PAYTYP not in ('01','02')) then (A.PAYINT-A.DSCINT) else 0 end) as I03 
+					,sum(case when (A.PAYTYP not in ('01','02')) then A.NETPAY else 0 end) as NET03 
+					,sum(A.PAYAMT) as T04 ,sum(A.PAYAMT_N) as N04 ,sum(A.PAYAMT_V) AS V04 ,sum(A.DISCT) as D04 
+					,sum(A.PAYINT-A.DSCINT) as I04 
+					,sum(A.NETPAY) as NET04 from {$this->MAuth->getdb('CHQTRAN')} A  
 				left join PAYFOR   B on B.FORCODE = A.PAYFOR  
-				left join CUSTMAST C on A.CUSCOD = C.CUSCOD where A.USERID like '%".$USERID."%' and A.LOCATRECV like '%".$LOCATRECV."%' 
-				and A.LOCATPAY like '%".$LOCATPAY."%' and A.INPDT BETWEEN '".$DATE1."' and '".$DATE2."' and A.PAYTYP like '%".$PAYTYP."%' 
+				left join CUSTMAST C on A.CUSCOD = C.CUSCOD where A.USERID like '%".$USERID."%' 
+				and A.LOCATRECV like '%".$LOCATRECV."%' 
+				and A.LOCATPAY like '%".$LOCATPAY."%' and A.INPDT BETWEEN '".$DATE1."' and '".$DATE2."' 
+				and A.PAYTYP like '%".$PAYTYP."%' 
 				and A.PAYFOR like '%".$PAYFOR."%' and A.FLAG <> 'C' and (C.GROUP1 like '%".$GROUP1."%' OR C.GROUP1 is null)  
 				group by A.PAYFOR,B.FORDESC 
 			)PAY
@@ -614,7 +621,8 @@ class ReportReceivedSV extends MY_Controller {
 		";
 		$query1 = $this->db->query($sql);
 		$sql = "
-			select count(PAYFOR) as countPAYFOR,SUM(T01) as T01,SUM(N01) as N01,SUM(V01) as V01,SUM(D01) as D01,SUM(I01) as I01,SUM(NET01) as NET01
+			select count(PAYFOR) as countPAYFOR
+				,SUM(T01) as T01,SUM(N01) as N01,SUM(V01) as V01,SUM(D01) as D01,SUM(I01) as I01,SUM(NET01) as NET01
 				,SUM(T02) as T02,SUM(N02) as N02,SUM(V02) as V02,SUM(D02) as D02,SUM(I02) as I02,SUM(NET02) as NET02
 				,SUM(T03) as T03,SUM(N03) as N03,SUM(V03) as V03,SUM(D03) as D03,SUM(I03) as I03,SUM(NET03) as NET03
 				,SUM(T04) as T04,SUM(N04) as N04,SUM(V04) as V04,SUM(D04) as D04,SUM(I04) as I04,SUM(NET04) as NET04
@@ -666,7 +674,7 @@ class ReportReceivedSV extends MY_Controller {
 				$ARGDES = $row->ARGDES;
 			}
 		}
-		$head = ""; $html = ""; 
+		$head = ""; $html = ""; $i = 0;
 		$head = "
 			<tr class='wm'>
 				<td class='wf' style='height:1px;border-top:0.1px solid black;' colspan='18'></td>
@@ -705,25 +713,25 @@ class ReportReceivedSV extends MY_Controller {
 		";
 		
 		if($query1->row()){
-			foreach($query1->result() as $row){
+			foreach($query1->result() as $row){$i++;
 				$html .="
 					<tr>
 						<th style='width:200px;text-align:left;'>".$row->PAYFOR." ".$row->FORDESC."</th>
 						<th style='width:10px;text-align:left;'></th>
 						<th style='width:70px;text-align:right;'>".number_format($row->T01,2)."<br>".number_format($row->N01,2)."</th>
-						<th style='width:70px;text-align:right;'>".number_format($row->V01,2)."<br>".number_format($row->D01,2)."</th>
+						<th style='width:70px;text-align:right;'>".number_format($row->D01,2)."<br>".number_format($row->V01,2)."</th>
 						<th style='width:50px;text-align:right;'>".number_format($row->I01,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->NET01,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->T02,2)."<br>".number_format($row->N02,2)."</th>
-						<th style='width:70px;text-align:right;'>".number_format($row->V02,2)."<br>".number_format($row->D02,2)."</th>
+						<th style='width:70px;text-align:right;'>".number_format($row->D02,2)."<br>".number_format($row->V02,2)."</th>
 						<th style='width:50px;text-align:right;'>".number_format($row->I02,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->NET02,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->T03,2)."<br>".number_format($row->N03,2)."</th>
-						<th style='width:70px;text-align:right;'>".number_format($row->V03,2)."<br>".number_format($row->D03,2)."</th>
+						<th style='width:70px;text-align:right;'>".number_format($row->D03,2)."<br>".number_format($row->V03,2)."</th>
 						<th style='width:50px;text-align:right;'>".number_format($row->I03,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->NET03,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->T04,2)."<br>".number_format($row->N04,2)."</th>
-						<th style='width:70px;text-align:right;'>".number_format($row->V04,2)."<br>".number_format($row->D04,2)."</th>
+						<th style='width:70px;text-align:right;'>".number_format($row->D04,2)."<br>".number_format($row->V04,2)."</th>
 						<th style='width:50px;text-align:right;'>".number_format($row->I04,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->NET04,2)."</th>
 					</tr>
@@ -736,19 +744,19 @@ class ReportReceivedSV extends MY_Controller {
 					<tr class='trow bor' style='background-color:#ebebeb;'>
 						<th style='width:70px;text-align:center;' colspan='2'>รวมทั้งสิ้น  ".$row->countPAYFOR." รายการ</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->T01,2)."<br>".number_format($row->N01,2)."</th>
-						<th style='width:70px;text-align:right;'>".number_format($row->V01,2)."<br>".number_format($row->D01,2)."</th>
+						<th style='width:70px;text-align:right;'>".number_format($row->D01,2)."<br>".number_format($row->V01,2)."</th>
 						<th style='width:50px;text-align:right;'>".number_format($row->I01,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->NET01,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->T02,2)."<br>".number_format($row->N02,2)."</th>
-						<th style='width:70px;text-align:right;'>".number_format($row->V02,2)."<br>".number_format($row->D02,2)."</th>
+						<th style='width:70px;text-align:right;'>".number_format($row->D02,2)."<br>".number_format($row->V02,2)."</th>
 						<th style='width:50px;text-align:right;'>".number_format($row->I02,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->NET02,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->T03,2)."<br>".number_format($row->N03,2)."</th>
-						<th style='width:70px;text-align:right;'>".number_format($row->V03,2)."<br>".number_format($row->D03,2)."</th>
+						<th style='width:70px;text-align:right;'>".number_format($row->D03,2)."<br>".number_format($row->V03,2)."</th>
 						<th style='width:50px;text-align:right;'>".number_format($row->I03,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->NET03,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->T04,2)."<br>".number_format($row->N04,2)."</th>
-						<th style='width:70px;text-align:right;'>".number_format($row->V04,2)."<br>".number_format($row->D04,2)."</th>
+						<th style='width:70px;text-align:right;'>".number_format($row->D04,2)."<br>".number_format($row->V04,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->I04,2)."</th>
 						<th style='width:70px;text-align:right;'>".number_format($row->NET04,2)."</th>
 					</tr>
@@ -765,39 +773,48 @@ class ReportReceivedSV extends MY_Controller {
 			'margin_header' => 9, 	//default = 9
 			'margin_footer' => 9, 	//default = 9
 		]);
-		$content = "
-			<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
-				<tbody>
-					<tr>
-						<th colspan='18' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
-					</tr>
-					<tr>
-						<th colspan='18' style='font-size:9pt;'>รายงานการรับชำระตามวันที่บันทึก</th>
-					</tr>
-					<tr>
-						<td style='text-align:center;' colspan='18'>
-							<b>สาขาที่รับชำระ</b> &nbsp;&nbsp;".$LOCATRECV."&nbsp;&nbsp;
-							<b>ชำระเพื่อ บ/ช สาขา</b>&nbsp;&nbsp;".$LOCATPAY."&nbsp;&nbsp;
-							<b>จากวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE1)."&nbsp;&nbsp;
-							<b>ถึงวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE2)."&nbsp;&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td style='text-align:center;' colspan='17'>
-							<b>ชำระโดย</b>&nbsp;&nbsp;".$PAYDESC."&nbsp;&nbsp;
-							<b>ชำระค่า</b>&nbsp;&nbsp;".$FORDESC."&nbsp;&nbsp;
-							<b>พนักงานบันทึกข้อมูล</b>&nbsp;&nbsp;".$USERNAME."&nbsp;&nbsp;
-							<b>กลุ่มลูกค้า</b>&nbsp;&nbsp;".$ARGDES."&nbsp;&nbsp;
-						</td>
-						<td style='text-align:right;' colspan='1'>RpRec11</td>
-					</tr>
-					<br><br>
-					".$head."
-					".$html."
-				</tbody>
-			</table>
-		";
-		
+		if($i > 0){
+			$content = "
+				<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
+					<tbody>
+						<tr>
+							<th colspan='18' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
+						</tr>
+						<tr>
+							<th colspan='18' style='font-size:9pt;'>รายงานการรับชำระตามวันที่บันทึก</th>
+						</tr>
+						<tr>
+							<td style='text-align:center;' colspan='18'>
+								<b>สาขาที่รับชำระ</b> &nbsp;&nbsp;".$LOCATRECV."&nbsp;&nbsp;
+								<b>ชำระเพื่อ บ/ช สาขา</b>&nbsp;&nbsp;".$LOCATPAY."&nbsp;&nbsp;
+								<b>จากวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE1)."&nbsp;&nbsp;
+								<b>ถึงวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE2)."&nbsp;&nbsp;
+							</td>
+						</tr>
+						<tr>
+							<td style='text-align:center;' colspan='17'>
+								<b>ชำระโดย</b>&nbsp;&nbsp;".$PAYDESC."&nbsp;&nbsp;
+								<b>ชำระค่า</b>&nbsp;&nbsp;".$FORDESC."&nbsp;&nbsp;
+								<b>พนักงานบันทึกข้อมูล</b>&nbsp;&nbsp;".$USERNAME."&nbsp;&nbsp;
+								<b>กลุ่มลูกค้า</b>&nbsp;&nbsp;".$ARGDES."&nbsp;&nbsp;
+							</td>
+							<td style='text-align:right;' colspan='1'>RpRec11</td>
+						</tr>
+						<br><br>
+						".$head."
+						".$html."
+					</tbody>
+				</table>
+			";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
+			";
+		}else{
+			$content = "<font style='color:red;'>ไม่พบข้อมูล</font>";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'></div>
+			";
+		}
 		$stylesheet = "
 			<style>
 				body { font-family: garuda;font-size:10pt; }
@@ -810,10 +827,6 @@ class ReportReceivedSV extends MY_Controller {
 			</style>
 		";
 		$content = $content.$stylesheet;
-		
-		$head = "
-			<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
-		";
 		$mpdf->SetHTMLHeader($head);	
 		$mpdf->WriteHTML($content);	
 		$mpdf->Output();

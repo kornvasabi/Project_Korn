@@ -25,7 +25,6 @@ class Cselect2K extends MY_Controller {
 		$sql = "
 			select LOCATCD from {$this->MAuth->getdb('INVLOCAT')}
 			where LOCATCD = '".$dataNow."' collate Thai_CI_AS
-			
 			union
 			select top 20 LOCATCD from {$this->MAuth->getdb('INVLOCAT')}
 			where LOCATCD like '%".$dataSearch."%' collate Thai_CI_AS or LOCATNM like '%".$dataSearch."%' collate Thai_CI_AS
@@ -133,11 +132,11 @@ class Cselect2K extends MY_Controller {
         if($provcod == ""){
             $cond = "";
         }else{
-            $cond = " and PROVCOD='".$provcod."'";
+            $cond = " and PROVCOD = '".$provcod."'";
         }
         $sql = "
             select AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
-            where AUMPCOD='".$dataNow."' 
+            where AUMPCOD = '".$dataNow."' 
             union
             select top 20 AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
             where AUMPDES like '%".$dataSearch."%' ".$cond."
@@ -400,9 +399,10 @@ class Cselect2K extends MY_Controller {
 			$cond .= "and C.NAME2 like '%".$s_name2."%'";
 		}
 		$sql = "
-			select top 100 A.CONTNO,A.LOCAT,C.SNAM+C.NAME1+' '+C.NAME2+'' as CUSNAME from ARMAST A
-			left join CUSTMAST C on A.CUSCOD = C.CUSCOD
-			left join INVTRAN I on A.STRNO = I.STRNO where 1=1 ".$cond."
+			select top 100 A.CONTNO,A.LOCAT,C.SNAM+C.NAME1+' '+C.NAME2+'' as CUSNAME 
+			from {$this->MAuth->getdb('ARMAST')} A
+			left join {$this->MAuth->getdb('CUSTMAST')} C on A.CUSCOD = C.CUSCOD
+			left join {$this->MAuth->getdb('INVTRAN')} I on A.STRNO = I.STRNO where 1=1 ".$cond."
 			order by A.CONTNO
 		";
 		//echo $sql; exit;
@@ -640,41 +640,40 @@ class Cselect2K extends MY_Controller {
 		}
 		if ($price == "P1"){
 			$sql = "
-				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from ARCRED A 
-				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 and A.TOTPRC > A.SMPAY ".$cond." 
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from {$this->MAuth->getdb('ARCRED')} A 
+				left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD where 1=1 and A.TOTPRC > A.SMPAY ".$cond." 
 				ORDER BY A.CONTNO,A.LOCAT
 			";
 		}else if($price == "P2"){
 			$sql = "
-				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from ARMAST A 
-				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 and A.TOTPRC > A.SMPAY ".$cond."
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from {$this->MAuth->getdb('ARMAST')} A 
+				left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD where 1=1 and A.TOTPRC > A.SMPAY ".$cond."
 				ORDER BY A.CONTNO,A.LOCAT
 			";
 		}else if($price == "P3"){
 			$sql = "
-				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from ARFINC A 
-				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 ".$cond."
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from {$this->MAuth->getdb('ARFINC')} A 
+				left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD where 1=1 ".$cond."
 				ORDER BY A.CONTNO,A.LOCAT
 			";
 		}else if($price == "P4"){
 			$sql = "
-				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from AR_INVOI A 
-				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 and A.TOTPRC > A.SMPAY ".$cond." 
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from {$this->MAuth->getdb('AR_INVOI')} A 
+				left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD where 1=1 and A.TOTPRC > A.SMPAY ".$cond." 
 				ORDER BY A.CONTNO,A.LOCAT
 			";
 		}else if($price == "P5"){
 			$sql = "
-				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from AROPTMST A 
-				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 and A.OPTPTOT > A.SMPAY ".$cond." 
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from {$this->MAuth->getdb('AROPTMST')} A 
+				left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD where 1=1 and A.OPTPTOT > A.SMPAY ".$cond." 
 				ORDER BY A.CONTNO,A.LOCAT
 			";
 		}else if($price == "P6"){
 			$sql = "
-				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from AROTHR A 
-				left join CUSTMAST B on A.CUSCOD = B.CUSCOD where 1=1 and A.PAYAMT > A.SMPAY ".$cond."
+				select top 100 A.CONTNO,B.SNAM+B.NAME1+' '+B.NAME2+''as CUSNAME,A.LOCAT  from {$this->MAuth->getdb('AROTHR')} A 
+				left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD where 1=1 and A.PAYAMT > A.SMPAY ".$cond."
 				ORDER BY A.ARCONT,A.LOCAT
 			";
-			
 		}
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -764,7 +763,7 @@ class Cselect2K extends MY_Controller {
 			$cond .= "and NAME2 like '%".$name2."%'";
 		}		
 		$sql = "
-			select top 100 CUSCOD,SNAM+NAME1+' '+NAME2+''as CUSNAME from CUSTMAST
+			select top 100 CUSCOD,SNAM+NAME1+' '+NAME2+''as CUSNAME from {$this->MAuth->getdb('CUSTMAST')}
 			where 1=1  ".$cond." 
 		";
 		//echo $sql; exit;
@@ -793,6 +792,191 @@ class Cselect2K extends MY_Controller {
 							<th>#</th>
 							<th>รหัสลูกค้า</th>
 							<th>ชื่อ-สกุล</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getBKCODE(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$sql = "
+			select BKCODE,BKNAME,BKCODE+' ('+BKNAME+')' as CODENAM from {$this->MAuth->getdb('BOOK')} 
+			where BKCODE like '%".$dataSearch."%' order by BKCODE
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->BKCODE)
+						  ,'text'=>str_replace(chr(0),'',$row->CODENAM)];
+			}
+		}
+		echo json_encode($json);
+	}
+	function getCONTNO_RP(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$sql = "
+			select top 100 A.CONTNO,A.LOCAT,C.SNAM+C.NAME1+' '+C.NAME2+' ('+A.CONTNO+')' as CUSNAME 
+			from {$this->MAuth->getdb('ARMAST')} A
+			left join {$this->MAuth->getdb('CUSTMAST')} C on A.CUSCOD = C.CUSCOD
+			left join {$this->MAuth->getdb('INVTRAN')} I on A.STRNO = I.STRNO where 1=1 
+			and A.CONTNO like '%".$dataSearch."%' or C.NAME1 like '%".$dataSearch."%' or C.NAME2 like '%".$dataSearch."%'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->CONTNO)
+						  ,'text'=>str_replace(chr(0),'',$row->CUSNAME)];
+			}
+		}
+		echo json_encode($json);
+	}
+	function getTAXNO(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+        $dataSearch = trim($_REQUEST["q"]);
+        $locat = $_REQUEST["locat"];
+
+        $sql = "
+           select top 20 TAXNO,TAXNO+'('+NAME1+')' as TAXNAME from {$this->MAuth->getdb('TAXBUY')}
+		   where TAXNO like '%".$dataSearch."%' and LOCAT = '".$locat."' and (FLAG <> 'C' or FLAG is null)
+        ";
+        $query = $this->db->query($sql);
+        $json = array();
+        if($query->row()){
+            foreach($query->result() as $row){
+                $json[] = array(
+                    "id" => $row->TAXNO,
+                    "text" => $row->TAXNAME,					 
+                );
+            }
+        }
+        echo json_encode($json);
+	}
+	function getSTRNO(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+        $dataSearch = trim($_REQUEST["q"]);
+        $taxno = $_REQUEST["taxno"];
+
+        $sql = "
+			select A.RECVNO,A.STRNO,A.RECVNO,B.TAXNO from {$this->MAuth->getdb('INVTRAN')} A
+			left join {$this->MAuth->getdb('TAXBUY')} B on A.RECVNO = B.REFNO 
+			where A.STRNO like '%".$dataSearch."%' and B.TAXNO = '".$taxno."'
+        ";
+        $query = $this->db->query($sql);
+        $json = array();
+        if($query->row()){
+            foreach($query->result() as $row){
+                $json[] = array(
+                    "id" => $row->STRNO,
+                    "text" => $row->STRNO,					 
+                );
+            }
+        }
+        echo json_encode($json);
+	}
+	function getfromREDUCECAR(){
+		$html = "
+			<div class='row'>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						ออกโดยสาขา
+						<input type='text' id='locat' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						เลขที่ใบลดหนี้
+						<input type='text' id='taxno' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						อ้างถึงใบกำกับ
+						<input type='text' id='refno' class='form-control'>
+					</div>
+				</div>
+				
+				<div class='col-sm-12'>
+					<button id='btnsearch' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'>ค้นหา</span></button>
+				</div>
+				<br>
+				<div id='vat_result' class='col-sm-12'></div>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getsearchREDUCECAR(){
+		$locat = $_POST['locat'];
+		$taxno  = $_POST['taxno'];
+		$refno  = $_POST['refno'];
+		
+		$cond = "";
+		if($locat != ""){
+			$cond .= "and LOCAT like '%".$locat."%'"; 
+		}
+		if($taxno != ""){
+			$cond .= "and TAXNO like '%".$taxno."%'";
+		}
+		if($refno != ""){
+			$cond .= "and REFNO like '%".$refno."%'";
+		}		
+		$sql = "
+			select LOCAT,TAXNO,convert(varchar(8),TAXDT,112) as TAXDT,REFNO,convert(varchar(8),REFDT,112) as REFDT
+			,CUSCOD,NAME1,TOTAMT,FLAG,STRNO,NETAMT,VATAMT,TOTAMT
+			from {$this->MAuth->getdb('TAXBUY')} where TAXTYP = '1'  ".$cond." 
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trow' seq='".$NRow."'>
+						<td style='cursor:pointer;' class='getit' seq='".$NRow++."'
+							LOCAT  ='".$row->LOCAT."'
+							TAXNO  ='".$row->TAXNO."'
+							REFNO  ='".$row->REFNO."'
+							STRNO  ='".$row->STRNO."'
+							TAXDT  ='".$this->Convertdate(2,$row->TAXDT)."'
+							REFDT  ='".$this->Convertdate(2,$row->REFDT)."'
+							NETAMT ='".$row->NETAMT."'
+							VATAMT ='".$row->VATAMT."'
+							TOTAMT ='".$row->TOTAMT."'
+							FLAG   ='".$row->FLAG."'
+						><b>เลือก</b></td>
+						<td>".$row->LOCAT."</td>
+						<td>".$row->TAXNO."</td>
+						<td>".$row->REFNO."</td>
+						<td>".$row->FLAG."</td>
+					</tr>
+				";
+			}
+		}
+		$html = "
+			<div id='tbcont' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>ออกโดยสาขา</th>
+							<th>เลขที่ใบลดหนี้</th>
+							<th>อ้างถีงใบกำกับ</th>
+							<th>#</th>
 						</tr>
 					</thead>	
 					<tbody>

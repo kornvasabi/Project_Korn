@@ -100,8 +100,10 @@ $(function(){
 		width: '100%'
 	});
 	$('#SPECSCAR_A').hide();
-	//$('#statuscar').hide();
-	
+	/*
+	$('#statuscar1').hide();
+	$('#statuscar2').hide();
+	*/
 	
 	LobiAdmin.loadScript([
 		'../public/lobiadmin-master/version/1.0/ajax/js/plugin/bootstrap-wizard/jquery.bootstrap.wizard.js',
@@ -359,6 +361,7 @@ function search(){
 				});
 				
 				loaddata(data,TSALE);
+				
 				$('#loadding').hide();
 				$('.getit').click(function(){
 					var	CUSCODS = $(this).attr('CUSCOD');
@@ -456,11 +459,24 @@ function message(){
 					}else{
 						$('#btnmsgI').attr('disabled',true);	
 					}
-					
+					description();
 				}
 			});
 		}
 	}); 
+} 
+function description(){
+	$('#DISCRIPTION').click(function(){
+		$content = "1. ข้อความสีแดง สำหรับเตือน ที่ไม่ต้องการให้แก้ไขข้อความ<br>2. ข้อความสีน้ำเงิน สำหรับติดต่อสื่อสารในแต่ละแผนก ซึ่งสามารถเพิ่มเติมข้อความได้<br><br>จะมีผลที่หน้าเมนูต่อไปนี้<br>- ระบบการเงิน หน้ารับชำระเงิน<br>- ระบบการเงิน หน้าสอบถาม<br>- ระบบลูกหนี้ หน้าสอบถาม<br>- ระบบทะเบียน หน้าบันทึกรับจดทะเบียน";
+		Lobibox.window({
+			title: 'การใช้งาน',
+			width:'100%',
+			height:'100%',
+			content: $content,
+			draggable: true,
+			closeOnEsc: false,
+		});
+	});
 }
 function insertmsg(){
 	dataToPost = new Object();//$('#loadding').show();
@@ -879,7 +895,8 @@ function selectmsg(){
 	});
 }
 function loaddata($data){
-	if($data.MSGMEMO != 'none'){
+	
+	if($data.MSGMEMO !== 'none'){
 		alertmessage($data.CONTNO,$data.MSGLOCAT,$data.STARTDT,$data.ENDDT,$data.MSGMEMO,$data.USERID);
 	}
 	//tab 1
@@ -898,6 +915,11 @@ function loaddata($data){
 	$('#1_SUMSMPAY').val($data.SUMSMPAY);
 	$('#1_SUMBALANCE').val($data.SUMBALANCE);
 	
+	document.getElementById("insurance").addEventListener("scroll", function(){
+		var translate = "translate(0,"+(this.scrollTop - 7)+"px)";
+		this.querySelector("thead").style.transform = translate;
+		this.querySelector("thead").style.zIndex = 100;
+	});
 	$('#dataTables-insurance tbody').empty().append($data.insurance);
 	$('#1_COUNTCUSCOD_ISR').val($data.COUNTCUSCOD_ISR);
 	$('#1_SUMBALANCE_ISR').val($data.SUMBALANCE_ISR);
@@ -928,11 +950,8 @@ function loaddata($data){
 	$('#2_COLOR').val($data.COLOR_2);
 	$('#2_CC').val($data.CC_2);
 	
-	if($data.STAT_2 == 'O'){
-		$('#2_STAT').val('เก่า');
-	}else if($data.STAT_2 == 'N'){
-		$('#2_STAT').val('ใหม่');
-	}
+	$('#2_STAT').val($data.STAT_2);
+	
 	$('#2_APNAME').val($data.APNAME_2);
 	$('#2_GDESC').val($data.GDESC_2);	
 	$('#2_MANUYR').val($data.MANUYR_2);
@@ -993,13 +1012,14 @@ function loaddata($data){
 	$('#3_CHECKER_USE').val($data.check);
 	$('#3_CHECKER').val($data.check);
 	$('#3_OTHR').val($data.OTHR_3);
-	/*
-	if($data.FL == '*'){
-		$('#statuscar').show();
+	
+	if($data.YSTAT == 'H'){
+		$('#statuscar').text("***อยู่ในสถานะรถยึดเปลี่ยนเป็นรถเก่า***");
+	}else if($data.YSTAT == 'Y'){
+		$('#statuscar').text("***อยู่ในสถานะรถยึดรอไถ่ถอน***");
 	}else{
-		$('#statuscar').hide();
+		$('#statuscar').text("");
 	}
-	*/
 	//tab4
 	document.getElementById("payment").addEventListener("scroll", function(){
 		var translate = "translate(0,"+(this.scrollTop - 7)+"px)";
@@ -1137,12 +1157,8 @@ function changedatatab($data){
 	$('#2_CC').val($data.CC_2);
 	$('#2_APNAME').val($data.APNAME_2);
 	$('#2_GDESC').val($data.GDESC_2);
+	$('#2_STAT').val($data.STAT_2);
 	
-	if($data.STAT_2 == 'O'){
-		$('#2_STAT').val('เก่า');
-	}else if($data.STAT_2 == 'N'){
-		$('#2_STAT').val('ใหม่');
-	}
 	$('#2_MANUYR').val($data.MANUYR_2);
 	
 	$('#dataTables-accessory tbody').empty().append($data.acce);
@@ -1188,11 +1204,13 @@ function changedatatab($data){
 	$('#3_CHECKER').val($data.check);
 	$('#3_OTHR').val($data.OTHR_3);
 	
-	/*if($data.statuscar == '*'){
-		$('#statuscar').show();
+	if($data.YSTAT == 'H'){
+		$('#statuscar').text("***อยู่ในสถานะรถยึดเปลี่ยนเป็นรถเก่า***");
+	}else if($data.YSTAT == 'Y'){
+		$('#statuscar').text("***อยู่ในสถานะรถยึดรอไถ่ถอน***");
 	}else{
-		$('#statuscar').hide();
-	}*/
+		$('#statuscar').text("");
+	}
 	//tab4
 	document.getElementById("payment").addEventListener("scroll", function(){
 		var translate = "translate(0,"+(this.scrollTop - 7)+"px)";
@@ -1310,11 +1328,7 @@ function changedatastrno($data){
 	$('#2_APNAME').val($data.APNAME_2);
 	$('#2_GDESC').val($data.GDESC_2);	
 	$('#2_MANUYR').val($data.MANUYR_2);
-	if($data.STAT_2 == 'O'){
-		$('#2_STAT').val('เก่า');
-	}else if($data.STAT_2 == 'N'){
-		$('#2_STAT').val('ใหม่');
-	}
+	$('#2_STAT').val($data.STAT_2);
 }
 
 function chagedataspt($CUSCODSPT){
@@ -1388,6 +1402,8 @@ function alertmessage(CONTNO,MSGLOCAT,STARTDT,ENDDT,MSGMEMO,USERID){
 							updatemessage(CONTNO,MSGLOCAT,STARTDT,ENDDT,MSGMEMO,USERID);
 						}
 					});
+					//description();
+					
 					$('#btnclose').click(function(){
 						if($("#savemsg").is(":checked")){
 							updatemessage(CONTNO,MSGLOCAT,STARTDT,ENDDT,MSGMEMO,USERID);
@@ -1448,9 +1464,10 @@ function updatemessage(CONTNO,MSGLOCAT,STARTDT,ENDDT,MSGMEMO,USERID){
 
 $('#btncostcar').click(function(){
 	dataToPost = new Object();
-	dataToPost.CONTNO 	= $('#3_CONTNO').val();
-	dataToPost.LOCAT	= $('#3_LOCAT').val();
-	var P_DATESEARCH    = $('#3_DATESEARCH').val();
+	dataToPost.CONTNO 	  = $('#3_CONTNO').val();
+	dataToPost.LOCAT	  = $('#3_LOCAT').val();
+	dataToPost.DATESEARCH = $('#3_DATESEARCH').val();
+	var P_DATESEARCH      = $('#3_DATESEARCH').val();
 	$('#loadding').show();
 	$.ajax({
 		url:'../SYS06/ReportFinance/getfromPayment',
@@ -1497,47 +1514,6 @@ $('#btncostcar').click(function(){
 		}
 	}); 
 });
-/*
-function payment($data,P_DATESEARCH){
-	dataToPost = new Object();
-	$('#loadding').show();
-	$.ajax({
-		url:'../SYS06/ReportFinance/getfromPayment',
-		data: dataToPost,
-		type: 'POST',
-		dataType: 'json',
-		success: function(data){
-			$('#loadding').hide();
-			Lobibox.window({
-				title: 'แสดงยอดเบี้ยปรับและยอดชำระ',
-				//width: $(window).width(),
-				//height: $(window).height(),
-				width:'100%',
-				height:'100%',
-				content: data.html,
-				draggable: true,
-				closeOnEsc: false,
-				shown: function(){
-					document.getElementById("dataTable-fixed-listpayment").addEventListener("scroll", function(){
-						var translate = "translate(0,"+(this.scrollTop - 7)+"px)";
-						this.querySelector("thead").style.transform = translate;
-						this.querySelector("thead").style.zIndex = 100;
-					});
-					$('#dataTables-listpayment tbody').empty().append($data.listpayment);
-					$('#P_sumINTAMT').val($data.sumINTAMT);
-					$('#P_sumPAID').val($data.sumPAID);
-					$('#P_sumDSCINT').val($data.sumDSCINT);
-					$('#P_penalty').val($data.penalty);
-					
-					$('#btnprint_penalty').click(function(){
-						printpenalty(P_DATESEARCH);
-					});
-				}
-			});			
-		}
-	}); 
-}
-*/
 function printpenalty(P_DATESEARCH){
 	$('#btnprint_penalty').attr('disabled',true);		
 	var baseUrl = $('body').attr('baseUrl');
@@ -1682,6 +1658,28 @@ function printcustomer(D_DATESEARCH){
 		closeOnEsc: true,			
 		beforeClose : function(){
 			$('#btnprint_customer').attr('disabled',false);
+		}
+	});
+}
+$('#btnprintT7').click(function(){
+	var CONTNO = $('#7_CONTNO').val();
+	var LOCAT  = $('#7_LOCAT').val();
+	//alert(CONTNO);
+	printstatuscontent(CONTNO,LOCAT);
+});
+function printstatuscontent(CONTNO,LOCAT){
+	var baseUrl = $('body').attr('baseUrl');
+	var url = baseUrl+'SYS06/ReportFinance/printstatuscontentpdf?cond='+CONTNO+'||'+LOCAT;
+	var content = "<iframe src='"+url+"' style='width:100%;height:100%;'</iframe>";
+	Lobibox.window({
+		title: 'พิมพ์ใบแจ้งเบี้ยปรับ',
+		width: $(window).width(),
+		height: $(window).height(),
+		content: content,
+		draggable: false,
+		closeOnEsc: true,			
+		beforeClose : function(){
+			//$('#btnprint_customer').attr('disabled',false);
 		}
 	});
 }

@@ -281,7 +281,7 @@ class ReportReceivedBC extends MY_Controller {
 				$PAYDESC = $row->PAYDESC;
 			}
 		}
-		$head = ""; $html = ""; 
+		$head = ""; $html = ""; $i = 0;
 		$head = "
 			<tr class='wm'>
 				<td class='wf' style='height:1px;border-top:0.1px solid black;' colspan='13'></td>
@@ -306,7 +306,7 @@ class ReportReceivedBC extends MY_Controller {
 			</tr>
 		";
 		if($query1->row()){
-			foreach($query1->result() as $row){
+			foreach($query1->result() as $row){$i++;
 				$html .= "
 					<tr>
 						<td style='width:90px;text-align:left;'>".$row->LOCATRECV."</td>
@@ -319,7 +319,7 @@ class ReportReceivedBC extends MY_Controller {
 						<td style='width:70px;text-align:right;'>".number_format($row->DAMT,2)."</td>
 						<td style='width:70px;text-align:right;'>".number_format($row->PAYAMT,2)."</td>
 						<td style='width:70px;text-align:right;'>".number_format($row->DISCT,2)."</td>
-						<td style='width:70px;text-align:right;color:#c0392b;'>".number_format($row->PAYINT,2)."</td>
+						<td style='width:150px;text-align:right;color:#c0392b;'>".number_format($row->PAYINT,2)."</td>
 						<td style='width:70px;text-align:right;'>".number_format($row->DSCINT,2)."</td>
 						<td style='width:70px;text-align:right;color:blue;'>".number_format($row->NETPAY,2)."</td>
 					</tr>
@@ -336,10 +336,10 @@ class ReportReceivedBC extends MY_Controller {
 						<td style='width:90px;text-align:left;'></td>
 						<td style='width:90px;text-align:left;color:#0963bd;'colspan='5'>".$row->BILLCOLL." ".$row->NAME."</td>
 						<td style='width:70px;text-align:left;'colspan='2'>".$row->TUMB."</td>
-						<td style='width:70px;text-align:center;'colspan='2'>".$row->AUMPDES."</td>
-						<td style='width:70px;text-align:right;'>".$row->PROVCOD."</td>
-						<td style='width:70px;text-align:right;'>".number_format($PERSEN,2)."</td>
-						<td style='width:70px;text-align:right;'>".number_format($row->COMAMT,2)."</td>
+						<td style='width:70px;text-align:right;'>".$row->AUMPDES."</td>
+						<td style='width:90px;text-align:right;'colspan='2'>".$row->PROVCOD."</td>
+						<td style='width:90px;text-align:right;color:blue;'>".number_format($PERSEN,2)."</td>
+						<td style='width:90px;text-align:right;'>".number_format($row->COMAMT,2)."</td>
 					</tr>
 				";
 			}
@@ -354,17 +354,17 @@ class ReportReceivedBC extends MY_Controller {
 						<th style='width:90px;text-align:left;'>รวมทั้งสิ้น</th>
 						<td style='width:90px;text-align:left;'>".$row->countCONTNO."</td>
 						<th style='width:70px;text-align:left;'>รายการ</th>
-						<td style='width:70px;text-align:right;' colspan='5'>".number_format($row->DAMT,2)."</td>
+						<td style='width:70px;text-align:right;' colspan='5'></td>
 						<td style='width:70px;text-align:right;'>".number_format($row->PAYAMT,2)."</td>
 						<td style='width:70px;text-align:right;'>".number_format($row->DISCT,2)."</td>
-						<td style='width:70px;text-align:right;'>".number_format($row->PAYINT,2)."</td>
+						<td style='width:70px;text-align:right;color:#c0392b;'>".number_format($row->PAYINT,2)."</td>
 						<td style='width:70px;text-align:right;'>".number_format($row->DSCINT,2)."</td>
-						<td style='width:70px;text-align:right;'>".number_format($row->NETPAY,2)."</td>
+						<td style='width:70px;text-align:right;color:blue;'>".number_format($row->NETPAY,2)."</td>
 					</tr>
 					<tr>
-						<td style='width:70px;text-align:right;' colspan='8'>".number_format($row->DPAY1,2)."</td>
+						<td style='width:70px;text-align:right;' colspan='9'>".number_format($row->DPAY1,2)."</td>
 						<td style='width:70px;text-align:right;' colspan='3'>".number_format($row->DPAY2,2)."</td>
-						<td style='width:70px;text-align:right;' colspan='2'>".number_format($row->BAL,2)."<br>
+						<td style='width:70px;text-align:right;'>".number_format($row->BAL,2)."<br>
 						<div style='color:red;'>".number_format($row->COMAMT,2)."<div></td>
 					</tr>
 					<tr class='wm'>
@@ -383,36 +383,46 @@ class ReportReceivedBC extends MY_Controller {
 			'margin_header' => 9, 	//default = 9
 			'margin_footer' => 9, 	//default = 9
 		]);
-		$content = "
-			<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
-				<tbody>
-					<tr>
-						<th colspan='13' style='font-size:10pt;text-align:center;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
-					</tr>
-					<tr>
-						<th colspan='13' style='font-size:9pt;'>รายงานการรับชำระตามพนักงานเก็บเงิน</th>
-					</tr>
-					<tr>
-						<td style='text-align:center;' colspan='13'>
-							<b>สาขาที่รับชำระ</b> &nbsp;&nbsp;".$LOCATRECV."&nbsp;&nbsp;
-							<b>ชำระเพื่อ บ/ช สาขา</b>&nbsp;&nbsp;".$LOCATPAY."&nbsp;&nbsp;
-							<b>จากวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE1)."&nbsp;&nbsp;
-							<b>ถึงวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE2)."&nbsp;&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td style='text-align:left;' colspan='2'><b>Scrt By :</b>&nbsp;&nbsp;".$SCRT."</th>
-						<td style='text-align:center;' colspan='8'>
-							<b>BILLCOLL</b>&nbsp;&nbsp;".$BILL."&nbsp;&nbsp;
-							<b>ชำระโดย</b>&nbsp;&nbsp;".$PAYDESC."&nbsp;&nbsp;
-						</td>
-						<td style='text-align:right;' colspan='3'>RpRec51</td>
-					</tr>
-					".$head."
-					".$html."
-				</tbody>
-			</table>
-		";
+		if($i > 0){
+			$content = "
+				<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
+					<tbody>
+						<tr>
+							<th colspan='13' style='font-size:10pt;text-align:center;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
+						</tr>
+						<tr>
+							<th colspan='13' style='font-size:9pt;'>รายงานการรับชำระตามพนักงานเก็บเงิน</th>
+						</tr>
+						<tr>
+							<td style='text-align:center;' colspan='13'>
+								<b>สาขาที่รับชำระ</b> &nbsp;&nbsp;".$LOCATRECV."&nbsp;&nbsp;
+								<b>ชำระเพื่อ บ/ช สาขา</b>&nbsp;&nbsp;".$LOCATPAY."&nbsp;&nbsp;
+								<b>จากวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE1)."&nbsp;&nbsp;
+								<b>ถึงวันที่</b>&nbsp;&nbsp;".$this->Convertdate(2,$DATE2)."&nbsp;&nbsp;
+							</td>
+						</tr>
+						<tr>
+							<td style='text-align:left;' colspan='2'><b>Scrt By :</b>&nbsp;&nbsp;".$SCRT."</th>
+							<td style='text-align:center;' colspan='8'>
+								<b>BILLCOLL</b>&nbsp;&nbsp;".$BILL."&nbsp;&nbsp;
+								<b>ชำระโดย</b>&nbsp;&nbsp;".$PAYDESC."&nbsp;&nbsp;
+							</td>
+							<td style='text-align:right;' colspan='3'>RpRec51</td>
+						</tr>
+						".$head."
+						".$html."
+					</tbody>
+				</table>
+			";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
+			";
+		}else{
+			$content = "<div style='color:red;'>ไม่พบข้อมูลตามเงื่อนไข</div>";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'></div>
+			";
+		}
 		$stylesheet = "
 			<style>
 				body { font-family: garuda;font-size:10pt; }
@@ -425,9 +435,6 @@ class ReportReceivedBC extends MY_Controller {
 			</style>
 		";
 		$content = $content.$stylesheet;
-		$head = "
-			<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
-		";
 		$mpdf->SetHTMLHeader($head);	
 		$mpdf->WriteHTML($content);	
 		$mpdf->Output();

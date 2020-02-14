@@ -78,6 +78,7 @@ $(function(){
 $('#btnreportCC').click(function(){
 	printReport();
 });
+CC_Report = null;
 function printReport(){
 	var order = "";
 	if($('#OR1').is(":checked")){
@@ -109,7 +110,7 @@ function printReport(){
 		});
 	}else{
 		$('#loadding').show();
-		$.ajax({
+		CC_Report = $.ajax({
 			url: '../SYS06/ReportReceivedCC/conditiontopdf',
 			data: dataToPost,
 			type:'POST',
@@ -126,7 +127,9 @@ function printReport(){
 					height: $(window).height(),
 					width: $(window).width()
 				});
-			}
+				CC_Report = null;
+			},
+			beforeSend:function(){if(CC_Report !== null){CC_Report.abort();}}
 		});
 	}
 }

@@ -209,7 +209,7 @@ class ReportFinance extends MY_Controller {
 						<b>การค้ำประกัน</b>
 						<div class='row' style='height:30%;border:0.1px solid #bdbdbd;background-color:#eee;'>
 							<div class='col-sm-12 col-xs-12' style='height:100%;'>
-								<div id='dataTable-fixed-insurance' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
+								<div id='insurance' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
 									<table id='dataTables-insurance' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' cellspacing='0' width='calc(100% - 1px)'>
 										<thead>
 											<tr role='row' style='font-size:8pt;background-color:#666666;color:white;'>
@@ -653,7 +653,7 @@ class ReportFinance extends MY_Controller {
 								</div>
 								<div class='col-sm-3'>	
 									<div class='form-group'>
-										ล่าช้าได้ไม่เกิด
+										ล่าช้าได้ไม่เกิน
 										<div class='input-group'>
 											<input type='text' id='3_DLDAY' class='form-control input-sm' readonly>
 											<span class='input-group-addon'>วัน</span>
@@ -690,12 +690,14 @@ class ReportFinance extends MY_Controller {
 										<b><input type='text' id='3_GRDCOD' class='form-control input-sm text-danger' readonly></b>
 									</div>
 								</div>
-								<!--div class='col-sm-6 col-xs-6'>	
+								
+								<div class='col-sm-6 col-xs-6'>	
 									<div class='form-group'>
 										<br>
-										<center><b id='statuscar' style='color:red;'>**อยู่ในสถานะรถใหม่เปลี่ยนเป็นรถเก่า**</b></center>
+										<p id='statuscar' style='text-align:center;color:red;' class='text-justify'><b></b></p>
 									</div>
-								</div-->
+								</div>
+								
 								<div class='col-sm-10'>	
 									<div class='form-group'>
 										หมายเหตุ
@@ -1203,6 +1205,12 @@ class ReportFinance extends MY_Controller {
 								</div>
 							</div>
 						</div>
+						<div class='col-sm-12 col-xs-12'>
+							<div class=' col-sm-12 col-xs-12'>
+								<br><br>
+								<button id='btnprintT7' class='btn btn-primary btn-outline btn-block' style='font-size:10pt'><span class='glyphicon glyphicon-print'><b>พิมพ์</b></span></button>
+							</div>
+						</div>
 					</div>
 				</fieldset>
 			</div>
@@ -1282,7 +1290,7 @@ class ReportFinance extends MY_Controller {
 	function getfromSaveMessage(){
 		$userid = !isset($_POST['userid']) ? '' : $_POST['userid'];
 		$html = "
-			<div class='k_Message' style='width:800px;height:480px;overflow:auto;background-color:white;'>
+			<div class='k_Message' style='width:800px;height:530px;overflow:auto;background-color:white;'>
 				<fieldset style='height:100%'>
 					<div style='float:left;height:100%;' class='col-sm-12 col-xs-12'>
 						<div id='col1' class='row'>
@@ -1293,6 +1301,11 @@ class ReportFinance extends MY_Controller {
 						<div id='col2' class='row'>
 							<div class='col-sm-12 col-xs-12' style='background-color:#f5301c; border:5px solid white:50px;height:65px;text-align:center;font-size:14pt;color:white;font-weight:bold;'>	
 								<br>บันทึกข้อความเตือน<br>
+							</div>
+						</div><br>
+						<div class='row'>
+							<div class='col-sm-12 col-xs-12' align='right'>	
+								<img id='DISCRIPTION' src='../public/images/manual-icon.png' style='width:30px;height:30px;cursor:pointer;filter: contrast(100%);'>
 							</div>
 						</div>
 						<br>
@@ -1533,25 +1546,47 @@ class ReportFinance extends MY_Controller {
 		echo json_encode($response);
 	}
 	function getfromPayment(){
-		$CONTNO = $_REQUEST['CONTNO'];
-		$LOCAT  = $_REQUEST['LOCAT'];
+		$CONTNO     = $_REQUEST['CONTNO'];
+		$LOCAT  	= $_REQUEST['LOCAT'];
+		$DATESEARCH = $this->Convertdate(1,$_REQUEST['DATESEARCH']);
 		
 		$arrs = array();
 		$sql = "
+			select CONVERT(varchar(8),GETDATE(),112) as GDATE
+		";
+		$query = $this->db->query($sql);
+		$gdate = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$gdate = $row->GDATE;
+			}
+		}
+		$datesr = "";
+		if($DATESEARCH == $gdate){
+			$datesr = $DATESEARCH;
+		}else{
+			$datesr = null;
+		}
+		$sql = "
+			exec [dbo].[FN_JD_LatePenalty] @contno ='".$CONTNO."',@dt = '".$datesr."'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$sql = "
 			select NOPAY,convert(varchar(8),DDATE,112) as DDATE,DAMT,convert(varchar(8),DATE1,112) as DATE1
-			,PAYMENT,DELAY,ADVDUE,GRDCOD from {$this->MAuth->getdb('ARPAY')} 
-			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
-			
+			,PAYMENT,DELAY,ADVDUE,GRDCOD,INTAMT from {$this->MAuth->getdb('ARPAY')} 
+			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' 
 			union
 			select NOPAY,convert(varchar(8),DDATE,112) as DDATE,DAMT,convert(varchar(8),DATE1,112) as DATE1
-			,PAYMENT,DELAY,ADVDUE,GRDCOD from {$this->MAuth->getdb('HARPAY')} 
+			,PAYMENT,DELAY,ADVDUE,GRDCOD,INTAMT from {$this->MAuth->getdb('HARPAY')} 
 			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' 
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
+		$i = 0;
 		$listpayment = "";
 		if($query->row()){
-			foreach($query->result() as $row){
+			foreach($query->result() as $row){$i++;
 				$listpayment .="
 					<tr class='trow' seq='old'>
 						<td align='center'>".str_replace(chr(0),'',$row->NOPAY)."</td>
@@ -1560,7 +1595,7 @@ class ReportFinance extends MY_Controller {
 						<td align='center'>".$this->Convertdate(2,$row->DATE1)."</td>
 						<td align='right'>".number_format($row->PAYMENT,2)."</td>
 						<td align='center'>".str_replace(chr(0),'',$row->DELAY)."</td>
-						<td align='right'>".number_format($row->ADVDUE,2)."</td>
+						<td align='right'>".number_format($row->INTAMT,2)."</td>
 						<td align='center'>".str_replace(chr(0),'',$row->GRDCOD)."</td>
 					</tr>
 				";
@@ -1571,9 +1606,9 @@ class ReportFinance extends MY_Controller {
 		$sql2 = "
 			select SUM(PAYINT) as sumPAID,SUM(DSCINT) as sumDSCINT from {$this->MAuth->getdb('CHQTRAN')} 
 			where CONTNO = '".$CONTNO."' and LOCATPAY = '".$LOCAT."'
-			and (PAYFOR='006' or PAYFOR = '007' and FLAG<>'C' and (PAYDT IS NOT NULL))
+			and (PAYFOR='006' or PAYFOR = '007') and FLAG<>'C' and (PAYDT IS NOT NULL)
 		";
-		//echo $sql; exit;
+		//echo $sql2; exit;
 		$query2 = $this->db->query($sql2);
 		$sumPAID   = "";
 		$sumDSCINT = "";
@@ -1584,10 +1619,10 @@ class ReportFinance extends MY_Controller {
 			}
 		}
 		$sql3 = "
-			select SUM(INTAMT) as sumINTAMT from ARPAY 
+			select SUM(INTAMT) as sumINTAMT from {$this->MAuth->getdb('ARPAY')} 
 			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
 		";
-		//echo $sql; exit;
+		//echo $sql3; exit;
 		$query3 = $this->db->query($sql3);
 		$sumINTAMT = "";
 		$penalty   = "";
@@ -1603,12 +1638,11 @@ class ReportFinance extends MY_Controller {
 		$arrs['penalty']   = number_format($penalty,2);
 		//echo $arrs['sumINTAMT']; exit;
 		
-		if($arrs['sumINTAMT'] =="0.00"){
+		if($i < 1){
 			$response["error"] = true;
 			$response["msg"] = "ไม่มีข้อมูลครับ";
 			echo json_encode ($response); exit;
 		}
-		
 		$html = "
 			<div class='k_Penalty' style='width:800px;height:480px;overflow:auto;background-color:white;'>
 				<fieldset style='height:100%'>
@@ -1694,31 +1728,84 @@ class ReportFinance extends MY_Controller {
 		$DATESEARCH = $this->Convertdate(1,$_REQUEST['DATESEARCH']);
 		$arrs = array();
 		$sql = "
-			declare @DISPAY decimal(8,2) = (select isnull(MIN(NOPAY),0) as DISPAY from {$this->MAuth->getdb('ARPAY')} 
-			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and DDATE >= '".$DATESEARCH."')
+			select CONVERT(varchar(8),GETDATE(),112) as GDATE
+		";
+		$query = $this->db->query($sql);
+		$gdate = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$gdate = $row->GDATE;
+			}
+		}
+		$datesr = "";
+		if($DATESEARCH == $gdate){
+			$datesr = $DATESEARCH;
+		}else{
+			$datesr = null;
+		}
+		//function sql update เบี้ยปรับล่าช้า
+		$sql = "
+			exec [dbo].[FN_JD_LatePenalty] @contno ='".$CONTNO."',@dt = '".$datesr."'
+		";
+		$sql = "
+			declare @DISPAY decimal(8,2) = (
+				select isnull(MIN(NOPAY),0) as DISPAY from {$this->MAuth->getdb('ARPAY')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and DDATE >= '".$DATESEARCH."'
+			)
 			declare @NPROF decimal(8,2)	= ( select sum(NPROF) as NPROF
 			from(
 				select case when PAYMENT > 0 then (NPROF/DAMT)*PAYMENT else NPROF end as  NPROF  
 				from {$this->MAuth->getdb('ARPAY')}  
 				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and PAYMENT < DAMT and DDATE >= '".$DATESEARCH."'
 			)A)
-			declare @AROTH decimal(8,2)= (select isnull(SUM(PAYAMT-(SMPAY+SMCHQ)),0) as AROTH  from {$this->MAuth->getdb('AROTHR')}  where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."')
-			declare @INTAMT decimal(8,2) = (select sum(INTAMT) from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."')
-			declare @PAID decimal(8,2) = (select isnull(SUM(PAYINT),0) from {$this->MAuth->getdb('CHQTRAN')} where CONTNO = '".$CONTNO."' and LOCATPAY = '".$LOCAT."' and 
-			(PAYFOR='006' OR PAYFOR='007') and FLAG !='C' and (PAYDT IS NOT NULL) )
-			declare @NPROF2 decimal(8,2)	= (select top 1 NPROF from {$this->MAuth->getdb('ARPAY')}  where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' order by NOPAY desc)
+			declare @AROTH decimal(8,2)= (
+				select isnull(SUM(PAYAMT-(SMPAY+SMCHQ)),0) as AROTH  from {$this->MAuth->getdb('AROTHR')}  
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			)
+			declare @INTAMT decimal(8,2) = (
+				select sum(INTAMT) from {$this->MAuth->getdb('ARPAY')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			)
+			declare @PAID decimal(8,2) = (
+				select isnull(SUM(PAYINT),0) from {$this->MAuth->getdb('CHQTRAN')} 
+				where CONTNO = '".$CONTNO."' and LOCATPAY = '".$LOCAT."' and 
+				(PAYFOR='006' OR PAYFOR='007') and FLAG !='C' and (PAYDT IS NOT NULL) 
+			)
+			declare @NPROF2 decimal(8,2)	= (
+				select top 1 NPROF from {$this->MAuth->getdb('ARPAY')}  
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' order by NOPAY desc
+			)
 
-			select TOTPRC-SMPAY-SMCHQ as TOTAR, case when @DISPAY > 0 then @NPROF*0.3 else 0 end as PERC30, 
-			case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3) else TOTPRC-SMPAY-SMCHQ end as TOTPAY,
-			@INTAMT-@PAID as INTAMT, 0 as OPERT, case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3)+(@INTAMT-@PAID)+@AROTH 
-			else TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH end as NETPAY, @NPROF as NPROF, @NPROF*0.5 as PERC50,
-			case when isnull(@NPROF,0) = 0 then @NPROF2 else @NPROF end as NPROF, case when isnull(@NPROF,0) = 0 then @NPROF2*0.5 else @NPROF*0.5 end as PERC50
+			select TOTPRC-SMPAY-SMCHQ as TOTAR
+				,case when @DISPAY > 0 then @NPROF*0.3 else 0 end as PERC30
+				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3) else TOTPRC-SMPAY-SMCHQ end as TOTPAY
+				,@INTAMT-@PAID as INTAMT
+				,0 as OPERT
+				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3)+(@INTAMT-@PAID)+@AROTH 
+				else TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH end as NETPAY
+				,@NPROF as NPROF, @NPROF*0.5 as PERC50
+				,case when isnull(@NPROF,0) = 0 then @NPROF2 else @NPROF end as NPROF
+				,case when isnull(@NPROF,0) = 0 then @NPROF2*0.5 else @NPROF*0.5 end as PERC50
 			from {$this->MAuth->getdb('ARMAST')} 
+			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			union
+			select TOTPRC-SMPAY-SMCHQ as TOTAR
+				,case when @DISPAY > 0 then @NPROF*0.3 else 0 end as PERC30
+				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3) else TOTPRC-SMPAY-SMCHQ end as TOTPAY
+				,@INTAMT-@PAID as INTAMT
+				,0 as OPERT
+				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3)+(@INTAMT-@PAID)+@AROTH 
+				else TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH end as NETPAY
+				,@NPROF as NPROF, @NPROF*0.5 as PERC50
+				,case when isnull(@NPROF,0) = 0 then @NPROF2 else @NPROF end as NPROF
+				,case when isnull(@NPROF,0) = 0 then @NPROF2*0.5 else @NPROF*0.5 end as PERC50
+			from {$this->MAuth->getdb('HARMAST')} 
 			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
 		";
 		$query = $this->db->query($sql);
 		//echo $sql; exit;
-		if($query->row()){
+		$i = 0;
+		if($query->row()){$i++;
 			foreach($query->result() as $row){
 				$arrs['TOTAR']   = number_format($row->TOTAR,2);
 				$arrs['PERC30']  = number_format($row->PERC30,2);
@@ -1739,11 +1826,13 @@ class ReportFinance extends MY_Controller {
 			$arrs['NPROF']   = '0.00';
 			$arrs['PERC50']  = '0.00';
 		}
-		if($arrs['INTAMT'] == "0.00"){
+		/*
+		if($i == 0){
 			$response["error"] = true;
 			$response["msg"] = "ไม่มีข้อมูลครับ";
 			echo json_encode ($response); exit;
 		}
+		*/
 		$html = "
 			<div class='k_Discount' style='width:800px;height:480px;overflow:auto;background-color:white;'>
 				<fieldset style='height:100%  background-color:#6aa705'>
@@ -1943,9 +2032,74 @@ class ReportFinance extends MY_Controller {
 		}
 		$response['TSALE'] = $TSALE;
 		
-		if($i>0){
+		if($i < 1){
+			if($CUSCOD1 !== ""){
+				$sql = "
+					select SNAM,NAME1,NAME2 from {$this->MAuth->getdb('CUSTMAST')} 
+					where CUSCOD = '".$CUSCOD1."'
+				";
+				$queryname = $this->db->query($sql);
+				$rown = $queryname->row();
+				$response['SNAM']		 = $rown->SNAM;
+				$response['NAME1']		 = $rown->NAME1;
+				$response['NAME2']		 = $rown->NAME2;
+			}
+			$sql12 = "
+				IF OBJECT_ID('tempdb..#ISR') IS NOT NULL DROP TABLE #ISR
+				select CONTNO,CUSCOD,NAME1,NAME2,STRNO,convert(varchar(8),SDATE,112) as SDATE, BALANCE
+				into #ISR
+				FROM(
+					select A.CONTNO,B.CUSCOD,C.NAME1,C.NAME2,B.STRNO,B.SDATE,(B.TOTPRC-B.SMPAY) as BALANCE 
+					from {$this->MAuth->getdb('ARMGAR')} A
+					left join {$this->MAuth->getdb('ARMAST')} B on A.CONTNO = B.CONTNO and A.LOCAT = B.LOCAT
+					left join {$this->MAuth->getdb('CUSTMAST')} C on B.CUSCOD = C.CUSCOD where A.CUSCOD = '".$CUSCOD1."'
+
+					union all
+					select A.CONTNO,B.CUSCOD,C.NAME1,C.NAME2,B.STRNO,B.SDATE,(B.TOTPRC-B.SMPAY) as BALANCE 
+					from {$this->MAuth->getdb('HARMGAR')} A
+					left join {$this->MAuth->getdb('HARMAST')} B on A.CONTNO = B.CONTNO and A.LOCAT = B.LOCAT
+					left join {$this->MAuth->getdb('CUSTMAST')} C on B.CUSCOD = C.CUSCOD where A.CUSCOD = '".$CUSCOD1."'
+				)ISR
+			";
+			//echo $sql12; exit;
+			$query12 = $this->db->query($sql12);
+			$sql13 = "
+				select * from #ISR
+			";
+			$query13 = $this->db->query($sql13);
+			$insurance = "";
+			if($query13->row()){
+				foreach($query13->result() as $row){
+					$insurance .= "
+						<tr class='trow' seq='old'>
+							<td class=''>".$row->CONTNO."</td>
+							<td>".$row->CUSCOD."</td>
+							<td>".$row->NAME1."</td>
+							<td>".$row->NAME2."</td>
+							<td>".$row->STRNO."</td>
+							<td>".$this->Convertdate(2,$row->SDATE)."</td>
+							<td align='right'>".number_format($row->BALANCE,2)."</td>
+						</tr>
+					";	
+				}
+			}else{
+				$insurance .= "<tr class='trow'><td colspan='9' style='color:red;'>ไม่มีข้อมูล</td></tr>";
+			}
+			$response["insurance"] = $insurance;
+			$sql14 = "
+				select count(CONTNO) as countCUSCOD,sum(BALANCE) as sumBALANCE from #ISR
+			";
+			$query14 = $this->db->query($sql14);
+			if($query14->row()){
+				foreach($query14->result() as $row){
+					$response['COUNTCUSCOD_ISR']    = $row->countCUSCOD;
+					$response['SUMBALANCE_ISR']		= number_format($row->sumBALANCE,2);
+				}
+			}
+			$response["MSGMEMO"] = "none";
+		}
+		if($i > 0){
 			$response["numrow"] = $i;
-			
 			$stylesheet = "
 				<style>
 					tr.highlighted td{background:#cce8ff;}
@@ -1967,12 +2121,20 @@ class ReportFinance extends MY_Controller {
 			$sql = "
 				select SNAM,NAME1,NAME2 from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD = '".$cuscod."'
 			";
-			$queryname = $this->db->query($sql);
+			$query = $this->db->query($sql);
+			if($query->row()){
+				foreach($query->result() as $row){
+					$response['SNAM']		 = $row->SNAM;
+					$response['NAME1']		 = $row->NAME1;
+					$response['NAME2']		 = $row->NAME2;
+				}
+			}
+			/*$queryname = $this->db->query($sql);
 			$rown = $queryname->row();
 			$response['SNAM']		 = $rown->SNAM;
 			$response['NAME1']		 = $rown->NAME1;
 			$response['NAME2']		 = $rown->NAME2;
-			
+			*/
 			if($tab11C[0] == "true"){
 				$sql11 = "
 					select COUNT(CONTNO) as countCONTNO,SUM(TOTPRC) as sumTOTPRC,SUM(SMPAY) as sumSMPAY
@@ -1999,12 +2161,14 @@ class ReportFinance extends MY_Controller {
 				select CONTNO,CUSCOD,NAME1,NAME2,STRNO,convert(varchar(8),SDATE,112) as SDATE, BALANCE
 				into #ISR
 				FROM(
-					select A.CONTNO,B.CUSCOD,C.NAME1,C.NAME2,B.STRNO,B.SDATE,(B.TOTPRC-B.SMPAY) as BALANCE from {$this->MAuth->getdb('ARMGAR')} A
+					select A.CONTNO,B.CUSCOD,C.NAME1,C.NAME2,B.STRNO,B.SDATE,(B.TOTPRC-B.SMPAY) as BALANCE 
+					from {$this->MAuth->getdb('ARMGAR')} A
 					left join {$this->MAuth->getdb('ARMAST')} B on A.CONTNO = B.CONTNO and A.LOCAT = B.LOCAT
 					left join {$this->MAuth->getdb('CUSTMAST')} C on B.CUSCOD = C.CUSCOD where A.CUSCOD = '".$cuscod."'
 
 					union all
-					select A.CONTNO,B.CUSCOD,C.NAME1,C.NAME2,B.STRNO,B.SDATE,(B.TOTPRC-B.SMPAY) as BALANCE from {$this->MAuth->getdb('HARMGAR')} A
+					select A.CONTNO,B.CUSCOD,C.NAME1,C.NAME2,B.STRNO,B.SDATE,(B.TOTPRC-B.SMPAY) as BALANCE 
+					from {$this->MAuth->getdb('HARMGAR')} A
 					left join {$this->MAuth->getdb('HARMAST')} B on A.CONTNO = B.CONTNO and A.LOCAT = B.LOCAT
 					left join {$this->MAuth->getdb('CUSTMAST')} C on B.CUSCOD = C.CUSCOD where A.CUSCOD = '".$cuscod."'
 				)ISR
@@ -2064,7 +2228,6 @@ class ReportFinance extends MY_Controller {
 			}else{
 				$response["MSGMEMO"] = "none";
 			}
-			
 			//tab2
 			$sql21 = "
 				select CONTNO,LOCAT from ##RPFN where CONTNO = '".$contno."'
@@ -2102,8 +2265,7 @@ class ReportFinance extends MY_Controller {
 			
 			$sql23 = "select * from #CDT";	
 			$query23 = $this->db->query($sql23);
-			$recvno = "";
-			$gcode  = "";
+			$recvno = ""; $gcode  = ""; $stat = ""; $ystat = "";
 			if($query23->row()){
 				foreach($query23->result() as $row){
 					$response['STRNO_2']    = str_replace(chr(0),'',$row->STRNO);
@@ -2114,12 +2276,22 @@ class ReportFinance extends MY_Controller {
 					$response['BAAB_2']     = str_replace(chr(0),'',$row->BAAB);
 					$response['COLOR_2']    = str_replace(chr(0),'',$row->COLOR);
 					$response['CC_2']       = str_replace(chr(0),'',$row->CC);
-					$response['STAT_2']		= str_replace(chr(0),'',$row->STAT);
+					$stat					= str_replace(chr(0),'',$row->STAT);
+					$ystat    				= str_replace(chr(0),'',$row->YSTAT);
 					$response['MANUYR_2']   = str_replace(chr(0),'',$row->MANUYR);
 					
 					$recvno					= str_replace(chr(0),'',$row->RECVNO);
 					$gcode					= str_replace(chr(0),'',$row->GCODE);
 				}
+			}
+			if($stat == 'O' && $ystat !== 'Y'){
+				$response['STAT_2'] = "เก่า";
+			}else if($stat == 'N' && $ystat !== 'Y'){
+				$response['STAT_2'] = "ใหม่";
+			}else if($stat == 'O' && $ystat == 'Y'){
+				$response['STAT_2'] = "เก่า : เป็นรถยึด";
+			}else if($stat == 'N' && $ystat == 'Y'){
+				$response['STAT_2'] = "ใหม่ : เป็นรถยึด";
 			}
 			$sql24 = "
 				select APNAME from {$this->MAuth->getdb('INVINVO')} A,{$this->MAuth->getdb('APMAST')} B 
@@ -2300,8 +2472,10 @@ class ReportFinance extends MY_Controller {
 			$query31 = $this->db->query($sql31);
 			
 			$sql32 = "
-				select * from #CONTRAC A left join {$this->MAuth->getdb('PAYDUE')} B on A.PAYTYP = B.PAYCODE
+				select '['+PAYCODE+']'+PAYDESC as PAY,* from #CONTRAC A 
+				left join {$this->MAuth->getdb('PAYDUE')} B on A.PAYTYP = B.PAYCODE
 			";
+			//echo $sql32; exit;
 			$query32 = $this->db->query($sql32);
 			if($query32->row()){
 				foreach($query32->result() as $row){
@@ -2321,7 +2495,7 @@ class ReportFinance extends MY_Controller {
 					$response['EXP_PRD_3']   = number_format($row->EXP_PRD);
 					
 					$response['CONTSTAT_3']  = $row->CONTSTAT;
-					$response['PAYTYP_3']  	 = str_replace(chr(0),'',$row->PAYDESC);
+					$response['PAYTYP_3']  	 = str_replace(chr(0),'',$row->PAY);
 					$response['T_NOPAY_3']   = $row->T_NOPAY;
 					$response['CALINT_3']    = $row->CALINT;
 					$response['CALDSC_3']    = $row->CALDSC;
@@ -2386,14 +2560,15 @@ class ReportFinance extends MY_Controller {
 				}
 			}
 			//สถานะรถ
-			/*$sttcar = "
-				select * from ##RPFN where CONTNO = '".$contno."'
+			$sttcar = "
+				select YSTAT from #CONTRAC
 			";
-			$querysttcar = $this->db->query($sttcar);
-			$rows = $querysttcar->row();
-			$FL = $rows->FL;
-			$response['FL'] = $FL;*/
-			
+			$querystt = $this->db->query($sttcar);
+			if($querystt->row()){
+				foreach($querystt->result() as $rows){
+					$response['YSTAT'] = $rows->YSTAT;
+				}
+			}
 			//tab4
 			$sql41 = "
 				IF OBJECT_ID('tempdb..#PAYMENT') IS NOT NULL DROP TABLE #PAYMENT
@@ -2409,6 +2584,7 @@ class ReportFinance extends MY_Controller {
 					AND (B.CONTNO = '".$contno."' OR B.CONTNO = '".$contno."') AND  B.LOCATPAY ='".$locat."'
 				)PAYMENT
 			";	
+			//echo $sql41; exit;
 			$query41 = $this->db->query($sql41);
 			
 			$sql42 = "
@@ -2836,12 +3012,11 @@ class ReportFinance extends MY_Controller {
 				,RECVNO,GCODE from {$this->MAuth->getdb('HINVTRAN')} where STRNO = '".$STRNOS."'
 			)CDT
 		";
-		echo $sql2; exit;
+		//echo $sql2; exit;
 		$query2 = $this->db->query($sql2);
 		
 		$sql2_1 = "select * from #CDT";
-		$recvno = "";
-		$gcode  = "";
+		$recvno = ""; $gcode  = ""; $stat = ""; $ystat = "";
 		$query2_1 = $this->db->query($sql2_1);
 		if($query2_1->row()){
 			foreach($query2_1->result() as $row){
@@ -2853,12 +3028,22 @@ class ReportFinance extends MY_Controller {
 				$response['BAAB_2']     = str_replace(chr(0),'',$row->BAAB);
 				$response['COLOR_2']    = str_replace(chr(0),'',$row->COLOR);
 				$response['CC_2']       = str_replace(chr(0),'',$row->CC);
-				$response['STAT_2']		= str_replace(chr(0),'',$row->STAT);
+				$stat					= str_replace(chr(0),'',$row->STAT);
+				$ystat   				= str_replace(chr(0),'',$row->YSTAT);
 				$response['MANUYR_2']   = str_replace(chr(0),'',$row->MANUYR);
 				
 				$recvno					= str_replace(chr(0),'',$row->RECVNO);
 				$gcode					= str_replace(chr(0),'',$row->GCODE);
 			}
+		}
+		if($stat == 'O' && $ystat !== 'Y'){
+			$response['STAT_2'] = "เก่า";
+		}else if($stat == 'N' && $ystat !== 'Y'){
+			$response['STAT_2'] = "ใหม่";
+		}else if($stat == 'O' && $ystat == 'Y'){
+			$response['STAT_2'] = "เก่า : เป็นรถยึด";
+		}else if($stat == 'N' && $ystat == 'Y'){
+			$response['STAT_2'] = "ใหม่ : เป็นรถยึด";
 		}
 		$sql2_2 = "
 			select APNAME from {$this->MAuth->getdb('INVINVO')} A,{$this->MAuth->getdb('APMAST')} B 
@@ -2992,7 +3177,8 @@ class ReportFinance extends MY_Controller {
 		$query3_1 = $this->db->query($sql3_1);
 		
 		$sql3_2 = "
-			select * from #CONTRAC A left join {$this->MAuth->getdb('PAYDUE')} B on A.PAYTYP = B.PAYCODE
+			select '['+PAYCODE+']'+PAYDESC as PAY,* from #CONTRAC A 
+			left join {$this->MAuth->getdb('PAYDUE')} B on A.PAYTYP = B.PAYCODE
 		";
 		$query3_2 = $this->db->query($sql3_2);
 		if($query3_2->row()){
@@ -3013,7 +3199,7 @@ class ReportFinance extends MY_Controller {
 				$response['EXP_PRD_3']   = number_format($row->EXP_PRD);
 				
 				$response['CONTSTAT_3']  = $row->CONTSTAT;
-				$response['PAYTYP_3']  	 = str_replace(chr(0),'',$row->PAYDESC);
+				$response['PAYTYP_3']  	 = str_replace(chr(0),'',$row->PAY);
 				$response['T_NOPAY_3']   = $row->T_NOPAY;
 				$response['CALINT_3']    = $row->CALINT;
 				$response['CALDSC_3']    = $row->CALDSC;
@@ -3049,7 +3235,8 @@ class ReportFinance extends MY_Controller {
 			}
 		}
 		$sql3_5 = "
-			select (select RTRIM(name) + '[' + RTRIM(code) + ']' from {$this->MAuth->getdb('OFFICER')} B where B.CODE = A.BILLCOLL) as BILLCOLL 
+			select (select RTRIM(name) + '[' + RTRIM(code) + ']' from {$this->MAuth->getdb('OFFICER')} B 
+			where B.CODE = A.BILLCOLL) as BILLCOLL 
 			from #CONTRAC A left join {$this->MAuth->getdb('OFFICER')} B on A.BILLCOLL = B.CODE
 		";
 		$query3_5 = $this->db->query($sql3_5);
@@ -3059,7 +3246,8 @@ class ReportFinance extends MY_Controller {
 			}
 		}
 		$sql3_6 = "
-			select (select RTRIM(name) + '[' + RTRIM(code) + ']' from {$this->MAuth->getdb('OFFICER')} B where B.CODE = A.CHECKER) as CHECKER 
+			select (select RTRIM(name) + '[' + RTRIM(code) + ']' from {$this->MAuth->getdb('OFFICER')} B 
+			where B.CODE = A.CHECKER) as CHECKER 
 			from #CONTRAC A left join {$this->MAuth->getdb('OFFICER')} B on A.CHECKER = B.CODE
 		";
 		$query3_6 = $this->db->query($sql3_6);
@@ -3077,17 +3265,14 @@ class ReportFinance extends MY_Controller {
 				$response['MEMO1_3']   = $row->MEMO1;
 			}
 		}
-		$sql3_7 = "
-			select * from ##RPFN1
+		//สถานะรถ
+		$sttcar = "
+			select YSTAT from #CONTRAC
 		";
-		$statuscar = "";
-		$query3_7 = $this->db->query($sql3_7);
-		if($query3_7->row()){
-			foreach($query3_7->result() as $row){
-				$statuscar   = $row->FL;
-			}
-		}
-		$response['statuscar'] = $statuscar;
+		$querysttcar = $this->db->query($sttcar);
+		$rows = $querysttcar->row();
+		$response['YSTAT'] = $rows->YSTAT;
+		
 		//tab4
 		$sql4_1 = "
 			IF OBJECT_ID('tempdb..#PAYMENT') IS NOT NULL DROP TABLE #PAYMENT
@@ -3434,8 +3619,7 @@ class ReportFinance extends MY_Controller {
 		$query2 = $this->db->query($sql2);
 		
 		$sql2_1 = "select * from #CDT";
-		$recvno = "";
-		$gcode  = "";
+		$recvno = ""; $gcode  = ""; $stat = ""; $ystat = "";
 		$query2_1 = $this->db->query($sql2_1);
 		if($query2_1->row()){
 			foreach($query2_1->result() as $row){
@@ -3447,12 +3631,22 @@ class ReportFinance extends MY_Controller {
 				$response['BAAB_2']     = str_replace(chr(0),'',$row->BAAB);
 				$response['COLOR_2']    = str_replace(chr(0),'',$row->COLOR);
 				$response['CC_2']       = str_replace(chr(0),'',$row->CC);
-				$response['STAT_2']		= str_replace(chr(0),'',$row->STAT);
+				$stat					= str_replace(chr(0),'',$row->STAT);
+				$ystat					= str_replace(chr(0),'',$row->YSTAT);
 				$response['MANUYR_2']   = str_replace(chr(0),'',$row->MANUYR);
 				
 				$recvno					= str_replace(chr(0),'',$row->RECVNO);
 				$gcode					= str_replace(chr(0),'',$row->GCODE);
 			}
+		}
+		if($stat == 'O' && $ystat !== 'Y'){
+			$response['STAT_2'] = "เก่า";
+		}else if($stat == 'N' && $ystat !== 'Y'){
+			$response['STAT_2'] = "ใหม่";
+		}else if($stat == 'O' && $ystat == 'Y'){
+			$response['STAT_2'] = "เก่า : เป็นรถยึด";
+		}else if($stat == 'N' && $ystat == 'Y'){
+			$response['STAT_2'] = "ใหม่ : เป็นรถยึด";
 		}
 		$sql2_2 = "
 			select APNAME from {$this->MAuth->getdb('INVINVO')} A,{$this->MAuth->getdb('APMAST')} B where RECVNO = '".$recvno."' and A.APCODE = B.APCODE 
@@ -3656,13 +3850,19 @@ class ReportFinance extends MY_Controller {
 		$CONTNO = $tx[0];
 		$DATESEARCH = $this->Convertdate(1,$tx[1]);
 		
-		$sql = "select CUSCOD, LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO = '".$CONTNO."' ";
+		$sql = "
+			select CUSCOD, LOCAT from {$this->MAuth->getdb('ARMAST')} 
+			where CONTNO = '".$CONTNO."' 
+		";
 		//echo $sql; exit;
+		$CUSCOD = ""; $LOCAT = ""; $i = 0;
 		$query = $this->db->query($sql);
-		$row = $query->row();
-		$CUSCOD = $row->CUSCOD;
-		$LOCAT = $row->LOCAT;
-		
+		if($query->row()){
+			foreach($query->result() as $row){$i++;
+				$CUSCOD = $row->CUSCOD;
+				$LOCAT = $row->LOCAT;
+			}
+		}
 		$data = array();
 		
 		$sql = "select COMP_NM from CONDPAY ";
@@ -3678,6 +3878,7 @@ class ReportFinance extends MY_Controller {
 			left join {$this->MAuth->getdb('SETAUMP')} SA on SA.AUMPCOD = A.AUMPCOD
 			left join {$this->MAuth->getdb('SETPROV')} SP on SP.PROVCOD = A.PROVCOD where M.CUSCOD = '".$CUSCOD."'
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		if($query->row()){
 			foreach($query->result() as $row){
@@ -3838,149 +4039,153 @@ class ReportFinance extends MY_Controller {
 				<td style='height:25px;'>&nbsp;<b>บาท</b></td>
 			</tr>
 		";
-		$content = "
-			<div style='width:100%;text-align:center;font-size:9.5pt;'><b>ใบแจ้งเบี้ยปรับ</b></div><br>
-			<div>
-				<table width='100%'>
-					<tr class='wm'> 
-						<td colspan='4'></td>
-						<td class='wf pd'>วันที่พิมพ์</td>
-						<td class='wf pd'> ".date('d/m/').(date('Y')+543)."</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd' colspan='4'>{$data[0]}</td>
-						<td class='wf pd'>เลขที่บัญชี</td>
-						<td class='wf pd'>".$CONTNO."</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ชื่อ-สกุล ผู้ชื้อ</td>
-						<td class='wf pd' colspan='3'>{$data[1]}</td>
-						<td class='wf pd'>สาขา</td>
-						<td class='wf pd'>".$LOCAT."</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ที่อยู่ ผู้ซื้อ</td>
-						<td class='wf pd' colspan='5'>{$data[2]}</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ที่อยู่ ที่ทำงาน</td>
-						<td class='wf pd' colspan='5'>{$data[3]}</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ชื่อ-สกุล ผู้ค้ำ 1</td>
-						<td class='wf pd' colspan='5'>{$data[4]}</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ที่อยู่ ผู้ค้ำ 1</td>
-						<td class='wf pd' colspan='5'>{$data[5]}</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ที่อยู่ ที่ทำงาน</td>
-						<td class='wf pd' colspan='5'>{$data[6]}</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ชื่อ-สกุล ผู้ค้ำ 2</td>
-						<td class='wf pd' colspan='5'>{$data[7]}</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ที่อยู่ ผู้ค้ำ 2</td>
-						<td class='wf pd' colspan='5'>{$data[8]}</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ที่อยู่ ที่ทำงาน</td>
-						<td class='wf pd' colspan='5'>{$data[9]}</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ยี่ห้อ</td>
-						<td class='wf pd'>{$data[10]}</td>
-						<td class='wf pd'>รุ่น</td>
-						<td class='wf pd'>{$data[11]}</td>
-						<td class='wf pd'>สี</td>
-						<td class='wf pd'>{$data[12]}</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>เลขตัวถัง</td>
-						<td class='wf pd'>{$data[13]}</td>
-						<td class='wf pd'>เลขทะเบียน</td>
-						<td class='wf pd'>{$data[14]}</td>
-						<td class='wf pd'>ทะเบียนหมดอายุ</td>
-						<td class='wf pd'>{$data[15]}</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>วันดิวงวดแรก</td>
-						<td class='wf pd'>{$data[16]}</td>
-						<td class='wf pd'>วันครบกำหนด</td>
-						<td class='wf pd'>{$data[17]}</td>
-						<td class='wf pd'>งวดที่</td>
-						<td class='wf pd'>{$data[18]}</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ราคาเช่าซื้อ</td>
-						<td class='wf pd tr'>{$data[19]}  บาท</td>
-						<td class='wf pd'>มูลค่าสินค้า</td>
-						<td class='wf pd tr'>{$data[20]}  บาท</td>
-						<td class='wf pd'>ภาษี</td>
-						<td class='wf pd tr'>{$data[21]}  บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>เงินดาวน์</td>
-						<td class='wf pd tr'>{$data[22]}  บาท</td>
-						<td class='wf pd'>ค้างดาวน์</td>
-						<td class='wf pd tr'>{$data[23]}  บาท</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ชำระเงินแล้ว</td>
-						<td class='wf pd tr'>{$data[24]}  บาท</td>
-						<td class='wf pd'>ลูกหนี้คงเหลือ</td>
-						<td class='wf pd tr'>{$data[25]}  บาท</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ค้างชำระงวดที่</td>
-						<td class='wf pd'>{$data[26]}</td>
-						<td class='wf pd'>เป็นเงิน</td>
-						<td class='wf pd tr'>{$data[27]}  บาท</td>
-						<td class='wf pd'>ค้างเบี้ยปรับ</td>
-						<td class='wf pd tr'>{$data[28]}  บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>จำนวนงวดที่ขาด</td>
-						<td class='wf pd'>{$data[29]}  งวด</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'>ค้างค่างวดและเบี้ยปรับ</td>
-						<td class='wf pd tr'><u>{$data[30]}</u>  บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>วันที่ชำระครั้งสุดท้าย</td>
-						<td class='wf pd'>{$data[31]}</td>
-						<td class='wf pd'>จำนวนเงิน</td>
-						<td class='wf pd tr'>{$data[32]}  บาท</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-				</table>
-			</div>
-			<div style='width:66%;padding:5px;'>หมายเหตุ : {$data[33]}</div>
-			<div style='text-align:center;'><b>ลูกหนี้ค้างชำระค่าอื่นๆ</b></div>
-			<div>
-				<table style='width:100%;' cellspacing='0'>
-					<tr>
-						<td class='tt' style='width:5%;'>No.</td>
-						<td class='tt' style='width:12%;'>วันที่ค้าง</td>
-						<td class='tt' style='width:21%;'>ค้างค่า</td>
-						<td class='tt' style='width:19%;text-align:right;'>จำนวนเงิน</td>
-						<td class='tt' style='width:19%;text-align:right;'>ชำระแล้ว</td>
-						<td class='tt' style='width:19%;text-align:right;'>ยอดคงเหลือ</td>
-						<td class='tt' style='width:5%;'></td>
-					</tr>
-					".$tdaroth."
-				</table>
-			</div>
-		";
+		if($i > 0){
+			$content = "
+				<div style='width:100%;text-align:center;font-size:9.5pt;'><b>ใบแจ้งเบี้ยปรับ</b></div><br>
+				<div>
+					<table width='100%'>
+						<tr class='wm'> 
+							<td colspan='4'></td>
+							<td class='wf pd'>วันที่พิมพ์</td>
+							<td class='wf pd'> ".date('d/m/').(date('Y')+543)."</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd' colspan='4'>{$data[0]}</td>
+							<td class='wf pd'>เลขที่บัญชี</td>
+							<td class='wf pd'>".$CONTNO."</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ชื่อ-สกุล ผู้ชื้อ</td>
+							<td class='wf pd' colspan='3'>{$data[1]}</td>
+							<td class='wf pd'>สาขา</td>
+							<td class='wf pd'>".$LOCAT."</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ที่อยู่ ผู้ซื้อ</td>
+							<td class='wf pd' colspan='5'>{$data[2]}</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ที่อยู่ ที่ทำงาน</td>
+							<td class='wf pd' colspan='5'>{$data[3]}</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ชื่อ-สกุล ผู้ค้ำ 1</td>
+							<td class='wf pd' colspan='5'>{$data[4]}</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ที่อยู่ ผู้ค้ำ 1</td>
+							<td class='wf pd' colspan='5'>{$data[5]}</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ที่อยู่ ที่ทำงาน</td>
+							<td class='wf pd' colspan='5'>{$data[6]}</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ชื่อ-สกุล ผู้ค้ำ 2</td>
+							<td class='wf pd' colspan='5'>{$data[7]}</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ที่อยู่ ผู้ค้ำ 2</td>
+							<td class='wf pd' colspan='5'>{$data[8]}</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ที่อยู่ ที่ทำงาน</td>
+							<td class='wf pd' colspan='5'>{$data[9]}</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ยี่ห้อ</td>
+							<td class='wf pd'>{$data[10]}</td>
+							<td class='wf pd'>รุ่น</td>
+							<td class='wf pd'>{$data[11]}</td>
+							<td class='wf pd'>สี</td>
+							<td class='wf pd'>{$data[12]}</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>เลขตัวถัง</td>
+							<td class='wf pd'>{$data[13]}</td>
+							<td class='wf pd'>เลขทะเบียน</td>
+							<td class='wf pd'>{$data[14]}</td>
+							<td class='wf pd'>ทะเบียนหมดอายุ</td>
+							<td class='wf pd'>{$data[15]}</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>วันดิวงวดแรก</td>
+							<td class='wf pd'>{$data[16]}</td>
+							<td class='wf pd'>วันครบกำหนด</td>
+							<td class='wf pd'>{$data[17]}</td>
+							<td class='wf pd'>งวดที่</td>
+							<td class='wf pd'>{$data[18]}</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ราคาเช่าซื้อ</td>
+							<td class='wf pd tr'>{$data[19]}  บาท</td>
+							<td class='wf pd'>มูลค่าสินค้า</td>
+							<td class='wf pd tr'>{$data[20]}  บาท</td>
+							<td class='wf pd'>ภาษี</td>
+							<td class='wf pd tr'>{$data[21]}  บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>เงินดาวน์</td>
+							<td class='wf pd tr'>{$data[22]}  บาท</td>
+							<td class='wf pd'>ค้างดาวน์</td>
+							<td class='wf pd tr'>{$data[23]}  บาท</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ชำระเงินแล้ว</td>
+							<td class='wf pd tr'>{$data[24]}  บาท</td>
+							<td class='wf pd'>ลูกหนี้คงเหลือ</td>
+							<td class='wf pd tr'>{$data[25]}  บาท</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ค้างชำระงวดที่</td>
+							<td class='wf pd'>{$data[26]}</td>
+							<td class='wf pd'>เป็นเงิน</td>
+							<td class='wf pd tr'>{$data[27]}  บาท</td>
+							<td class='wf pd'>ค้างเบี้ยปรับ</td>
+							<td class='wf pd tr'>{$data[28]}  บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>จำนวนงวดที่ขาด</td>
+							<td class='wf pd'>{$data[29]}  งวด</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'>ค้างค่างวดและเบี้ยปรับ</td>
+							<td class='wf pd tr'><u>{$data[30]}</u>  บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>วันที่ชำระครั้งสุดท้าย</td>
+							<td class='wf pd'>{$data[31]}</td>
+							<td class='wf pd'>จำนวนเงิน</td>
+							<td class='wf pd tr'>{$data[32]}  บาท</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+					</table>
+				</div>
+				<div style='width:66%;padding:5px;'>หมายเหตุ : {$data[33]}</div>
+				<div style='text-align:center;'><b>ลูกหนี้ค้างชำระค่าอื่นๆ</b></div>
+				<div>
+					<table style='width:100%;' cellspacing='0'>
+						<tr>
+							<td class='tt' style='width:5%;'>No.</td>
+							<td class='tt' style='width:12%;'>วันที่ค้าง</td>
+							<td class='tt' style='width:21%;'>ค้างค่า</td>
+							<td class='tt' style='width:19%;text-align:right;'>จำนวนเงิน</td>
+							<td class='tt' style='width:19%;text-align:right;'>ชำระแล้ว</td>
+							<td class='tt' style='width:19%;text-align:right;'>ยอดคงเหลือ</td>
+							<td class='tt' style='width:5%;'></td>
+						</tr>
+						".$tdaroth."
+					</table>
+				</div>
+			";
+		}else{
+			$content = "<div style='color:red;'>ไม่พบข้อมูล</div>";
+		}
 		$stylesheet = "
 			<style>
 				body { font-family: garuda;font-size:8pt; }
@@ -4017,15 +4222,23 @@ class ReportFinance extends MY_Controller {
 		$DATEBILL =  $tx[1];
 		$DATESEARCH = $this->Convertdate(1,$tx[1]);
 		
+		$tx = explode("||",$_REQUEST['cond']);
+		$CONTNO = $tx[0];
+		$DATESEARCH = $this->Convertdate(1,$tx[1]);
+		
 		$sql = "
-			select CUSCOD, LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO = '".$CONTNO."' 
+			select CUSCOD, LOCAT from {$this->MAuth->getdb('ARMAST')} 
+			where CONTNO = '".$CONTNO."' 
 		";
 		//echo $sql; exit;
+		$CUSCOD = ""; $LOCAT = ""; $i = 0;
 		$query = $this->db->query($sql);
-		$row = $query->row();
-		$CUSCOD = $row->CUSCOD;
-		$LOCAT = $row->LOCAT;
-		$data = array();
+		if($query->row()){
+			foreach($query->result() as $row){$i++;
+				$CUSCOD = $row->CUSCOD;
+				$LOCAT = $row->LOCAT;
+			}
+		}
 		
 		$sql = " select COMP_NM from {$this->MAuth->getdb('CONDPAY')} ";
 		//echo $sql; exit;
@@ -4168,174 +4381,178 @@ class ReportFinance extends MY_Controller {
 				<td class='tt' style='height:25px;'>&nbsp;บาท</td>
 			</tr>
 		";
-		$content = "
+		if($i > 0){
+			$content = "
 			<div style='width:100%;text-align:center;font-size:9.5pt;'><b>ใบตัดสด</b></div><br>
 			<div style='width:100%;text-align:right;font-size:8pt;'>[แผนกบัญชี]</div>
-			<div>
-				<table width='100%' cellspacing='0'>
-					<tr class='wm'>
-						<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='6'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd' colspan='5'>{$data[0]}</td>
-						<td class='wf pd tr'>PrnBill40,41</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd' colspan='6'>ตัดสด ณ วันที่ ".$DATEBILL."</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>เลขที่บัญชี</td>
-						<td class='wf pd'>".$CONTNO."</td>
-						<td class='wf pd'>สาขา</td>
-						<td class='wf pd'>".$LOCAT."</td>
-						<td class='wf pd'>วันที่ทำสัญญา</td>
-						<td class='wf pd'>{$data[8]}</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ชื่อ-สกุล</td>
-						<td class='wf pd'>{$data[1]}</td>
-						<td class='wf pd'>รหัสลูกค้า</td>
-						<td class='wf pd'>".$CUSCOD."</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ยี่ห้อ</td>
-						<td class='wf pd'>{$data[2]}</td>
-						<td class='wf pd'>รุ่น</td>
-						<td class='wf pd'>{$data[3]}</td>
-						<td class='wf pd'>สี</td>
-						<td class='wf pd'>{$data[4]}</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>เลขถัง</td>
-						<td class='wf pd'>{$data[5]}</td>
-						<td class='wf pd'>เลขเครื่อง</td>
-						<td class='wf pd'>{$data[6]}</td>
-						<td class='wf pd'>เลขทะเบียน</td>
-						<td class='wf pd'>{$data[7]}</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd' style='height:1px;border-bottom:0.1px solid black;' colspan='6'></td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd' style='height:1px;' colspan='6'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>จำนวนงวดทั้งหมด</td>
-						<td class='wf pd tr'>{$data[9]} งวด</td>
-						<td class='wf pd'>จำนวนงวดที่ผ่อนมาแล้ว</td>
-						<td class='wf pd tr'>{$data[10]} งวด</td>
-						<td class='wf pd'>ตัดสดงวดที่</td>
-						<td class='wf pd tr'>{$data[11]}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ดอกผลคงเหลือ</td>
-						<td class='wf pd tr'>{$data[12]} บาท</td>
-						<td class='wf pd'>ส่วนลด</td>
-						<td class='wf pd tr'>50%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-						<td class='wf pd'>เงินส่วนลด</td>
-						<td class='wf pd tr'>{$data[13]} บาท</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-						<td class='wf pd'>ส่วนลด</td>
-						<td class='wf pd tr'>{$data[14]}%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-						<td class='wf pd'>เงินส่วนลด</td>
-						<td class='wf pd tr'>{$data[15]} บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>มูลค่าราคาเช่าซื้อ</td>
-						<td class='wf pd tr'>{$data[16]} บาท</td>
-						<td class='wf pd'>ภาษีราคาเช่าซื้อ</td>
-						<td class='wf pd tr'>{$data[17]} บาท</td>
-						<td class='wf pd'>ราคาเช่าซื้อ</td>
-						<td class='wf pd tr'>{$data[18]} บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>มูลค่าราคาขายสด</td>
-						<td class='wf pd tr'>{$data[19]} บาท</td>
-						<td class='wf pd'>ภาษีราคาขายสด</td>
-						<td class='wf pd tr'>{$data[20]} บาท</td>
-						<td class='wf pd'>ราคาขายสด</td>
-						<td class='wf pd tr'>{$data[21]} บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>มูลค่าเงินดาวน์</td>
-						<td class='wf pd tr'>{$data[22]} บาท</td>
-						<td class='wf pd'>อัตราดอกเบี้ย</td>
-						<td class='wf pd tr'>{$data[23]} บาท</td>
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>มูลค่าชำระแล้ว</td>
-						<td class='wf pd tr'>{$data[24]} บาท</td>
-						<td class='wf pd'>ภาษีชำระแล้ว</td>
-						<td class='wf pd tr'>{$data[25]} บาท</td>
-						<td class='wf pd'>ชำระเงินแล้ว</td>
-						<td class='wf pd tr'>{$data[26]} บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>มูลค่าลุกหนี้คงเหลือ</td>
-						<td class='wf pd tr'>{$data[27]} บาท</td>
-						<td class='wf pd'>ภาษีคงเหลือ</td>
-						<td class='wf pd tr'>{$data[28]} บาท</td>
-						<td class='wf pd'>ลูกหนี้คงเหลือรวม</td>
-						<td class='wf pd tr'>{$data[29]} บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-						<td class='wf pd'>ยอดต้องชำระ</td>
-						<td class='wf pd tr'>{$data[30]} บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-						<td class='wf pd'>เบี้ยปรับ</td>
-						<td class='wf pd tr'>{$data[31]} บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-						<td class='wf pd'>ลูกหนี้อื่นๆ</td>
-						<td class='wf pd tr'>{$data[32]} บาท</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-						<td class='wf pd'>รวมต้องชำระ</td>
-						<td class='wf pd tr'><u>{$data[33]}</u>  บาท</td>
-					</tr>
-				</table>
-			</div>
-			<br>
-			<div style='text-align:center;'><b>ลูกหนี้ค้างชำระค่าอื่นๆ</b></div>
-			<div>
-				<table style='width:100%;' cellspacing='0'>
-					<tr>
-						<td class='tt' style='background-color:#eee;width:13%;'>เลขที่ลูกหนี้</td>
-						<td class='tt' style='background-color:#eee;width:10%;'>วันที่ค้าง</td>
-						<td class='tt' style='background-color:#eee;width:15%;'>ค้างค่า</td>
-						<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>จำนวนเงิน</td>
-						<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>ชำระแล้ว</td>
-						<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>ยอดคงเหลือ</td>
-						<td class='tt' style='background-color:#eee;width:5%;'></td>
-					</tr>
-					".$tdaroth."
-				</table>
-			</div>
-		";
+				<div>
+					<table width='100%' cellspacing='0'>
+						<tr class='wm'>
+							<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='6'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd' colspan='5'>{$data[0]}</td>
+							<td class='wf pd tr'>PrnBill40,41</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd' colspan='6'>ตัดสด ณ วันที่ ".$DATEBILL."</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>เลขที่บัญชี</td>
+							<td class='wf pd'>".$CONTNO."</td>
+							<td class='wf pd'>สาขา</td>
+							<td class='wf pd'>".$LOCAT."</td>
+							<td class='wf pd'>วันที่ทำสัญญา</td>
+							<td class='wf pd'>{$data[8]}</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ชื่อ-สกุล</td>
+							<td class='wf pd'>{$data[1]}</td>
+							<td class='wf pd'>รหัสลูกค้า</td>
+							<td class='wf pd'>".$CUSCOD."</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ยี่ห้อ</td>
+							<td class='wf pd'>{$data[2]}</td>
+							<td class='wf pd'>รุ่น</td>
+							<td class='wf pd'>{$data[3]}</td>
+							<td class='wf pd'>สี</td>
+							<td class='wf pd'>{$data[4]}</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>เลขถัง</td>
+							<td class='wf pd'>{$data[5]}</td>
+							<td class='wf pd'>เลขเครื่อง</td>
+							<td class='wf pd'>{$data[6]}</td>
+							<td class='wf pd'>เลขทะเบียน</td>
+							<td class='wf pd'>{$data[7]}</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd' style='height:1px;border-bottom:0.1px solid black;' colspan='6'></td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd' style='height:1px;' colspan='6'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>จำนวนงวดทั้งหมด</td>
+							<td class='wf pd tr'>{$data[9]} งวด</td>
+							<td class='wf pd'>จำนวนงวดที่ผ่อนมาแล้ว</td>
+							<td class='wf pd tr'>{$data[10]} งวด</td>
+							<td class='wf pd'>ตัดสดงวดที่</td>
+							<td class='wf pd tr'>{$data[11]}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ดอกผลคงเหลือ</td>
+							<td class='wf pd tr'>{$data[12]} บาท</td>
+							<td class='wf pd'>ส่วนลด</td>
+							<td class='wf pd tr'>50%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+							<td class='wf pd'>เงินส่วนลด</td>
+							<td class='wf pd tr'>{$data[13]} บาท</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+							<td class='wf pd'>ส่วนลด</td>
+							<td class='wf pd tr'>{$data[14]}%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+							<td class='wf pd'>เงินส่วนลด</td>
+							<td class='wf pd tr'>{$data[15]} บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>มูลค่าราคาเช่าซื้อ</td>
+							<td class='wf pd tr'>{$data[16]} บาท</td>
+							<td class='wf pd'>ภาษีราคาเช่าซื้อ</td>
+							<td class='wf pd tr'>{$data[17]} บาท</td>
+							<td class='wf pd'>ราคาเช่าซื้อ</td>
+							<td class='wf pd tr'>{$data[18]} บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>มูลค่าราคาขายสด</td>
+							<td class='wf pd tr'>{$data[19]} บาท</td>
+							<td class='wf pd'>ภาษีราคาขายสด</td>
+							<td class='wf pd tr'>{$data[20]} บาท</td>
+							<td class='wf pd'>ราคาขายสด</td>
+							<td class='wf pd tr'>{$data[21]} บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>มูลค่าเงินดาวน์</td>
+							<td class='wf pd tr'>{$data[22]} บาท</td>
+							<td class='wf pd'>อัตราดอกเบี้ย</td>
+							<td class='wf pd tr'>{$data[23]} บาท</td>
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>มูลค่าชำระแล้ว</td>
+							<td class='wf pd tr'>{$data[24]} บาท</td>
+							<td class='wf pd'>ภาษีชำระแล้ว</td>
+							<td class='wf pd tr'>{$data[25]} บาท</td>
+							<td class='wf pd'>ชำระเงินแล้ว</td>
+							<td class='wf pd tr'>{$data[26]} บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>มูลค่าลุกหนี้คงเหลือ</td>
+							<td class='wf pd tr'>{$data[27]} บาท</td>
+							<td class='wf pd'>ภาษีคงเหลือ</td>
+							<td class='wf pd tr'>{$data[28]} บาท</td>
+							<td class='wf pd'>ลูกหนี้คงเหลือรวม</td>
+							<td class='wf pd tr'>{$data[29]} บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+							<td class='wf pd'>ยอดต้องชำระ</td>
+							<td class='wf pd tr'>{$data[30]} บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+							<td class='wf pd'>เบี้ยปรับ</td>
+							<td class='wf pd tr'>{$data[31]} บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+							<td class='wf pd'>ลูกหนี้อื่นๆ</td>
+							<td class='wf pd tr'>{$data[32]} บาท</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+							<td class='wf pd'>รวมต้องชำระ</td>
+							<td class='wf pd tr'><u>{$data[33]}</u>  บาท</td>
+						</tr>
+					</table>
+				</div>
+				<br>
+				<div style='text-align:center;'><b>ลูกหนี้ค้างชำระค่าอื่นๆ</b></div>
+				<div>
+					<table style='width:100%;' cellspacing='0'>
+						<tr>
+							<td class='tt' style='background-color:#eee;width:13%;'>เลขที่ลูกหนี้</td>
+							<td class='tt' style='background-color:#eee;width:10%;'>วันที่ค้าง</td>
+							<td class='tt' style='background-color:#eee;width:15%;'>ค้างค่า</td>
+							<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>จำนวนเงิน</td>
+							<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>ชำระแล้ว</td>
+							<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>ยอดคงเหลือ</td>
+							<td class='tt' style='background-color:#eee;width:5%;'></td>
+						</tr>
+						".$tdaroth."
+					</table>
+				</div>
+			";
+		}else{
+			$content = "<div style='color:red;'>ไม่พบข้อมูล</div>";
+		}
 		$stylesheet = "
 			<style>
 				body { font-family: garuda;font-size:8pt; }
@@ -4351,7 +4568,6 @@ class ReportFinance extends MY_Controller {
 				.data { background-color:#fff;font-size:9pt; }
 			</style>
 		";
-		
 		$mpdf->WriteHTML($content.$stylesheet);
 		$mpdf->SetHTMLFooter("<div class='wf pf' style='top:1060;left:0;font-size:6pt;width:720px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
@@ -4374,13 +4590,18 @@ class ReportFinance extends MY_Controller {
 		$DATESEARCH = $this->Convertdate(1,$tx[1]);
 		
 		$sql = "
-			select CUSCOD,LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO = '".$CONTNO."' 
+			select CUSCOD, LOCAT from {$this->MAuth->getdb('ARMAST')} 
+			where CONTNO = '".$CONTNO."' 
 		";
 		//echo $sql; exit;
+		$CUSCOD = ""; $LOCAT = ""; $i = 0;
 		$query = $this->db->query($sql);
-		$row = $query->row();
-		$CUSCOD = $row->CUSCOD;
-		$LOCAT = $row->LOCAT;
+		if($query->row()){
+			foreach($query->result() as $row){$i++;
+				$CUSCOD = $row->CUSCOD;
+				$LOCAT = $row->LOCAT;
+			}
+		}
 		$data = array();
 		
 		$sql = " select COMP_NM from {$this->MAuth->getdb('CONDPAY')} ";
@@ -4510,150 +4731,154 @@ class ReportFinance extends MY_Controller {
 				<td class='tt' style='height:25px;'>&nbsp;บาท</td>
 			</tr>
 		";
-		$content = "
+		if($i > 0){
+			$content = "
 			<div style='width:100%;text-align:center;font-size:9.5pt;'><b>ใบตัดสด</b></div>
 			<div style='width:100%;text-align:right;font-size:8pt;'>[สำหรับลูกค้า]</div>
-			<div>
-				<table width='100%' cellspacing='0'>
-					<tr class='wm'>
-						<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='6'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd' colspan='2'>{$data[0]}</td>
-						<td class='wf pd'>ตัดสด ณ วันที่</td>
-						<td class='wf pd'>".$DATEBILL."</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'>PrnBill50,51</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>เลขที่บัญชี</td>
-						<td class='wf pd'>".$CONTNO."</td>
-						<td class='wf pd'>สาขา</td>
-						<td class='wf pd'>".$LOCAT."</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ชื่อ-สกุล</td>
-						<td class='wf pd'>{$data[1]}</td>
-						<td class='wf pd'>รหัสลูกค้า</td>
-						<td class='wf pd'>".$CUSCOD."</td>
-						<td class='wf pd'>วันที่ทำสัญญา</td>
-						<td class='wf pd'>{$data[8]}</td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ยี่ห้อ</td>
-						<td class='wf pd'>{$data[2]}</td>
-						<td class='wf pd'>รุ่น</td>
-						<td class='wf pd'>{$data[3]}</td>
-						<td class='wf pd'>สี</td>
-						<td class='wf pd'>{$data[4]}</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>เลขถัง</td>
-						<td class='wf pd'>{$data[5]}</td>
-						<td class='wf pd'>เลขเครื่อง</td>
-						<td class='wf pd'>{$data[6]}</td>
-						<td class='wf pd'>เลขทะเบียน</td>
-						<td class='wf pd'>{$data[7]}</td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd' style='height:1px;border-bottom:0.1px solid black;' colspan='6'></td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd' style='height:1px;' colspan='6'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ราคาขายสด</td>
-						<td class='wf pd tr'>{$data[13]} บาท</td>
-						<td class='wf pd'>จำนวนงวดที่ผ่อนมาแล้ว</td>
-						<td class='wf pd tr'>{$data[10]} งวด</td>
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ราคาเช่าซื้อ</td>
-						<td class='wf pd tr'>{$data[12]} บาท</td>
-						<td class='wf pd'>จำนวนงวดทั้งหมด</td>
-						<td class='wf pd tr'>{$data[9]} งวด</td>
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-					</tr>
-					<tr class='wm'>
-						<td class='wf pd'>ยอดชำระ</td>
-						<td class='wf pd tr'>{$data[14]} บาท</td>
-						<td class='wf pd'>ตัดสด งวดที่</td>
-						<td class='wf pd tr'>{$data[11]} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-						<td class='wf pd'></td>
-						<td class='wf pd tr'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ลูกหนี้คงเหลือรวม</td>
-						<td class='wf pd tr'>{$data[15]} บาท</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>เบี้ยปรับ</td>
-						<td class='wf pd tr'>{$data[16]} บาท</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>ลูกหนี้อื่นๆ</td>
-						<td class='wf pd tr'>{$data[17]} บาท</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>รวมยอดค้าง</td>
-						<td class='wf pd tr'><u>{$data[18]}</u> บาท</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>เงินส่วนลด</td>
-						<td class='wf pd tr'><u>{$data[19]}</u> บาท</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-					<tr class='wm'> 
-						<td class='wf pd'>รวมต้องชำระ</td>
-						<td class='wf pd tr'><u>{$data[20]}</u> บาท</td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-						<td class='wf pd'></td>
-					</tr>
-				</table>
-			</div>
-			<br>
-			<div style='text-align:center;'><b>ลูกหนี้ค้างชำระค่าอื่นๆ</b></div>
-			<div>
-				<table style='width:100%;' cellspacing='0'>
-					<tr>
-						<td class='tt' style='background-color:#eee;width:13%;'>เลขที่ลูกหนี้</td>
-						<td class='tt' style='background-color:#eee;width:10%;'>วันที่ค้าง</td>
-						<td class='tt' style='background-color:#eee;width:15%;'>ค้างค่า</td>
-						<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>จำนวนเงิน</td>
-						<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>ชำระแล้ว</td>
-						<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>ยอดคงเหลือ</td>
-						<td class='tt' style='background-color:#eee;width:5%;'></td>
-					</tr>
-					".$tdaroth."
-				</table>
-			</div>
-		";
+				<div>
+					<table width='100%' cellspacing='0'>
+						<tr class='wm'>
+							<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='6'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd' colspan='2'>{$data[0]}</td>
+							<td class='wf pd'>ตัดสด ณ วันที่</td>
+							<td class='wf pd'>".$DATEBILL."</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'>PrnBill50,51</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>เลขที่บัญชี</td>
+							<td class='wf pd'>".$CONTNO."</td>
+							<td class='wf pd'>สาขา</td>
+							<td class='wf pd'>".$LOCAT."</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ชื่อ-สกุล</td>
+							<td class='wf pd'>{$data[1]}</td>
+							<td class='wf pd'>รหัสลูกค้า</td>
+							<td class='wf pd'>".$CUSCOD."</td>
+							<td class='wf pd'>วันที่ทำสัญญา</td>
+							<td class='wf pd'>{$data[8]}</td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ยี่ห้อ</td>
+							<td class='wf pd'>{$data[2]}</td>
+							<td class='wf pd'>รุ่น</td>
+							<td class='wf pd'>{$data[3]}</td>
+							<td class='wf pd'>สี</td>
+							<td class='wf pd'>{$data[4]}</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>เลขถัง</td>
+							<td class='wf pd'>{$data[5]}</td>
+							<td class='wf pd'>เลขเครื่อง</td>
+							<td class='wf pd'>{$data[6]}</td>
+							<td class='wf pd'>เลขทะเบียน</td>
+							<td class='wf pd'>{$data[7]}</td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd' style='height:1px;border-bottom:0.1px solid black;' colspan='6'></td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd' style='height:1px;' colspan='6'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ราคาขายสด</td>
+							<td class='wf pd tr'>{$data[13]} บาท</td>
+							<td class='wf pd'>จำนวนงวดที่ผ่อนมาแล้ว</td>
+							<td class='wf pd tr'>{$data[10]} งวด</td>
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ราคาเช่าซื้อ</td>
+							<td class='wf pd tr'>{$data[12]} บาท</td>
+							<td class='wf pd'>จำนวนงวดทั้งหมด</td>
+							<td class='wf pd tr'>{$data[9]} งวด</td>
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+						</tr>
+						<tr class='wm'>
+							<td class='wf pd'>ยอดชำระ</td>
+							<td class='wf pd tr'>{$data[14]} บาท</td>
+							<td class='wf pd'>ตัดสด งวดที่</td>
+							<td class='wf pd tr'>{$data[11]} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+							<td class='wf pd'></td>
+							<td class='wf pd tr'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ลูกหนี้คงเหลือรวม</td>
+							<td class='wf pd tr'>{$data[15]} บาท</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>เบี้ยปรับ</td>
+							<td class='wf pd tr'>{$data[16]} บาท</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>ลูกหนี้อื่นๆ</td>
+							<td class='wf pd tr'>{$data[17]} บาท</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>รวมยอดค้าง</td>
+							<td class='wf pd tr'><u>{$data[18]}</u> บาท</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>เงินส่วนลด</td>
+							<td class='wf pd tr'><u>{$data[19]}</u> บาท</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+						<tr class='wm'> 
+							<td class='wf pd'>รวมต้องชำระ</td>
+							<td class='wf pd tr'><u>{$data[20]}</u> บาท</td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+							<td class='wf pd'></td>
+						</tr>
+					</table>
+				</div>
+				<br>
+				<div style='text-align:center;'><b>ลูกหนี้ค้างชำระค่าอื่นๆ</b></div>
+				<div>
+					<table style='width:100%;' cellspacing='0'>
+						<tr>
+							<td class='tt' style='background-color:#eee;width:13%;'>เลขที่ลูกหนี้</td>
+							<td class='tt' style='background-color:#eee;width:10%;'>วันที่ค้าง</td>
+							<td class='tt' style='background-color:#eee;width:15%;'>ค้างค่า</td>
+							<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>จำนวนเงิน</td>
+							<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>ชำระแล้ว</td>
+							<td class='tt' style='background-color:#eee;width:19%;text-align:right;'>ยอดคงเหลือ</td>
+							<td class='tt' style='background-color:#eee;width:5%;'></td>
+						</tr>
+						".$tdaroth."
+					</table>
+				</div>
+			";
+		}else{
+			$content = "<div style='color:red;'>ไม่พบข้อมูล</div>";
+		}
 		$stylesheet = "
 			<style>
 				body { font-family: garuda;font-size:8pt; }
@@ -4672,6 +4897,154 @@ class ReportFinance extends MY_Controller {
 		$mpdf->WriteHTML($content.$stylesheet);
 		$mpdf->SetHTMLFooter("<div class='wf pf' style='top:1060;left:0;font-size:6pt;width:720px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
+		$mpdf->Output();
+	}
+	function printstatuscontentpdf(){
+		$tx = explode("||",$_REQUEST['cond']);
+		$CONTNO = $tx[0];
+		$LOCAT =  $tx[1];
+		$sql = "
+			IF OBJECT_ID('tempdb..#RCT') IS NOT NULL DROP TABLE #RCT
+			select LOCAT,CONTNO,CUSNAME,SDATE,TOTPRC,LPAYD
+				,BALANCE,CHGDATE,STATFRM,STATTO,FRMBILL,TOBILL,MEMO1 
+			into #RCT
+			FROM(
+				select A.LOCAT,A.CONTNO,C.SNAM+C.NAME1+' '+C.NAME2 as CUSNAME,convert(varchar(8),B.SDATE,112) as SDATE
+				,B.TOTPRC,convert(varchar(8),B.LPAYD,112) as LPAYD,(B.TOTPRC-B.SMPAY) as BALANCE
+				,convert(varchar(8),A.CHGDATE,112) as CHGDATE,A.STATFRM,A.STATTO,A.FRMBILL,A.TOBILL,A.MEMO1 
+				from {$this->MAuth->getdb('STATTRAN')} A
+				left join {$this->MAuth->getdb('ARMAST')} B on A.CONTNO = B.CONTNO
+				left join {$this->MAuth->getdb('CUSTMAST')} C on B.CUSCOD = C.CUSCOD
+				where A.CONTNO like '%".$CONTNO."%' and A.LOCAT like '%".$LOCAT."%'
+			)RCT
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$sql = "select * from #RCT";
+		$query1 = $this->db->query($sql);
+		
+		$sql2 = "select count(CONTNO) as CONTNO from #RCT";
+		$query2 = $this->db->query($sql2);
+		
+		$head = ""; $html = ""; $i = 0;
+		$head = "
+			<tr class='wm'>
+				<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='13'></td>
+			</tr>
+			<tr>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>สาขา</th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>เลขที่สัญญา</th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>ชื่อ - สกุล</th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>วันขาย</th>
+				<th style='border-bottom:0.1px solid black;text-align:left;'>ราคาขาย</th>			
+				<th style='border-bottom:0.1px solid black;text-align:left;'>วันชำระล่าสุด</th> 
+				<th style='border-bottom:0.1px solid black;text-align:left;'>ลูกหนี้คงเหลือ</th> 
+				<th style='border-bottom:0.1px solid black;text-align:right;'>วันที่เปลี่ยนสถานะ</th>
+				<th style='border-bottom:0.1px solid black;text-align:right;'>จากสถานะ</th>
+				<th style='border-bottom:0.1px solid black;text-align:right;'>เป็นสถานะ</th>
+				<th style='border-bottom:0.1px solid black;text-align:right;'>จากพนักงานเก็บเงิน</th>
+				<th style='border-bottom:0.1px solid black;text-align:right;'>เป็นพนักงานเก็บเงิน</th>
+				<th style='border-bottom:0.1px solid black;text-align:right;'>หมายเหตุ</th>
+			</tr>
+			<tr class='wm'>
+				<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='13'></td>
+			</tr>
+		";
+		if($query1->row()){
+			foreach($query1->result() as $row){$i++;
+				$html .="
+					<tr class='trow'>
+						<td style='width:70px;text-align:left;'>".$row->LOCAT."</td>
+						<td style='width:90px;text-align:left;'>".$row->CONTNO."</td>
+						<td style='width:300px;text-align:left;'>".$row->CUSNAME."</td>
+						<td style='width:70spx;text-align:left;'>".$this->Convertdate(2,$row->SDATE)."</td>
+						<td style='width:70px;text-align:right;'>".number_format($row->TOTPRC,2)."</td>
+						<td style='width:70px;text-align:right;'>".$this->Convertdate(2,$row->LPAYD)."</td>
+						<td style='width:70px;text-align:right;'>".number_format($row->BALANCE,2)."</td>
+						<td style='width:70px;text-align:right;'>".$this->Convertdate(2,$row->CHGDATE)."</td>
+						<td style='width:70px;text-align:right;'>".$row->STATFRM."</td>
+						<td style='width:70px;text-align:right;'>".$row->STATTO."</td>
+						<td style='width:70px;text-align:right;'>".$row->FRMBILL."</td>
+						<td style='width:70px;text-align:right;'>".$row->TOBILL."</td>
+						<td style='width:70px;text-align:right;'>".$row->MEMO1."</td>
+					</tr>
+				";
+			}
+		}
+		if($query2->row()){
+			foreach($query2->result() as $row){;
+				$html .="
+					<tr class='wm'>
+						<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='13'></td>
+					</tr>
+					<tr class='trow'>
+						<td style='width:70px;text-align:left;'>รวมทั้งสิ้น</td>
+						<td style='width:70px;text-align:left;'>".$row->CONTNO."</td>
+						<td style='width:70px;text-align:left;'>รายการ</td>
+					</tr>
+					<tr class='wm'>
+						<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='13'></td>
+					</tr>
+				";
+			}
+		}
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8', 
+			'format' =>'A4-L',
+			'margin_top' => 10, 	//default = 16
+			'margin_left' => 10, 	//default = 15
+			'margin_right' => 10, 	//default = 15
+			'margin_bottom' => 10, 	//default = 16
+			'margin_header' => 9, 	//default = 9
+			'margin_footer' => 9, 	//default = 9
+		]);
+		if($i > 0){
+			$content = "
+				<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
+					<tbody>
+						<tr>
+							<th colspan='13' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
+						</tr>
+						<tr>
+							<th colspan='13' style='font-size:9pt;'>รายงานการเปลี่ยนสถานะสัญญา</th>
+						</tr>
+						<tr>
+							<td style='text-align:center;' colspan='13'>
+								<b>จากวันที่</b> &nbsp;&nbsp; &nbsp;&nbsp;
+								<b>ถึงวันที่</b>&nbsp;&nbsp; &nbsp;&nbsp;
+								<b>เลขที่สัญญา</b>&nbsp;&nbsp;".$CONTNO."&nbsp;&nbsp;
+								<b>สาขา</b>&nbsp;&nbsp;".$LOCAT."&nbsp;&nbsp;
+							</td>
+						</tr>
+						".$head."
+						".$html."
+					</tbody>
+				</table>
+			";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
+			";
+		}else{
+			$content = "<font style='color:red;'>ไม่พบข้อมูล</font>";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'></div>
+			";
+		}
+		$stylesheet = "
+			<style>
+				body { font-family: garuda;font-size:10pt; }
+				.wf { width:100%; }
+				.h10 { height:10px; }
+				.tc { text-align:center; }
+				.pf { position:fixed; }
+				.bor { border:0.1px solid black; }
+				.bor2 { border:0.1px dotted black; }
+			</style>
+		";
+		$content = $content.$stylesheet;
+		$mpdf->SetHTMLHeader($head);	
+		$mpdf->WriteHTML($content);	
 		$mpdf->Output();
 	}
 }

@@ -119,17 +119,22 @@ class ReportReceivedCC extends MY_Controller {
 		$order 	    = $tx[2];
 		
 		$scrt = "";
+		$ord  = "";
 		if($order == "TMBILL"){
 			$scrt = "เลขที่ใบรับ";
+			$ord  = "TMBILL";
 		}else if($order == "CONTNO"){
 			$scrt = "เลขที่สัญญา";
+			$ord  = "TMBILL";
 		}else if($order == "TMBILDT"){
 			$scrt = "วันที่รับชำระ";
+			$ord  = "TMBILDT";
 		}else if($order == "CHQDT"){
 			$scrt = "วันที่เช็ค";
+			$ord  = "CHQDT";
 		}
 		$sql = "
-			IF OBJECT_ID('tempdb..#ONE') IS NOT NULL DROP TABLE #RCUS
+			IF OBJECT_ID('tempdb..#RCUS') IS NOT NULL DROP TABLE #RCUS
 			select CUSCOD,TMBILL,LOCATRECV,TMBILDT,BILLNO,BILLDT,PAYTYP,CHQNO
 				,CHQDT,CHQAMT,CHQTMP,FLAG,PAYDT,REFNO
 			into #RCUS
@@ -143,7 +148,7 @@ class ReportReceivedCC extends MY_Controller {
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		$sql = "
-			select * from #RCUS order by ".$order."
+			select * from #RCUS order by ".$ord."
 		";
 		$query2 = $this->db->query($sql);
 		
@@ -183,7 +188,7 @@ class ReportReceivedCC extends MY_Controller {
 			select @A1-@B1 as PAYAMT,@A2-@B2 as DISCT,@A3-@B3 as PAYINT,@A4-@B4 as DSCINT,@A5-@B5 as NETPAY
 		";
 		$query6 = $this->db->query($sql);
-		$head = ""; $html = ""; 
+		$head = ""; $html = ""; $i = 0;
 		$head = "
 			<tr class='wm'>
 				<td class='wf pd' style='height:1px;border-top:0.1px solid black;' colspan='12'></td>
@@ -208,7 +213,7 @@ class ReportReceivedCC extends MY_Controller {
 		";
 		$status = "";
 		if($query2->row()){
-			foreach($query2->result() as $row){
+			foreach($query2->result() as $row){$i++;
 				$tmbill = array();
 				$tmbill['TMBILL'] = $row->TMBILL;
 				$sql3 = "
@@ -324,29 +329,39 @@ class ReportReceivedCC extends MY_Controller {
 			'margin_header' => 9, 	//default = 9
 			'margin_footer' => 9, 	//default = 9
 		]);
-		$content = "
-			<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
-				<tbody>
-					<tr>
-						<th colspan='12' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
-					</tr>
-					<tr>
-						<th colspan='12' style='font-size:9pt;'>รายงานการรับชำระตามรหัสลูกค้า</th>
-					</tr>
-					<tr>
-						<td  colspan='12' style='font-size:9pt;text-align:center;'>
-							<b>รหัสลูกค้า</b>&nbsp;&nbsp;".$CUSCOD."&nbsp;&nbsp;&nbsp;&nbsp;<b>ชื่อ - นามสกุล</b> ".$CUSNAME."&nbsp;&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td style='text-align:left;' colspan='6'><b>Scrt By :</b>".$scrt."</td>
-						<td style='text-align:right;' colspan='6'>RpRec41</td>
-					</tr>
-					".$head."
-					".$html."
-				</tbody>
-			</table>
-		";
+		if($i > 0){
+			$content = "
+				<table class='wf' style='font-size:7.5pt;height:700px;border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
+					<tbody>
+						<tr>
+							<th colspan='12' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
+						</tr>
+						<tr>
+							<th colspan='12' style='font-size:9pt;'>รายงานการรับชำระตามรหัสลูกค้า</th>
+						</tr>
+						<tr>
+							<td  colspan='12' style='font-size:9pt;text-align:center;'>
+								<b>รหัสลูกค้า</b>&nbsp;&nbsp;".$CUSCOD."&nbsp;&nbsp;&nbsp;&nbsp;<b>ชื่อ - นามสกุล</b> ".$CUSNAME."&nbsp;&nbsp;
+							</td>
+						</tr>
+						<tr>
+							<td style='text-align:left;' colspan='6'><b>Scrt By :</b>".$scrt."</td>
+							<td style='text-align:right;' colspan='6'>RpRec41</td>
+						</tr>
+						".$head."
+						".$html."
+					</tbody>
+				</table>
+			";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
+			";
+		}else{
+			$content = "<div style='color:red'>ไม่พบข้อมูลตามเงื่อนไข</div>";
+			$head = "
+				<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'></div>
+			";
+		}
 		$stylesheet = "
 			<style>
 				body { font-family: garuda;font-size:10pt; }
@@ -359,10 +374,6 @@ class ReportReceivedCC extends MY_Controller {
 			</style>
 		";
 		$content = $content.$stylesheet;
-		
-		$head = "
-			<div class='wf pf' style='top:1060;left:600;top:715;left:880; font-size:6pt;'>วันที่พิมพ์รายงาน : ".date('d/m/').(date('Y')+543)." ".date('H:i')." หน้า {PAGENO} / {nbpg}</div>
-		";
 		$mpdf->SetHTMLHeader($head);	
 		$mpdf->WriteHTML($content);	
 		$mpdf->Output();

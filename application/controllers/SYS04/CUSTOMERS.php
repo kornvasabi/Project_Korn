@@ -65,35 +65,27 @@ class CUSTOMERS extends MY_Controller {
 	}
 	function groupSearchcm(){
 		$arrs = array();
-		$arrs['cuscod'] = !isset($_REQUEST['cuscod']) ? '' : $_REQUEST['cuscod'];
+		$arrs['cuscod']  = !isset($_REQUEST['cuscod'])  ? '' : $_REQUEST['cuscod'];
 		$arrs['surname'] = !isset($_REQUEST['surname']) ? '' : $_REQUEST['surname'];
 		$arrs['address'] = !isset($_REQUEST['address']) ? '' : $_REQUEST['address'];
-		$top = "";
+		
 		$cond = "";
 		if($arrs['cuscod'] != ''){
 			$cond .= " and CUSCOD like '%".$arrs['cuscod']."%'";
-			$top = "";
-		}else{
-			$top = "top 100";
 		}
 		if($arrs['surname'] != ''){
-			$cond .= " and NAME1 like '%".$arrs['surname']."%'";
-			$top = "";
-		}else{
-			$top = "top 100";
-		}
-		if($arrs['surname'] != ''){
-			$cond .= " or NAME2 like '%".$arrs['surname']."%'";
-			$top = "";
-		}else{
-			$top = "top 100";
+			$cond .= " and CUSNAME like '%".$arrs['surname']."%'";
 		}
 		if($arrs['address'] != ''){
 			$cond .= " and ADDR like '%".$arrs['address']."%'";
+		}
+		$top = "";
+		if($arrs['cuscod'] != '' || $arrs['surname'] != '' || $arrs['address'] != ''){
 			$top = "";
-		}else{
+		}else if($cond == ''){
 			$top = "top 100";
 		}
+		//".($cond == "" ? "top 100":"")."
 		$sql = "
 			select ".$top." * from (
 				select replace(STUFF(
@@ -114,12 +106,20 @@ class CUSTOMERS extends MY_Controller {
 						left join {$this->MAuth->getdb('SETPROV')} C on CC.PROVCOD=C.PROVCOD
 						where A.CUSCOD = CC.CUSCOD FOR XML path('') 
 					),1, 1, ''
-				),'๛','<br>') as ADDR,CONVERT(varchar(8),BIRTHDT,112) as BIRT,* from {$this->MAuth->getdb('CUSTMAST')} A 
+				),'๛','<br>')as ADDR,CUSCOD,SNAM+NAME1+' '+NAME2 as CUSNAME
+				,CONVERT(varchar(8),BIRTHDT,112) as BIRTHDT
+				,datediff(month,BIRTHDT,getdate())/12 as GETAGE
+				,OCCUP from {$this->MAuth->getdb('CUSTMAST')} A 
 			)A
 			where 1=1 ".$cond." order by CUSCOD
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
+		if(!$query){
+			$response["error"] = true;
+			$response["msg"] = "ผิดพลาด กรุณาติดต่อฝ่ายไอที";
+			echo json_encode ($response); exit;
+		}
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
@@ -131,50 +131,19 @@ class CUSTOMERS extends MY_Controller {
 							</button>
 						</td>
 						<td style='width:70px;text-align:center;'>".$row->CUSCOD."</td>
-						<td style='width:70px;text-align:left;'>".$row->NAME1." ".$row->NAME2."</td>
-						<td style='width:70px;text-align:center;'>".$this->Convertdate(2,$row->BIRT)."</td>
-						<td style='width:70px;text-align:center;'>".$row->AGE."</td>
+						<td style='width:70px;text-align:left;'>".$row->CUSNAME."</td>
+						<td style='width:70px;text-align:center;'>".$this->Convertdate(2,$row->BIRTHDT)."</td>
+						<td style='width:70px;text-align:center;'>".$row->GETAGE."</td>
 						<td style='width:70px;text-align:left;'>".$row->OCCUP."</td>
 						<td style='width:70px;text-align:left;'>".$row->ADDR."</td>
 					</tr>
 				";
 			}
 		}
-		/*
-		$sql = "select top 20 * from CUSTMAST where 1=1 ".$cond." order by CUSCOD";
-		$query = $this->db->query($sql);
-		$html = "";
-		if($query->row()){
-			foreach($query->result() as $row){
-				$sql2  = "
-					select * from CUSTADDR where 1=1 and CUSCOD = '{$row->CUSCOD}' 
-				";
-				$query2 = $this->db->query($sql2);
-				$addr  = "";
-				if($query2->row()){
-					foreach($query2->result() as $row2){
-						if($addr <> '') { $addr .= "<br>"; }
-						$addr .= "{$row2->ADDR1} {$row2->ADDR2}";
-					}
-				}
-				$html .= "
-					<tr>
-						<td style='width:70px;text-align:left;'><button CUSCOD ='".$row->CUSCOD."' class='btnDetail btn btn-xs btn-info btn btn-cyan' style='width:100%'><span class='fa fa-edit'><b>รายละเอียด</b></span></button></td>
-						<td style='width:70px;text-align:center;'>".$row->CUSCOD."</td>
-						<td style='width:70px;text-align:left;'>".$row->NAME1." ".$row->NAME2."</td>
-						<td style='width:70px;text-align:center;'>".$this->dateselectshow($row->BIRTHDT)."</td>
-						<td style='width:70px;text-align:center;'>".$row->AGE."</td>
-						<td style='width:70px;text-align:center;'>".$row->OCCUP."</td>
-						<td style='width:70px;text-align:left;'>".$addr."</td>
-					</tr>
-				";
-			}
-		}
-		*/
 		$html = "
 			<div id='tbScroll' class='col-sm-12' style='height:calc(100% - 30px);width:100%;overflow:auto;font-size:8pt;'>
-				<table id='data-table-example2' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)'>
-					<thead style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
+				<table id='data-table-example2' class='table table-bordered' cellspacing='0' width='calc(100% - 1px)' style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg2.png&#39;) repeat scroll 0% 0%;'>
+					<thead style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg8.png&#39;) repeat scroll 0% 0%;'>
 						<!-- tr>
 							<th colspan='4' align='center'>
 								<span style='cursor:pointer;'>Excel</span>
@@ -182,16 +151,16 @@ class CUSTOMERS extends MY_Controller {
 							</th>
 						</tr -->
 						<tr>
-							<th style='text-align:center;color:blue;' colspan='7'>ประวัติลูกค้า</th>
+							<th style='text-align:center;color:#d35400;' colspan='7'>ประวัติลูกค้า</th>
 						</tr>
 						<tr>
-							<th>#</th>
-							<th>รหัสลูกค้า</th>
-							<th>ชื่อ-สกุล</th>		
-							<th>วัน-เดือน-ปี เกิด</th>	
-							<th>อายุ</th>	
-							<th>อาชีพ</th>	
-							<th>ที่อยู่</th>
+							<th style='vertical-align:middle;'>#</th>
+							<th style='vertical-align:middle;'>รหัสลูกค้า</th>
+							<th style='vertical-align:middle;'>ชื่อ-สกุล</th>		
+							<th style='vertical-align:middle;'>วัน-เดือน-ปี เกิด</th>	
+							<th style='vertical-align:middle;'>อายุ</th>	
+							<th style='vertical-align:middle;'>อาชีพ</th>	
+							<th style='vertical-align:middle;'>ที่อยู่</th>
 						</tr>
 					</thead>	
 					<tbody>
@@ -303,10 +272,14 @@ class CUSTOMERS extends MY_Controller {
 		$arrs['ADDRNO3']    = "";
 		$arrs['MEMOADD']   	= "";
 		$sql = "
-			select * from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD = '".$CUSCOD."'
+			select CUSCOD,SNAM,NAME1,NAME2,NICKNM,BIRTHDT,IDCARD,IDNO,ISSUBY,ISSUDT,EXPDT
+			,datediff(month,BIRTHDT,getdate())/12 as AGE,NATION,OCCUP,OFFIC,MAXCRED,MREVENU
+			,YREVENU,MOBILENO,EMAIL1,ADDRNO,ADDRNO2,ADDRNO3,MEMO1
+			from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD = '".$CUSCOD."'
 		";
+		//echo $sql; exit;
+		//datediff(month,BIRTHDT,getdate())/12 as GETAGE
         $query = $this->db->query($sql);
-		
 		if($query->row()){
 			foreach($query->result() as $row){
 				$arrs['CUSCOD']     = $row->CUSCOD;
