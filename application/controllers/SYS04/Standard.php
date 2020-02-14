@@ -133,6 +133,32 @@ class Standard extends MY_Controller {
 	}
 	
 	function search(){
+		
+		//declare(encoding='UTF-8');
+		// $str = "";
+		// for($i=128;$i<=191;$i++){
+			// $r1 = 240;
+			// $r2 = 159;
+			// $r3 = 133;
+			// $str .= "
+				// <div style='font-size:65pt;float:left;border:0.1px dotted red;'>
+					// ".chr($r1) . chr($r2) . chr($r3) . chr($i)."
+					// <div style='font-size:5pt;'>chr($r1).chr($r2).chr($r3).chr($i)</div>
+				// </div>
+			// ";			
+		// }
+		/* 
+		$str  = "<div>";
+		$str .= "<div style='font-size:10pt;position:fixed;top:60px;left:0px;'>".chr(240).chr(159).chr(133).chr(168)."</div>";
+		$str .= "<div style='font-size:20pt;position:fixed;top:60px;left:7px;'>".chr(240).chr(159).chr(133).chr(163)."</div>";
+		$str .= "<div style='font-size:10pt;position:fixed;top:60px;left:14px;'>".chr(240).chr(159).chr(133).chr(154)."</div>";
+		$str .= "</div>";
+		 */
+		
+		// $response = array("html"=>$str,"status"=>true,"excel"=>"");
+		// echo json_encode($response); exit;
+		
+		
 		$arrs = array();
 		$arrs['name']	 = $_POST['name'];
 		$arrs['model']	 = $_POST['model'];
@@ -261,6 +287,7 @@ class Standard extends MY_Controller {
 					left join {$this->MAuth->getdb('STDVehiclesPackages')} e on e.STDID=d.STDID and e.SUBID=d.SUBID and e.PRICES=d.PRICES and e.PRICEE=d.PRICEE and d.DOWNS=e.DOWNS and d.DOWNE=e.DOWNE
 					where a.STDID='{$STDID}' and b.SUBID='{$SUBID}' and c.ACTIVE='yes' --and d.ACTIVE='yes' and e.ACTIVE='yes' 
 				";
+				//echo $sql_df; exit;
 				$query_df = $this->db->query($sql_df);
 				
 				$df = "";
@@ -352,7 +379,7 @@ class Standard extends MY_Controller {
 								<br>".$this->Convertdate(2,$row->EVENTEnd)."
 								<br><span class='JDtooltip' title='{$row->STDNAME}'>".$row->STDNAME."</span>
 								<br><span class='JDtooltip' title='{$row->STDDESC}'>".$row->STDDESC."</span>
-								<br>".$row->STAT."
+								<br><span style='font-size:16pt;'>".$row->STAT."</span>
 							</div>
 						</td>
 						<td style='vertical-align: text-top;'>
@@ -633,6 +660,7 @@ class Standard extends MY_Controller {
 				and d.DOWNS='{$DOWNS}' and d.DOWNE='{$DOWNE}' 
 				and c.ACTIVE='yes' and d.ACTIVE='yes' and e.ACTIVE='yes'
 		";
+		//echo $sql; //exit;
 		$query = $this->db->query($sql);
 		
 		$html = "";
@@ -1575,7 +1603,7 @@ class Standard extends MY_Controller {
 			</div>
 			<div>
 				<div class='col-sm-6 text-left'>
-					<button id='btnUpload' ".($_POST["event"] == "add" ? "":"disabled")." class='btn btn-xs btn-info' style='width:100px;'><span class='glyphicon glyphicon-upload'> นำเข้า</span></button>
+					<!-- button id='btnUpload' ".($_POST["event"] == "add" ? "":"disabled")." class='btn btn-xs btn-info' style='width:100px;'><span class='glyphicon glyphicon-upload'> นำเข้า</span></button -->
 				</div>
 				<div class='col-sm-6 text-right'>
 					<button id='add_delete' class='btn btn-xs btn-danger' style='width:100px;'><span class='glyphicon glyphicon-trash'> ลบ</span></button>
@@ -2956,7 +2984,7 @@ class Standard extends MY_Controller {
 				forminterest decimal(5,2),forminterest2 decimal(5,2),
 				forminsurance decimal(9,2),formtrans decimal(9,2),
 				formregist decimal(9,2),formact decimal(9,2),
-				formcoupon decimal(9,2),formapprv varchar(1)
+				formcoupon decimal(9,2),formapprv varchar(3)
 			);
 		";
 		#echo $sql; //sqlgetStdDWN
@@ -3019,7 +3047,7 @@ class Standard extends MY_Controller {
 			select * from #tempdbStdDWN
 			order by formpriceFP ,formdwns 
 		";
-		#echo $sql; //sqlgetStdDWN
+		//echo $sql; exit;//sqlgetStdDWN
 		$query = $this->db->query($sql);
 		
 		$html = "";
@@ -4425,12 +4453,12 @@ class Standard extends MY_Controller {
 						$header[$row][$column] = $data_value;
 					} else {
 						switch($column){
-							case 'I': $arr_data[$arrs["now"]][$column] = $this->Convertdate(2,$data_value); break;
 							case 'J': $arr_data[$arrs["now"]][$column] = $this->Convertdate(2,$data_value); break;
-							case 'E': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
+							case 'K': $arr_data[$arrs["now"]][$column] = $this->Convertdate(2,$data_value); break;
 							case 'F': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
-							case 'H': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
-							case 'K': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
+							case 'G': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
+							case 'I': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
+							case 'L': $arr_data[$arrs["now"]][$column] = str_replace("\n","",$data_value); break;
 							default: $arr_data[$arrs["now"]][$column] = $data_value; break;
 						}
 					}
@@ -4440,7 +4468,7 @@ class Standard extends MY_Controller {
 			}
 		}
 		
-		$arrs = array("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB");
+		$arrs = array("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC");
 		$datasize = sizeof($arr_data);
 		for($i=1;$i<=$datasize;$i++){
 			foreach($arrs as $key => $val){
@@ -4456,130 +4484,427 @@ class Standard extends MY_Controller {
 		$stdR  	= 1;
 		$stdid 	= 1;
 		for($i=1;$i<=$size_data;$i++){
-			$sql .= ($i==1?"":" union all ")." select ";
-			foreach($arrs as $key => $val){
-				switch($val){
-					case 'A': 
-						if($stdA != $arr_data[$i][$val] and $stdR++ > 1 and $i > 1){
-							$stdR = 1;
-							$stdA = $arr_data[$i][$val];
-							$stdid += 1;
-						}
-						
-						$sql .= "'{$arr_data[$i][$val]}','{$stdid}'";
-						break;
-					/*
-					case 'E':
-					case 'F':
-					case 'H':
-					case 'K':
-						$data 	= $arr_data[$i][$val];
-						$ex 	= str_replace(",","<br>",$data);						
-						$html  .= "<td>{$ex}</td>"; 
-						break;
-					*/
-					case 'I': $sql .= ",".($arr_data[$i][$val] == "" ? "null":"'".$this->Convertdate(1,$arr_data[$i][$val])."'"); break;
-					case 'J': $sql .= ",".($arr_data[$i][$val] == "" ? "null":"'".$this->Convertdate(1,$arr_data[$i][$val])."'"); break;
-					case 'M': 
-					case 'O': $sql .= ",".($arr_data[$i][$val] == "ขึ้นไป" ? "-1":"'".$arr_data[$i][$val]."'"); break;
-					default: $sql .= ",".($arr_data[$i][$val] == "" ? "null":"'{$arr_data[$i][$val]}'"); break;
+			if($i==1){ $stdA = $arr_data[$i]["A"]; }
+			if($arr_data[$i]["A"] != ""){
+				$sql .= ($i==1?"":" union all ")." select ";			
+				foreach($arrs as $key => $val){
+					switch($val){
+						case 'A': 
+							if($stdA != $arr_data[$i][$val] and $stdR++ >= 1 and $i > 1){
+								$stdR = 1;
+								$stdA = $arr_data[$i][$val];
+								$stdid += 1;
+							}
+							
+							$sql .= ($arr_data[$i][$val] == "" ? "null":$arr_data[$i][$val]);
+							$sql .= ($arr_data[$i][$val] == "" ? ",null":",".$stdid);
+							break;
+						case 'J': //$sql .= ",".($arr_data[$i][$val] == "" ? "null":"'".$this->Convertdate(1,$arr_data[$i][$val])."'"); break;
+						case 'K': 
+							if($arr_data[$i][$val] != ""){
+								$ssql = "select isdate('".$this->Convertdate(1,$arr_data[$i][$val])."') as checkisdate";
+								$squery = $this->db->query($ssql);
+								$squery = $squery->row();
+								
+								if($squery->checkisdate != 1){
+									$response = array();
+									$response["error"] 	  = true;
+									$response["errorMsg"] = "ผิดพลาด  ลำดับที่ {$arr_data[$i]["A"]} <br>วันที่ไม่ถูกต้อง โปรดตรวจสอบใหม่อีกครั้ง";
+									echo json_encode($response); exit;
+								}
+							}
+							
+							$sql .= ",".($arr_data[$i][$val] == "" ? "null":"'".$this->Convertdate(1,$arr_data[$i][$val])."'"); 
+							break;
+						case 'N': 
+						case 'P': $sql .= ",".($arr_data[$i][$val] == "ขึ้นไป" ? 9999999.99:($arr_data[$i][$val] == ""? 9999999.99:"'".$arr_data[$i][$val]."'")); break;
+						case 'M': 
+						case 'O': 
+						case 'S': 
+						case 'T': 
+						case 'U': 
+						case 'V': 
+						case 'W': $sql .= ",".($arr_data[$i][$val] == "0" ? 0:"'{$arr_data[$i][$val]}'"); break;
+						default: $sql .= ",".($arr_data[$i][$val] == "" ? "null":"'{$arr_data[$i][$val]}'"); break;
+					}
 				}
-			}			
+				
+				$sql .= ",'{$this->sess["IDNo"]}',@datetime";
+			}
 		}
 		
-		$this->create_temptable("#STDVehiclesTemp");
 		$sql = "
-			insert into #STDVehiclesTemp ".$sql."
-			
-			delete from #STDVehiclesTemp where sprice is null and free is null
-			
-			/*
-			update c
-			set c.stdid=a.id
-			from (
-				select a.stdid,a.id
-					,isnull(b.id,(select max(id)+1 from #STDVehiclesTemp))-1 as toid 
-				from #STDVehiclesTemp a 
-				left join (
-					select id,stdid - 1 as stdid from #STDVehiclesTemp 
-					where stdid<>0
-				) as b on a.stdid=b.stdid
-				where a.stdid<>0
-			) as a
-			left join #STDVehiclesTemp c on c.id between a.id and a.toid
-
-			
-			update c
-			set c.sprice=a.sprice
-				,c.eprice=a.eprice
-			from (
-				select a.stdid,a.id,a.sprice,a.eprice
-					,isnull(b.id,(select max(id)+1 from #STDVehiclesTemp s where s.stdid=a.stdid))-1 as toid 
-				from (
-					select ROW_NUMBER() over(order by id) r,id,stdid,sprice,eprice from #STDVehiclesTemp
-					where sprice is not null
-				) as a
-				left join (
-					select ROW_NUMBER() over(order by id) - 1 as r,id,stdid,sprice from #STDVehiclesTemp
-					where sprice is not null
-				) as b on a.stdid=b.stdid and a.r=b.r
-			) as a
-			left join #STDVehiclesTemp c on c.id between a.id and a.toid
-			*/
+			begin
+				declare @datetime datetime = getdate();			
+				insert into {$this->MAuth->getdb('STDVehiclesTemp')} ".$sql."
+				
+				delete from {$this->MAuth->getdb('STDVehiclesTemp')} 
+				where insby = '{$this->sess["IDNo"]}' and insdt = @datetime and sprice is null and free is null
+				
+				delete from {$this->MAuth->getdb('STDVehiclesTemp')} 
+				where insby = '{$this->sess["IDNo"]}' and insdt < @datetime 
+			end
 		";
 		//echo $sql; exit;
 		$this->db->query($sql);
-		$sql = "select * from #STDVehiclesTemp";
+		
+		$sql = "
+			if object_id('tempdb..#tempResult') is not null drop table #tempResult;
+			create table #tempResult (error varchar(1),errorMsg varchar(max));
+			declare @error_stdid varchar(max) = '';
+			
+			if exists (
+				select keyid,COUNT(*) from (
+					select distinct keyid,(convert(varchar(8),sevent,112)+'_'+convert(varchar(8),eevent ,112)) dt 
+					from {$this->MAuth->getdb('STDVehiclesTemp')} 
+				) as a
+				group by keyid
+				having COUNT(*) > 1
+			)
+			begin
+				set @error_stdid = (
+					stuff((select ','+cast(keyid as varchar) from (
+						select keyid,COUNT(*) r from (
+							select distinct keyid,(convert(varchar(8),sevent,112)+'_'+convert(varchar(8),eevent ,112)) dt 
+							from {$this->MAuth->getdb('STDVehiclesTemp')} 
+						) as a
+						group by keyid
+						having COUNT(*) > 1
+					) as a
+					),1,1,'')
+				);
+			
+				insert into #tempResult
+				select 'y' as error,'ผิดพลาด วันที่บังคับใช้ ไม่ตรงกันในสแตนดาร์ด ลำดับที่ '+@error_stdid as errorMsg
+			end 
+			else if exists (
+				select keyid,COUNT(*) from (
+					select distinct keyid,stdid,stdname,stddesc,typecod,model,baab,color,stat,acticod,locat
+						,(convert(varchar(8),sevent,112)+'_'+convert(varchar(8),eevent ,112)) dt 						
+					from {$this->MAuth->getdb('STDVehiclesTemp')} 
+				) as a
+				group by keyid
+				having COUNT(*) > 1
+			)
+			begin
+				set @error_stdid = (
+					stuff((select ','+cast(keyid as varchar) from (
+						select keyid,COUNT(*) r from (
+							select distinct keyid,(convert(varchar(8),sevent,112)+'_'+convert(varchar(8),eevent ,112)) dt 
+							from {$this->MAuth->getdb('STDVehiclesTemp')} 
+						) as a
+						group by keyid
+						having COUNT(*) > 1
+					) as a
+					),1,1,'')
+				);
+
+				insert into #tempResult
+				select 'y' as error,'ผิดพลาด ข้อมูลลำดับที่  '+@error_stdid+' <u><span style=\"color:yellow;\">ชื่อเรียก/ลักษณะ/ยี่ห้อ/รุ่น/แบบ/สี/สถานะภาพรถ/กิจกรรมการขาย/สาขา</span></u> ไม่ตรงกัน <br>โปรดตรวจสอบข้อมูลอีกครั้ง' as errorMsg
+			end
+			
+			
+			
+			
+			else if exists (
+				-- รถใหม่ แต่ราคารถ มากกว่า 1 จำนวน
+				select keyid,COUNT(*) from (
+					select distinct keyid,sprice,eprice
+						,(convert(varchar(8),sevent,112)+'_'+convert(varchar(8),eevent ,112)) dt 						
+					from {$this->MAuth->getdb('STDVehiclesTemp')} 
+					where stat='N' collate thai_ci_as
+				) as a
+				group by keyid
+				having COUNT(*) > 1
+			)
+			begin
+				set @error_stdid = (
+					stuff((select ','+cast(keyid as varchar) from (
+						select keyid,COUNT(*) r from (
+							select distinct keyid,sprice,eprice
+								,(convert(varchar(8),sevent,112)+'_'+convert(varchar(8),eevent ,112)) dt 						
+							from {$this->MAuth->getdb('STDVehiclesTemp')} 
+							where stat='N' collate thai_ci_as
+						) as a
+						group by keyid
+						having COUNT(*) > 1
+					) as a
+					),1,1,'')
+				);
+
+				insert into #tempResult
+				select 'y' as error,'ผิดพลาด ข้อมูลลำดับที่  '+@error_stdid+' <br><u><span style=\"color:yellow;\">ระบุมาว่าเป็นรถใหม่ แต่มีราคามากกว่า 1 จำนวน</span></u> <br>โปรดตรวจสอบข้อมูลอีกครั้ง' as errorMsg
+			end 
+			
+			
+			
+			else if exists (
+				select keyid,COUNT(*) n_price from (
+					select distinct keyid,model,stat,sprice,eprice from {$this->MAuth->getdb('STDVehiclesTemp')} 
+					where insby = '{$this->sess["IDNo"]}' 
+				) as data
+				where stat='n' collate thai_ci_as
+				group by keyid
+				having COUNT(*) > 1
+			)			
+			begin
+				declare @keyall varchar(max) = (select stuff((
+					select ','+cast(keyid as varchar) from (
+						select distinct keyid,model,stat,sprice,eprice from {$this->MAuth->getdb('STDVehiclesTemp')} 
+					) as data
+					where stat='n' collate thai_ci_as
+					group by keyid
+					having COUNT(*) > 1
+					for xml path('')
+				),1,1,''));
+				
+				delete from {$this->MAuth->getdb('STDVehiclesTemp')} 
+				where insby = '{$this->sess["IDNo"]}'	
+				
+				insert into #tempResult
+				select 'y' as error,'ผิดพลาด โปรดตรวจสอบราคารถ ลำดับที่ '+@keyall+' อีกครั้ง<br>ตั้งค่าสแตนดาร์ดรถใหม่ แต่ใส่ราคามามากกว่า 1 ช่วง' as errorMsg
+			end
+			else
+			begin
+				insert into #tempResult
+				select 'n' as error,'' as errorMsg
+			end
+		";
+		$this->db->query($sql);
+		
+		$sql = "select * from #tempResult";
+		$query = $this->db->query($sql);
+		$row = $query->row();		
+		if($row->error == "y"){
+			$response = array();
+			$response["error"] 	  = true;
+			$response["errorMsg"] = $row->errorMsg;
+			echo json_encode($response); exit;
+		}
+		
+		$sql = "
+			select [keyid],[stdid],[stdname],[stddesc]
+				,[typecod],[model],[baab],[color],[stat],[acticod]
+				,[sevent],[eevent],[locat],[sprice],[eprice]
+				,[sdown],[edown],[interest],[interest2],[insurance]
+				,[trans],[regist],[act],[coupon],[approve]
+				,case when [free] = 'C' then 'คนซื้อ' when [free] = 'I' then 'คนค้ำ' end as [free]
+				,[snopay],[enopay],[freeamt],[memo1],[insby],[insdt] 
+			from {$this->MAuth->getdb('STDVehiclesTemp')} a
+			where insby='{$this->sess["IDNo"]}' and insdt in (
+				select max(insdt) from {$this->MAuth->getdb('STDVehiclesTemp')} 
+				where insby='{$this->sess["IDNo"]}'
+			)
+			order by id
+		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$html = "";
 		if($query->row()){
-			$db_data = array();
+			$db_data = array("stdid_before"=>"");
 			foreach($query->result() as $row){
-				if($row->stdid == $row->id){
-					$db_data[$row->stdid] = 1;
-				}else{
+				if(isset($db_data[$row->stdid])){
 					$db_data[$row->stdid] += 1;
+				}else{
+					$db_data[$row->stdid] = 1;
 				}
-			}	
+			}
 			
 			foreach($query->result() as $row){
-				$html .= "<tr style='vertical-align:text-top;'>";
+				$sql = "
+					select count(*) r from {$this->MAuth->getdb('SETMODEL')}
+					where MODELCOD='{$row->model}'
+				";
+				$query = $this->db->query($sql);
+				
+				$model_issued = "";
+				if($query->row()){
+					foreach($query->result() as $row_model){
+						$model_issued = ($row_model->r == 0 ? "background-color:#efb8b8;":"");
+					}
+				}
+				
+				$html .= "<tr style='vertical-align:text-top;{$model_issued}'>";
 				foreach($row as $key => $val){
 					switch($key){
 						case 'id': 
-						case 'stdid': break;
+						case 'stdid': 
+						case 'insby': 
+						case 'insdt': break;
 						case 'keyid': 
 						case 'stdname': 
 						case 'stddesc': 
+						case 'typecod': 
 						case 'model': 
 						case 'stat': 
-							if($row->stdid == $row->id){
+							if($db_data["stdid_before"] != $row->stdid){
 								$html .= "<td rowspan='{$db_data[$row->stdid]}'>{$val}</td>"; 
 							}
 							break;
 						case 'sevent': 
 						case 'eevent': 
-							if($row->stdid == $row->id){
+							if($db_data["stdid_before"] != $row->stdid){
 								$html .= "<td rowspan='{$db_data[$row->stdid]}'>{$this->Convertdate(103,$val)}</td>"; 
 							}
 							break;
 						case 'baab': 
-						case 'color': 
-						case 'acticod': 
-						case 'locat': 
-							if($row->stdid == $row->id){								
-								$html .= "<td rowspan='{$db_data[$row->stdid]}'>".str_replace(",","<br>",$val)."</td>"; 
+							if($db_data["stdid_before"] != $row->stdid){								
+								$sql = "
+									declare @xml xml = '<r>'+replace('".$val."',',','</r>,<r>')+'</r>';
+									select a.BAABCOD,isnull(b.BAABCOD,'NOT') indb from (
+										select replace(replace(cast(t.col.query('.') as varchar(max)),'<r>',''),'</r>','') as BAABCOD
+										from @xml.nodes('/r') t(col)
+									) as a
+									left join {$this->MAuth->getdb('SETBAAB')} b on a.BAABCOD=b.BAABCOD collate thai_cs_as
+										and b.MODELCOD='{$row->model}'
+								";
+								//echo $sql; exit;
+								$query = $this->db->query($sql);
+								
+								$this_locat = "";
+								if($query->row()){
+									foreach($query->result() as $row_locat){
+										if($this_locat != ""){ $this_locat .= "<br>"; }
+										$this_locat .= "<span style='".($row_locat->indb == "NOT" ? "color:red;":"")."'>".$row_locat->BAABCOD."</span>";
+									}
+								}
+								
+								$html .= "<td rowspan='{$db_data[$row->stdid]}'>".$this_locat."</td>"; 
 							}
 							break;
-						default: $html .= "<td align='right'>{$val}</td>"; break;
+						case 'color':
+							if($db_data["stdid_before"] != $row->stdid){								
+								$sql = "
+									declare @xml xml = '<r>'+replace('".$val."',',','</r>,<r>')+'</r>';
+									select a.COLORCOD,isnull(b.COLORCOD,'NOT') indb from (
+										select replace(replace(cast(t.col.query('.') as varchar(max)),'<r>',''),'</r>','') as COLORCOD
+										from @xml.nodes('/r') t(col)
+									) as a
+									left join {$this->MAuth->getdb('JD_SETCOLOR')} b on a.COLORCOD=b.COLORCOD collate thai_cs_as
+										and b.MODELCOD='{$row->model}' and b.BAABCOD in ('".(str_replace(",","','",$row->baab))."')
+								";
+								//echo $sql; exit;
+								$query = $this->db->query($sql);
+								
+								$this_locat = "";
+								if($query->row()){
+									foreach($query->result() as $row_locat){
+										if($this_locat != ""){ $this_locat .= "<br>"; }
+										$this_locat .= "<span style='".($row_locat->indb == "NOT" ? "color:red;":"")."'>".$row_locat->COLORCOD."</span>";
+									}
+								}
+								
+								$html .= "<td rowspan='{$db_data[$row->stdid]}'>".$this_locat."</td>"; 
+							}
+							break;
+						case 'acticod': 
+							if($db_data["stdid_before"] != $row->stdid){								
+								$sql = "
+									declare @xml xml = '<r>'+replace('".$val."',',','</r>,<r>')+'</r>';
+									select a.ACTICOD +' '+ isnull(b.ACTIDES,'') as ACTICOD,isnull(b.ACTICOD,'NOT') indb from (
+										select replace(replace(cast(t.col.query('.') as varchar(max)),'<r>',''),'</r>','') as ACTICOD
+										from @xml.nodes('/r') t(col)
+									) as a
+									left join {$this->MAuth->getdb('SETACTI')} b on a.ACTICOD=b.ACTICOD collate thai_cs_as
+								";
+								//echo $sql; exit;
+								$query = $this->db->query($sql);
+								
+								$this_locat = "";
+								if($query->row()){
+									foreach($query->result() as $row_locat){
+										if($this_locat != ""){ $this_locat .= "<br>"; }
+										$this_locat .= "<span style='".($row_locat->indb == "NOT" ? "color:red;":"")."'>".$row_locat->ACTICOD."</span>";
+									}
+								}
+								
+								$html .= "<td rowspan='{$db_data[$row->stdid]}'>".$this_locat."</td>"; 
+							}
+							break;
+						case 'locat': 
+							if($db_data["stdid_before"] != $row->stdid){								
+								$sql = "
+									declare @xml xml = '<r>'+replace('".$val."',',','</r>,<r>')+'</r>';
+									select a.LOCAT,isnull(b.LOCATCD,'NOT') indb from (
+										select replace(replace(cast(t.col.query('.') as varchar(max)),'<r>',''),'</r>','') as LOCAT
+										from @xml.nodes('/r') t(col)
+									) as a
+									left join {$this->MAuth->getdb('INVLOCAT')} b on a.LOCAT=b.LOCATCD collate thai_cs_as
+								";
+								//echo $sql; exit;
+								$query = $this->db->query($sql);
+								
+								$this_locat = "";
+								if($query->row()){
+									foreach($query->result() as $row_locat){
+										if($this_locat != ""){ $this_locat .= "<br>"; }
+										$this_locat .= "<span style='".($row_locat->indb == "NOT" ? "color:red;":"")."'>".$row_locat->LOCAT."</span>";
+									}
+								}
+								
+								$html .= "<td rowspan='{$db_data[$row->stdid]}'>".$this_locat."</td>"; 
+							}
+							break;
+						case 'free': 
+						case 'approve':
+						case 'memo1': $html .= "<td>".$val."</td>"; break;	
+						case 'interest': 
+						case 'interest2': $html .= "<td align='right'>".($val == 9999999.99 ? "ขึ้นไป": number_format($val,2))."</td>"; break;
+						default: $html .= "<td align='right'>".($val == 9999999.99 ? "ขึ้นไป": number_format($val,0))."</td>"; break;
 					}
 				}
 				$html .= "</tr>";
+				$db_data["stdid_before"] = $row->stdid;
 			}
 		}
+		//echo $html; exit;
 		
-		$html = "<table border=1 style='border-collapse:collapse;width:100%;'>{$html}</table>";
+		$html = "
+			<div style='width:100%;height:calc(100% - 30px);overflow:auto;'>
+				<table border=1 style='border-collapse:collapse;width:100%;'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>ชื่อ</th>
+							<th>ลักษณะ</th>
+							<th>ยี่ห้อ</th>
+							<th>รุ่น</th>
+							<th>แบบ</th>
+							<th>สี</th>
+							<th>สถานะ</th>
+							<th>กิจกรรมการขาย</th>
+							<th>วันที่ใช้</th>
+							<th>ถึงวันที่</th>
+							<th>สาขา</th>
+							<th>ราคาสด</th>
+							<th>ราคาผลัด</th>
+							<th>ดาวน์</th>
+							<th>ดาวน์</th>
+							<th>inrf</th>
+							<th>inrt</th>
+							<th>insr</th>
+							<th>trans</th>
+							<th>regist</th>
+							<th>act</th>
+							<th>cp</th>
+							<th>ap</th>
+							<th>แถม</th>
+							<th>งวด</th>
+							<th>งวด</th>
+							<th>จำนวน</th>
+							<th>หมายเหตุ</th>
+						</tr>
+					</thead>
+					{$html}
+				</table>
+			</div>
+			<div style='width:100%;height:30px;padding-top:10px;'>
+				<div class='col-sm-2 col-sm-offset-10'>
+					<button id='std_import'  class='btn btn-xs btn-primary btn-block'><span class='glyphicon glyphicon-import'> นำเข้า</span></button>
+				</div>
+			</div>
+		";
 		
 		$response = array();
 		$response["html"] 	  = $html;
@@ -4588,23 +4913,309 @@ class Standard extends MY_Controller {
 		echo json_encode($response); 
 	}
 	
-	function create_temptable($temptable){
+	function import_save(){
 		$sql = "
-			if OBJECT_ID('tempdb..{$temptable}') is not null drop table {$temptable};
-			create table {$temptable} (
-				id int identity(1,1),keyid int,stdid int,stdname varchar(200),
-				stddesc varchar(200),model varchar(20),baab varchar(max),
-				color varchar(max),stat varchar(5),acticod varchar(max),
-				sevent datetime,eevent datetime,locat varchar(max),
-				sprice decimal(18,2),eprice decimal(18,2),sdown decimal(18,2),
-				edown decimal(18,2),interest decimal(18,2),interest2 decimal(18,2),
-				insurance decimal(18,2),trans decimal(18,2),regist decimal(18,2),
-				act decimal(18,2),coupon decimal(18,2),approve varchar(5),free varchar(20),
-				snopay int,enopay int,freeamt decimal(18,2),memo1 varchar(250)	
-			)
+			if object_id('tempdb..#tempResult') is not null drop table #tempResult;
+			create table #tempResult (error varchar(1),msg varchar(max));
+				
+			begin tran import_transaction
+			begin try
+				declare @keyid int;
+				declare @insby varchar(20) = '{$this->sess["IDNo"]}';
+				declare @insdt varchar(20) = getdate();
+				declare csimport cursor for (select * from (select distinct keyid from {$this->MAuth->getdb('STDVehiclesTemp')} where insby=@insby) as data);
+				
+				open csimport;
+				fetch next from csimport into @keyid
+				while @@FETCH_STATUS = 0
+				begin
+					declare @STDID varchar(30) = isnull(cast((
+						select distinct a.STDID from {$this->MAuth->getdb('STDVehicles')} a
+						inner join {$this->MAuth->getdb('STDVehiclesTemp')} b on a.TYPECOD=b.typecod collate thai_cs_as and a.MODEL=b.model collate thai_cs_as
+						where b.keyid=@keyid	
+					) as varchar),'Auto Genarate');
+					
+					declare @SUBID varchar(30)	 = 'Auto Genarate';		
+					declare @TYPECOD varchar(20)	 = (select distinct typecod from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid);
+					declare @MODEL varchar(20)	 = (select distinct model   from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid);
+					declare @NAME varchar(250)	 = (select distinct stdname from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid);
+					declare @DETAIL varchar(250) = (select distinct stddesc from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid);
+					declare @STAT varchar(1)	 = (select distinct stat	from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid);
+					declare @ES datetime		 = (select distinct sevent  from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid);
+					declare @EE datetime		 = (select distinct eevent  from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid);
+					
+					declare @tbPRICE table (FPRICE decimal(18,2),TPRICE decimal(18,2));
+					insert into @tbPRICE
+					select distinct sprice,case when eprice = -1 then null else eprice end as eprice from {$this->MAuth->getdb('STDVehiclesTemp')}
+					where keyid=@keyid
+					order by sprice
+					
+					declare @tbDwn table (
+						FPRICE decimal(18,2),
+						TPRICE decimal(18,2),
+						DOWNS  decimal(18,2),
+						DOWNE  decimal(18,2),
+						INTERESTRT decimal(5,2) not null,
+						INTERESTRT_GVM decimal(5,2) null,
+						INSURANCE decimal(7,2) null,
+						TRANSFERS decimal(7,2) null,
+						REGIST decimal(7,2) null,
+						ACT decimal(7,2) null,
+						COUPON decimal(7,2) null,
+						APPROVE varchar(3)
+					);
+					insert into @tbDwn
+					select distinct sprice,case when eprice = -1 then null else eprice end as eprice
+						,sdown,case when edown = -1 then null else edown end as edown
+						,interest,interest2,insurance,trans,regist,act,coupon,approve 
+					from {$this->MAuth->getdb('STDVehiclesTemp')}
+					where keyid=@keyid
+					order by sprice
+					
+					declare @tbFre table (
+						FPRICE decimal(18,2),
+						TPRICE decimal(18,2),
+						DOWNS decimal(18,2),
+						DOWNE decimal(18,2),
+						FORCUS varchar(5) not null,
+						NOPAYS int not null,
+						NOPAYE int null,
+						RATE decimal(7,2) not null,
+						MEMO1 varchar(max) null
+					);
+					insert into @tbFre
+					select distinct sprice,case when eprice = -1 then null else eprice end as eprice
+						,sdown,case when edown = -1 then null else edown end as edown
+						,free,snopay,enopay,freeamt,memo1
+					from {$this->MAuth->getdb('STDVehiclesTemp')}
+					where keyid=@keyid
+					order by sprice
+					
+					declare @tempimport table (id bigint,topic varchar(20),result varchar(max));
+					insert into @tempimport
+					select * from {$this->sess["db"]}.dbo.FN_JD_STDVehicles_IMPORT(@insby) where id=@keyid
+					
+					if (@STDID = 'Auto Genarate')
+					begin
+						set @STDID = isnull((select MAX(STDID)+1 from {$this->MAuth->getdb('STDVehicles')}),1);
+						
+						if exists(select * from {$this->MAuth->getdb('SETMODEL')} where MODELCOD=@MODEL collate thai_cs_as)
+						begin
+							insert into {$this->MAuth->getdb('STDVehicles')}
+							select @STDID,@TYPECOD,@MODEL,@insby,@insdt
+						end 
+						else 
+						begin
+							rollback tran import_transaction;
+							insert into #tempResult 
+							select 'y','ผิดพลาด ไม่พบข้อมูลรุ่น '+@MODEL+' <br>โปรดตรวจสอบข้อมูลรุ่น ในเมนูตั้งค่ารุ่นรถก่อนครับ';
+							return;
+						end
+					end		
+					
+					if (@SUBID = 'Auto Genarate')
+					begin
+						set @SUBID = isnull((select MAX(SUBID)+1 from {$this->MAuth->getdb('STDVehiclesDetail')} where STDID=@STDID),1);
+					end
+					
+					if exists (
+						select * from @tempimport a
+						left join {$this->MAuth->getdb('SETBAAB')} b on a.result=b.BAABCOD collate thai_cs_as
+						where a.id=@keyid and a.topic='baab' and b.BAABCOD is null
+					)
+					begin
+						rollback tran import_transaction;
+						insert into #tempResult 
+						select 'y','ผิดพลาด ลำดับที่ '+cast(@keyid as varchar)+' <br>ไม่พบข้อมูลแบบรถของรุ่น '+@MODEL+' ในระบบ<br>โปรดตรวจสอบใหม่อีกครั้ง';
+						return;
+					end
+					
+					if not exists (select * from @tempimport where id=@keyid and topic='acticod')
+					begin
+						rollback tran import_transaction;
+						insert into #tempResult 
+						select 'y','ผิดพลาด คุณยังไม่ได้ระบุกิจกรรมการขาย';
+						return;
+					end
+					
+					-----------------------------------------------
+					declare @dcs_subid bigint;
+					declare cs_subid cursor for select SUBID from {$this->MAuth->getdb('STDVehiclesDetail')} where STDID=@STDID
+					open cs_subid;
+					fetch next from cs_subid into @dcs_subid;
+					
+					while @@FETCH_STATUS = 0
+					begin
+						declare @hasACTI varchar(3) = isnull((
+							select top 1 'YES' from {$this->MAuth->getdb('STDVehicles')} a
+							left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
+							left join {$this->MAuth->getdb('STDVehiclesACTI')} c on b.STDID=c.STDID and b.SUBID=c.SUBID
+							where a.STDID=@STDID and (
+								EVENTStart between @ES and isnull(@EE,EVENTStart)
+								or 
+								EVENTEnd between @ES and isnull(@EE,EVENTEnd)
+							) and c.ACTICOD collate thai_cs_as in (select result from @tempimport where id=@keyid and topic='acticod')
+							and b.STAT=@stat and b.SUBID = @dcs_subid
+						),'NO');
+						
+						declare @hasBAAB varchar(3) = isnull((
+							select top 1 'YES' from {$this->MAuth->getdb('STDVehicles')} a
+							left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
+							left join {$this->MAuth->getdb('STDVehiclesBAAB')} c on b.STDID=c.STDID and b.SUBID=c.SUBID
+							where a.STDID=@STDID and (
+								EVENTStart between @ES and isnull(@EE,EVENTStart)
+								or 
+								EVENTEnd between @ES and isnull(@EE,EVENTEnd)
+							) and c.BAAB collate thai_cs_as in (select result from @tempimport where id=@keyid and topic='baab')
+							and b.STAT=@STAT and b.SUBID = @dcs_subid
+						),'NO');
+						
+						declare @hasCOLOR varchar(3) = isnull((
+							select top 1 'YES' from {$this->MAuth->getdb('STDVehicles')} a
+							left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
+							left join {$this->MAuth->getdb('STDVehiclesCOLOR')} c on b.STDID=c.STDID and b.SUBID=c.SUBID
+							where a.STDID=@STDID and (
+								EVENTStart between @ES and isnull(@EE,EVENTStart)
+								or 
+								EVENTEnd between @ES and isnull(@EE,EVENTEnd)
+							) and c.COLOR collate thai_cs_as in (select result from @tempimport where id=@keyid and topic='color')
+							and b.STAT=@STAT and b.SUBID = @dcs_subid
+						),'NO');
+						
+						declare @hasLOCAT varchar(3) = isnull((
+							select top 1 'YES' from {$this->MAuth->getdb('STDVehicles')} a
+							left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
+							left join {$this->MAuth->getdb('STDVehiclesLOCAT')} c on b.STDID=c.STDID and b.SUBID=c.SUBID
+							where a.STDID=@STDID and (
+								EVENTStart between @ES and isnull(@EE,EVENTStart)
+								or 
+								EVENTEnd between @ES and isnull(@EE,EVENTEnd)
+							) and c.LOCAT collate thai_cs_as in (select result from @tempimport where id=@keyid and topic='locat')
+							and b.STAT=@STAT and b.SUBID = @dcs_subid
+						),'NO');
+						
+						if ((@hasACTI = 'YES') and (@hasBAAB = 'YES') and (@hasCOLOR = 'YES') and (@hasLOCAT = 'YES'))
+						begin
+							rollback tran import_transaction;
+							close csimport; deallocate csimport;
+							close cs_subid; deallocate cs_subid;
+							
+							insert into #tempResult 
+							select 'y','ผิดพลาด เนื่องจากกิจกรรมการขาย รุ่นรถ แบบ สี <br>สถานะภาพรถ และสาขาที่กำหนดใช้ std. <br><br>ลำดับที่ #'+cast(@keyid as varchar)+'<br>ในช่วงวันที่ '+convert(varchar(6),@ES,103)+cast(year(@ES)+543 as varchar(4))+' ถึง '+convert(varchar(6),@EE,103)+cast(year(@EE)+543 as varchar(4))+'<br>มีข้อมูลอยู่แล้ว';
+							return;
+						end	
+						else if (isdate(@ES) = 0 or isdate(isnull(@EE,getdate())) = 0)
+						begin
+							rollback tran import_transaction;
+							close csimport; deallocate csimport;
+							close cs_subid; deallocate cs_subid;
+							
+							insert into #tempResult 
+							select 'y','ผิดพลาด วันที่ไม่ถูกต้อง';
+							return;
+						end	
+						
+						fetch next from cs_subid into @dcs_subid;
+					end
+					close cs_subid;
+					deallocate cs_subid;
+
+					begin
+						if exists(
+							select * from {$this->MAuth->getdb('STDVehiclesDetail')}
+							where STDID=@STDID and SUBID=@SUBID
+						)
+						begin
+							rollback tran import_transaction;
+							close csimport; deallocate csimport;
+							insert into #tempResult 
+							select 'y','ผิดพลาด มี standard อยู่แล้ว';
+							return;
+						end
+						else
+						begin
+							insert into {$this->MAuth->getdb('STDVehiclesDetail')} (STDID,SUBID,STDNAME,STDDESC,STAT,EVENTStart,EVENTEnd)
+							select @STDID,@SUBID,@NAME,@DETAIL,@STAT,@ES,@EE
+							
+							insert into {$this->MAuth->getdb('STDVehiclesACTI')} (STDID,SUBID,ACTICOD,ACTIVE,INSBY,INSDT)
+							select distinct @STDID,@SUBID,result,'yes',@insby,@insdt from @tempimport 
+							where id=@keyid and topic='acticod'
+							delete @tempimport where id=@keyid and topic='acticod'
+							
+							insert into {$this->MAuth->getdb('STDVehiclesBAAB')} (STDID,SUBID,BAAB,ACTIVE,INSBY,INSDT)
+							select distinct @STDID,@SUBID,result,'yes',@insby,@insdt from @tempimport 
+							where id=@keyid and topic='baab'
+							delete @tempimport where id=@keyid and topic='baab'
+							
+							insert into {$this->MAuth->getdb('STDVehiclesCOLOR')} (STDID,SUBID,COLOR,ACTIVE,INSBY,INSDT)
+							select distinct @STDID,@SUBID,result,'yes',@insby,@insdt from @tempimport
+							where id=@keyid and topic='color'
+							delete @tempimport where id=@keyid and topic='color'
+							
+							insert into {$this->MAuth->getdb('STDVehiclesPRICE')} (STDID,SUBID,PRICE,PRICES,ACTIVE,INSBY,INSDT)
+							select @STDID,@SUBID,FPRICE,TPRICE,'yes',@insby,@insdt from @tbPRICE
+							delete @tbPRICE
+							
+							insert into {$this->MAuth->getdb('STDVehiclesLOCAT')} (STDID,SUBID,LOCAT,ACTIVE,INSBY,INSDT)
+							select distinct @STDID,@SUBID,result,'yes',@insby,@insdt from @tempimport
+							where id=@keyid and topic='locat'
+							delete @tempimport where id=@keyid and topic='locat'
+							
+							insert into {$this->MAuth->getdb('STDVehiclesDOWN')} (
+								STDID,SUBID,PRICES,PRICEE,DOWNS,DOWNE
+								,INTERESTRT,INTERESTRT_GVM,INSURANCE,TRANSFERS
+								,REGIST,ACT,COUPON,APPROVE,ACTIVE,INSBY,INSDT
+							) 
+							select @STDID,@SUBID,FPRICE,TPRICE,DOWNS,DOWNE
+								,INTERESTRT,INTERESTRT_GVM,INSURANCE,TRANSFERS
+								,REGIST,ACT,COUPON,APPROVE,'yes',@insby,@insdt
+							from @tbDwn
+							delete @tbDwn
+							
+							insert into {$this->MAuth->getdb('STDVehiclesPackages')} (
+								STDID,SUBID,PRICES,PRICEE,DOWNS,DOWNE,FORCUS,NOPAYS
+								,NOPAYE,RATE,MEMO1,ACTIVE,INSBY,INSDT
+							) 
+							select @STDID,@SUBID,FPRICE,TPRICE,DOWNS,DOWNE,FORCUS,NOPAYS
+								,NOPAYE,RATE,MEMO1,'yes',@insby,@insdt
+							from @tbFre
+							delete @tbFre
+						end
+					end
+					
+					fetch next from csimport into @keyid
+				end
+				close csimport;
+				deallocate csimport;
+				
+				insert into #tempResult
+				select 'n','บันทึกข้อมูลเรียบร้อยแล้ว'
+				
+				commit tran import_transaction
+			end try
+			begin catch
+				rollback tran import_transaction
+				insert into #tempResult
+				select 'y',cast(ERROR_LINE() as varchar)+'::'+ERROR_MESSAGE()
+			end catch
 		";
-		//echo $sql;
+		//echo $sql; exit;
 		$this->db->query($sql);
+		$sql = "select * from #tempResult";
+		$query = $this->db->query($sql);
+		
+		$response = array();
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["error"] = ($row->error == "y" ? true:false);
+				$response["errorMsg"] = $row->msg;
+			}
+		}else{
+			$response["error"] 	  = true;
+			$response["errorMsg"] = "ผิดพลาด ไม่พบข้อมูลตามเงื่อนไข";
+		}
+		
+		echo json_encode($response);
 	}
 	
 }

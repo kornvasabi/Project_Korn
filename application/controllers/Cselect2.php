@@ -477,12 +477,25 @@ class Cselect2 extends MY_Controller {
 		$MODEL 		= $_REQUEST['MODEL'];
 		$BAAB 		= $_REQUEST['BAAB'];
 		
-		$sql = "
-			select COLORCOD from {$this->MAuth->getdb('JD_SETCOLOR')}
-			where MODELCOD='{$MODEL}' collate Thai_CI_AS
-				and BAABCOD='{$BAAB}' collate Thai_CI_AS
-			order by COLORCOD
-		"; 
+		if(isset($_REQUEST['NOTB'])){
+			$cond = "";
+			if(is_array($BAAB)){ 
+				$BAAB = implode("','",$BAAB); 
+				$cond = " and BAABCOD collate Thai_CI_AS in ('{$BAAB}') ";
+			}
+			$sql = "
+				select distinct COLORCOD from {$this->MAuth->getdb('JD_SETCOLOR')}
+				where MODELCOD='{$MODEL}' collate Thai_CI_AS {$cond}
+				order by COLORCOD
+			"; 			
+		}else{
+			$sql = "
+				select distinct COLORCOD from {$this->MAuth->getdb('JD_SETCOLOR')}
+				where MODELCOD='{$MODEL}' collate Thai_CI_AS
+					and BAABCOD='{$BAAB}' collate Thai_CI_AS
+				order by COLORCOD
+			";
+		}
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		

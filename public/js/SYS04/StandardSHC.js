@@ -57,6 +57,7 @@ $("#btnt1search").click(function(){
 							dataToPost.event = "edit";
 							
 							form_operation(dataToPost);
+							$this.destroy();
 						});
 					}
 					JDbtnt1search = null;
@@ -125,15 +126,14 @@ $("#btnt1import").click(function(){
 									draggable: false,
 									closeOnEsc: false,
 									shown: function($this){
-										fn_import();
+										fn_import($this);
 									}
 								});
 
 								$this.destroy();
-								
-								$("#loadding").fadeOut(200);
 							}
-							
+
+							$("#loadding").fadeOut(200);							
 						}
 					});
 					
@@ -151,7 +151,7 @@ $("#btnt1import").click(function(){
 	});
 });
 
-function fn_import(){
+function fn_import($thisForm){
 	var JDmp_save = null;
 	$("#mp_save").click(function(){
 		$data = new Array();
@@ -200,7 +200,8 @@ function fn_import(){
 						draggable: true,
 						closeOnEsc: false,
 						shown: function($this){
-							fn_datatables('mp_result',2,400);
+							fn_datatables('mp_result',2,300);
+							$thisForm.destroy();
 						}
 					});
 				}
@@ -243,6 +244,40 @@ function form_operation(dataToPost){
 				closeOnEsc: false,
 				shown: function($this){
 					//fnload($this);
+					$('#shc_type').select2({
+						placeholder: 'เลือก',
+						ajax: {
+							url: '../Cselect2/getTYPES',
+							data: function (params) {
+								dataToPost = new Object();
+								dataToPost.now = (typeof $('#shc_type').find(':selected').val() === 'undefined' ? "" : $('#shc_type').find(':selected').val());
+								dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+								
+								return dataToPost;				
+							},
+							dataType: 'json',
+							delay: 1000,
+							processResults: function (data) {
+								return {
+									results: data
+								};
+							},
+							cache: true
+						},
+						allowClear: true,
+						multiple: false,
+						dropdownParent: $('#shc_type').parent().parent(),
+						//disabled: true,
+						//theme: 'classic',
+						width: '100%'
+					});
+					
+					$('#shc_type').on("select2:select",function(){
+						$('#shc_model').empty().trigger('change');
+						$('#shc_baab').empty().trigger('change');
+						fn_baabselect();
+					});
+					
 					$('#shc_model').select2({
 						placeholder: 'เลือก',
 						ajax: {
@@ -251,7 +286,7 @@ function form_operation(dataToPost){
 								dataToPost = new Object();
 								dataToPost.now = (typeof $('#shc_model').find(':selected').val() === 'undefined' ? "" : $('#shc_model').find(':selected').val());
 								dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-								dataToPost.TYPECOD = "HONDA";
+								dataToPost.TYPECOD = (typeof $('#shc_type').find(':selected').val() === 'undefined' ? "" : $('#shc_type').find(':selected').val());
 								
 								return dataToPost;				
 							},
@@ -302,7 +337,8 @@ function form_operation(dataToPost){
 						width: '100%'
 					});
 					
-					$('#shc_baab').on("select2:select",function(){
+					$('#shc_baab').on("select2:select",function(){ fn_baabselect(); });
+					function fn_baabselect(){
 						dataToPost = new Object();
 						dataToPost.now 	 = '';
 						dataToPost.q 	 = '';
@@ -325,7 +361,7 @@ function form_operation(dataToPost){
 								$("#shc_color").bootstrapDualListbox('refresh', true);
 							}
 						});
-					});
+					}
 					
 					
 					$('#shc_gcode').select2({
@@ -356,7 +392,7 @@ function form_operation(dataToPost){
 						width: '100%'
 					});
 					
-					let h = $(window).height() - 400;
+					let h = $(window).height() - 450;
 					$("#shc_locat").bootstrapDualListbox({
 						bootstrap2Compatible: false,
 						filterTextClear: 'แสดงทั้งหมด',
@@ -401,6 +437,7 @@ function form_operation(dataToPost){
 					// มีสิทธิ์แก้ไขหรือไม่
 					if($event == "edit"){
 						if(_update == "T"){	 
+							$('#shc_type').attr('disabled',true);
 							$('#shc_model').attr('disabled',true);
 							$('#shc_baab').attr('disabled',true);
 							
@@ -412,6 +449,7 @@ function form_operation(dataToPost){
 							
 							$('#btn_save').attr('disabled',false);
 						}else{
+							$('#shc_type').attr('disabled',true);
 							$('#shc_model').attr('disabled',true);
 							$('#shc_baab').attr('disabled',true);
 							$(".bootstrap-duallistbox-container").find("*").prop("disabled",true);
@@ -449,6 +487,7 @@ function form_operation(dataToPost){
 								if (type === 'ok'){
 									dataToPost2 = new Object();
 									dataToPost2.stdid 	= $btn_save.attr('stdid');
+									dataToPost2.type 	= (typeof $('#shc_type').find(':selected').val() === 'undefined' ? '':$('#shc_type').find(':selected').val());
 									dataToPost2.model 	= (typeof $('#shc_model').find(':selected').val() === 'undefined' ? '':$('#shc_model').find(':selected').val());
 									dataToPost2.baab  	= (typeof $('#shc_baab').find(':selected').val() === 'undefined' ? '':$('#shc_baab').find(':selected').val());
 									dataToPost2.color 	= $('#shc_color').val();

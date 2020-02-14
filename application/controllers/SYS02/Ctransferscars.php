@@ -995,6 +995,7 @@ class Ctransferscars extends MY_Controller {
 				,b.STRNO,c.TYPE,c.MODEL,c.BAAB,c.COLOR,c.CC,case when c.STAT='N' then 'รถใหม่' else 'รถเก่า' end as STAT
 				,e.USERNAME as EMPCARRY,convert(varchar(8),b.TRANSDT,112) TRANSDTDetail
 				,f.USERNAME as EMPRC,convert(varchar(8),b.RECEIVEDT,112) RECEIVEDT
+				,c.GCODE
 			from {$this->MAuth->getdb('INVTransfers')} a
 			left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO collate Thai_CS_AS
 			left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate Thai_CS_AS
@@ -1044,7 +1045,7 @@ class Ctransferscars extends MY_Controller {
 				$html .= "
 					<tr>
 						<td class='bor2' align='center' style='".$cdt."max-width:29px;width:29px;background-color:white;'>".$NRow."</td>
-						<td class='bor2' style='".$cdt."max-width:150px;width:150px;background-color:white;'>".$row->STRNO."</td>
+						<td class='bor2' style='".$cdt."max-width:150px;width:150px;background-color:white;'>".$row->STRNO."<br/>".$row->GCODE."</td>
 						<td class='bor2' style='".$cdt."max-width:150px;width:150px;background-color:white;'>".$row->TYPE."<br/>".$row->MODEL."<br/>".$row->BAAB."</td>
 						<td class='bor2' style='".$cdt."max-width:150px;width:150px;background-color:white;'>".$row->COLOR."<br/>".$row->CC."<br/>".$row->STAT."</td>
 						<td class='bor2' style='".$cdt."max-width:250px;width:250px;background-color:white;'>".$EMPTRANS."<br/>".$EMPRC."<br/></td>
@@ -1125,7 +1126,7 @@ class Ctransferscars extends MY_Controller {
 					<thead>
 						<tr>
 							<th class='bor' align='center' style='max-width:29px;width:29px;background-color:white;'>No.</th>
-							<th class='bor' style='max-width:150px;width:150px;background-color:white;'>หมายเลขตัวถัง</th>
+							<th class='bor' style='max-width:150px;width:150px;background-color:white;'>หมายเลขตัวถัง<br/>กลุ่มรถ</th>
 							<th class='bor' style='max-width:150px;width:150px;background-color:white;'>ยี่ห้อ<br/>รุ่น<br/>แบบ</th>
 							<th class='bor' style='max-width:150px;width:150px;background-color:white;'>สี<br/>ขนาด<br/>สถานะรถ</th>
 							<th class='bor' style='max-width:250px;width:250px;background-color:white;'>พขร (วันที่โอนย้าย)<br/>ผู้รับสินค้า (วันที่รับ)</th>

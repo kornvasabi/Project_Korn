@@ -79,6 +79,7 @@ $("#btnt1search").click(function(){
 							dataToPost.event	= "edit";
 							
 							form_operation(dataToPost);
+							$this.destroy();
 						});
 					}
 					
@@ -557,7 +558,8 @@ function fnload($thisForm){
 		dataToPost.q 		= "";
 		dataToPost.TYPECOD 	= "HONDA";
 		dataToPost.MODEL 	= (typeof $('#FMODEL').find(':selected').val() === 'undefined' ? "" : $('#FMODEL').find(':selected').val());
-		
+		dataToPost.BAAB 	= "";
+		dataToPost.NOTB 	= "YES";
 		$.ajax({
 			url: '../Cselect2/getBAAB',
 			data: dataToPost,
@@ -575,6 +577,22 @@ function fnload($thisForm){
 		});
 		
 		$.ajax({
+			url: '../Cselect2/getJDCOLOR',
+			data: dataToPost,
+			tyle: 'POST',
+			dataType: 'json',
+			success: function(data){
+				let size = data.length;
+				for(let i=0;i<size;i++){
+					if(i==0){ FCOLOR.empty(); }
+					FCOLOR.append('<option value="'+data[i].id+'">'+data[i].text+'</option>');
+				}				
+				FCOLOR.bootstrapDualListbox('refresh', true);
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		});
+		
+		$.ajax({
 			url:'../SYS04/Standard/getSTDID',
 			data: dataToPost,
 			type: 'POST',
@@ -585,6 +603,32 @@ function fnload($thisForm){
 			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 		
+	});
+	
+	FBAAB.change(function(){
+		dataToPost = new Object();
+		dataToPost.now 		= "";
+		dataToPost.q 		= "";
+		dataToPost.TYPECOD 	= "HONDA";
+		dataToPost.MODEL 	= (typeof $('#FMODEL').find(':selected').val() === 'undefined' ? "" : $('#FMODEL').find(':selected').val());
+		dataToPost.BAAB 	= $(this).val();
+		dataToPost.NOTB 	= "YES";
+		
+		$.ajax({
+			url: '../Cselect2/getJDCOLOR',
+			data: dataToPost,
+			tyle: 'POST',
+			dataType: 'json',
+			success: function(data){
+				let size = data.length;
+				for(let i=0;i<size;i++){
+					if(i==0){ FCOLOR.empty(); }
+					FCOLOR.append('<option value="'+data[i].id+'">'+data[i].text+'</option>');
+				}				
+				FCOLOR.bootstrapDualListbox('refresh', true);
+			},
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		});
 	});
 	
 	
@@ -700,7 +744,6 @@ function fnload($thisForm){
 						msg: data.msg
 					});
 				}else{
-					//$thisForm.destroy();					
 					Lobibox.notify('success', {
 						title: 'สำเร็จ',
 						size: 'mini',
@@ -712,13 +755,11 @@ function fnload($thisForm){
 						messageHeight: '90vh',
 						msg: data.msg
 					});
+					
+					$thisForm.destroy();
 				}
 			},
-			beforeSend: function(){
-				if(JDbtnAddDwn !== null){
-					JDbtnAddDwn.abort();
-				}
-			},
+			beforeSend: function(){ if(JDbtnAddDwn !== null){ JDbtnAddDwn.abort(); } },
 			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
@@ -1062,6 +1103,12 @@ function activeDatatables(){ // หลังจากเพิ่มข้อม
 	$('.editDwn').unbind('click');
 	$('.editDwn').click(function(){ 
 		$this = $(this);
+		$('#btnAddDwn').attr('disabled',true);
+		$('#btnAddFree').attr('disabled',true);
+		$(".deleteDwn").attr('disabled',true);
+		$(".editDwn").attr('disabled',true);
+		$(".deleteFree").attr('disabled',true);
+		$(".editFree").attr('disabled',true);
 		$(this).parent().parent().remove();
 		setTimeout(function(){ loadAddDwn($this); },250);
 	});
@@ -1132,6 +1179,13 @@ function activeDatatablesFree($stdfree){ // หลังจากเพิ่ม
 	$('.editFree').unbind('click');
 	$('.editFree').click(function(){ 
 		$this = $(this);
+		$('#btnAddDwn').attr('disabled',true);
+		$('#btnAddFree').attr('disabled',true);
+		$(".deleteDwn").attr('disabled',true);
+		$(".editDwn").attr('disabled',true);
+		$(".deleteFree").attr('disabled',true);
+		$(".editFree").attr('disabled',true);
+		
 		$(this).parent().parent().remove();
 		setTimeout(function(){ loadAddFree($this); },250);
 	});
@@ -1459,8 +1513,8 @@ function loadAddFree($edit){
 					$("#btnSWNADD").click(function(){
 						dataToPost = new Object();
 						dataToPost.formprice 	= $("#formprice").find(':selected').text();
-						dataToPost.formpriceFP 	= $("#formDwn").find('option:selected').attr("formpriceFP");
-						dataToPost.formpriceTP 	= $("#formDwn").find('option:selected').attr("formpriceTP");
+						dataToPost.formpriceFP 	= $("#formprice").find('option:selected').attr("fprice");
+						dataToPost.formpriceTP 	= $("#formprice").find('option:selected').attr("tprice");
 						dataToPost.formdwns 	= $("#formDwn").find('option:selected').attr("formdwns");
 						dataToPost.formdwne 	= $("#formDwn").find('option:selected').attr("formdwne");
 						dataToPost.formtypeT 	= $("#formtype").find(':selected').text();
@@ -1528,6 +1582,8 @@ function loadAddFree($edit){
 				},
 				beforeClose : function(){
 					if($edit !== null){
+						dataToPost.formpriceFP 	= ($edit === null ? "":$edit.attr('formpriceFP'));
+						dataToPost.formpriceTP 	= ($edit === null ? "":$edit.attr('formpriceTP'));	
 						dataToPost.action = "cancel edit";	
 						$('#loadding').fadeIn(200);
 						
@@ -1637,10 +1693,10 @@ $("#btnt1import").click(function(){
 								});
 
 								$this.destroy();
-								
-								$("#loadding").fadeOut(200);
+								fn_afterimport();
 							}
 							
+							$("#loadding").fadeOut(200);
 						}
 					});
 					
@@ -1658,9 +1714,63 @@ $("#btnt1import").click(function(){
 	});
 });
 
-
-
-
+function fn_afterimport(){
+	var JDstd_import = null;
+	$('#std_import').click(function(){
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			iconClass: false,
+			closeOnEsc: false,
+			closeButton: false,
+			msg: "คุณต้องการนำเข้าข้อมูลสแตนดาร์ดหรือไม่",
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ยืนยัน, นำเข้า',
+					closeOnClick: false,
+				},
+				cancel : {
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ยกเลิก, ไม่นำเข้าก่อน',
+					closeOnClick: true
+				},
+			},
+			callback: function(lobibox, type){
+				if (type === 'ok'){
+					dataToPost = new Object();
+					dataToPost.dt = '';
+					
+					$('#loadding').fadeIn(200);
+					JDstd_import = $.ajax({
+						url:'../SYS04/Standard/import_save',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						success: function(data){
+							Lobibox.notify('warning', {
+								title: 'แจ้งเตือน',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 5000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.errorMsg
+							});
+							
+							JDstd_import = null;
+							lobibox.destroy();
+							$('#loadding').fadeOut(200);
+						},
+						beforeSend: function(){ if(JDstd_import !== null){ JDstd_import.abort(); } },
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+					});
+				}
+			}
+		});
+	});
+}
 
 
 

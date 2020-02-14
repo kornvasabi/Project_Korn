@@ -509,13 +509,29 @@ class Welcome extends MY_Controller {
 			</script>
 		";
 		*/
-		
 		$html = "
-			<div class='col-md-12' style='height:30vh;'>&emsp;</div>
+			<div class='col-md-12' style='height:20vh;'>&emsp;</div>
 			<div class='col-md-12' style='font-size:50pt;' align='center'>
-				WELCOME
+				<div style='font-size:100pt;transform: rotate(0deg);width:100%;'>
+					".
+					chr(240).chr(159).chr(133).chr(166).
+					chr(240).chr(159).chr(133).chr(148).
+					chr(240).chr(159).chr(133).chr(155).
+					chr(240).chr(159).chr(133).chr(146).
+					chr(240).chr(159).chr(133).chr(158).
+					chr(240).chr(159).chr(133).chr(156).
+					chr(240).chr(159).chr(133).chr(148)
+					."
+				</div>
 			</div>
 		";
+		
+		// $html = "
+			// <div class='col-md-12' style='height:30vh;'>&emsp;</div>
+			// <div class='col-md-12' style='font-size:50pt;' align='center'>
+				// WELCOME
+			// </div>
+		// ";
 		
 		echo $html;
 	}

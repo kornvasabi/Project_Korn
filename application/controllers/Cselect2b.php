@@ -1416,4 +1416,95 @@ class Cselect2b extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function getAPMAST(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select top 50 APCODE, APCODE+' - '+APNAME as APNAME
+			from {$this->MAuth->getdb('APMAST')}
+			where APCODE like '%".$dataSearch."%' collate Thai_CI_AS
+				or APNAME like '%".$dataSearch."%' collate Thai_CI_AS
+			order by APCODE
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->APCODE, 'text'=>$row->APNAME];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function getCCCOD(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select CCCOD
+			from {$this->MAuth->getdb('SETCC')}
+			where CCCOD like '%".$dataSearch."%' collate Thai_CI_AS
+			order by CCCOD
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CCCOD, 'text'=>$row->CCCOD];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function getOPTION(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			/*select top 50 OPTCODE, OPTCODE+' - '+isnull(OPTNAME,'')+' ['+LOCAT+']' as OPTNAME
+			from {$this->MAuth->getdb('OPTMAST')}
+			where OPTCODE != '' and (OPTCODE like '%".$dataSearch."%' collate Thai_CI_AS or OPTNAME like '%".$dataSearch."%' collate Thai_CI_AS 
+			or LOCAT like '%".$dataSearch."%') 
+			order by LOCAT, OPTCODE*/
+			
+			select OPTCODE, OPTCODE+isnull(' - '+OPTNAME,'') as OPTNAME
+			from {$this->MAuth->getdb('OPTMAST')}
+			where OPTCODE != '' and (OPTCODE like '%".$dataSearch."%' collate Thai_CI_AS or OPTNAME like '%".$dataSearch."%' collate Thai_CI_AS) 
+			group by OPTCODE, OPTCODE+isnull(' - '+OPTNAME,'')
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->OPTCODE, 'text'=>$row->OPTNAME];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function getTAXNO(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select top 50 TAXNO
+			from {$this->MAuth->getdb('TAXTRAN')}
+			where TAXNO like '%".$dataSearch."%' collate Thai_CI_AS
+			ORDER BY FLAG, TAXDT
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->TAXNO, 'text'=>$row->TAXNO];
+			}
+		}
+		echo json_encode($json);
+	}
+	
 }

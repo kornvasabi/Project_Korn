@@ -85,28 +85,39 @@ function search(){
 			msg: 'กรุณาระบุลูกค้า'
 		});
 	}else{
-		$('#resultt_HCsale').html('');
-		$('#resultt_AOsale').html('');
-		$('#resultt_ARmgra').html('');
-		$('#resultt_HCsale').html("<table width='100%' height='100%'><tr><td align='center'><img src='../public/images/loading-icon.gif' style='width:130px;height:130px;'></td></tr></table>");
-		$('#resultt_ARmgra').html("<table width='100%' height='100%'><tr><td align='center'><img src='../public/images/loading-icon.gif' style='width:130px;height:130px;'></td></tr></table>");
+		$('#dataTables-HCsale tbody').html('');
+		$('#dataTables-AOsale tbody').html('');
+		$('#dataTables-ARmgra tbody').html('');
+		$('#dataTables-HCsale tbody').html("<table width='100%' height='100%'><tr><td colspan='8'><img src='../public/images/loading-icon2.gif' style='width:50px;height:15px;'></td></tr></table>");
+		$('#dataTables-AOsale tbody').html("<table width='100%' height='100%'><tr><td colspan='8'><img src='../public/images/loading-icon2.gif' style='width:50px;height:15px;'></td></tr></table>");
+		$('#dataTables-ARmgra tbody').html("<table width='100%' height='100%'><tr><td colspan='8'><img src='../public/images/loading-icon2.gif' style='width:50px;height:15px;'></td></tr></table>");
 		reportsearch = $.ajax({
 			url: '../SYS05/CustomerData/search',
 			data: dataToPost,
 			Type: 'POST',
 			dataType:'json',
 			success: function(data){	
+				$('#dataTables-HCsale tbody').empty().append(data.html1);
+				document.getElementById("dataTable-fixed-HCsale").addEventListener("scroll", function(){
+					var translate = "translate(0,"+(this.scrollTop - 7)+"px)";
+					this.querySelector("thead").style.transform = translate;
+					this.querySelector("thead").style.zIndex = 100;
+				});
 				
-				$('#resultt_HCsale').html(data.html1);
-				$('#resultt_AOsale').html(data.html2);
-				$('#resultt_ARmgra').html(data.html3);
+				$('#dataTables-AOsale tbody').empty().append(data.html2);
+				document.getElementById("dataTable-fixed-AOsale").addEventListener("scroll", function(){
+					var translate = "translate(0,"+(this.scrollTop - 7)+"px)";
+					this.querySelector("thead").style.transform = translate;
+					this.querySelector("thead").style.zIndex = 100;
+				});
 				
-				fn_datatables('table-HCsale',3,735);
-				fn_datatables('table-AOsale',3,735,);
-				fn_datatables('table-ARmgra',3,735,);
-
-				$('.dataTables_paginate').hide();
-				$('.dataTables_info').hide();
+				$('#dataTables-ARmgra tbody').empty().append(data.html3);
+				document.getElementById("dataTable-fixed-ARmgra").addEventListener("scroll", function(){
+					var translate = "translate(0,"+(this.scrollTop - 7)+"px)";
+					this.querySelector("thead").style.transform = translate;
+					this.querySelector("thead").style.zIndex = 100;
+				});
+				
 				reportsearch = null;
 			},
 			beforeSend: function(){

@@ -625,7 +625,7 @@ class Creceivedcars extends MY_Controller {
 							EMPCARRYNM='".$row->EMPCARRYNM."'
 							style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
 				";
-				if($row->EMPCARRY == "" or $row->TRANSDT == "" or $row->active == "y"){ $td = "<td></td>"; }
+				if($row->EMPCARRY == "" or $row->TRANSDT == "" or $row->active == "y" or $row->MODEL == ""){ $td = "<td></td>"; }
 				
 				$html .= "
 					<tr class='trow' seq=".$NRow." style='".($row->active == "y" ? "color:blue;":"")."'>

@@ -323,7 +323,7 @@ class HoldtoStock extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	function Save_changecontstat(){
+	function Save_holdtostock(){
 		$CONTNO 	= $_REQUEST["CONTNO"];
 		$CUSCOD 	= $_REQUEST["CUSCOD"];
 		$STRNO 		= $_REQUEST["STRNO"];
@@ -364,8 +364,8 @@ class HoldtoStock extends MY_Controller {
 					set YSTAT = 'N', YDATE = NULL
 					where CONTNO = @CONTNO and CUSCOD = @CUSCOD
 				end
-					
-				insert into #AddHoldtoStock select 'S',@CONTNO,'บันทึกรายการรถยึดเข้าสต็อก เลขตัวถังรถ '+@STRNO+' เรียบร้อย';
+				
+				insert into #AddHoldtoStock select 'S',@CONTNO,'บันทึกรายการรถยึดเข้าสต็อก เลขตัวถังรถ '+@STRNO+' เรียบร้อย โปรดทำรายการบันทึกเปลี่ยนรถยึดเป็นรถเก่า (เพื่อขาย)';
 					
 				commit tran AddHoldtoStock;
 			end try
@@ -398,6 +398,66 @@ class HoldtoStock extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function Edit_holdtostock(){
+		$CONTNO 	= $_REQUEST["CONTNO"];
+		$CUSCOD 	= $_REQUEST["CUSCOD"];
+		$STRNO 		= $_REQUEST["STRNO"];
+		$YSTAT		= $_REQUEST["YSTAT"];
+		$RVLOCAT	= $_REQUEST["RVLOCAT"];
+		//echo $DATEHOLD; exit;
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#Editholdtostock') is not null drop table #Editholdtostock;
+			create table #Editholdtostock (id varchar(20),contno varchar(20),msg varchar(max));
+			
+			begin tran Editholdtostock
+			begin try
+			
+				declare @CONTNO varchar(20) = '".$CONTNO."';
+				declare @CUSCOD varchar(20) = '".$CUSCOD."';
+				declare @STRNO 	varchar(max) = '".$STRNO."';
+				
+				update {$this->MAuth->getdb('INVTRAN')}
+				set CRLOCAT = '".$RVLOCAT."', CURSTAT = '', YSTAT = ''
+				where CONTNO = @CONTNO and STRNO = @STRNO
+
+				update {$this->MAuth->getdb('ARMAST')} 
+				set YSTAT = 'N', YDATE = NULL
+				where CONTNO = @CONTNO and CUSCOD = @CUSCOD
+					
+				insert into #Editholdtostock select 'S',@CONTNO,'แก้ไขรายการรถยึดเข้าสต็อก เลขตัวถังรถ '+@STRNO+' เรียบร้อย';
+					
+				commit tran Editholdtostock;
+			end try
+			begin catch
+				rollback tran Editholdtostock;
+				insert into #Editholdtostock select 'E','',ERROR_MESSAGE();
+			end catch
+		";
+		//echo $sql; exit;
+		
+		$this->db->query($sql);
+		$sql = "select * from #Editholdtostock";
+		$query = $this->db->query($sql);
+	  
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["status"] = $row->id;
+				$response["contno"] = $row->contno;
+				$response["msg"] = $row->msg;
+				$response["stat"] = $YSTAT;
+			}
+		}else{
+			$response["status"] = false;
+			$response["contno"] = '';
+			$response["msg"] = 'ผิดพลาดไม่สามารถบันทึกเปลี่ยนสถานะสัญญาได้ โปรดติดต่อฝ่ายไอที';
+			$response["stat"] = $row->msg;
+			$response["stat"] = $YSTAT;
+		}
+		
+		echo json_encode($response);
+	}
+	
 	function getfromHoldtoOldcar(){
 		$level	= $_REQUEST["level"];
 		//$locat = $this->sess['branch'];
@@ -405,6 +465,7 @@ class HoldtoStock extends MY_Controller {
 		$html = "
 			<div class='b_HoldtoOldcar' style='width:100%;height:calc(100vh - 85px);overflow:auto;background-color:white;'>
 				<div style='float:left;height:100%;overflow:auto;' class='col-sm-10 col-xs-10 col-sm-offset-1'>
+					<div class='row' style='height:94%;'>
 					<div class='form-group col-sm-12 col-xs-12' style='border:0.1px solid #f0f0f0;'>
 						<div class='form-group col-sm-10 col-xs-10 col-sm-offset-1'>
 							<div class='row'>
@@ -453,22 +514,16 @@ class HoldtoStock extends MY_Controller {
 									</div>
 								</div>
 								<div class='col-sm-4 col-xs-4'>	
-									<div class='form-group'>
-										ชำระเงินแล้ว
-										<input type='text' id='SMPAY2' class='form-control input-sm' style='font-size:10.5pt' disabled>
-									</div>
+									ชำระเงินแล้ว
+									<input type='text' id='SMPAY2' class='form-control input-sm' style='font-size:10.5pt' disabled>
 								</div>
 								<div class='col-sm-4 col-xs-4'>	
-									<div class='form-group'>
-										ยอดคงเหลือ
-										<input type='text' id='BALANCE2' class='form-control input-sm' style='font-size:10.5pt' disabled>
-									</div>
+									ยอดคงเหลือ
+									<input type='text' id='BALANCE2' class='form-control input-sm' style='font-size:10.5pt' disabled>
 								</div>
 								<div class='col-sm-4 col-xs-4'>	
-									<div class='form-group'>
-										ยอดค้างชำระ
-										<input type='text' id='NETAR2' class='form-control input-sm' style='font-size:10.5pt' disabled>
-									</div>
+									ยอดค้างชำระ
+									<input type='text' id='NETAR2' class='form-control input-sm' style='font-size:10.5pt' disabled>
 								</div>
 							</div>
 						</div>
@@ -510,6 +565,18 @@ class HoldtoStock extends MY_Controller {
 								</div>
 								<div class='col-sm-3 col-xs-3'>	
 									<div class='form-group'>
+										วันที่ขาย
+										<input type='text' id='SDATE2' class='form-control input-sm' style='font-size:10.5pt' placeholder='วันที่ขาย'  readonly>
+									</div>
+								</div>
+								<div class='col-sm-3 col-xs-3'>	
+									<div class='form-group'>
+										จำนวนวันจากวันที่ขาย ถึง วันยึด
+										<input type='text' id='DATEDIFF2' class='form-control input-sm' style='font-size:10.5pt' placeholder='x วัน'  readonly>
+									</div>
+								</div>
+								<div class='col-sm-3 col-xs-3'>	
+									<div class='form-group'>
 										สถานที่เก็บปัจจุบัน
 										<input type='text' id='LOCATR2' class='form-control input-sm' style='font-size:10.5pt' placeholder='สถานที่เก็บ' readonly>
 									</div>
@@ -518,6 +585,7 @@ class HoldtoStock extends MY_Controller {
 									<div class='form-group'>
 										ราคาขายใหม่
 										<input type='text' id='SALENEW2' class='form-control input-sm' style='font-size:10.5pt' placeholder='0.00'>
+										<span style='font-size:8pt;color:#bd000a;'>วันขายถึงวันยึดไม่เกิน 195 วัน <u>บวกเพิ่ม</u> 3,000 บ. <br>วันขายถึงวันยึด  196-365 วัน <u>บวกเพิ่ม</u> 2,000 บ. </span>
 									</div>
 								</div>
 								<div class='col-sm-3 col-xs-3'>	
@@ -538,27 +606,20 @@ class HoldtoStock extends MY_Controller {
 										<select id='Y_USER2' class='form-control input-sm' data-placeholder='พนักงานที่ยึดรถ' ></select>
 									</div>
 								</div>
-								<div class=' col-sm-6 col-xs-6'>	
-									<div class='form-group'>
-										หมายเหตุ
-										<textarea type='text' id='MEMO2' rows='1' cols='20' class='form-control input-sm' style='height:30px;font-size:10.5pt'></textarea>
-									</div>
+								<div class=' col-sm-12 col-xs-12'>	
+									หมายเหตุ
+									<textarea type='text' id='MEMO2' rows='1' cols='20' class='form-control input-sm' style='height:30px;font-size:10.5pt'></textarea>
 								</div>
 							</div>
 						</div>
 					</div>
-					<div class='row'>
+					</div>
+					<div class='row' style='height:6%;'>
 						<div class=' col-sm-2 col-sm-offset-4'>	
-							<div class='form-group'>
-								<br>
-								<button id='btnsave_holdtooldcar' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
-							</div>
+							<button id='btnsave_holdtooldcar' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
 						</div>
 						<div class=' col-sm-2'>	
-							<div class='form-group'>
-								<br>
-								<input type='button' id='btndel_holdtooldcar' class='btn btn-danger btn-sm' value='ลบ' style='width:100%'>
-							</div>
+							<input type='button' id='btndel_holdtooldcar' class='btn btn-danger btn-sm' value='ลบ' style='width:100%'>
 						</div>
 					</div>
 				</div>
@@ -571,10 +632,17 @@ class HoldtoStock extends MY_Controller {
 	
 	function searchCONTNOtoOldcar(){
 		$contno	= $_REQUEST["contno"];
-
+		$dateY = $this->Convertdate(1,$_REQUEST["dateY"]);
 		$sql = "
+				declare @NPROF decimal(8,2)	= ( select convert(decimal(12,2),round(SUM(NPROF),2)) AS NPROF 
+				from(
+					select CONTNO, CASE WHEN PAYMENT > 0 THEN (NPROF/DAMT)*PAYMENT ELSE NPROF END AS  NPROF  
+					from {$this->MAuth->getdb('ARPAY')}  WHERE CONTNO = '".$contno."' and PAYMENT < DAMT
+				)A)
+				
 				select b.CONTNO, b.CRLOCAT, isnull(b.REGNO,'') as REGNO, b.STRNO , b.STAT, b.GCODE, d.GDESC, c.SNAM, c.NAME1, c.NAME2, a.CUSCOD, a.TOTPRC, a.SMPAY+a.SMCHQ as SMPAY, 
-				a.TOTPRC - a.SMPAY - a.SMCHQ as BALANC, a.EXP_AMT, a.NKANG+a.TOTDWN-a.SMPAY-a.SMCHQ as BOOKVAL, a.VKANG, b.STDPRC, a.VATRT, a.BILLCOLL, e.NAME
+				a.TOTPRC - a.SMPAY - a.SMCHQ as BALANC, a.EXP_AMT, a.NKANG+a.TOTDWN-a.SMPAY-a.SMCHQ-@NPROF as BOOKVAL, a.VKANG, b.STDPRC, a.VATRT, a.BILLCOLL, e.NAME,
+				convert(char,a.SDATE,112) as SDATE, datediff(day,a.SDATE,'".$dateY."') as DAYDAIFF
 				from {$this->MAuth->getdb('ARMAST')} a
 				left join {$this->MAuth->getdb('INVTRAN')} b on a.CONTNO = b.CONTNO 
 				left join {$this->MAuth->getdb('CUSTMAST')} c on a.CUSCOD = c.CUSCOD 
@@ -608,6 +676,8 @@ class HoldtoStock extends MY_Controller {
 				$response["VATRT"]  	= number_format($row->VATRT);
 				$response["BILLCOLL"] 	= str_replace(chr(0),'',$row->BILLCOLL);
 				$response["NAME"] 		= $row->NAME;
+				$response["SDATE"] 		= $this->Convertdate(2,$row->SDATE);
+				$response["DAYDAIFF"] 	= number_format($row->DAYDAIFF);
 			}
 		}
 		
@@ -761,7 +831,7 @@ class HoldtoStock extends MY_Controller {
 			$response["contno"] = '';
 			$response["msg"] = 'ผิดพลาดไม่สามารถบันทึกเปลี่ยนรถยึดเป็นรถเก่าได้ โปรดติดต่อฝ่ายไอที';
 		}
-		
+		 
 		echo json_encode($response);
 	}
 }
