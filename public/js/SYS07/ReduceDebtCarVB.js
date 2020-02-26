@@ -105,8 +105,20 @@ $(function(){
 	//$('#btnsaveRD').attr('disabled',true);
 	//$('#btnclearRD').attr('disabled',true);
 	$('#stana').hide();
+	/*
+	if(_insert == 'T'){
+		$('#btnaddRD').attr('disabled',false);	
+		$('#btnsaveRD').attr('disabled',false);	
+	}else{
+		$('#btnaddRD').attr('disabled',true);	
+		$('#btnsaveRD').attr('disabled',true);	
+	}
+	*/
 });
 $('#btnaddRD').click(function(){
+	AddRD();
+});
+function AddRD(){
 	$('#stana').hide();
 	$('#LOCAT').empty();
 	$('#TAXNO').empty();
@@ -132,8 +144,11 @@ $('#btnaddRD').click(function(){
 	$('#btnclearRD').attr('disabled',false);
 	$('#btnsaveRD').attr('disabled',false);
 	//$('#btnaddRD').attr('disabled',true);
-});
+}
 $('#btnclearRD').click(function(){
+	ClearRD();
+});
+function ClearRD(){
 	$('#LOCAT').empty();
 	$('#TAXNO').empty();
 	$('#STRNO').empty();
@@ -145,7 +160,7 @@ $('#btnclearRD').click(function(){
 	$('#VATAMT').val('0.00');
 	$('#TOTAMT').val('0.00');
 	$('#stana').hide();
-});
+}
 $('#TAXNO').change(function(){
 	gettaxno();
 });
@@ -199,6 +214,7 @@ function getoutdt(){
 					messageHeight: '90vh',
 					msg: data.msg
 				});
+				$('#TAXDT').val('');
 			}else{
 				$('#DEBTNO').val(data.DEBTNO);
 			}
@@ -269,57 +285,94 @@ function savereducecar(){
 	dataToPost.NETAMT  = $('#NETAMT').val();
 	dataToPost.VATAMT  = $('#VATAMT').val();
 	dataToPost.TOTAMT  = $('#TOTAMT').val();
-	$('#loadding').show();
-	VBreducecar = $.ajax({
-		url:'../SYS07/ReduceDebtCarVB/Save_reducecar',
-		data:dataToPost,
-		type:'POST',
-		dataType:'json',
-		success:function(data){
-			$('#loadding').hide();
-			if(data.error){
-				Lobibox.notify('warning', {
+	
+	Lobibox.confirm({
+		title: 'ยืนยันการทำรายการ',
+		iconClass: false,
+		msg: "คุณต้องการบันทึก ?",
+		buttons: {
+			ok : {
+				'class': 'btn btn-primary',
+				text: 'ยืนยัน',
+				closeOnClick: true,
+			},
+			cancel : {
+				'class': 'btn btn-danger',
+				text: 'ยกเลิก',
+				closeOnClick: true
+			},
+		},
+		callback: function(lobibox, type){
+			$('#loadding').show();
+			if(type === 'ok'){
+				VBreducecar = $.ajax({
+					url:'../SYS07/ReduceDebtCarVB/Save_reducecar',
+					data:dataToPost,
+					type:'POST',
+					dataType:'json',
+					success:function(data){
+						$('#loadding').hide();
+						if(data.error){
+							Lobibox.notify('warning', {
+								title: 'แจ้งเตือน',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 5000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+						}
+						if(data.status == 'Y'){
+							Lobibox.notify('success', {
+								title: 'สำเร็จ',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 3000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+							ClearRD();
+						}else if(data.status == 'N'){
+							Lobibox.notify('error', {
+								title: 'ผิดพลาด',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 3000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+						}
+						VBreducecar = null;
+					},
+					beforeSend:function(){
+						if(VBreducecar !== null){VBreducecar.abort();}
+					}
+				});
+			}else{
+				$('#loadding').hide();
+				Lobibox.notify('error', {
 					title: 'แจ้งเตือน',
 					size: 'mini',
-					closeOnClick: false,
+					closeOnClick: true,
 					delay: 5000,
 					pauseDelayOnHover: true,
 					continueDelayOnInactiveTab: false,
 					icon: true,
 					messageHeight: '90vh',
-					msg: data.msg
+					//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+					//soundExt: '.ogg',
+					msg: 'ยังไม่บันทึกรายการ'
 				});
-			}
-			if(data.status == 'Y'){
-				Lobibox.notify('success', {
-					title: 'สำเร็จ',
-					size: 'mini',
-					closeOnClick: false,
-					delay: 3000,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					icon: true,
-					messageHeight: '90vh',
-					msg: data.msg
-				});
-				
-			}else if(data.status == 'N'){
-				Lobibox.notify('error', {
-					title: 'ผิดพลาด',
-					size: 'mini',
-					closeOnClick: false,
-					delay: 3000,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					icon: true,
-					messageHeight: '90vh',
-					msg: data.msg
-				});
-			}
-			VBreducecar = null;
-		},
-		beforeSend:function(){
-			if(VBreducecar !== null){VBreducecar.abort();}
+			}	
 		}
 	});
 }
@@ -391,6 +444,7 @@ function showreducecar(){
 										$('#TAXDT').val(rdc.taxdt);
 										$('#REFDT').val(rdc.refdt);
 										$('#NETAMT').val(rdc.netamt);
+										
 										if(rdc.vatamt == 0){
 											$('#VATAMT').val('0.00');
 										}else{
@@ -420,7 +474,13 @@ function showreducecar(){
 									$this.destroy();
 								});
 								$('#loadding').fadeOut(200);
-								
+								/*
+								if(_delete == 'T'){
+									$('#btndelRD').attr('disabled',false);	
+								}else{	
+									$('#btndelRD').attr('disabled',true);	
+								}
+								*/
 								VATsearch = null;
 							},
 							beforeSend: function(){
@@ -450,6 +510,7 @@ function delreducecar(){
 	dataToPost.REFNO   = $('#TAXNO').val();
 	dataToPost.STRNO   = $('#STRNO').val();
 	dataToPost.TAXNO   = $('#DEBTNO').val();
+	dataToPost.RECVNO  = $('#RECVNO').val();
 	Lobibox.confirm({
 		title: 'ยืนยันการทำรายการ',
 		iconClass: false,
@@ -474,17 +535,32 @@ function delreducecar(){
 					type: 'POST',
 					dataType: 'json',
 					success: function(data){
-						Lobibox.notify('success', {
-							title: 'แจ้งเตือน',
-							size: 'mini',
-							closeOnClick: false,
-							delay: 5000,
-							pauseDelayOnHover: true,
-							continueDelayOnInactiveTab: false,
-							icon: true,
-							messageHeight: '90vh',
-							msg: data.msg
-						});	
+						if(data.status == 'Y'){
+							Lobibox.notify('success', {
+								title: 'สำเร็จ',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 3000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+							AddRD();
+						}else if(data.status == 'N'){
+							Lobibox.notify('error', {
+								title: 'ผิดพลาด',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 3000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+						}
 						DEL_reducecar = null;
 					},
 					beforeSend: function(){

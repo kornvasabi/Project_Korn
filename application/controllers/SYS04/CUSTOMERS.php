@@ -1242,6 +1242,7 @@ class CUSTOMERS extends MY_Controller {
 			begin catch
 				rollback tran custmastTran;
 				insert into #custmastTemp select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				return;
 			end catch
 		";
 		//echo $sql; exit;

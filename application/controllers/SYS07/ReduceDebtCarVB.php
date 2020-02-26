@@ -126,19 +126,19 @@ class ReduceDebtCarVB extends MY_Controller {
 								<div class='col-sm-2 col-sm-2'></div>
 								<div class='col-sm-2 col-sm-2'>
 									<br>
-										<button id='btnaddRD' type='button' class='btn btn-info'style='width:100%;'><span class='fa fa-plus-square'><b>เพิ่ม</b></span></button>
-									</div>
-								<div class='col-sm-2 col-xs-2'>
+									<button id='btnaddRD' type='button' class='btn btn-info'style='width:100%;'><span class='fa fa-plus-square'><b>เพิ่ม</b></span></button>
+								</div>
+								<div class='col-sm-2 col-sm-2'>
 									<br>
 									<button id='btnsaveRD' type='button' class='btn btn-primary' style='width:100%;'><span class='fa fa-floppy-o'><b>บันทึก</b></span></button>
 								</div>
-								<div class='col-sm-2 col-xs-2'>
+								<div class='col-sm-2 col-sm-2'>
 									<br>
 									<button id='btndelRD' type='button' class='btn btn-info btn btn-danger'style='width:100%;'><span class='glyphicon glyphicon-trash'><b>ลบ</b></span></button>
-								</div><br><div class='col-sm-2 col-xs-2'>
+								</div><br><div class='col-sm-2 col-sm-2'>
 									<br>
 									<button id='btnshowRD' type='button' class='btn btn-info btn btn-cyan'style='width:100%;'><span class='fa fa-folder-open'><b>สอบถาม</b></span></button>
-								</div><br><div class='col-sm-2 col-xs-2'>
+								</div><br><div class='col-sm-2 col-sm-2'>
 									<br>
 									<button id='btnclearRD' type='button' class='btn btn-info btn btn-light'style='width:100%;'><span class='' style='color:blue;'><b>Clear</b></span></button>
 								</div><br>
@@ -176,12 +176,14 @@ class ReduceDebtCarVB extends MY_Controller {
 		$response = array();
 		if($LOCAT ==""){
 			$response["error"] = true;
-			$response["msg"] = "ไม่พบรหัสสาขา กรุณากรอกรหัสสาขาก่อนครับ";
+			$response["msg"] = "ไม่พบรหัสสาขา กรุณาเลือกรหัสสาขาก่อนครับ";
 			echo json_encode($response); exit;
 		}
 		$sql = "
-			SELECT YEAR('".$TAXDT."') as Yyear,RIGHT('0' + RTRIM(MONTH('".$TAXDT."')), 2) as Mmonth
+			SELECT RIGHT(YEAR('".$TAXDT."'),2) as Yyear ,RIGHT('0' + RTRIM(MONTH('".$TAXDT."')), 2) as Mmonth
 		";
+		//Right(Year('20260203'),2)
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		$year = ""; $month = "";
 		if($query->row()){
@@ -191,14 +193,16 @@ class ReduceDebtCarVB extends MY_Controller {
 			}
 		}
 		$sql = "
+			declare @taxdt varchar(4) = (select YEAR('".$TAXDT."'));
 			declare @locat varchar(3) = (select SHORTL from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD = '".$LOCAT."');
 			declare @tcby  varchar(4) = (select RIGHT('0000'+CAST(MAX(CAST(coalesce(L_TCBUY,0) AS int) + 1) as nvarchar(4)), 4) 
-			as TCBUY from {$this->MAuth->getdb('LASTNO')} where LOCAT = '".$LOCAT."' and CR_YEAR = '".$year."' and CR_MONTH = '".$month."');
+			as TCBUY from {$this->MAuth->getdb('LASTNO')} where LOCAT = '".$LOCAT."' and CR_YEAR = @taxdt and CR_MONTH = '".$month."');
+			
 
 			select Llocat+'W-'+year1+CR_MONTH+@tcby as TAXNO
 			from (
-				select @locat Llocat,LOCAT,CR_YEAR,CONVERT(varchar(2),CR_YEAR,12) as year1,CR_MONTH,coalesce(L_TCBUY,0) as L_TCBUY  
-				from {$this->MAuth->getdb('LASTNO')} where LOCAT = '".$LOCAT."' and CR_YEAR = '".$year."' 
+				select @locat Llocat,LOCAT,CR_YEAR,RIGHT(YEAR(CR_YEAR),2) as year1,CR_MONTH,coalesce(L_TCBUY,0) as L_TCBUY  
+				from {$this->MAuth->getdb('LASTNO')} where LOCAT = '".$LOCAT."' and CR_YEAR = @taxdt 
 				and CR_MONTH = '".$month."'	
 			)a
 		";
@@ -284,7 +288,7 @@ class ReduceDebtCarVB extends MY_Controller {
 		}
 		if($TAXDT == ''){
 			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกวันที่ออกก่อนครับ";
+			$response["msg"] = "กรุณาเลือกวันที่ออกก่อนครับ";
 			echo json_encode($response); exit;
 		}
 		$arrs = array();
@@ -312,41 +316,67 @@ class ReduceDebtCarVB extends MY_Controller {
 
 			begin tran AddReduce
 			begin try
+				declare @invtran  varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('INVTRAN')} 
+				where STRNO = '".$STRNO."' and RECVNO = '".$RECVNO."' and CRDAMT = '0.00');
+				declare @apinvoi  varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('APINVOI')} 
+				where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."' and RTNAMT = '0.00');
+				declare @crdamt   decimal(12,2) = (select TOTCOST from {$this->MAuth->getdb('INVTRAN')} 
+				where STRNO = '".$STRNO."' and RECVNO = '".$RECVNO."');
+				declare @kang decimal(12,2) = (select KANG from {$this->MAuth->getdb('APINVOI')} 
+				where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."');
+				
+				--declare @year varchar(4)   = (select year('".$TAXDT."'));
 				declare @taxdt  varchar(4) = (select YEAR('".$TAXDT."'));
 				declare @month  varchar(2) = (select RIGHT('0' + RTRIM(MONTH('".$TAXDT."')), 2));
 				declare @lastno varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('LASTNO')} 
-				where LOCAT = '".$LOCAT."' and CR_YEAR = @taxdt);
+				where LOCAT = '".$LOCAT."' and CR_YEAR = @taxdt and CR_MONTH = @month);
+				
+				if(@invtran = 1 and @apinvoi = 1)
 				begin
-					if(@lastno = 0)
-						insert into {$this->MAuth->getdb('LASTNO')} (
-							LOCAT,CR_YEAR,CR_MONTH,L_TCBUY
+					update {$this->MAuth->getdb('INVTRAN')} set CRDAMT = @crdamt where STRNO = '".$STRNO."' 
+					and RECVNO = '".$RECVNO."'
+					update {$this->MAuth->getdb('APINVOI')} set KANG = '0.00',RTNAMT = @kang,RTNDATE = '".$TAXDT."' 
+					where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."'
+					
+					begin
+						if(@lastno = 0)
+							insert into {$this->MAuth->getdb('LASTNO')} (
+								LOCAT,CR_YEAR,CR_MONTH,L_TCBUY
+							)values(
+								'".$LOCAT."',@taxdt,@month,'1'
+							)
+						else
+							update {$this->MAuth->getdb('LASTNO')} set L_TCBUY = L_TCBUY+1 where LOCAT = '".$LOCAT."' 
+							and CR_YEAR = @taxdt
+					end
+					begin
+						insert into {$this->MAuth->getdb('TAXBUY')} (
+							LOCAT,TAXNO,TAXDT,CUSCOD,SNAM,NAME1,NAME2,REFNO,REFDT,STRNO,VATRT
+							,NETAMT,VATAMT,TOTAMT,DESCP,TAXTYP,FLAG,CANID,CANDT,INPDT,USERID,TAXFLG
 						)values(
-							'".$LOCAT."',@lastno,@month,'1'
+							'".$LOCAT."','".$DEBTNO."','".$TAXDT."','".$arrs['CUSCOD']."','".$arrs['SNAM']."'
+							,'".$arrs['NAME1']."','".$arrs['NAME2']."','".$TAXNO."','".$REFDT."','".$STRNO."'
+							,'".$arrs['VATRT']."','".$NETAMT."','".$VATAMT."','".$TOTAMT."','ใบลดหนี้ซื้อรถทั้งคัน','".$TAXTYP."'
+							,'".$TAXTYP."',null,null,getdate(),'".$USERID."','".$arrs['TAXFLG']."'
 						)
-					else
-						update {$this->MAuth->getdb('LASTNO')} set L_TCBUY = L_TCBUY+1 where LOCAT = '".$LOCAT."' 
-						and CR_YEAR = @taxdt
+						insert into #AddReduceCar select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
+						commit tran AddReduce;
+					end	
 				end
+				else
 				begin
-					insert into {$this->MAuth->getdb('TAXBUY')} (
-						LOCAT,TAXNO,TAXDT,CUSCOD,SNAM,NAME1,NAME2,REFNO,REFDT,STRNO,VATRT
-						,NETAMT,VATAMT,TOTAMT,DESCP,TAXTYP,FLAG,CANID,CANDT,INPDT,USERID,TAXFLG
-					)values(
-						'".$LOCAT."','".$DEBTNO."','".$TAXDT."','".$arrs['CUSCOD']."','".$arrs['SNAM']."'
-						,'".$arrs['NAME1']."','".$arrs['NAME2']."','".$TAXNO."','".$REFDT."'
-						,'".$STRNO."','".$arrs['VATRT']."','".$NETAMT."','".$VATAMT."','".$TOTAMT."','ใบลดหนี้ซื้อรถทั้งคัน','".$TAXTYP."'
-						,'".$TAXTYP."',null,null,getdate(),'".$USERID."','".$arrs['TAXFLG']."'
-					)
-					insert into #AddReduceCar select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
-					commit tran AddReduce;
-				end		
+					rollback tran AddReduce;
+					insert into #AddReduceCar select 'N' as id,'ออกใบลดหนี้มากกว่ายอดเงินในใบกำกับภาษี' as msg;
+					return;
+				end
 			end try
 			begin catch
 				rollback tran AddReduce;
 				insert into #AddReduceCar select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				return;
 			end catch
 		";
-		echo $sql; exit;
+		//echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "
 			select * from #AddReduceCar
@@ -368,14 +398,65 @@ class ReduceDebtCarVB extends MY_Controller {
 		$REFNO  = $_REQUEST['REFNO'];
 		$STRNO  = $_REQUEST['STRNO'];
 		$TAXNO  = $_REQUEST['TAXNO'];
+		$RECVNO = $_REQUEST['RECVNO'];
 		$USERID = $this->sess["USERID"];
 		$sql = "
-			update {$this->MAuth->getdb('TAXBUY')} set FLAG = 'C',CANID = '".$USERID."',CANDT = GETDATE()
-			where LOCAT = '".$LOCAT."' and TAXTYP = '1' and TAXNO = '".$TAXNO."' 
-			and REFNO = '".$REFNO."' and STRNO = '".$STRNO."'
+			if object_id('tempdb..#DelReduceCar') is not null drop table #DelReduceCar;
+			create table #DelReduceCar (id varchar(1),msg varchar(max));
+
+			begin tran DelReduce
+			begin try
+				declare @taxbuy varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('TAXBUY')} 
+				where LOCAT = '".$LOCAT."' and TAXNO = '".$TAXNO."' and REFNO = '".$REFNO."' 
+				and STRNO = '".$STRNO."' and TAXTYP = '1' and FLAG = '1');
+				
+				declare @apinvoi varchar(1)    = (select COUNT(*) from {$this->MAuth->getdb('APINVOI')} 
+				where LOCAT = '".$LOCAT."' and TAXNO = '".$REFNO."'
+				and KANG =  '0.00' and RTNAMT <> '0');
+				declare @rtnamt decimal(12,2) = (select RTNAMT from {$this->MAuth->getdb('APINVOI')} 
+				where LOCAT = '".$LOCAT."' and TAXNO = '".$REFNO."'
+				and KANG =  '0.00' and RTNAMT <> '0');
+				
+				if(@taxbuy = 1 and @apinvoi = 1)
+				begin
+					update {$this->MAuth->getdb('APINVOI')} set KANG = @rtnamt,RTNAMT = '0.00'
+					where LOCAT = '".$LOCAT."' and TAXNO = '".$REFNO."' and RTNAMT <> '0.00'
+					
+					update {$this->MAuth->getdb('TAXBUY')} set FLAG = 'C',CANID = '".$USERID."',CANDT = GETDATE()
+					where LOCAT = '".$LOCAT."' and TAXTYP = '1' and TAXNO = '".$TAXNO."' 
+					and REFNO = '".$REFNO."' and STRNO = '".$STRNO."'
+					
+					insert into #DelReduceCar select 'Y' as id,'สำเร็จ ลบข้อมูลเรียบร้อยแล้ว' as msg;
+					commit tran DelReduce;
+				end
+				else
+				begin
+					rollback tran DelReduce;
+					insert into #DelReduceCar select 'N' as id,'ไม่สำเร็จ' as msg;
+					return;
+				end
+			end try
+			begin catch
+				rollback tran DelReduce;
+				insert into #DelReduceCar select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				return;
+			end catch
 		";
+		//echo $sql; exit;
 		$this->db->query($sql);
-		$response = array();
+		$sql = "
+			select * from #DelReduceCar
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response['status'] = $row->id;
+				$response['msg']    = $row->msg;
+			}
+		}else{
+			$response['status'] = false;
+			$response['msg']    = "ผิดพลาด";
+		}
 		echo json_encode($response);
 	}
 }
