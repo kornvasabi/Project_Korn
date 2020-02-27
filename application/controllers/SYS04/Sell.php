@@ -93,12 +93,12 @@ class Sell extends MY_Controller {
 	
 	function search(){
 		$arrs = array();
-		$arrs['contno']	= $_REQUEST['contno'];
-		$arrs['sdatefrm'] = $this->Convertdate(1,$_REQUEST['sdatefrm']);
-		$arrs['sdateto'] = $this->Convertdate(1,$_REQUEST['sdateto']);
-		$arrs['locat'] 	= $_REQUEST['locat'];
-		$arrs['strno'] 	= $_REQUEST['strno'];
-		$arrs['cuscod'] = $_REQUEST['cuscod'];
+		$arrs['contno']	= $_POST['contno'];
+		$arrs['sdatefrm'] = $this->Convertdate(1,$_POST['sdatefrm']);
+		$arrs['sdateto'] = $this->Convertdate(1,$_POST['sdateto']);
+		$arrs['locat'] 	= $_POST['locat'];
+		$arrs['strno'] 	= $_POST['strno'];
+		$arrs['cuscod'] = $_POST['cuscod'];
 		
 		$cond = "";
 		$condDesc = "";
@@ -113,13 +113,13 @@ class Sell extends MY_Controller {
 		}
 		
 		if($arrs['sdatefrm'] != "" and $arrs['sdateto'] != ""){
-			$condDesc .= " วันที่ ".$_REQUEST['sdatefrm']." - ".$_REQUEST['sdateto'];
+			$condDesc .= " วันที่ ".$_POST['sdatefrm']." - ".$_POST['sdateto'];
 			$cond .= " and convert(varchar(8),A.SDATE,112) between '".$arrs['sdatefrm']."' and '".$arrs['sdateto']."' ";
 		}else if($arrs['sdatefrm'] != "" and $arrs['sdateto'] == ""){
-			$condDesc .= " วันที่ ".$_REQUEST['sdatefrm'];
+			$condDesc .= " วันที่ ".$_POST['sdatefrm'];
 			$cond .= " and convert(varchar(8),A.SDATE,112) = '".$arrs['sdatefrm']."'";
 		}else if($arrs['sdatefrm'] == "" and $arrs['sdateto'] != ""){
-			$condDesc .= " วันที่ ".$_REQUEST['sdateto'];
+			$condDesc .= " วันที่ ".$_POST['sdateto'];
 			$cond .= " and convert(varchar(8),A.SDATE,112) = '".$arrs['sdateto']."'";
 		}
 		
@@ -193,13 +193,13 @@ class Sell extends MY_Controller {
 				</table>
 			</div>
 		";
-				
+		
 		$response = array("html"=>$html,"status"=>true);
 		echo json_encode($response);
 	}
 	
 	function loadSell(){
-		$contno = $_REQUEST['contno'];
+		$contno = $_POST['contno'];
 		
 		$sql = "
 			select CONTNO,LOCAT,convert(varchar(8),SDATE,112) SDATE,RESVNO,APPVNO
@@ -317,7 +317,7 @@ class Sell extends MY_Controller {
 	}
 	
 	function loadARPAY(){
-		$contno = $_REQUEST['contno'];
+		$contno = $_POST['contno'];
 		$sql = "
 			select NOPAY,convert(varchar(8),DDATE,112) as DDATE,DAMT,V_DAMT,N_DAMT,PAYMENT
 				,V_PAYMENT,TAXINV,convert(varchar(8),TAXDT,112) as TAXDT,GRDCOD 
@@ -385,9 +385,7 @@ class Sell extends MY_Controller {
 		$row = $query->row();
 		$data["vatrt"] = number_format($row->VATRT,2);
 		
-		$sql = "
-			select CALINT,DISC_FM from {$this->MAuth->getdb('CONDPAY')}			
-		";
+		$sql = "select CALINT,DISC_FM from {$this->MAuth->getdb('CONDPAY')}";
 		$query = $this->db->query($sql);
 		$row = $query->row();
 		$data["CALINT"] = $row->CALINT;
@@ -804,138 +802,169 @@ class Sell extends MY_Controller {
 		return $html;
 	}
 	
-	function strnoChanged(){
+	function checkStandart(){
 		$response = array("html"=>"","error"=>false,"msg"=>"");
-		$strno 	  = $_REQUEST['strno'];
-		$sdate 	  = $this->Convertdate(1,$_REQUEST['sdate']);
-		$acticod  = '';
 		
-		if($sdate == ""){
-			$response["error"] = true;
-			$response["msg"] = "ผิดพลาด :: โปรดระบุวันที่ทำสัญญาก่อนครับ";
+		$locat	  = $_POST['locat'];
+		$resvno   = $_POST['resvno'];
+		$strno 	  = $_POST['strno'];
+		$sdate 	  = $this->Convertdate(1,$_POST['sdate']);
+		$acticod  = $_POST['acticod'];
+		
+		if($locat == "" || $sdate == "" || $acticod == "" || $strno == ""){
+			$response["error"] = false;
+			$response["msg"] = "Status Code:400 Bad Request";
 			echo json_encode($response); exit;
 		}
 		
-		
-		$sql = "select * from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$strno."'";
+		if($resvno != ""){
+			$sql = "
+				select convert(varchar(8),a.RESVDT,112) as RESVDT,a.STRNO,b.TYPE,b.MODEL,b.BAAB,b.COLOR,b.STAT 
+				from {$this->MAuth->getdb('ARRESV')} a
+				left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO and a.RESVNO=b.RESVNO
+				where a.RESVNO='{$resvno}' and b.CRLOCAT='{$locat}'
+			";
+		}else{
+			$sql = "
+				select '' as RESVDT,STRNO,TYPE,MODEL,BAAB,COLOR,STAT from {$this->MAuth->getdb('INVTRAN')} 
+				where STRNO='{$strno}' and CRLOCAT='{$locat}'
+			";
+		}
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$data = array();
+		$data["ACTICOD"] = $acticod;
+		$data["LOCAT"]   = $locat;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["MODEL"] 	= $row->MODEL;
+				$data["BAAB"] 	= $row->BAAB;
+				$data["COLOR"] 	= $row->COLOR;
+				$data["STAT"] 	= $row->STAT;
+				$data["DT"] 	= ($row->RESVDT == "" ? $sdate : $row->RESVDT);
+			}
+		}
+		
+		$sql = "
+			declare @STRNO_USE int = (
+				select count(*) from {$this->MAuth->getdb('ARANALYZE')}
+				where STRNO = '{$strno}' and ANSTAT != 'C' collate thai_ci_as
+			);
+			select a.STRNO,@STRNO_USE as STRNO_USE,a.MODEL,a.BAAB,a.COLOR
+				,case when a.STAT='N' then 'รถใหม่'  else 'รถเก่า' end as STAT
+				,a.STAT as STATEN
+				,convert(varchar(8),b.SDATE,112) as SDATE
+				,convert(varchar(8),b.YDATE,112) as YDATE
+				,a.CRLOCAT as LOCAT
+				,a.GCODE
+				,datediff(day,b.SDATE,b.YDATE) as daysy
+				,b.CONTNO
+			from {$this->MAuth->getdb('INVTRAN')} a
+			left join (
+				select ROW_NUMBER() over(partition by STRNO order by STRNO,sdate desc) r,* 
+				from {$this->MAuth->getdb('ARHOLD')}
+			) as b on a.STRNO=b.STRNO and b.r=1
+			where a.STRNO='{$strno}'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
 		if($query->row()){
 			foreach($query->result() as $row){
 				foreach($row as $key => $val){
-					$data[$key] = $val;
+					switch($key){
+						case 'SDATE': $data[$key] = $this->Convertdate(2,$val); break;
+						case 'YDATE': $data[$key] = $this->Convertdate(2,$val); break;
+						default:  $data[$key] = $val; break;
+					}
 				}
 			}
 		}
 		
-		if($data['STAT'] == 'N'){
-			$sql = "
-				if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='{$acticod}'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='{$data["COLOR"]}' and b.ACTICOD='ALL'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='{$data["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
-				end 
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$acticod}'
-				end
-				else if exists(
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
-				)
-				begin 
-					select * from {$this->MAuth->getdb('std_vehicles')} a
-					left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$sdate."' between event_s and isnull(event_e,GETDATE())
-					where a.model='{$data["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
-				end
-			";
-			$query = $this->db->query($sql);
-			
-			if($query->row()){
-				foreach($query->result() as $row){
-					$data["stdid"] = $row->id;
-					$data["stdplrank"] = $row->plrank;
-					$data["price"] = $row->price;
+		$sql = "select * from {$this->MAuth->getdb('fn_STDVehicles')}('{$data["MODEL"]}','{$data["BAAB"]}','{$data["COLOR"]}','{$data["STATEN"]}','{$data["ACTICOD"]}','{$data["LOCAT"]}','{$data["DT"]}')";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$data["mainstdid"] = "";
+		$data["mainsubid"] = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["mainstdid"] = $row->STDID;
+				$data["mainsubid"] = $row->SUBID;
+				
+				if($row->STAT == "N"){
+					$sql = "
+						select STDID,SUBID,0 as SHCID,PRICE,0 as PRICE_ADD from {$this->MAuth->getdb('STDVehiclesPRICE')}
+						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
+					";
+				}else{
+					$sql = "
+						declare @CONTNO varchar(12) = '".$data["CONTNO"]."';
+						declare @STAT varchar(1)  = (case when @CONTNO = '' 
+							then 'O' else (select STAT from {$this->MAuth->getdb('HINVTRAN')} where CONTNO=@CONTNO) end);
+						declare @price_add decimal(18,2) = (
+							select price_add from {$this->MAuth->getdb('config_addpricesale')}
+							where getdate() between event_st and isnull(event_ed,getdate()) 
+								and '".$data["daysy"]."' between in_sday and in_eday
+						);
+						
+						select '{$row->STDID}' as STDID
+							,'{$row->SUBID}' as SUBID
+							,a.ID as SHCID
+						
+							,b.OPRICE as PRICE
+							,case when @STAT = 'N'
+								then (case when @price_add is null then 0 else @price_add end) else 0 end as PRICE_ADD
+						from {$this->MAuth->getdb('STDSHCAR')} a
+						left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
+						left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
+						left join {$this->MAuth->getdb('STDSHCARLocats')} d on a.ID=d.ID
+						where b.ACTIVE='yes' collate thai_ci_as 
+							and a.MODEL='".$row->MODEL."' collate thai_cs_as
+							and a.BAAB='".$row->BAAB."' collate thai_cs_as 
+							and (case when c.COLOR = 'ALL' then '".$row->COLOR."' else c.COLOR end) = '".$row->COLOR."' collate thai_cs_as 
+							and (case when d.LOCAT = 'ALL' then '".$row->LOCAT."' else d.LOCAT end) = '".$row->LOCAT."' collate thai_cs_as
+							and a.GCODE='".$data["GCODE"]."'
+					";
 				}
-			}else{
-				$response["error"] = true;
-				$response["msg"] = "
-					ผิดพลาด ไม่พบราคาขายรถใหม่ โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
-					รุ่น :: ".$data["MODEL"]."<br>
-					แบบ :: ".$data["BAAB"]."<br>
-					สี :: ".$data["COLOR"]."<br>
-					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$sdate)."
-				";
-				echo json_encode($response); exit;
-			}
-			
-			/*
-			$sql = "
-				select * from {$this->MAuth->getdb('std_down')} a
-				where id='".$data["stdid"]."' and plrank='".$data["stdplrank"]."' and '".$dwnAmt."' between dwnrate_s and isnull(dwnrate_e,'".$data["price"]."')
-			";
-			$query = $this->db->query($sql);
-			
-			if($query->row()){
-				foreach($query->result() as $row){
-					$data["interest_rate"] 	= $row->interest_rate;
-					$data["interest_rate2"]	= $row->interest_rate2;
+				//echo $sql; exit;
+				$query = $this->db->query($sql);
+				
+				if($query->row()){
+					foreach($query->result() as $row){
+						$data["STDID"] = $row->STDID;
+						$data["SUBID"] = $row->SUBID;
+						$data["SHCID"] = $row->SHCID;
+						$data["PRICE"] = ($row->PRICE+$row->PRICE_ADD);
+						$data["PRICE_ADD"] = number_format($row->PRICE_ADD,2);
+					}
+				}else{
+					$response["error"] = true;
+					$response["msg"] = "
+						ผิดพลาด ไม่พบราคาในสแตนดาร์ด <br>โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+						รุ่น :: ".$data["MODEL"]."<br>
+						แบบ :: ".$data["BAAB"]."<br>
+						สี :: ".$data["COLOR"]."<br>
+						สถานะรถ :: ".$data["STAT"]."<br>
+						กิจกรรมการขาย :: ".$data["ACTICOD"]."<br>
+						วันที่ขออนุมัติ :: ".$this->Convertdate(2,$sdate)."
+					";
+					echo json_encode($response); exit;
 				}
-			}else{
-				$response["error"] = true;
-				$response["msg"] = "
-					ผิดพลาด ไม่พบขั้นเงินดาวน์ที่ระบุมา โปรดตรวจสอบข้อมูลใหม่อีกครั้ง<br><br>
-					รุ่น :: ".$data["MODEL"]."<br>
-					แบบ :: ".$data["BAAB"]."<br>
-					สี :: ".$data["COLOR"]."<br>
-					วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
-				";
-				echo json_encode($response); exit;
 			}
-			*/
+		}else{
+			$response["error"] = true;
+			$response["msg"] = "
+				ผิดพลาด ไม่พบราคาขายรถ <br>โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+				รุ่น :: ".$data["MODEL"]."<br>
+				แบบ :: ".$data["BAAB"]."<br>
+				สี :: ".$data["COLOR"]."<br>
+				สถานะรถ :: ".$data["STAT"]."<br>
+				กิจกรรมการขาย :: ".$data["ACTICOD"]."<br>
+				วันที่ขออนุมัติ :: ".$this->Convertdate(2,$sdate)."
+			";
+			echo json_encode($response); exit;
 		}
 		
 		$response = array();
@@ -944,7 +973,7 @@ class Sell extends MY_Controller {
 	}
 	
 	function resvnoChanged(){
-		$resvno = $_REQUEST['resvno'];
+		$resvno = $_POST['resvno'];
 		
 		$sql = "
 			select a.RESVNO,a.LOCAT
@@ -988,7 +1017,7 @@ class Sell extends MY_Controller {
 	}
 	
 	function checkCustomer(){
-		$cuscod = $_REQUEST['cuscod'];
+		$cuscod = $_POST['cuscod'];
 		$sql = "
 			select GRADE from {$this->MAuth->getdb('CUSTMAST')}
 			where CUSCOD='".$cuscod."'
@@ -1080,20 +1109,29 @@ class Sell extends MY_Controller {
 	}
 	
 	function save(){
-		$arrs = array();
-		$arrs["contno"] 	= $_REQUEST["contno"];
-		$arrs["locat"] 		= $_REQUEST["locat"];
-		$arrs["resvno"] 	= $_REQUEST["resvno"];
-		$arrs["cuscod"] 	= $_REQUEST["cuscod"];
-		$arrs["strno"] 		= $_REQUEST["strno"];
-		$arrs["inclvat"] 	= $_REQUEST["inclvat"];
-		$arrs["sdate"] 		= $this->Convertdate(1,$_REQUEST["sdate"]);
-		$arrs["vatrt"] 		= $_REQUEST["vatrt"];
+		$response = array("error"=>false,"msg"=>"");
 		
-		$arrs["stdprc"] 	= str_replace(',','',$_REQUEST["stdprc"]);
+		$check_locat = $this->MMAIN->locat_claim($_POST["locat"]);
+		if($check_locat["FLSALE"] != "T"){
+			$response["error"] = true;
+			$response["msg"] = "สาขานี้ ยังไม่มีสิทธิ์ในการคีย์ขาย";
+			echo json_encode($response); exit;
+		}
+		
+		$arrs = array();
+		$arrs["contno"] 	= $_POST["contno"];
+		$arrs["locat"] 		= $_POST["locat"];
+		$arrs["resvno"] 	= $_POST["resvno"];
+		$arrs["cuscod"] 	= $_POST["cuscod"];
+		$arrs["strno"] 		= $_POST["strno"];
+		$arrs["inclvat"] 	= $_POST["inclvat"];
+		$arrs["sdate"] 		= $this->Convertdate(1,$_POST["sdate"]);
+		$arrs["vatrt"] 		= $_POST["vatrt"];
+		
+		$arrs["stdprc"] 	= str_replace(',','',$_POST["stdprc"]);
 		$arrs["dscprc"] 	= 0;
 		
-		$arrs["keyin"] 		= str_replace(',','',$_REQUEST["inprc"]);
+		$arrs["keyin"] 		= str_replace(',','',$_POST["inprc"]);
 		if($arrs["inclvat"] == 'Y'){
 			$arrs["nkeyin"] 	= str_replace(',','',number_format($arrs["keyin"] / ((100 + $arrs["vatrt"]) / 100),2));
 			$arrs["vkeyin"] 	= str_replace(',','',number_format($arrs["keyin"] - $arrs["nkeyin"],2));
@@ -1118,34 +1156,34 @@ class Sell extends MY_Controller {
 		$arrs["ncarcst"] 	= 0;
 		$arrs["vcarcst"] 	= 0;
 		$arrs["tcarcst"] 	= 0;
-		$arrs["crdtxno"] 	= $_REQUEST["crdtxno"];
-		$arrs["crdamt"] 	= str_replace(',','',$_REQUEST["crdamt"]);
+		$arrs["crdtxno"] 	= $_POST["crdtxno"];
+		$arrs["crdamt"] 	= str_replace(',','',$_POST["crdamt"]);
 		$arrs["optcst"]  	= 0;
 		$arrs["optcvt"]  	= 0;
 		$arrs["optctot"] 	= 0;		
 		$arrs["optprc"]  	= 0;
 		$arrs["optpvt"]  	= 0;
 		$arrs["optptot"] 	= 0;
-		$arrs["credtm"] 	= str_replace(',','',$_REQUEST["credtm"]);
-		$arrs["duedt"] 		= $this->Convertdate(1,$_REQUEST["duedt"]);
-		$arrs["salcod"] 	= $_REQUEST["salcod"];
-		$arrs["comitn"] 	= str_replace(',','',$_REQUEST["comitn"]);
-		$arrs["issuno"] 	= $_REQUEST["issuno"];
-		$arrs["issudt"] 	= $this->Convertdate(1,$_REQUEST["issudt"]);
+		$arrs["credtm"] 	= str_replace(',','',$_POST["credtm"]);
+		$arrs["duedt"] 		= $this->Convertdate(1,$_POST["duedt"]);
+		$arrs["salcod"] 	= $_POST["salcod"];
+		$arrs["comitn"] 	= str_replace(',','',$_POST["comitn"]);
+		$arrs["issuno"] 	= $_POST["issuno"];
+		$arrs["issudt"] 	= $this->Convertdate(1,$_POST["issudt"]);
 		$arrs["tsale"]	 	= 'C';
-		$arrs["memo1"] 		= $_REQUEST["memo1"];
+		$arrs["memo1"] 		= $_POST["memo1"];
 		$arrs["userid"]  	= $this->sess["USERID"];
 		$arrs["inpdt"] 	 	= 'getdate()';
 		$arrs["delid"]	 	= '';
 		$arrs["flcancl"] 	= '';
-		$arrs["appvno"] 	= $_REQUEST["approve"];
-		$arrs["paytyp"] 	= $_REQUEST["paydue"];
-		$arrs["addrno"] 	= $_REQUEST["addrno"];
-		$arrs["comext"] 	= str_replace(',','',($_REQUEST["commission"] == "" ? 0 : $_REQUEST["commission"]));
-		$arrs["comopt"] 	= str_replace(',','',($_REQUEST["free"] == "" ? 0 : $_REQUEST["free"]));
-		$arrs["comoth"] 	= str_replace(',','',($_REQUEST["payother"] == "" ? 0 : $_REQUEST["payother"]));
-		$arrs["recomcod"] 	= $_REQUEST["recomcod"];
-		$arrs["acticod"] 	= $_REQUEST["acticod"];
+		$arrs["appvno"] 	= $_POST["approve"];
+		$arrs["paytyp"] 	= $_POST["paydue"];
+		$arrs["addrno"] 	= $_POST["addrno"];
+		$arrs["comext"] 	= str_replace(',','',($_POST["commission"] == "" ? 0 : $_POST["commission"]));
+		$arrs["comopt"] 	= str_replace(',','',($_POST["free"] == "" ? 0 : $_POST["free"]));
+		$arrs["comoth"] 	= str_replace(',','',($_POST["payother"] == "" ? 0 : $_POST["payother"]));
+		$arrs["recomcod"] 	= $_POST["recomcod"];
+		$arrs["acticod"] 	= $_POST["acticod"];
 		
 		$arrs["updateARRESV"] = "";
 		if($arrs["resvno"] != ''){
@@ -1203,7 +1241,7 @@ class Sell extends MY_Controller {
 			}
 		}
 		
-		$arrs["inopt"] 		= (isset($_REQUEST["inopt"]) ? $_REQUEST["inopt"] : array());
+		$arrs["inopt"] 		= (isset($_POST["inopt"]) ? $_POST["inopt"] : array());
 		$arrs['insertOpt'] 	= "";
 		for($i = 0;$i < sizeof($arrs["inopt"]);$i++){
 			$arrs["optprc"]  = $arrs["inopt"][$i][3];
@@ -1232,29 +1270,29 @@ class Sell extends MY_Controller {
 			";
 		}
 		
-		$arrs["reg"] 		= $_REQUEST["reg"];
-		$arrs["dwninv"] 	= $_REQUEST["dwninv"];
-		$arrs["dwninvDt"] 	= $this->Convertdate(1,$_REQUEST["dwninvDt"]);
+		$arrs["reg"] 		= $_POST["reg"];
+		$arrs["dwninv"] 	= $_POST["dwninv"];
+		$arrs["dwninvDt"] 	= $this->Convertdate(1,$_POST["dwninvDt"]);
 		
 		$data = "";
-		if($arrs["acticod"] 	== ""){ $data = "กิจกรรมการขาย"; }
-		if($arrs["issudt"] 		== ""){ $data = "วันที่ปล่อยรถ"; }
-		if($arrs["salcod"] 		== ""){ $data = "รหัสพนักงานขาย"; }
-		if($arrs["keyin"] 		== ""){ $data = "ราคาขายจริงรวมอุปกรณ์"; }
-		if($arrs["stdprc"] 		== ""){ $data = "ราคาขายหน้าร้าน"; }
-		if($arrs["strno"] 		== ""){	$data = "เลขตัวถัง"; }
-		if($arrs["vatrt"] 		== ""){ $data = "อัตราภาษี"; }
-		if($arrs["addrno"] 		== ""){ $data = "ที่อยู่ในการพิมพ์สัญญา"; }
-		if($arrs["cuscod"] 		== ""){ $data = "รหัสลูกค้า"; }
-		if($arrs["sdate"] 		== ""){ $data = "วันที่ขาย"; }
+		if($arrs["acticod"] == ""){ $data = "กิจกรรมการขาย"; }
+		if($arrs["issudt"] 	== ""){ $data = "วันที่ปล่อยรถ"; }
+		if($arrs["salcod"] 	== ""){ $data = "รหัสพนักงานขาย"; }
+		if($arrs["keyin"] 	== ""){ $data = "ราคาขายจริงรวมอุปกรณ์"; }
+		if($arrs["stdprc"] 	== ""){ $data = "ราคาขายหน้าร้าน"; }
+		if($arrs["strno"] 	== ""){	$data = "เลขตัวถัง"; }
+		if($arrs["vatrt"] 	== ""){ $data = "อัตราภาษี"; }
+		if($arrs["addrno"] 	== ""){ $data = "ที่อยู่ในการพิมพ์สัญญา"; }
+		if($arrs["cuscod"] 	== ""){ $data = "รหัสลูกค้า"; }
+		if($arrs["sdate"] 	== ""){ $data = "วันที่ขาย"; }
 		
 		if($data != ""){ 
-			$response["status"] = 'W';
+			$response["error"] = true;
 			$response["msg"] = "ไม่พบ{$data} โปรดระบุ{$data}ก่อนครับ";
 			echo json_encode($response); exit; 
 		}
 		
-		$arrs["billdas"] = (!isset($_REQUEST["billdas"]) ? array():$_REQUEST["billdas"]);
+		$arrs["billdas"] = (!isset($_POST["billdas"]) ? array():$_POST["billdas"]);
 		$dasSize = sizeof($arrs["billdas"]);
 		$mapMEMO1 = "";
 		for($i=0;$i<$dasSize;$i++){
@@ -1392,7 +1430,7 @@ class Sell extends MY_Controller {
 					ENABLE Trigger ALL ON {$this->MAuth->getdb('ARINOPT')};
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-				values ('".$this->sess["IDNo"]."','SYS04::บันทึกขายสดแล้ว',@CONTNO+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				values ('".$this->sess["IDNo"]."','SYS04::บันทึกขายสดแล้ว',@CONTNO+' ".str_replace("'","",var_export($_POST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 
 				insert into #sellTemp select 'S',@CONTNO,'บันทึกรายการขายสด เลขที่สัญญา '+@CONTNO+' แล้วครับ';
 				commit tran sellTran;
@@ -1410,12 +1448,12 @@ class Sell extends MY_Controller {
 	  
 		if($query->row()){
 			foreach($query->result() as $row){
-				$response["status"] = $row->id;
+				$response["error"] = ($row->id == "S" ? false : true);
 				$response["contno"] = $row->contno;
 				$response["msg"] = $row->msg;
 			}
 		}else{
-			$response["status"] = false;
+			$response["error"] = false;
 			$response["contno"] = '';
 			$response["msg"] = 'ผิดพลาดไม่สามารถบันทึกการขายได้ โปรดติดต่อฝ่ายไอที';
 		}
@@ -1425,7 +1463,7 @@ class Sell extends MY_Controller {
 	
 	private function updateinleasing($arrs){
 		if($arrs["contno"] == ''){
-			$response["status"] = false;
+			$response["error"] = false;
 			$response["msg"] = 'ผิดพลาดไม่สามารถแก้ไขการขายได้ เนื่องจากไม่พบเลขที่สัญญาครับ';
 			echo json_encode($response); exit;
 		}
@@ -1465,7 +1503,7 @@ class Sell extends MY_Controller {
 					".$arrs["insertAROTHGAR"]."	
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-				values ('".$this->sess["IDNo"]."','SYS04::บันทึกขายผ่อน (แก้ไข)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				values ('".$this->sess["IDNo"]."','SYS04::บันทึกขายผ่อน (แก้ไข)',' ".str_replace("'","",var_export($_POST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 
 				insert into #leasingTemp select 'S',@CONTNO,'บันทึกรายการขายสำเร็จ เลขที่สัญญา '+@CONTNO;
 				commit tran leasingTran;
@@ -1482,12 +1520,12 @@ class Sell extends MY_Controller {
 	  
 		if($query->row()){
 			foreach($query->result() as $row){
-				$response["status"] = $row->id;
+				$response["error"] = ($row->id == "S" ? false : true);
 				$response["contno"] = $row->contno;
 				$response["msg"] = $row->msg;
 			}
 		}else{
-			$response["status"] = false;
+			$response["error"] = false;
 			$response["contno"] = '';
 			$response["msg"] = 'ผิดพลาดไม่สามารถบันทึกการขายได้ โปรดติดต่อฝ่ายไอที';
 		}
@@ -1496,7 +1534,7 @@ class Sell extends MY_Controller {
 	}
 	
 	function deleteContno(){
-		$contno = $_REQUEST['contno'];
+		$contno = $_POST['contno'];
 		
 		$sql = "
 			if OBJECT_ID('tempdb..#sellTemp') is not null drop table #sellTemp;
@@ -1543,7 +1581,7 @@ class Sell extends MY_Controller {
 				where CONTNO=@CONTNO
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-				values ('".$this->sess["IDNo"]."','SYS04::ลบการขายสด',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				values ('".$this->sess["IDNo"]."','SYS04::ลบการขายสด',' ".str_replace("'","",var_export($_POST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 
 				insert into #sellTemp select 'S',@CONTNO,'ลบรายการขาย เลขที่สัญญา '+@CONTNO+' แล้ว';
 				commit tran sellTran;
@@ -1656,7 +1694,7 @@ class Sell extends MY_Controller {
 				
 			from {$this->MAuth->getdb('ARCRED')} a
 			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO
-			where a.CONTNO='".$_REQUEST['contno']."'
+			where a.CONTNO='".$_POST['contno']."'
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -1719,7 +1757,7 @@ class Sell extends MY_Controller {
 				 ) CUSADDR 
 			from {$this->MAuth->getdb('ARMGAR')} a
 			left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD
-			where CONTNO='".$_REQUEST['contno']."'
+			where CONTNO='".$_POST['contno']."'
 			order by GARNO
 		";
 		$query = $this->db->query($sql);
@@ -1741,7 +1779,7 @@ class Sell extends MY_Controller {
 		$sql = "
 			select b.FORDESC,a.PAYAMT from {$this->MAuth->getdb('AROTHR')} a
 			left join {$this->MAuth->getdb('PAYFOR')} b on a.PAYFOR=b.FORCODE
-			where CONTNO='".$_REQUEST['contno']."'
+			where CONTNO='".$_POST['contno']."'
 		";
 		
 		$query = $this->db->query($sql);

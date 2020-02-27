@@ -52,17 +52,14 @@ $('#btnt1search').click(function(){
 	dataToPost.Name = $('#Name').val();
 	dataToPost.groupCode = $('#groupCode').val();
 	
-	var spinner = $('body>.spinner').clone().removeClass('hide');
-    $('#resultt1users').html('');
-	$('#resultt1users').append(spinner);	
-	
+	$('#resultt1users').html('');
+	$('#loadding').fadeIn(200);
 	$.ajax({
 		url:'../SYS99/CUsers/search',
 		data:dataToPost,
 		type:'POST',
 		dataType:'json',
 		success:function(data){
-			$('#resultt1users').find('.spinner, .spinner-backdrop').remove();
 			$('#resultt1users').html(data.html);
 			
 			document.getElementById("table-fixed-CUsers").addEventListener("scroll", function(){
@@ -81,6 +78,8 @@ $('#btnt1search').click(function(){
 			$('.getit').click(function(){
 				getDetailsFN($(this).attr('USERID'));
 			});
+			
+			$('#loadding').fadeOut(200);
 		}
 	});
 });
@@ -92,10 +91,8 @@ function getDetailsFN($this){
 	dataToPost.cup = $('.tab1[name="home"]').attr('cup');
 	dataToPost.clev = $('.tab1[name="home"]').attr('clev');
 	
-	var spinner = $('body>.spinner').clone().removeClass('hide');
 	$('#resultt2users').html('');
-	$('#resultt2users').append(spinner);
-	
+	$('#loadding').fadeIn(200);
 	$.ajax({
 		url:'../SYS99/CUsers/getDetails',
 		data:dataToPost,
@@ -131,6 +128,7 @@ function getDetailsFN($this){
 					callback: function(lobibox, type){
 						var btnType;
 						if (type === 'ok'){
+							$('#loadding').fadeIn(200);
 							$.ajax({
 								url:'../SYS99/CUsers/mapUsers',
 								data:dataToPost,
@@ -170,6 +168,8 @@ function getDetailsFN($this){
 											msg: data.msg
 										});
 									}
+									
+									$('#loadding').fadeOut(200);
 								}
 							});
 						}
@@ -202,6 +202,7 @@ function getDetailsFN($this){
 					callback: function(lobibox, type){
 						var btnType;
 						if (type === 'ok'){
+							$('#loadding').fadeIn(200);
 							$.ajax({
 								url:'../SYS99/CUsers/unmapUsers',
 								data:dataToPost,
@@ -229,6 +230,8 @@ function getDetailsFN($this){
 											msg: data.msg
 										});
 									}
+									
+									$('#loadding').fadeOut(200);
 								}
 							});
 						}
@@ -263,6 +266,7 @@ function getDetailsFN($this){
 					callback: function(lobibox, type){
 						var btnType;
 						if (type === 'ok'){
+							$('#loadding').fadeIn(200);
 							$.ajax({
 								url:'../SYS99/CUsers/addLOCATUsers',
 								data:dataToPost,
@@ -304,6 +308,8 @@ function getDetailsFN($this){
 											msg: data.msg
 										});
 									}
+									
+									$('#loadding').fadeOut(200);
 								}
 							});
 						}
@@ -336,6 +342,7 @@ function getDetailsFN($this){
 					callback: function(lobibox, type){
 						var btnType;
 						if (type === 'ok'){
+							$('#loadding').fadeIn(200);
 							$.ajax({
 								url:'../SYS99/CUsers/delLOCATUsers',
 								data:dataToPost,
@@ -377,6 +384,8 @@ function getDetailsFN($this){
 											msg: data.msg
 										});
 									}
+									
+									$('#loadding').fadeOut(200);
 								}
 							});
 						}
@@ -463,6 +472,8 @@ function getDetailsFN($this){
 								
 			$('.tab1').hide();
 			$('.tab2').show();
+			
+			$('#loadding').fadeOut(200);
 		}
 	});
 }

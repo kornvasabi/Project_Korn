@@ -1,6 +1,6 @@
-﻿<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-?><!DOCTYPE html>
+﻿<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<!DOCTYPE html>
+<!-- Author : @s.anutin -->
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
@@ -42,6 +42,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			line-height: 1;
 			//vertical-align: text-bottom;
 			//border-top: 1px solid #ddd;
+		}
+		
+		input[type="number"]:disabled {
+			background: #ccc;
 		}
 	</style>
 </head>

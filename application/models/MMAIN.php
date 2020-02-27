@@ -201,6 +201,29 @@ class MMAIN extends CI_Model {
 		return $opt;
 	}
 	
+	public function locat_claim($locat){
+		$response = array();
+		
+		$sql = "
+			select * from {$this->MAuth->getdb('INVLOCAT')}
+			where LOCATCD='{$locat}'
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["error"]  = false;
+				$response["FLSALE"] = $row->FLSALE;
+				$response["msg"] 	= "";
+			}
+		}else{
+			$response["error"]  = true;
+			$response["FLSALE"] = "E";
+			$response["msg"]    = "ไม่พบข้อมูลสาขา ".$locat;
+		}
+		
+		return $response;
+	}
+	
 }
 
 

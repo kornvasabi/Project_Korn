@@ -569,22 +569,24 @@ class Cselect2 extends MY_Controller {
 		$locat = $_REQUEST['locat'];
 		
 		$sql = "
-			select RESVNO from {$this->MAuth->getdb('ARRESV')}
-			where LOCAT = '".$locat."' collate Thai_CI_AS and RESVNO='".$dataNow."' collate Thai_CI_AS 
-				and isnull(STRNO,'') <> '' and SDATE is null
-			union
-			select top 10 RESVNO from {$this->MAuth->getdb('ARRESV')}
-			where LOCAT = '".$locat."' collate Thai_CI_AS and RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
-				and isnull(STRNO,'') <> '' and SDATE is null
-			
-			union
-			--บิลจองจากสาขาอื่น แต่ลูกค้ามาออกรถกับอีกสาขา
-			select top 10 a.RESVNO from {$this->MAuth->getdb('ARRESV')} a
-			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO and a.RESVNO=b.RESVNO
-			where b.CRLOCAT='".$locat."' and a.RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
-				and isnull(a.STRNO,'') <> '' and a.SDATE is null
+			select a.RESVNO from (
+				select RESVNO from {$this->MAuth->getdb('ARRESV')}
+				where LOCAT = '".$locat."' collate Thai_CI_AS and RESVNO='".$dataNow."' collate Thai_CI_AS 
+					and isnull(STRNO,'') <> '' and SDATE is null
+				union
+				select top 10 RESVNO from {$this->MAuth->getdb('ARRESV')}
+				where LOCAT = '".$locat."' collate Thai_CI_AS and RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
+					and isnull(STRNO,'') <> '' and SDATE is null
 				
-			--order by RESVNO desc
+				union
+				--บิลจองจากสาขาอื่น แต่ลูกค้ามาออกรถกับอีกสาขา
+				select top 10 a.RESVNO from {$this->MAuth->getdb('ARRESV')} a
+				left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO and a.RESVNO=b.RESVNO
+				where b.CRLOCAT='".$locat."' and a.RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
+					and isnull(a.STRNO,'') <> '' and a.SDATE is null
+			) as a
+			left join {$this->MAuth->getdb('ARANALYZE')} as b on a.RESVNO=b.RESVNO collate thai_cs_as and b.ANSTAT not in ('C')
+			where b.RESVNO is null
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -807,15 +809,17 @@ class Cselect2 extends MY_Controller {
 		$locat = ($_REQUEST["locat"]);
 		
 		$sql = "
-			select ID,ANSTAT
-			from {$this->MAuth->getdb('ARANALYZE')}
-			where 1=1 and ID='".$dataNow."' collate Thai_CI_AS and LOCAT='".$locat."' 
-				
-			union
-			select ID,ANSTAT
-			from {$this->MAuth->getdb('ARANALYZE')}
-			where 1=1 and ID like '%".$dataSearch."%' collate Thai_CI_AS 
-				and LOCAT='".$locat."' and isnull(CONTNO,'')=''
+			select * from (
+				select ID,ANSTAT
+				from {$this->MAuth->getdb('ARANALYZE')}
+				where 1=1 and ID='".$dataNow."' collate Thai_CI_AS and LOCAT='".$locat."' 
+					
+				union
+				select ID,ANSTAT
+				from {$this->MAuth->getdb('ARANALYZE')}
+				where 1=1 and ID like '%".$dataSearch."%' collate Thai_CI_AS 
+					and LOCAT='".$locat."' and isnull(CONTNO,'')=''
+			) as a
 			order by ID
 		";
 		//echo $sql; exit;

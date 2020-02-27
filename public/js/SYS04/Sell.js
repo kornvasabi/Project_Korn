@@ -7,6 +7,7 @@
                           _ _/ /
                          /___ /
 ********************************************************/
+"use strict";
 var _locat  = $('.tab1[name="home"]').attr('locat');
 var _insert = $('.tab1[name="home"]').attr('cin');
 var _update = $('.tab1[name="home"]').attr('cup');
@@ -19,7 +20,7 @@ $(function(){
         ajax: {
 			url: '../Cselect2/getCUSTOMERS',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_cuscod').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				
@@ -47,7 +48,7 @@ var jd_btnt1search = null;
 var jd_sellDetails = null;
 var jd_loadSell = null;
 $('#btnt1search').click(function(){
-	dataToPost = new Object();
+	var dataToPost = new Object();
 	dataToPost.contno 	= $('#CONTNO').val();
 	dataToPost.sdatefrm = $('#SDATEFRM').val();
 	dataToPost.sdateto 	= $('#SDATETO').val();
@@ -89,7 +90,7 @@ $('#btnt1search').click(function(){
 });
 
 function sellDetails($contno,$event){
-	dataToPost = new Object();
+	var dataToPost = new Object();
 	dataToPost.contno = $contno;
 	
 	$('#loadding').show();
@@ -200,23 +201,23 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					beforeChanged = beforeChanged + 1;
 				});
 				
-				var sdate = $('#add_sdate').val();
-				var cuscod = $('#add_cuscod').attr('CUSCOD');
-				var cuscodaddr = (typeof $('#add_addrno').find(':selected').val() === 'undefined' ? '' : $('#add_addrno').find(':selected').val());
-				var strno = (typeof $('#add_strno').find(':selected').val() === 'undefined' ? '' : $('#add_strno').find(':selected').val());
-				var paydue = (typeof $('#add_paydue').find(':selected').val() === 'undefined' ? '' : $('#add_paydue').find(':selected').val());
+				var sdate 		= $('#add_sdate').val();
+				var cuscod		= $('#add_cuscod').attr('CUSCOD');
+				var cuscodaddr 	= (typeof $('#add_addrno').find(':selected').val() === 'undefined' ? '' : $('#add_addrno').find(':selected').val());
+				var strno 		= (typeof $('#add_strno').find(':selected').val() === 'undefined' ? '' : $('#add_strno').find(':selected').val());
+				var paydue 		= (typeof $('#add_paydue').find(':selected').val() === 'undefined' ? '' : $('#add_paydue').find(':selected').val());
 				
 				switch(index){
 					case 0: //tab1
-						$msg = "";
+						var msg = "";
 						
-						if(paydue 		== ''){ $msg = "ไม่พบวิธีชำระค่างวด โปรดระบุวิธีชำระค่างวดก่อนครับ"; }
-						if(strno 		== ''){ $msg = "ไม่พบเลขตัวถัง โปรดระบุเลขตัวถังก่อนครับ"; }
-						if(cuscodaddr 	== ''){ $msg = "ไม่พบที่อยู่ในการพิมพ์สัญญา โปรดระบุที่อยู่ในการพิมพ์สัญญาก่อนครับ"; }
-						if(cuscod 		== ''){ $msg = "ไม่พบรหัสลูกค้า โปรดระบุรหัสลูกค้าก่อนครับ"; }
-						if(sdate 		== ''){ $msg = "ไม่พบวันที่ขาย โปรดระบุวันที่ขายก่อนครับ"; }
+						if(paydue 		== ''){ msg = "ไม่พบวิธีชำระค่างวด โปรดระบุวิธีชำระค่างวดก่อนครับ"; }
+						if(strno 		== ''){ msg = "ไม่พบเลขตัวถัง โปรดระบุเลขตัวถังก่อนครับ"; }
+						if(cuscodaddr 	== ''){ msg = "ไม่พบที่อยู่ในการพิมพ์สัญญา โปรดระบุที่อยู่ในการพิมพ์สัญญาก่อนครับ"; }
+						if(cuscod 		== ''){ msg = "ไม่พบรหัสลูกค้า โปรดระบุรหัสลูกค้าก่อนครับ"; }
+						if(sdate 		== ''){ msg = "ไม่พบวันที่ขาย โปรดระบุวันที่ขายก่อนครับ"; }
 						
-						if($msg != ""){
+						if(msg != ""){
 							Lobibox.notify('warning', {
 								title: 'แจ้งเตือน',
 								size: 'mini',
@@ -226,7 +227,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								continueDelayOnInactiveTab: false,
 								icon: true,
 								messageHeight: '90vh',
-								msg: $msg
+								msg: msg
 							});
 							
 							return false;
@@ -264,8 +265,6 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		return true;					
 	}
 	
-	
-	
 	$('#add_contno').val('Auto Genarate');
 	$('#add_contno').attr('readonly',true);
 	$('#add_locat').select2({
@@ -273,7 +272,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getLOCAT',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_locat').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				
@@ -302,7 +301,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getRESVNO',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_resvno').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = $('#add_locat').find(':selected').val();
@@ -368,7 +367,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 									
 									$('.CUSDetails').unbind('click');
 									$('.CUSDetails').click(function(){
-										dtp = new Object();
+										var dtp = new Object();
 										dtp.cuscod  = $(this).attr('CUSCOD');
 										dtp.cusname = $(this).attr('CUSNAMES');
 										dtp.addrno  = $(this).attr('ADDRNO');
@@ -423,7 +422,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getCUSTOMERSADDRNo',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_addrno').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.cuscod = $('#add_cuscod').attr('CUSCOD');
@@ -452,7 +451,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getSTRNO',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_strno').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = $('#add_locat').find(':selected').val();
@@ -481,7 +480,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getPAYDUE',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_paydue').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				
@@ -504,42 +503,51 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
-	if($param != 'old'){
-		$('#add_strno').change(function(){
-			dataToPost = new Object();
-			dataToPost.strno = (typeof $(this).find(':selected').val() === 'undefined' ? '' : $(this).find(':selected').val());
-			dataToPost.sdate = $('#add_sdate').val();
-			
-			$.ajax({
-				url:'../SYS04/Sell/strnoChanged',
-				data: dataToPost,
-				type: 'POST',
-				dataType: 'json',
-				success: function(data) {
-					if(data.error){
-						Lobibox.notify('warning', {
-							title: 'ผิดพลาด',
-							size: 'mini',
-							closeOnClick: false,
-							delay: 5000,
-							pauseDelayOnHover: true,
-							continueDelayOnInactiveTab: false,
-							icon: true,
-							messageHeight: '90vh',
-							msg: data.msg
-						});
-					}
-					
-					$('#add_stdprc').val(data.html.price);
-					$('#add_inprc').val(data.html.price);
-				},
-				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
-			});
+	var jd_add_strno = null;
+	$('#add_resvno').on('select2:select',function(){ fn_checkStd(); });
+	$('#add_strno').on('select2:select',function(){ fn_checkStd(); });
+	$('#add_acticod').on('select2:select',function(){ fn_checkStd(); });
+	function fn_checkStd(){
+		var dataToPost = new Object();
+		dataToPost.locat 	= (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
+		dataToPost.resvno 	= (typeof $('#add_resvno').find(':selected').val() === 'undefined' ? '' : $('#add_resvno').find(':selected').val());
+		dataToPost.strno 	= (typeof $('#add_strno').find(':selected').val() === 'undefined' ? '' : $('#add_strno').find(':selected').val());
+		dataToPost.sdate 	= $('#add_sdate').val();
+		dataToPost.acticod 	= (typeof $('#add_acticod').find(':selected').val() === 'undefined' ? '' : $('#add_acticod').find(':selected').val());
+		
+		jd_add_strno = $.ajax({
+			url:'../SYS04/Sell/checkStandart',
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
+			success: function(data) {
+				if(data.error){
+					Lobibox.notify('warning', {
+						title: 'ผิดพลาด',
+						size: 'mini',
+						closeOnClick: true,
+						delay: false,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						msg: data.msg
+					});
+				}else{
+					$('#add_stdprc').val(data.html.PRICE);
+					$('#add_inprc').val(data.html.PRICE);
+				}
+				
+				
+				jd_add_strno = null;
+			},
+			beforeSend: function(){ if(jd_add_strno !== null){ jd_add_strno.abort(); } },
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	}
 	
 	$('#add_resvno').on('select2:select', function (e) {	
-		dataToPost = new Object();
+		var dataToPost = new Object();
 		dataToPost.resvno = (typeof $(this).find(':selected').val() === 'undefined' ? '' : $(this).find(':selected').val());
 		dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
 		
@@ -604,7 +612,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			ajax: {
 				url: '../Cselect2/getSTRNO',
 				data: function (params) {
-					dataToPost = new Object();
+					var dataToPost = new Object();
 					dataToPost.now = $('#add_strno').find(':selected').val();
 					dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 					dataToPost.locat = $('#add_locat').find(':selected').val();
@@ -661,7 +669,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 							ajax: {
 								url: '../Cselect2/getOPTMAST',
 								data: function (params) {
-									dataToPost = new Object();
+									var dataToPost = new Object();
 									dataToPost.now = $('#op_code').find(':selected').val();
 									dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 									dataToPost.locat = $('#add_locat').find(':selected').val();
@@ -687,7 +695,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						
 						$('#receipt_inopt').hide();
 						$('#cal_inopt').click(function(){
-							dataToPost = new Object();
+							var dataToPost = new Object();
 							dataToPost.qty 	   = $('#op_qty').val();
 							dataToPost.uprice  = $('#op_uprice').val();
 							dataToPost.cvt     = $('#op_cvt').val();
@@ -811,7 +819,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getUSERS',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_salcod').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
 				
@@ -840,7 +848,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getCUSTOMERS',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_recomcod').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
 				
@@ -907,7 +915,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 									
 									$('.CUSDetails').unbind('click');
 									$('.CUSDetails').click(function(){
-										dtp = new Object();
+										var dtp = new Object();
 										dtp.cuscod  = $(this).attr('CUSCOD');
 										dtp.cusname = $(this).attr('CUSNAMES');
 										
@@ -951,7 +959,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getACTI',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_acticod').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
 				
@@ -1005,6 +1013,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		}
 	});
 	
+	var jd_add_save = null;
 	$('#add_save').click(function(){
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
@@ -1014,7 +1023,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				ok : {
 					'class': 'btn btn-primary',
 					text: 'ยืนยัน',
-					closeOnClick: true,
+					closeOnClick: false,
 				},
 				cancel : {
 					'class': 'btn btn-danger',
@@ -1024,7 +1033,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			},
 			callback: function(lobibox, type){
 				if (type === 'ok'){
-					dataToPost = new Object();
+					var dataToPost = new Object();
 					dataToPost.contno 	= $('#add_contno').val();
 					dataToPost.locat 	= (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '':$('#add_locat').find(':selected').val() );
 					dataToPost.sdate 	= $('#add_sdate').val();
@@ -1083,43 +1092,15 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					});		
 					dataToPost.billdas = billdas;
 					
-					//$('#loadding').show();
-					$.ajax({
+					$('#loadding').fadeIn(200);
+					jd_add_save = $.ajax({
 						url:'../SYS04/Sell/save',
 						data: dataToPost,
 						type: 'POST',
 						dataType: 'json',
 						success: function(data) {
-							$('#loadding').hide();
-							
-							if(data.status == 'S'){
-								$thisWindowLeasing.destroy();
-								
-								Lobibox.notify('success', {
-									title: 'สำเร็จ',
-									size: 'mini',
-									closeOnClick: false,
-									delay: 15000,
-									pauseDelayOnHover: true,
-									continueDelayOnInactiveTab: false,
-									icon: true,
-									messageHeight: '90vh',
-									msg: data.msg
-								});
-							}else if(data.status == 'W'){
+							if(data.error){
 								Lobibox.notify('warning', {
-									title: 'แจ้งเตือน',
-									size: 'mini',
-									closeOnClick: false,
-									delay: 15000,
-									pauseDelayOnHover: true,
-									continueDelayOnInactiveTab: false,
-									icon: true,
-									messageHeight: '90vh',
-									msg: data.msg
-								});
-							}else if(data.status == 'E'){
-								Lobibox.notify('error', {
 									title: 'ผิดพลาด',
 									size: 'mini',
 									closeOnClick: false,
@@ -1130,10 +1111,30 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 									messageHeight: '90vh',
 									msg: data.msg
 								});
+							}else{
+								Lobibox.notify('success', {
+									title: 'สำเร็จ',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+								
+								$thisWindowLeasing.destroy();
 							}
+							
+							jd_add_save = null;
+							$('#loadding').fadeOut(200);
 						},
+						beforeSend: function(){ if(jd_add_save !== null){ jd_add_save.abort(); } },
 						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
+					
+					lobibox.destroy();
 				}
 			}
 		});
@@ -1168,7 +1169,7 @@ function fn_billdasActive(rank){
 		ajax: {
 			url: '../Cselect2/getBILLDAS',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $(this).find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
 				
@@ -1405,7 +1406,7 @@ function btnOther($thisWindowLeasing){
 			},
 			callback: function(lobibox, type){
 				if (type === 'ok'){
-					dataToPost = new Object();
+					var dataToPost = new Object();
 					dataToPost.contno = $('#add_contno').val();
 					
 					$('#loadding').show();
@@ -1504,18 +1505,18 @@ function btnOther($thisWindowLeasing){
 }
 
 function fn_calbilldas(){
-	$saleno = new Array();
+	var saleno = new Array();
 	$('.add_billdas').each(function(){
 		if(typeof $(this).find(':selected').val() !== 'undefined'){
-			$saleno.push($(this).find(':selected').val());
+			saleno.push($(this).find(':selected').val());
 		}
 	});	
 	
-	if($saleno.length > 0){
+	if(saleno.length > 0){
 		$('#loadding').show();
 		$.ajax({
 			url:'../SYS04/Leasing/calbilldas',
-			data: {saleno:$saleno,locat:(typeof $("#add_locat").find(':selected').val() === 'undefined' ? '' : $("#add_locat").find(':selected').val())},
+			data: {saleno:saleno,locat:(typeof $("#add_locat").find(':selected').val() === 'undefined' ? '' : $("#add_locat").find(':selected').val())},
 			type: 'POST',
 			dataType: 'json',
 			success: function(data) {

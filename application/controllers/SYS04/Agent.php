@@ -23,6 +23,37 @@ class Agent extends MY_Controller {
 		}
 	}
 	
+	function object2Array($obj){
+	  $arrs = array();
+	  if(is_object($obj) || is_array($obj)){
+	   $obj = (array) $obj;
+	   foreach($obj as $key => $val){
+		$obj2 = $obj[$key];    
+		if(is_object($obj2) || is_array($obj2)){
+		 $val = $this->object2ArrayLoop($obj2);
+		}
+		$arrs[$key] = $val;
+	   }   
+	  }
+	  
+	  return ($arrs);
+	 }
+	 
+	 function object2ArrayLoop($obj){
+	  $arrs = array();
+	  if(is_object($obj) || is_array($obj)){
+	   $obj = (array) $obj;
+	   foreach($obj as $key => $val){
+		$val = $this->object2ArrayLoop($obj[$key]);
+		$arrs[$key] = $val;
+	   }   
+	  }else{
+	   $arrs = $obj;
+	  }
+	  
+	  return ($arrs);
+	 }
+	
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
@@ -1648,7 +1679,7 @@ class Agent extends MY_Controller {
 					$top += 25; 
 					$data["car"][$data["carsize"]] .= "
 						<div class='wf pf data' style='top:{$top};left:0;width:30px;'>{$i}</div>
-						<div class='wf pf data' colspan='4' style='top:{$top};left:30;width:300px;'>{$row->optname}</div>
+						<div class='wf pf data' colspan='4' style='top:{$top};left:30;width:300px;'>[{$row->optcode}] {$row->optname}</div>
 						<div class='wf pf tc data' style='top:{$top};left:480;width:50px;'>{$row->qty}</div>
 						<div class='wf pf tr data' style='top:{$top};left:540;width:90px;'>".number_format($row->nprice,2)."</div>
 						<div class='wf pf tr data' style='top:{$top};left:635;width:80px;'>".number_format($row->totprc,2)."</div>

@@ -658,109 +658,225 @@ function fnload($thisForm){
 	});
 	
 	$("#btnSave").click(function(){
-		dataToPost = new Object();
+		$("#btnSave").attr('disabled',true);
+		$("#add_delete").attr('disabled',true);
 		
-		dataToPost.STDID  	 = $("#STDID").val();
-		dataToPost.SUBID  	 = $("#SUBID").val();
-		dataToPost.EVENTS 	 = $("#FEVENTS").val();
-		dataToPost.EVENTE 	 = $("#FEVENTE").val();
-		dataToPost.EVENTNAME = $("#FEVENTNAME").val();
-		dataToPost.DETAIL 	 = $("#FDETAIL").val();
-		dataToPost.ACTI  	 = $("#FACTI").val();
-		dataToPost.MODEL 	 = (typeof $("#FMODEL").find(":selected").val() === 'undefined' ? "":$("#FMODEL").find(":selected").val());
-		dataToPost.BAAB  	 = $("#FBAAB").val();
-		dataToPost.COLOR 	 = $("#FCOLOR").val();
-		dataToPost.STAT 	 = $("#FSTAT").val();
-		
-		$price = [];
-		$(".btn_car_old_delete").each(function(){
-			row = new Object();
-			row.fprice		= $(this).attr('fprice');
-			row.tprice 		= $(this).attr('tprice');
-			
-			$price.push(row);
-		});
-		
-		dataToPost.PRICE 	 = ($price.length == 0 ? "":$price);
-		dataToPost.LOCAT 	 = $("#FLOCAT").val();
-		
-		$Dwn = [];
-		$(".editDwn").each(function(){
-			row = new Object();
-			row.formpriceFP		= $(this).attr('formpriceFP');
-			row.formpriceTP		= $(this).attr('formpriceTP');
-			row.formdwns		= $(this).attr('formdwns');
-			row.formdwne 		= $(this).attr('formdwne');
-			row.forminterest 	= $(this).attr('forminterest');
-			row.forminterest2 	= $(this).attr('forminterest2');
-			row.forminsurance 	= $(this).attr('forminsurance');
-			row.formtrans 		= $(this).attr('formtrans');
-			row.formregist 		= $(this).attr('formregist');
-			row.formact 		= $(this).attr('formact');
-			row.formcoupon 		= $(this).attr('formcoupon');
-			row.formapprv 		= $(this).attr('formapprv');
-			
-			$Dwn.push(row);
-		});
-		dataToPost.STDDWN 	 = ($Dwn.length == 0 ? "":$Dwn);
-		
-		$Free = [];
-		$(".editFree").each(function(){
-			row = new Object();
-			row.formpriceFP	= $(this).attr('formpriceFP');
-			row.formpriceTP	= $(this).attr('formpriceTP');
-			row.formdwns	= $(this).attr('formdwns');
-			row.formdwne	= $(this).attr('formdwne');
-			row.formtype	= $(this).attr('formtypev');
-			row.formnopays	= $(this).attr('formnopays');
-			row.formnopaye 	= $(this).attr('formnopaye');
-			row.formrate 	= $(this).attr('formrate');
-			row.formdetail 	= $(this).attr('formdetail');
-			
-			$Free.push(row);
-		});
-		dataToPost.STDFREE 	= ($Free.length == 0 ? "":$Free);
-		dataToPost.event 	= $('#btnSave').attr('event');
-		
-		$('#loadding').show(0);
-		JDbtnAddDwn = $.ajax({
-			url:'../SYS04/Standard/SaveSTD',
-			data: dataToPost,
-			type: 'POST',
-			dataType: 'json',
-			success: function(data){
-				$('#loadding').hide(0);
-				
-				if(data.error){
-					Lobibox.notify('warning', {
-						title: 'แจ้งเตือน',
-						size: 'mini',
-						closeOnClick: false,
-						delay: 5000,
-						pauseDelayOnHover: true,
-						continueDelayOnInactiveTab: false,
-						icon: true,
-						messageHeight: '90vh',
-						msg: data.msg
-					});
-				}else{
-					Lobibox.notify('success', {
-						title: 'สำเร็จ',
-						size: 'mini',
-						closeOnClick: false,
-						delay: 5000,
-						pauseDelayOnHover: true,
-						continueDelayOnInactiveTab: false,
-						icon: true,
-						messageHeight: '90vh',
-						msg: data.msg
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			draggable: true,
+			iconClass: false,
+			closeOnEsc: false,
+			closeButton: false,
+			msg: 'บันทึกสแตนดาร์ด [STDID :: '+$("#STDID").val()+'] [SUBID :: '+$("#SUBID").val()+']',
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ยืนยันการทำรายการ',
+					closeOnClick: false,
+				},
+				cancel : {
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ยกเลิก',
+					closeOnClick: true
+				},
+			},
+			shown: function($this){},
+			callback: function(lobibox, type){
+				if (type === 'ok'){
+					var dataToPost = new Object();
+					
+					dataToPost.STDID  	 = $("#STDID").val();
+					dataToPost.SUBID  	 = $("#SUBID").val();
+					dataToPost.EVENTS 	 = $("#FEVENTS").val();
+					dataToPost.EVENTE 	 = $("#FEVENTE").val();
+					dataToPost.EVENTNAME = $("#FEVENTNAME").val();
+					dataToPost.DETAIL 	 = $("#FDETAIL").val();
+					dataToPost.ACTI  	 = $("#FACTI").val();
+					dataToPost.MODEL 	 = (typeof $("#FMODEL").find(":selected").val() === 'undefined' ? "":$("#FMODEL").find(":selected").val());
+					dataToPost.BAAB  	 = $("#FBAAB").val();
+					dataToPost.COLOR 	 = $("#FCOLOR").val();
+					dataToPost.STAT 	 = $("#FSTAT").val();
+					
+					$price = [];
+					$(".btn_car_old_delete").each(function(){
+						row = new Object();
+						row.fprice		= $(this).attr('fprice');
+						row.tprice 		= $(this).attr('tprice');
+						
+						$price.push(row);
 					});
 					
-					$thisForm.destroy();
+					dataToPost.PRICE 	 = ($price.length == 0 ? "":$price);
+					dataToPost.LOCAT 	 = $("#FLOCAT").val();
+					
+					$Dwn = [];
+					$(".editDwn").each(function(){
+						row = new Object();
+						row.formpriceFP		= $(this).attr('formpriceFP');
+						row.formpriceTP		= $(this).attr('formpriceTP');
+						row.formdwns		= $(this).attr('formdwns');
+						row.formdwne 		= $(this).attr('formdwne');
+						row.forminterest 	= $(this).attr('forminterest');
+						row.forminterest2 	= $(this).attr('forminterest2');
+						row.forminsurance 	= $(this).attr('forminsurance');
+						row.formtrans 		= $(this).attr('formtrans');
+						row.formregist 		= $(this).attr('formregist');
+						row.formact 		= $(this).attr('formact');
+						row.formcoupon 		= $(this).attr('formcoupon');
+						row.formapprv 		= $(this).attr('formapprv');
+						
+						$Dwn.push(row);
+					});
+					dataToPost.STDDWN 	 = ($Dwn.length == 0 ? "":$Dwn);
+					
+					$Free = [];
+					$(".editFree").each(function(){
+						row = new Object();
+						row.formpriceFP	= $(this).attr('formpriceFP');
+						row.formpriceTP	= $(this).attr('formpriceTP');
+						row.formdwns	= $(this).attr('formdwns');
+						row.formdwne	= $(this).attr('formdwne');
+						row.formtype	= $(this).attr('formtypev');
+						row.formnopays	= $(this).attr('formnopays');
+						row.formnopaye 	= $(this).attr('formnopaye');
+						row.formrate 	= $(this).attr('formrate');
+						row.formdetail 	= $(this).attr('formdetail');
+						
+						$Free.push(row);
+					});
+					dataToPost.STDFREE 	= ($Free.length == 0 ? "":$Free);
+					dataToPost.event 	= $('#btnSave').attr('event');
+					
+					$('#loadding').show(0);
+					JDbtnAddDwn = $.ajax({
+						url:'../SYS04/Standard/SaveSTD',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						success: function(data){
+							$('#loadding').hide(0);
+							
+							if(data.error){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+								$("#btnSave").attr('disabled',false);
+								$("#add_delete").attr('disabled',false);
+							}else{
+								Lobibox.notify('success', {
+									title: 'สำเร็จ',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+								
+								$thisForm.destroy();
+							}
+						},
+						beforeSend: function(){ if(JDbtnAddDwn !== null){ JDbtnAddDwn.abort(); } },
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+					});
+					
+					lobibox.destroy();
+				}else{
+					$("#btnSave").attr('disabled',false);
+					$("#add_delete").attr('disabled',false);
 				}
+			}
+		});
+	});
+	
+	var jd_add_delete = null;
+	$("#add_delete").click(function(){
+		$("#btnSave").attr('disabled',true);
+		$("#add_delete").attr('disabled',true);
+		
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			draggable: true,
+			iconClass: false,
+			closeOnEsc: false,
+			closeButton: false,
+			msg: 'ลบสแตนดาร์ด [STDID :: '+$("#STDID").val()+'] [SUBID :: '+$("#SUBID").val()+']',
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ยืนยันการทำรายการ',
+					closeOnClick: false,
+				},
+				cancel : {
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ยกเลิก',
+					closeOnClick: true
+				},
 			},
-			beforeSend: function(){ if(JDbtnAddDwn !== null){ JDbtnAddDwn.abort(); } },
-			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+			shown: function($this){},
+			callback: function(lobibox, type){
+				if (type === 'ok'){
+					var dataToPost = new Object();
+					dataToPost.STDID = $("#STDID").val();
+					dataToPost.SUBID = $("#SUBID").val();
+					
+					jd_add_delete = $.ajax({
+						url:'../SYS04/Standard/DeleteSTD',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						success: function(data){
+							if(data.error){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+								$("#btnSave").attr('disabled',false);
+								$("#add_delete").attr('disabled',false);
+							}else{
+								Lobibox.notify('success', {
+									title: 'สำเร็จ',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+								
+								$thisForm.destroy();
+							}
+							jd_add_delete = null;
+						},
+						beforeSend: function(){ if(jd_add_delete !== null){ jd_add_delete.abort(); } },
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+					});
+					
+					lobibox.destroy();
+				}else{
+					$("#btnSave").attr('disabled',false);
+					$("#add_delete").attr('disabled',false);
+				}
+			}
 		});
 	});
 	
