@@ -36,6 +36,34 @@ $(function(){
 		width: '100%'
 	});
 	
+	$('#APCODE1').select2({
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2b/getAPMAST',
+			data: function (params) {
+				dataToPost = new Object();
+				//dataToPost.now = $('#add_cuscod').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: true,
+		multiple: false,
+		dropdownParent: $(".b_tab1"),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
 	$('#TYPE1').select2({
 		placeholder: 'เลือก',
         ajax: {
@@ -203,16 +231,6 @@ $(function(){
 		//theme: 'classic',
 		width: '100%'
 	});
-	
-	$(document).ready(function() {
-		$('input:radio[name=stat]').change(function() {
-			if (this.value == 'old'){
-				$("#showystat").show();
-			}else{ 
-				$("#showystat").hide();
-			}
-		});
-	});
 });
 
 //กดแสดงข้อมูล
@@ -233,37 +251,28 @@ function search(){
 		stat = "";
 	}
 	
-	var ystat = "";
-	if($("#typey").is(":checked")){ 
-		ystat = "typey";
-	}else if($("#typeold").is(":checked")){
-		ystat = "typeold";
-	}else if($("#typeall").is(":checked")){
-		ystat = "";
-	}
-
 	dataToPost = new Object();
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
+	dataToPost.APCODE1 		= (typeof $('#APCODE1').find(':selected').val() === 'undefined' ? '':$('#APCODE1').find(':selected').val());
 	dataToPost.TYPE1 		= (typeof $('#TYPE1').find(':selected').val() === 'undefined' ? '':$('#TYPE1').find(':selected').val());
 	dataToPost.GCOCE1 		= (typeof $('#GCOCE1').find(':selected').val() === 'undefined' ? '':$('#GCOCE1').find(':selected').val());
 	dataToPost.BAAB1 		= (typeof $('#BAAB1').find(':selected').val() === 'undefined' ? '':$('#BAAB1').find(':selected').val());
 	dataToPost.MODEL1 		= (typeof $('#MODEL1').find(':selected').val() === 'undefined' ? '':$('#MODEL1').find(':selected').val());
 	dataToPost.CC1 			= (typeof $('#CC1').find(':selected').val() === 'undefined' ? '':$('#CC1').find(':selected').val());
 	dataToPost.COLOR1 		= (typeof $('#COLOR1').find(':selected').val() === 'undefined' ? '':$('#COLOR1').find(':selected').val());
-	dataToPost.KANG 		= $('#daykang').val();
-	dataToPost.ystat 		= ystat;
+	dataToPost.TODATE 		= $('#TODATE').val();
 	dataToPost.stat 		= stat;
 	
 	$('#loadding').show();
 	reportsearch = $.ajax({
-		url: '../SYS02/ReportInventorykang/search',
+		url: '../SYS02/ReportSummaryinventory/search',
 		data: dataToPost,
 		Type: 'POST',
 		dataType:'json',
 		success: function(data){	
 			$('#loadding').hide();	
 			Lobibox.window({
-				title: 'รายงานสินค้าค้างในสต็อกเกิน x วัน',
+				title: 'รายงานสรุปสินค้าคงเหลือ (รถ)',
 				content: data.html,
 				height: $(window).height(),
 				width: $(window).width(),
@@ -271,27 +280,27 @@ function search(){
 				draggable: false
 			});
 			
-			fn_datatables('table-ReportInventorykang',1,290);
+			fn_datatables('table-ReportSummaryinventory',1,285);
 			
-			$('.data-export').prepend('<img id="print-Inventorykang" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-			$("#print-Inventorykang").hover(function(){
-				document.getElementById("print-Inventorykang").style.filter = "contrast(70%)";
+			$('.data-export').prepend('<img id="print-Summaryinventory" src="../public/images/print-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+			$("#print-Summaryinventory").hover(function(){
+				document.getElementById("print-Summaryinventory").style.filter = "contrast(70%)";
 			}, function() {
-				document.getElementById("print-Inventorykang").style.filter = "contrast(100%)";
+				document.getElementById("print-Summaryinventory").style.filter = "contrast(100%)";
 			});
 			
-			$('.data-export').prepend('<img id="table-Inventorykang-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
-			$("#table-Inventorykang-excel").hover(function() {
-				document.getElementById("table-Inventorykang-excel").style.filter = "contrast(70%)";
+			$('.data-export').prepend('<img id="table-Summaryinventory-excel" src="../public/images/excel-icon.png" style="width:30px;height:30px;cursor:pointer;filter: contrast(100%);">');
+			$("#table-Summaryinventory-excel").hover(function() {
+				document.getElementById("table-Summaryinventory-excel").style.filter = "contrast(70%)";
 			}, function() {
-				document.getElementById("table-Inventorykang-excel").style.filter = "contrast(100%)";
+				document.getElementById("table-Summaryinventory-excel").style.filter = "contrast(100%)";
 			});
 			
-			$("#table-Inventorykang-excel").click(function(){ 
-				tableToExcel_Export(data.report,"sheet 1","รายงานสินค้าค้างในสต็อกเกิน x วัน  "+data.reporttoday); 
+			$("#table-Summaryinventory-excel").click(function(){ 
+				tableToExcel_Export(data.report,"sheet 1","รายงานสรุปสินค้าคงเหลือ (รถ)  "+data.reporttoday); 
 			});
 			
-			$('#print-Inventorykang').click(function(){
+			$('#print-Summaryinventory').click(function(){
 				printReport();
 			});
 
@@ -322,38 +331,29 @@ function printReport(){
 	}else if($("#all").is(":checked")){
 		stat = "";
 	}
-	
-	var ystat = "";
-	if($("#typey").is(":checked")){ 
-		ystat = "typey";
-	}else if($("#typeold").is(":checked")){
-		ystat = "typeold";
-	}else if($("#typeall").is(":checked")){
-		ystat = "";
-	}
 
 	dataToPost = new Object();
 	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(':selected').val() === 'undefined' ? '':$('#LOCAT1').find(':selected').val());
+	dataToPost.APCODE1 		= (typeof $('#APCODE1').find(':selected').val() === 'undefined' ? '':$('#APCODE1').find(':selected').val());
 	dataToPost.TYPE1 		= (typeof $('#TYPE1').find(':selected').val() === 'undefined' ? '':$('#TYPE1').find(':selected').val());
 	dataToPost.GCOCE1 		= (typeof $('#GCOCE1').find(':selected').val() === 'undefined' ? '':$('#GCOCE1').find(':selected').val());
 	dataToPost.BAAB1 		= (typeof $('#BAAB1').find(':selected').val() === 'undefined' ? '':$('#BAAB1').find(':selected').val());
 	dataToPost.MODEL1 		= (typeof $('#MODEL1').find(':selected').val() === 'undefined' ? '':$('#MODEL1').find(':selected').val());
 	dataToPost.CC1 			= (typeof $('#CC1').find(':selected').val() === 'undefined' ? '':$('#CC1').find(':selected').val());
 	dataToPost.COLOR1 		= (typeof $('#COLOR1').find(':selected').val() === 'undefined' ? '':$('#COLOR1').find(':selected').val());
-	dataToPost.KANG 		= $('#daykang').val();
-	dataToPost.ystat 		= ystat;
+	dataToPost.TODATE 		= $('#TODATE').val();
 	dataToPost.stat 		= stat;
 	dataToPost.layout 		= layout;
 	
 	$.ajax({
-		url: '../SYS02/ReportInventorykang/conditiontopdf',
+		url: '../SYS02/ReportSummaryinventory/conditiontopdf',
 		data: dataToPost,
 		type:'POST',
 		dataType: 'json',
 		success: function(data){
 			//alert(data[0]);
 			var baseUrl = $('body').attr('baseUrl');
-			var url = baseUrl+'SYS02/ReportInventorykang/pdf?condpdf='+data[0];
+			var url = baseUrl+'SYS02/ReportSummaryinventory/pdf?condpdf='+data[0];
 			var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 			Lobibox.window({
 				title: 'พิมพ์รายงาน',

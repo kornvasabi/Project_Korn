@@ -1,4 +1,4 @@
-//BEE+
+//BEE+ 
 // หน้าแรก  
 var _locat  = $('.b_tab1[name="home"]').attr('locat');
 var _insert = $('.b_tab1[name="home"]').attr('cin');
@@ -103,70 +103,11 @@ function Add_HoldtoOldcar($thisWindowChange){
 	
 	CONTNOCHANGE = null
 	$('#CONTNO').change(function(){ 
-		var contno =  (typeof $('#CONTNO').find(":selected").val() === 'undefined' ? '' : $('#CONTNO').find(":selected").val());
-		dataToPost = new Object();
-		dataToPost.contno = contno;
-			
-		CONTNOCHANGE = $.ajax({
-			url : '../SYS05/HoldtoOldcar/searchCONTNO',
-			data : dataToPost,
-			type : "POST",
-			dataType : "json",
-			success: function(data){
-				//GCODENEW(data.GCODE);
-				if(contno != ''){
-					$('#LOCAT').val(data.CRLOCAT);
-					$('#CUSNAME').val(data.CUSNAME);
-					$('#CUSCOD').val(data.CUSCOD);
-					$('#REGNO').val(data.REGNO);
-					$('#STRNO').val(data.STRNO);
-					$('#PRICE').val(data.TOTPRC);
-					$('#SMPAY').val(data.SMPAY);
-					$('#BALANCE').val(data.BALANCE);
-					$('#NETAR').val(data.EXP_AMT);
-					$('#BOOKVALUE').val(data.BOOKVALUE);
-					$('#SALEVAT').val(data.VATPRC);
-					$('#LOCATR').val(data.CRLOCAT);
-					$('#SALENEW').val(data.NEWPRC);	
-					
-					newOption = new Option('('+data.GCODE+') '+data.GDESC, data.GCODE, false, false);
-					$('#GCODENEW').empty();
-					$('#GCODENEW').append(newOption).trigger('change'); 
-					
-					newOption = new Option(data.BILLCOLL+' - '+data.NAME, data.BILLCOLL, false, false);
-					$('#Y_USER').empty();
-					$('#Y_USER').append(newOption).trigger('change'); 
-					
-				}else{
-					$('#LOCAT').val('');
-					$('#CUSNAME').val('');
-					$('#CUSCOD').val('');
-					$('#REGNO').val('');
-					$('#STRNO').val('');
-					$('#PRICE').val('');
-					$('#SMPAY').val('');
-					$('#BALANCE').val('');
-					$('#NETAR').val('');
-					$('#BOOKVALUE').val('');
-					$('#SALEVAT').val('');
-					$('#COST').val('');
-					$('#COSTVAT').val('');
-					$('#DATECHG').val(_today);
-					$('#LOCATR').val('');
-					$('#SALENEW').val('');
-					$('#GCODENEW').empty().trigger('change');
-					$('#TYPHOLD').empty().trigger('change');
-					$('#Y_USER').empty().trigger('change');
-					$('#MEMO').val('');
-				}
-				CONTNOCHANGE = null;
-			},
-			beforeSend: function(){
-				if(CONTNOCHANGE !== null){
-					CONTNOCHANGE.abort();
-				}
-			}
-		});
+		SearchContno();
+	});	
+	
+	$('#DATECHG').change(function(){ 
+		SearchContno();
 	});	
 	
 	$('#GCODENEW').select2({
@@ -197,6 +138,9 @@ function Add_HoldtoOldcar($thisWindowChange){
 		dropdownAutoWidth : true,
 		width: '100%'
 	});
+	$('#GCODENEW').on('select2:open', function (e) {
+	  $(".select2-results__options").height(100);
+	});
 	
 	$('#TYPHOLD').select2({
 		placeholder: 'เลือก',
@@ -226,7 +170,7 @@ function Add_HoldtoOldcar($thisWindowChange){
 		width: '100%'
 	});
 	$('#TYPHOLD').on('select2:open', function (e) {
-	  $(".select2-results__options").height(135);
+	  $(".select2-results__options").height(100);
 	});
 
 	$('#Y_USER').select2({
@@ -257,7 +201,7 @@ function Add_HoldtoOldcar($thisWindowChange){
 		width: '100%'
 	});
 	$('#Y_USER').on('select2:open', function (e) {
-	  $(".select2-results__options").height(135);
+	  $(".select2-results__options").height(100);
 	});
 	
 	//_insert = 'T';
@@ -273,6 +217,78 @@ function Add_HoldtoOldcar($thisWindowChange){
 	});
 }
 
+function SearchContno(){
+	var contno =  (typeof $('#CONTNO').find(":selected").val() === 'undefined' ? '' : $('#CONTNO').find(":selected").val());
+	var dateY =  $('#DATECHG').val();
+	dataToPost = new Object();
+	dataToPost.contno = contno;
+	dataToPost.dateY = dateY;
+		
+	CONTNOCHANGE = $.ajax({
+		url : '../SYS05/HoldtoOldcar/searchCONTNO',
+		data : dataToPost,
+		type : "POST",
+		dataType : "json",
+		success: function(data){
+			//GCODENEW(data.GCODE);
+			if(contno != ''){
+				$('#LOCAT').val(data.CRLOCAT);
+				$('#CUSNAME').val(data.CUSNAME);
+				$('#CUSCOD').val(data.CUSCOD);
+				$('#REGNO').val(data.REGNO);
+				$('#STRNO').val(data.STRNO);
+				$('#PRICE').val(data.TOTPRC);
+				$('#SMPAY').val(data.SMPAY);
+				$('#BALANCE').val(data.BALANCE);
+				$('#NETAR').val(data.EXP_AMT);
+				$('#BOOKVALUE').val(data.BOOKVALUE);
+				$('#SALEVAT').val(data.VATPRC);
+				$('#LOCATR').val(data.CRLOCAT);
+				$('#SALENEW').val(data.NEWPRC);	
+				$('#SDATE').val(data.SDATE);	
+				$('#DATEDIFF').val(data.DAYDAIFF);
+				
+				newOption = new Option('('+data.GCODE+') '+data.GDESC, data.GCODE, false, false);
+				$('#GCODENEW').empty();
+				$('#GCODENEW').append(newOption).trigger('change'); 
+				
+				newOption = new Option(data.BILLCOLL+' - '+data.NAME, data.BILLCOLL, false, false);
+				$('#Y_USER').empty();
+				$('#Y_USER').append(newOption).trigger('change'); 
+				
+			}else{
+				$('#LOCAT').val('');
+				$('#CUSNAME').val('');
+				$('#CUSCOD').val('');
+				$('#REGNO').val('');
+				$('#STRNO').val('');
+				$('#PRICE').val('');
+				$('#SMPAY').val('');
+				$('#BALANCE').val('');
+				$('#NETAR').val('');
+				$('#BOOKVALUE').val('');
+				$('#SALEVAT').val('');
+				$('#COST').val('');
+				$('#COSTVAT').val('');
+				$('#DATECHG').val(_today);
+				$('#LOCATR').val('');
+				$('#SALENEW').val('');
+				$('#SDATE').val('');
+				$('#DATEDIFF').val('');
+				$('#GCODENEW').empty().trigger('change');
+				$('#TYPHOLD').empty().trigger('change');
+				$('#Y_USER').empty().trigger('change');
+				$('#MEMO').val('');
+			}
+			CONTNOCHANGE = null;
+		},
+		beforeSend: function(){
+			if(CONTNOCHANGE !== null){
+				CONTNOCHANGE.abort();
+			}
+		}
+	});
+}
 
 function Save_holdtooldcar($thisWindowChange){
 	Lobibox.confirm({

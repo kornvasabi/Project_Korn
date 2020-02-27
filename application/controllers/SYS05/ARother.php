@@ -97,7 +97,7 @@ class ARother extends MY_Controller {
 		$html = "
 			<div class='b_add_arother' style='width:100%;height:calc(100vh - 85px);overflow:auto;background-color:white;'>
 				<div style='float:left;height:100%;overflow:auto;' class='col-sm-6 col-sm-offset-3'>					
-					<div class='row' style='height:85%;'>
+					<div class='row' style='height:90%;'>
 						<div class='col-sm-12 col-xs-12' >	
 							<div class='form-group'>
 								เงื่อนไขการรับรู้
@@ -220,8 +220,7 @@ class ARother extends MY_Controller {
 							</div>
 						</div>	
 					</div>
-					<div class='row' style='height:15%;'>
-						<br>
+					<div class='row' style='height:10%;'>
 						<div class=' col-sm-2 col-sm-offset-3'>	
 							<div class='form-group'>
 								<button id='btnsave_arother' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
@@ -673,7 +672,7 @@ class ARother extends MY_Controller {
 	
 	function formupload(){
 		$html 	= "	
-			<div class='b_formupload' style='width:408px;height:560px;overflow:auto;background-color:white;'>
+			<div class='b_formupload' style='width:408px;height:calc(100vh - 85px);overflow:auto;background-color:white;'>
 				<div style='float:left;overflow:auto;height:100%;' class='col-sm-12 col-xs-12'>
 					<div class='row' style='height:92%;'>
 						<div id='showoldupload' style='border:5px solid white;'></div>
