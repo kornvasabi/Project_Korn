@@ -208,6 +208,7 @@ class Analyze extends MY_Controller {
 					,a.ANSTAT
 					,case when a.ANSTAT='I' then 'สร้างคำร้อง' 
 						when a.ANSTAT='P' then 'รออนุมัติ' 
+						when a.ANSTAT='PP' then 'รออนุมัติ(2)' 
 						when a.ANSTAT='A' then 'อนุมัติ' 
 						when a.ANSTAT='N' then 'ไม่อนุมัติ' 
 						when a.ANSTAT='C' then 'ยกเลิก'  end as ANSTATDESC
@@ -236,15 +237,15 @@ class Analyze extends MY_Controller {
 				$css = "color:black";
 				if($row->ANSTAT == "A"){
 					$css = "color:green";
-				}else if($row->ANSTAT == "N"){
+				}else if(in_array($row->ANSTAT,array('N','C'))){
 					$css = "color:red";
-				}else if($row->ANSTAT == "P"){
+				}else if($row->ANSTAT == "P" || $row->ANSTAT == "PP"){
 					$css = "color:#666";
 				}
 				
 				$button = "";
 				if($row->groupCode == "AL"){
-					$disabled = (in_array($row->ANSTAT,array('P','A','N'))? "":"disabled");
+					$disabled = (in_array($row->ANSTAT,array('P','PP','A','N'))? "":"disabled");
 					$button = "
 						<button {$disabled} class='andetail btn btn-xs btn-success glyphicon glyphicon-zoom-in'
 							ANID='".$row->ID."'  
@@ -343,6 +344,64 @@ class Analyze extends MY_Controller {
 	
 	function searchDetail(){
 		$ANID = $_POST["ANID"];
+		
+		$sql = "
+			if object_id('tempdb..#transaction') is not null drop table #transaction;
+			create table #transaction (error varchar(1),id varchar(12),msg varchar(max));
+
+			begin tran upd
+			begin try
+				if exists (
+					select * from {$this->MAuth->getdb('ARANALYZE')} 
+					where ID='{$ANID}' and ANSTAT in ('P','PP')
+				)
+				begin
+					update {$this->MAuth->getdb('ARANALYZE')} 
+					set ANSTAT='PP'
+					where ID='{$ANID}'
+				end 
+				else if not exists (
+					select * from {$this->MAuth->getdb('ARANALYZE')} 
+					where ID='{$ANID}' and ANSTAT in ('P','PP','A','N')
+				)
+				begin
+					rollback tran upd;
+					insert into #transaction select 'y' as error,'' as id,'ผิดพลาด ใบวิเคราะห์สินเชื่อ เลขที่ ".$ANID." ไม่ได้อยู่ในสถานะรออนุมัติ' as msg;
+					return;
+				end
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS04::ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ เลขที่ ".$ANID."','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
+				insert into #transaction select 'n' as error,'".$ANID."' as id,'ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ <br>เลขที่ใบวิเคราะห์สินเชื่อ ".$ANID." แล้ว' as msg;
+				commit tran upd;
+			end try
+			begin catch
+				rollback tran upd;
+				insert into #transaction select 'y' as error,'' as id,ERROR_MESSAGE() as msg;
+			end catch
+		";
+		$this->db->query($sql);
+		
+		$sql 	= "select * from #transaction";
+		$query 	= $this->db->query($sql);
+		
+		$stat 	= true;
+		$msg  	= '';
+		$ARANALYZE_ID  = '';
+		
+		if($query->row()) {
+			foreach ($query->result() as $row) {
+				if($row->error == "y"){
+					$response = array("html"=>$row->msg,"status"=>true);
+					echo json_encode($response); exit;
+				}
+			}
+		}else{
+			$msg = "ผิดพลาด :: ไม่สามารถทำรายการได้ในขณะนี้ โปรดลองทำรายการใหม่ภายหลัง";
+			$response = array("html"=>$msg,"status"=>true);
+			echo json_encode($response); exit;
+		}
 		
 		$sql = "
 			declare @filePath varchar(250) = (
@@ -819,8 +878,10 @@ class Analyze extends MY_Controller {
 				".$this->_formEMP()."
 				
 				<div class='row' style='padding-top:30px;padding-bottom:30px;'>
-					<div class='col-sm-2 col-sm-offset-9'>	
-						<!-- button id='save' class='btn-sm btn-primary btn-block'>บันทึก</button -->
+					<div class='col-sm-2 col-sm-offset-1'>
+						<button id='deleted' class='btn btn-danger btn-block'><span class='glyphicon glyphicon-floppy-disk'> ยกเลิก</span></button>
+					</div>
+					<div class='col-sm-2 col-sm-offset-6'>
 						<button id='save' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
 					</div>
 				</div>
@@ -1969,7 +2030,7 @@ class Analyze extends MY_Controller {
 						$data["SUBID"] = $row->SUBID;
 						$data["SHCID"] = $row->SHCID;
 						$data["PRICE"] = $row->PRICE;
-						$data["PRICE"] = $row->PRICE_ADD;
+						$data["PRICE_ADD"] = $row->PRICE_ADD;
 					}
 				}else{
 					$response["error"] = true;
@@ -2024,7 +2085,7 @@ class Analyze extends MY_Controller {
 				สี :: ".$data["COLOR"]."<br>
 				สถานะรถ :: ".$data["STAT"]."<br>
 				กิจกรรมการขาย :: ".$data["ACTICOD"]."<br>
-				วันที่ขออนุมัติ :: ".$this->Convertdate(2,$createDate)."
+				วันที่ขออนุมัติ :: ".$this->Convertdate(2,$data["DT"])."
 			";
 			
 			echo json_encode($response); exit;
@@ -3400,14 +3461,14 @@ class Analyze extends MY_Controller {
 				else 
 				begin
 					rollback tran upd;
-					insert into #transaction select 'y' as error,'' as id,'ผิดพลาด ส่งคำร้องไม่สำเร็จ เนื่องจากสถานะใบวิเคราะห์สินเชื่อ เลขที่ ".$anid." ไม่ได้อยู่ในสถานะสร้างคำร้อง' as msg;
+					insert into #transaction select 'y' as error,'' as id,'ผิดพลาด ดึงคำร้องไม่สำเร็จ เนื่องจากสถานะใบวิเคราะห์สินเชื่อ เลขที่ ".$anid." ไม่ได้อยู่ในสถานะสร้างคำร้อง/รออนุมัติ' as msg;
 					return;
 				end
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-				values ('".$this->sess["IDNo"]."','SYS04::ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ เลขที่ ".$anid."','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				values ('".$this->sess["IDNo"]."','SYS04::ดึงคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ เลขที่ ".$anid."','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				
-				insert into #transaction select 'n' as error,'".$anid."' as id,'ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ <br>เลขที่ใบวิเคราะห์สินเชื่อ ".$anid." แล้ว' as msg;
+				insert into #transaction select 'n' as error,'".$anid."' as id,'ดึงคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ <br>เลขที่ใบวิเคราะห์สินเชื่อ ".$anid." แล้ว' as msg;
 				commit tran upd;
 			end try
 			begin catch
@@ -4139,6 +4200,133 @@ class Analyze extends MY_Controller {
 		
 		$response["html"] = $data;
 		echo json_encode($response);
+	}
+	
+	function an_cancel(){
+		$response = array("html"=>"","error"=>false,"msg"=>"");
+		
+		$anid 		= $_POST["anid"];
+		$cancel_msg = trim($_POST["cancel_msg"]);
+		
+		if($anid == "Auto Genarate"){
+			$response["error"] = true;
+			$response["msg"]   = "ผิดพลาด ไม่สามารถยกเลิกเลขที่ใบวิเคราะห์ ".$anid." ได้";
+			echo json_encode($response); exit;
+		}
+		
+		if($cancel_msg == ""){
+			$response["error"] = true;
+			$response["msg"]   = "ผิดพลาด คุณยังไม่ได้ระบุสาเหตุที่ยกเลิกใบวิเคราะห์";
+			echo json_encode($response); exit;
+		}
+		
+		$sql = "
+			if object_id('tempdb..#transaction') is not null drop table #transaction;
+			create table #transaction (error varchar(1),id varchar(12),msg varchar(max));
+			
+			declare @ANID varchar(12) = '{$anid}';
+			declare @MASSAGE varchar(max) = '{$cancel_msg}';
+			
+			begin tran transup
+			begin try 
+				if exists (
+					select * from {$this->MAuth->getdb('ARANALYZE')}
+					where ANSTAT in ('I','P') and ID=@ANID
+				)
+				begin 
+					update {$this->MAuth->getdb('ARANALYZE')}
+					set ANSTAT='C'
+					where ANSTAT in ('I','P') and ID=@ANID
+					
+					if exists (
+						select * from {$this->MAuth->getdb('ARANALYZEAPPR')}
+						where ID=@ANID
+					)
+					begin 
+						update {$this->MAuth->getdb('ARANALYZEAPPR')}
+						set APPROVE='C'
+							,COMMENTS=@MASSAGE
+							,APPRBY='".$this->sess["IDNo"]."'
+							,APPRDT=getdate()
+						where ID=@ANID
+					end 
+					else 
+					begin
+						insert into {$this->MAuth->getdb('ARANALYZEAPPR')} (ID,APPROVE,COMMENTS,APPRBY,APPRDT)
+						select @ANID,'C',@MASSAGE,'".$this->sess["IDNo"]."',getdate()
+					end
+				end
+				else 
+				begin
+					rollback tran transup;
+					insert into #transaction select 'y',@ANID as id,'ผิดพลาด ไม่สามารถยกเลิกใบวิเคราะห์ '+@ANID+' ได้โปรดตรวจสอบข้อมูลใหม่อีกครั้ง';
+					return;
+				end
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS04::ยกเลิก ใบวิเคราะห์สินเชื่อ',@ANID+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
+				insert into #transaction select 'n' as error,@ANID as id,'แก้ไข ใบวิเคราะห์สินเชื่อแล้ว<br>เลขที่ใบวิเคราะห์สินเชื่อ '+@ANID+' ' as msg;
+				commit tran transup;
+			end try
+			begin catch
+				rollback tran transup;
+				insert into #transaction select 'y',@ANID as id,ERROR_MESSAGE();
+			end catch
+		";
+		$this->db->query($sql);
+		$sql   = "select * from #transaction";
+		$query = $this->db->query($sql);
+		
+		if($query->row()) {
+			foreach ($query->result() as $row) {
+				$response["error"] = ($row->error == "n" ? false:true);
+				$response["msg"] = $row->msg;
+			}
+		}else{
+			$response["error"] = true;
+			$response["msg"] = "ผิดพลาด :: ไม่สามารถทำรายการได้ในขณะนี้ โปรดลองทำรายการใหม่ภายหลัง";
+		}
+		
+		echo json_encode($response);
+	}
+	
+	function changeANSTAT(){
+		$ANID = $_POST["ANID"];
+		$sql = "
+			if object_id('tempdb..#transaction') is not null drop table #transaction;
+			create table #transaction (error varchar(1),id varchar(12),msg varchar(max));
+
+			begin tran upd
+			begin try
+				if exists (
+					select * from {$this->MAuth->getdb('ARANALYZE')} 
+					where ID='{$ANID}' and ANSTAT in ('P','PP')
+				)
+				begin
+					update {$this->MAuth->getdb('ARANALYZE')} 
+					set ANSTAT='P'
+					where ID='{$ANID}'
+				end 
+				else 
+				begin
+					rollback tran upd;
+					insert into #transaction select 'y' as error,'' as id,'ผิดพลาด ใบวิเคราะห์สินเชื่อ เลขที่ ".$ANID." ไม่ได้อยู่ในสถานะรออนุมัติ' as msg;
+					return;
+				end
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS04::ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ เลขที่ ".$ANID."','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
+				insert into #transaction select 'n' as error,'".$ANID."' as id,'ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ <br>เลขที่ใบวิเคราะห์สินเชื่อ ".$ANID." แล้ว' as msg;
+				commit tran upd;
+			end try
+			begin catch
+				rollback tran upd;
+				insert into #transaction select 'y' as error,'' as id,ERROR_MESSAGE() as msg;
+			end catch
+		";
+		$this->db->query($sql);
 	}
 	
 }

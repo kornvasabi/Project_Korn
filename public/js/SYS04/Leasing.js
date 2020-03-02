@@ -63,7 +63,7 @@ $('#btnt1search').click(function(){
 		success: function(data){
 			$('#jd_result').html(data.html);
 			$('#table-LeasingCar').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-LeasingCar',1,250);
+			fn_datatables('table-LeasingCar',1,225);
 			
 			function redraw(){
 				$('[data-toggle="tooltip"]').tooltip();
@@ -339,6 +339,10 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				var newOption = new Option(data.STRNO, data.STRNO, true, true);
 				$('#add_strno').attr('disabled',true);
 				$('#add_strno').empty().append(newOption).trigger('change');
+				
+				var newOption = new Option(data.ACTIDES, data.ACTICOD, true, true);
+				$('#add_acticod').attr('disabled',true);
+				$('#add_acticod').empty().append(newOption).trigger('change');
 				
 				/*tab 2*/
 				$('#add_inprc').val(addCommas(data.PRICE_TOTAL));
@@ -661,6 +665,10 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					var newOption = new Option(data.STRNO, data.STRNO, true, true);
 					$('#add_strno').attr('disabled',true);
 					$('#add_strno').empty().append(newOption).trigger('change');
+					
+					var newOption = new Option(data.ACTIDES, data.ACTICOD, true, true);
+					$('#add_acticod').attr('disabled',true);
+					$('#add_acticod').empty().append(newOption).trigger('change');
 				}
 				
 				$('#add_cuscod').trigger('select2:select');
@@ -673,8 +681,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#add_cuscod').attr('disabled',false);
 		$('#add_cuscod').empty().trigger('change');
 		$('#add_addrno').empty().trigger('change');
-		$('#add_strno').attr('disabled',false);
-		$('#add_strno').empty().trigger('change');
+		$('#add_strno ,#add_acticod').attr('disabled',false);
+		$('#add_strno ,#add_acticod').empty().trigger('change');
 	});
 	
 	$('#add_vatrt').attr('disabled',true);
@@ -2194,6 +2202,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					dataToPost.calint 	= $("input:radio[name=CALINT]:checked").val();
 					dataToPost.discfm 	= $("input:radio[name=DISC_FM]:checked").val();
 					dataToPost.comments = $('#add_comments').val();
+					dataToPost.comments_free = $('#add_comments_free').val();
 					
 					var billdas = [];
 					$('.add_billdas').each(function(){
@@ -2307,6 +2316,13 @@ function fn_billdasActive(rank){
 				dataToPost.locat = $('#add_locat').find(':selected').val();
 				dataToPost.sdate = $('#add_sdate').val();
 				
+				var customers = new Array();
+				if(typeof $('#add_cuscod').find(':selected').val() !== 'undefined'){
+					customers.push($('#add_cuscod').find(':selected').val());
+				}
+				$('.mgarTab5').each(function(){ customers.push($(this).attr('cuscod')); });
+				dataToPost.customers = (customers.length > 0 ? customers : []);
+				
 				return dataToPost;				
 			},
 			dataType: 'json',
@@ -2409,16 +2425,22 @@ function fn_calbilldas(){
 			success: function(data) {
 				$('#add_free').val(data.TotalAmt);
 				
+				/*
 				var comment = $('#add_comments').val().split("\n");
 				$('#add_comments').val(data.Details+"\n"+(typeof comment[1] === 'undefined' ? '' : comment[1]));
+				*/
+				$('#add_comments_free').val(data.Details);
 				$('#loadding').hide();
 			},
 			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		})
 	}else{
 		$('#add_free').val('0.00');
+		/*
 		var comment = $('#add_comments').val().split("\n");
 		$('#add_comments').val((typeof comment[1] === 'undefined' ? '' : "\n"+comment[1]));
+		*/
+		$('#add_comments_free').val('');
 	}
 }
 
@@ -2565,6 +2587,7 @@ function permission($dataLoad,$thisWindowLeasing){
 		
 		fn_billdasActive(i);
 	}
+	$('#add_comments_free').val($dataLoad.MEMO1_FREE);
 	$('#add_comments').val($dataLoad.MEMO1);
 	/*tab5*/
 	$('#dataTable_ARMGAR tbody').empty().append($dataLoad.mgar);

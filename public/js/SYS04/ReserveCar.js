@@ -42,12 +42,7 @@ $(function(){
 		width: '100%'
 	});
 	
-	
-	if(_insert == 'T'){
-		$('#btnt1reserve').attr('disabled',false);
-	}else{
-		$('#btnt1reserve').attr('disabled',true);
-	}
+	$('#btnt1reserve').attr('disabled',(_insert == 'T' ? false:true));
 });
 
 var divcondition = $(".divcondition").height() ;
@@ -736,12 +731,12 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			buttons: {
 				ok : {
 					'class': 'btn btn-primary glyphicon glyphicon-ok',
-					text: 'บันทึก',
+					text: ' ยืนยัน ,บันทึกบิลจอง',
 					closeOnClick: false,
 				},
 				cancel : {
 					'class': 'btn btn-danger glyphicon glyphicon-remove',
-					text: ' ยกเลิก',
+					text: ' ไว้ทีหลัง',
 					closeOnClick: true
 				},
 			},
@@ -790,18 +785,9 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			$('#fRESPAY').attr('disabled',true);
 		}
 		
-		if(_update == 'T'){
-			$('#btnSave').attr('disabled',false);
-		}else{
-			$('#btnSave').attr('disabled',true);
-		}
-		
+		$('#btnSave').attr('disabled',(_update == 'T' ? false:true));
 		$('#btnDelete').show(0);
-		if(_delete == 'T'){
-			$('#btnDelete').attr('disabled',false);
-		}else{
-			$('#btnDelete').attr('disabled',true);
-		}
+		$('#btnDelete').attr('disabled',(_delete == 'T' ? false:true));
 	}
 	
 	
@@ -833,12 +819,12 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			buttons: {
 				ok : {
 					'class': 'btn btn-primary glyphicon glyphicon-ok',
-					text: 'บันทึก',
+					text: 'ยืนยัน ,ลบบิลจองรถ',
 					closeOnClick: false,
 				},
 				cancel : {
 					'class': 'btn btn-danger glyphicon glyphicon-remove',
-					text: ' ยกเลิก',
+					text: ' ไว้ทีหลัง',
 					closeOnClick: true
 				},
 			},

@@ -4017,6 +4017,7 @@ class Standard extends MY_Controller {
 						where STDID=@STDID and SUBID=@SUBID and STAT=@STAT
 					)
 					begin
+						/*
 						declare @eve datetime = (
 							select convert(varchar(8),EVENTEnd,112) from {$this->MAuth->getdb('STDVehiclesDetail')}
 							where STDID=@STDID and SUBID=@SUBID and STAT=@STAT 
@@ -4038,6 +4039,13 @@ class Standard extends MY_Controller {
 							select 'y','ผิดพลาด วันที่บังคับใช้งาน ต้องไม่เกินวันปัจจุบันครับ';
 							return;
 						end
+						*/
+						update {$this->MAuth->getdb('STDVehiclesDetail')}
+						set EVENTStart=@EVENTS
+							,EVENTEnd=@EVENTE
+							,STDNAME=@EVENTNAME
+							,STDDESC=@DETAIL
+						where STDID=@STDID and SUBID=@SUBID and STAT=@STAT		
 					end
 					
 					-- แก้ไขกิจกรรมการขาย
@@ -4288,7 +4296,7 @@ class Standard extends MY_Controller {
 			insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 			values ('".$this->sess["IDNo"]."','SYS04::เปลี่ยนแปลง standard รถ',@stdlog+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 		*/
-		//echo $sql; exit;
+		// echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "select * from #tempResult";
 		$query = $this->db->query($sql);

@@ -202,19 +202,21 @@ class Sell extends MY_Controller {
 		$contno = $_POST['contno'];
 		
 		$sql = "
-			select CONTNO,LOCAT,convert(varchar(8),SDATE,112) SDATE,RESVNO,APPVNO
-				,CUSCOD,(select SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+'-'+GRADE from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD=a.CUSCOD) as CUSNAME
-				,INCLVAT,VATRT
-				,ADDRNO,(select '('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB from {$this->MAuth->getdb('CUSTADDR')} where CUSCOD=a.CUSCOD and ADDRNO=a.ADDRNO) as ADDRDetail
-				,STRNO,PAYTYP,(select '('+PAYCODE+') '+PAYDESC from {$this->MAuth->getdb('PAYDUE')} where PAYCODE=a.PAYTYP) as PAYDESC
-				,OPTCTOT,OPTPTOT,STDPRC,KEYIN,TAXNO,convert(varchar(8),TAXDT,112) TAXDT,CREDTM,convert(varchar(8),DUEDT,112) DUEDT
-				,SALCOD	,(select USERNAME+' ('+USERID+')' from {$this->MAuth->getdb('PASSWRD')} where USERID=a.SALCOD) as SALNAME
-				,COMITN,ISSUNO,convert(varchar(8),ISSUDT,112) ISSUDT,RECOMCOD
+			select a.CONTNO,a.LOCAT,convert(varchar(8),a.SDATE,112) SDATE,a.RESVNO,a.APPVNO
+				,a.CUSCOD,(select SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+'-'+GRADE from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD=a.CUSCOD) as CUSNAME
+				,a.INCLVAT,a.VATRT
+				,a.ADDRNO,(select '('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB from {$this->MAuth->getdb('CUSTADDR')} where CUSCOD=a.CUSCOD and ADDRNO=a.ADDRNO) as ADDRDetail
+				,a.STRNO,a.PAYTYP,(select '('+PAYCODE+') '+PAYDESC from {$this->MAuth->getdb('PAYDUE')} where PAYCODE=a.PAYTYP) as PAYDESC
+				,a.OPTCTOT,a.OPTPTOT,a.STDPRC,a.KEYIN,a.TAXNO,convert(varchar(8),a.TAXDT,112) TAXDT,a.CREDTM,convert(varchar(8),a.DUEDT,112) DUEDT
+				,a.SALCOD	,(select USERNAME+' ('+USERID+')' from {$this->MAuth->getdb('PASSWRD')} where USERID=a.SALCOD) as SALNAME
+				,a.COMITN,a.ISSUNO,convert(varchar(8),a.ISSUDT,112) ISSUDT,a.RECOMCOD
 				,(select SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')'+'-'+GRADE from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD=a.RECOMCOD) as RECOMNAME
-				,ACTICOD,(select '('+ACTICOD+') '+ACTIDES from HIC2SHORTL.dbo.SETACTI where 1=1 and ACTICOD=a.ACTICOD) as ACTINAME
-				,COMEXT,COMOPT,COMOTH
-				,CRDTXNO,CRDAMT,MEMO1
+				,a.ACTICOD,(select '('+ACTICOD+') '+ACTIDES from HIC2SHORTL.dbo.SETACTI where 1=1 and ACTICOD=a.ACTICOD) as ACTINAME
+				,a.COMEXT,a.COMOPT,a.COMOTH
+				,a.CRDTXNO,a.CRDAMT,a.MEMO1
+				,b.STDID,b.SUBID,b.SHCID
 			from {$this->MAuth->getdb('ARCRED')} a
+			left join {$this->MAuth->getdb('STDUSAGE')} b on a.CONTNO=b.CONTNO collate thai_cs_as
 			where a.CONTNO='".$contno."'
 		";
 		//echo $sql; exit;
@@ -263,14 +265,20 @@ class Sell extends MY_Controller {
 				$response["CRDTXNO"] 	= $row->CRDTXNO;
 				$response["CRDAMT"] 	= number_format($row->CRDAMT,2);
 				
+				$response["STDID"] 	= $row->STDID;
+				$response["SUBID"] 	= $row->SUBID;
+				$response["SHCID"] 	= $row->SHCID;
+				
 				$MEMO = explode('[explode]',$row->MEMO1);
-				if(sizeof($MEMO) == 2){
+				if(sizeof($MEMO) == 3){
 					$billDAS = explode(',',$MEMO[0]);
 					for($i=0;$i<sizeof($billDAS);$i++){
 						$response["billDAS"][$i] = $billDAS[$i];
 					}
-					$response["MEMO1"] 	= $MEMO[1];
+					$response["MEMO1_FREE"] = $MEMO[1];
+					$response["MEMO1"] 	= $MEMO[2];
 				}else{
+					$response["MEMO1_FREE"] = "";
 					$response["MEMO1"] 	= $row->MEMO1;
 				}
 			}
@@ -468,8 +476,10 @@ class Sell extends MY_Controller {
 				</div>
 				<div class='col-sm-6 text-right'>
 					<br>
-					<input type='button' id='add_delete' class='btn btn-xs btn-danger right' style='width:100px;' value='ลบ' >
-					<input type='button' id='add_save' class='btn btn-xs btn-primary right' style='width:100px;' value='บันทึก' >
+					<!-- input type='button' id='add_delete' class='btn btn-xs btn-danger right' style='width:100px;' value='ลบ'  -->
+					<!-- input type='button' id='add_save' class='btn btn-xs btn-primary right' style='width:100px;' value='บันทึก'  -->
+					<button id='add_delete' class='btn btn-xs btn-danger' style='width:100px;'><span class='glyphicon glyphicon-trash'> ลบ</span></button>
+					<button id='add_save' class='btn btn-xs btn-primary' style='width:100px;'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
 				</div>
 			</div>
 		";
@@ -545,7 +555,7 @@ class Sell extends MY_Controller {
 								<div class='col-sm-4'>	
 									<div class='form-group'>
 										อัตราภาษี
-										<input type='text' id='add_vatrt' class='form-control input-sm' placeholder='อัตราภาษี' value='".$data["vatrt"]."'>
+										<input type='text' id='add_vatrt' class='form-control input-sm' placeholder='อัตราภาษี' value='".$data["vatrt"]."' disabled>
 									</div>
 								</div>
 								<div class='col-sm-4'>	
@@ -582,6 +592,7 @@ class Sell extends MY_Controller {
 									<div class='form-group'>
 										กิจกรรมการขาย
 										<select id='add_acticod' class='form-control input-sm' data-placeholder='กิจกรรมการขาย'></select>
+										<input type='hidden' id='add_std' class='form-control input-sm' stdid='' subid='' shcid=''>
 									</div>
 								</div>
 							</div>	
@@ -778,10 +789,16 @@ class Sell extends MY_Controller {
 							</div>
 							
 							
-							<div class='2 col-sm-12'>	
+							<div class='2 col-sm-6'>	
 								<div class='form-group'>
 									หมายเหตุ
 									<textarea type='text' id='add_memo1' class='form-control input-sm' placeholder='หมายเหตุ'  rows=4 style='resize:vertical;'></textarea>
+								</div>
+							</div>
+							<div class='2 col-sm-6'>	
+								<div class='form-group'>
+									รายละเอียดของแถม
+									<textarea type='text' id='add_memo1_free' class='form-control input-sm' placeholder='รายละเอียดของแถม'  rows=4 style='resize:vertical;' readonly></textarea>
 								</div>
 							</div>
 						</div>
@@ -1171,7 +1188,7 @@ class Sell extends MY_Controller {
 		$arrs["issuno"] 	= $_POST["issuno"];
 		$arrs["issudt"] 	= $this->Convertdate(1,$_POST["issudt"]);
 		$arrs["tsale"]	 	= 'C';
-		$arrs["memo1"] 		= $_POST["memo1"];
+		$arrs["memo1"] 		= $_POST["memo1_free"]."[explode]".$_POST["memo1"];
 		$arrs["userid"]  	= $this->sess["USERID"];
 		$arrs["inpdt"] 	 	= 'getdate()';
 		$arrs["delid"]	 	= '';
@@ -1286,15 +1303,15 @@ class Sell extends MY_Controller {
 		if($arrs["cuscod"] 	== ""){ $data = "รหัสลูกค้า"; }
 		if($arrs["sdate"] 	== ""){ $data = "วันที่ขาย"; }
 		
-		if($data != ""){ 
+		if($data != ""){
 			$response["error"] = true;
 			$response["msg"] = "ไม่พบ{$data} โปรดระบุ{$data}ก่อนครับ";
 			echo json_encode($response); exit; 
 		}
 		
 		$arrs["billdas"] = (!isset($_POST["billdas"]) ? array():$_POST["billdas"]);
-		$dasSize = sizeof($arrs["billdas"]);
-		$mapMEMO1 = "";
+		$dasSize 	= sizeof($arrs["billdas"]);
+		$mapMEMO1 	= "";
 		for($i=0;$i<$dasSize;$i++){
 			if($mapMEMO1 != ""){ $mapMEMO1 .= ","; }
 			$mapMEMO1 .= $arrs["billdas"][$i];	
@@ -1304,7 +1321,7 @@ class Sell extends MY_Controller {
 		if($arrs["contno"] == 'Auto Genarate'){
 			$this->saveinsell($arrs);
 		}else{
-			$this->updateinleasing($arrs);
+			$this->updateinsell($arrs);
 		}
 	}
 	
@@ -1461,7 +1478,7 @@ class Sell extends MY_Controller {
 		echo json_encode($response);
 	}
 	
-	private function updateinleasing($arrs){
+	private function updateinsell($arrs){
 		if($arrs["contno"] == ''){
 			$response["error"] = false;
 			$response["msg"] = 'ผิดพลาดไม่สามารถแก้ไขการขายได้ เนื่องจากไม่พบเลขที่สัญญาครับ';
@@ -1469,53 +1486,40 @@ class Sell extends MY_Controller {
 		}
 		
 		$sql = "
-			if OBJECT_ID('tempdb..#leasingTemp') is not null drop table #leasingTemp;
-			create table #leasingTemp (id varchar(20),contno varchar(20),msg varchar(max));
+			if OBJECT_ID('tempdb..#sellTemp') is not null drop table #sellTemp;
+			create table #sellTemp (id varchar(20),contno varchar(20),msg varchar(max));
 			
 			begin tran leasingTran
 			begin try
 				declare @CONTNO varchar(20) = '".$arrs["contno"]."';
 				
-				update {$this->MAuth->getdb('ARMAST')}
-				set PAYTYP='".$arrs["paydue"]."'
-					,BILLCOLL='".$arrs["billcoll"]."'
-					,CHECKER='".$arrs["checker"]."'
-					,INTRT='".$arrs["intrt"]."'
-					,DELYRT='".$arrs["delyrt"]."'
-					,DLDAY='".$arrs["dlday"]."'
+				update {$this->MAuth->getdb('ARCRED')}
+				set PAYTYP='".$arrs["paytyp"]."'
+					,SALCOD='".$arrs["salcod"]."'
 					,COMITN='".$arrs["comitn"]."'
-					,ACTICOD='".$arrs["acticod"]."'
+					,ISSUNO='".$arrs["issuno"]."'
+					,ISSUDT='".$arrs["issudt"]."'
 					,RECOMCOD='".$arrs["recomcod"]."'
 					,COMEXT='".$arrs["comext"]."'
 					,COMOPT='".$arrs["comopt"]."'
 					,COMOTH='".$arrs["comoth"]."'
-					,CALINT='".$arrs["calint"]."'
-					,CALDSC='".$arrs["discfm"]."'
-					,MEMO1='".$arrs["comments"]."'
+					,MEMO1='".$arrs["memo1"]."'
 				where CONTNO=@CONTNO
 				
-				/* คนค้ำประกัน  ARMGAR */
-					delete {$this->MAuth->getdb('ARMGAR')} where CONTNO=@CONTNO
-					".$arrs["insertARMGAR"]."
-					
-				/* หลักทรัพย์ประกัน  AROTHGAR */
-					delete {$this->MAuth->getdb('AROTHGAR')} where CONTNO=@CONTNO
-					".$arrs["insertAROTHGAR"]."	
-				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-				values ('".$this->sess["IDNo"]."','SYS04::บันทึกขายผ่อน (แก้ไข)',' ".str_replace("'","",var_export($_POST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				values ('".$this->sess["IDNo"]."','SYS04::บันทึกขายสด (แก้ไข)',' ".str_replace("'","",var_export($_POST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 
-				insert into #leasingTemp select 'S',@CONTNO,'บันทึกรายการขายสำเร็จ เลขที่สัญญา '+@CONTNO;
+				insert into #sellTemp select 'S',@CONTNO,'บันทึกรายการขายสดแล้ว เลขที่สัญญา '+@CONTNO;
 				commit tran leasingTran;
 			end try
 			begin catch
 				rollback tran leasingTran;
-				insert into #leasingTemp select 'E','',ERROR_MESSAGE();
+				insert into #sellTemp select 'E','',ERROR_MESSAGE();
 			end catch
 		";
 		
 		$this->db->query($sql);
-		$sql = "select * from #leasingTemp";
+		$sql = "select * from #sellTemp";
 		$query = $this->db->query($sql);
 	  
 		if($query->row()){
@@ -1689,12 +1693,12 @@ class Sell extends MY_Controller {
 				,cast(totprc-totpres as decimal) as TOTDR
 				,cast(smpay-totpres as decimal) as PAYDWN
 				,cast(totprc-smpay as decimal) as REV
-				,(case when A.TSALE='C' then ' ' end) as T_NOPAY
+				,(case when A.TSALE='C' then '0' end) as T_NOPAY
 				,cast(totprc-totpres as decimal) - cast(smpay-totpres as decimal) as TKANG
 				
 			from {$this->MAuth->getdb('ARCRED')} a
 			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO
-			where a.CONTNO='".$_POST['contno']."'
+			where a.CONTNO='".$_GET['contno']."'
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -1757,7 +1761,7 @@ class Sell extends MY_Controller {
 				 ) CUSADDR 
 			from {$this->MAuth->getdb('ARMGAR')} a
 			left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD
-			where CONTNO='".$_POST['contno']."'
+			where CONTNO='".$_GET['contno']."'
 			order by GARNO
 		";
 		$query = $this->db->query($sql);
@@ -1779,7 +1783,7 @@ class Sell extends MY_Controller {
 		$sql = "
 			select b.FORDESC,a.PAYAMT from {$this->MAuth->getdb('AROTHR')} a
 			left join {$this->MAuth->getdb('PAYFOR')} b on a.PAYFOR=b.FORCODE
-			where CONTNO='".$_POST['contno']."'
+			where CONTNO='".$_GET['contno']."'
 		";
 		
 		$query = $this->db->query($sql);

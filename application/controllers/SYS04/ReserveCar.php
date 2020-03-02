@@ -945,7 +945,10 @@ class ReserveCar extends MY_Controller {
 				begin try 
 					if exists (
 						select * from {$this->MAuth->getdb('ARANALYZE')}
-						where RESVNO='".$arrs["RESVNO"]."'
+						where RESVNO='".$arrs["RESVNO"]."' and ANSTAT != 'C'
+					) or exists (
+						select * from {$this->MAuth->getdb('ARRESV')}
+						where RESVNO='".$arrs["RESVNO"]."' and isnull(CONTNO,'') != ''
 					)
 					begin
 						rollback tran tst;
@@ -989,7 +992,7 @@ class ReserveCar extends MY_Controller {
 					where RESVNO='".$arrs["RESVNO"]."'
 					
 					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-					values ('".$this->sess["IDNo"]."','SYS04::บันทึกบิลจองแล้ว','".$arrs["RESVNO"]." :: ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+					values ('".$this->sess["IDNo"]."','SYS04::บันทึกบิลจองแล้ว (แก้ไข)','".$arrs["RESVNO"]." :: ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 					
 					insert into #transaction select 'N','".$arrs["RESVNO"]."','แก้ไขบิลจอง เลขที่บิลจอง :: ".$arrs["RESVNO"]." เรียบร้อยแล้ว';
 					commit tran tst;

@@ -666,7 +666,18 @@ class Cselect2 extends MY_Controller {
 		$json = array();
 		if($query->row()){
 			foreach($query->result() as $row){
-				$json[] = ['id'=>str_replace(chr(0),'',$row->STRNO), 'text'=>str_replace(chr(0),'',$row->STRNO)];
+				$sql = "
+					select count(*) r from {$this->MAuth->getdb('ARANALYZE')} 
+					where ANSTAT!='C' and STRNO='{$row->STRNO}'
+				";
+				$query = $this->db->query($sql);
+				$row_check = $query->row();
+				
+				$json[] = array(
+					'id'=>str_replace(chr(0),'',$row->STRNO), 
+					'text'=>str_replace(chr(0),'',$row->STRNO),
+					'disabled'=>($row_check->r > 0 ? true:false)
+				);
 			}
 		}
 		
@@ -761,9 +772,32 @@ class Cselect2 extends MY_Controller {
 	function getBILLDAS(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_REQUEST['q']);
-		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
-		$locat = $_REQUEST['locat'];
-		$sdate = $this->Convertdate(1,$_REQUEST['sdate']);
+		$dataNow 	= (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$locat 		= $_REQUEST['locat'];
+		$sdate 		= $this->Convertdate(1,$_REQUEST['sdate']);
+		$customers 	= $_REQUEST['customers'];
+		
+		$cond = "";
+		foreach($customers as $key => $val){
+			if($cond != ""){ $cond .= ","; }
+			$cond .= "'".$val."'";
+		}
+		
+		if ($cond != ""){
+			$sql = "
+				select IDNO from {$this->MAuth->getdb('CUSTMAST')} 
+				where CUSCOD in (".$cond.")
+			";
+			$query = $this->db->query($sql);
+			
+			$cond = "'NONE'";
+			if($query->row()){
+				foreach($query->result() as $row){
+					if($cond != ""){ $cond .= ","; }
+					$cond .= "'".$row->IDNO."'";
+				}
+			}
+		}
 		
 		$sql = "
 			select free from serviceweb.dbo.fn_branchMaps
@@ -779,20 +813,28 @@ class Cselect2 extends MY_Controller {
 			@@ SLCP ขายแคมเปญ
 		@@@@@@@@@@@@@@@@@@@@@@@@*/
 		$sql = "
-			select SaleNo from DBFREE.dbo.SPSale 
-			where cast(left(SaleDate,4)-543 as varchar(4))+CAST(replace(right(SaleDate,5),'/','') as varchar(4))='".$sdate."'
-				and BranchNo='".$row->free."' and SaleNo = '".$dataNow."'
+			select SaleNo from dbo.SPSale a 
+			left join dbo.Customer b on a.CustID=b.CustID
+			where cast(left(a.SaleDate,4)-543 as varchar(4))+CAST(replace(right(a.SaleDate,5),'/','') as varchar(4))='".$sdate."'
+				and a.BranchNo='".$row->free."' 
+				and a.SaleNo = '".$dataNow."' 
+				and a.SaleStatus='paid' collate thai_ci_as
+				and b.CustIDCardNo collate thai_cs_as in (".$cond.")
 			union 
-			select SaleNo from DBFREE.dbo.SPSale 
-			where cast(left(SaleDate,4)-543 as varchar(4))+CAST(replace(right(SaleDate,5),'/','') as varchar(4))='".$sdate."'
-				and BranchNo='".$row->free."' and SaleNo like '%".$dataSearch."%'
+			select SaleNo from dbo.SPSale a
+			left join dbo.Customer b on a.CustID=b.CustID
+			where cast(left(a.SaleDate,4)-543 as varchar(4))+CAST(replace(right(a.SaleDate,5),'/','') as varchar(4))='".$sdate."'
+				and a.BranchNo='".$row->free."' 
+				and a.SaleNo like '%".$dataSearch."%' 
+				and a.SaleStatus='paid' collate thai_ci_as
+				and b.CustIDCardNo collate thai_cs_as in (".$cond.")
 		";
 		//echo $sql; exit;
 		$DAS = $this->load->database('DAS',true);
 		$query = $DAS->query($sql);
 		$row = $query->row();
 		
-		$html = "";
+		$json  = array();
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>str_replace(chr(0),'',$row->SaleNo), 'text'=>str_replace(chr(0),'',$row->SaleNo)];
@@ -850,7 +892,7 @@ class Cselect2 extends MY_Controller {
 			where 1=1 and CONTTYP='".$dataNow."' collate Thai_CS_AS 
 				
 			union
-			select top 20 CONTTYP,'('+CONTTYP+') '+CONTDESC as CONTDESC
+			select CONTTYP,'('+CONTTYP+') '+CONTDESC as CONTDESC
 			from {$this->MAuth->getdb('TYPCONT')}
 			where 1=1 and CONTTYP+' '+CONTDESC like '%".$dataSearch."%' collate Thai_CS_AS 
 			order by CONTTYP

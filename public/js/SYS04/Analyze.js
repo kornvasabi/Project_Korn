@@ -11,7 +11,7 @@
 var _locat  = $('.tab1[name="home"]').attr('locat');
 var _insert = $('.tab1[name="home"]').attr('cin');
 var _update = $('.tab1[name="home"]').attr('cup');
-var _devare = $('.tab1[name="home"]').attr('cdel');
+var _delete = $('.tab1[name="home"]').attr('cdel');
 var _level  = $('.tab1[name="home"]').attr('clev');
 var _ismobile  = $('.tab1[name="home"]').attr('is_mobile');
 var JDbtnt1search = null;
@@ -168,6 +168,8 @@ function fn_search(JDbtnt1search){
 									messageHeight: '90vh',
 									msg: data.msg
 								});
+								
+								$('#loadding').fadeOut(200);
 							}else{
 								fn_loadFormAnalyze(data["data"]);
 								fn_search(JDbtnt1search);
@@ -201,9 +203,20 @@ function fn_search(JDbtnt1search){
 								content: data.html,
 								draggable: false,
 								closeOnEsc: false,
+								closeButton: false,
 								shown: function($this){
 									WINDOW_DETAILS = $this;
 									$("#back").click(function(){
+										 $.ajax({
+											url:'../SYS04/Analyze/changeANSTAT',
+											data: dataToPost,
+											type: 'POST',
+											dataType: 'json',
+											success: function(data){
+												// update status PP to P
+											}
+										 });
+										 
 										WINDOW_DETAILS.destroy();
 									});
 								}
@@ -211,9 +224,9 @@ function fn_search(JDbtnt1search){
 							
 							// ซ่อนปุ่มอนุมัติ
 							if(_update == "T"){
-								$("#approve").show();
+								$("#approve").attr('disabled',false);
 							}else{
-								$("#approve").hide();
+								$("#approve").attr('disabled',true);
 							}
 							
 							$('.cushistory').click(function(){
@@ -405,13 +418,7 @@ function fn_search(JDbtnt1search){
 	});
 }
 
-
-if(_insert == "T"){
-	$("#btnt1createappr").show();
-}else{
-	$("#btnt1createappr").hide();
-}
-
+$("#btnt1createappr").attr('disabled',(_insert == "T" ? false:true));
 var JDbtnt1createappr = null;
 $("#btnt1createappr").click(function(){ fn_loadFormAnalyze(); });
 
@@ -442,7 +449,7 @@ function fn_loadFormAnalyze($_data){
 					$('#is3_idnoStat').val(null).trigger('change');
 					fnload($this);
 					
-					if (typeof $_data !== 'undefined') {	
+					if (typeof $_data !== 'undefined') {
 						$('#anid').val($_data['ID']);
 						var newOption = new Option($_data["LOCAT"], $_data["LOCAT"], true, true);
 						$('#locat').empty().append(newOption).attr('disabled',true).trigger('change');
@@ -544,9 +551,18 @@ function fn_loadFormAnalyze($_data){
 						if($_data['EVIDENCE'] != "(none)"){
 							picture_msg = '<image style="width:'+widpic+'px;height:auto;" src="'+$_data['EVIDENCE']+'"/>';
 						}
+						
 						$('#analyze_picture').val("");
 						$('#analyze_picture').attr('source','');
 						$('#analyze_picture').attr('data-original-title',picture_msg);
+					}
+					
+					if ($('#anid').val() == "Auto Genarate"){
+						$('#save').attr('disabled',(_insert == "T" ? false:true));
+						$('#deleted').attr('disabled',true);
+					}else{
+						$('#save').attr('disabled',(_update == "T" ? false:true));
+						$('#deleted').attr('disabled',(_delete == "T" ? false:true));
 					}
 				},
 				beforeClose : function(){
@@ -1205,7 +1221,10 @@ function fnload($thisForm){
 	});
 	
 	var JDsave = null;
-	$("#save").click(function(){
+	$('#save').click(function(){
+		$('#save').attr('disabled',true);
+		$('#deleted').attr('disabled',true);
+		
 		var dataToPost = new Object();
 		dataToPost.anid 		= $('#anid').val();
 		dataToPost.locat 		= (typeof $('#locat').find(':selected').val() === 'undefined' ? '' : $('#locat').find(':selected').val());
@@ -1336,16 +1355,17 @@ function fnload($thisForm){
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
 			iconClass: false,
+			closeButton: false,
 			msg: 'คุณต้องการบันทึกการใบวิเคราะห์หรือไม่ ? <br><span style="color:red;font-size:16pt">*** กรณีที่บันทึกแล้วจะไม่สามารถแก้ไขข้อมูลได้อีก ยืนยันการทำรายการ</span>',
 			buttons: {
 				ok : {
 					'class': 'btn btn-primary glyphicon glyphicon-ok',
-					text: 'ยืนยัน',
+					text: ' ยืนยัน ,บันทึกใบวิเคราะห์',
 					closeOnClick: true,
 				},
 				cancel : {
 					'class': 'btn btn-danger glyphicon glyphicon-remove',
-					text: 'ยกเลิก',
+					text: ' ไว้ทีหลัง',
 					closeOnClick: true
 				},
 			},
@@ -1377,7 +1397,7 @@ function fnload($thisForm){
 									title: 'แจ้งเตือน',
 									size: 'mini',
 									closeOnClick: false,
-									delay: 5000,
+									delay: false,
 									pauseDelayOnHover: true,
 									continueDelayOnInactiveTab: false,
 									icon: true,
@@ -1422,8 +1442,111 @@ function fnload($thisForm){
 						msg: "คุณยังไม่ได้บันทึกข้อมูล"
 					});
 				}
+				
+				if ($('#anid').val() == "Auto Genarate"){
+					$('#save').attr('disabled',(_insert == "T" ? false:true));
+					$('#deleted').attr('disabled',true);
+				}else{
+					$('#save').attr('disabled',(_update == "T" ? false:true));
+					$('#deleted').attr('disabled',(_delete == "T" ? false:true));
+				}
 			}
 		});
+	});
+	
+	var JDdeleted = null;
+	$('#deleted').click(function(){
+		$('#deleted').attr('disabled',true);
+		$('#save').attr('disabled',true);
+		
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			iconClass: false,
+			closeButton: false,
+			msg: 'คุณต้องการ<b><u>ยกเลิก</u></b>ใบวิเคราะห์หรือไม่ ? <br><textarea id="cancel_msg" maxlength="8000" rows="3" class="col-sm-12" placeholder="สาเหตุที่ยกเลิก" style="resize:vertical;"></textarea><br><span style="color:red;font-size:16pt">*** กรณีที่บันทึกแล้วจะไม่สามารถแก้ไขข้อมูลได้อีก ยืนยันการทำรายการ</span>',
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ยืนยัน ,ยกเลิกใบวิเคราะห์',
+					closeOnClick: false,
+				},
+				cancel : {
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ไว้ทีหลัง',
+					closeOnClick: true
+				},
+			},
+			callback: function(lobibox, type){
+				if (type === 'ok'){
+					var dataToPost = new Object();
+					dataToPost.anid 	  = $('#anid').val();
+					dataToPost.cancel_msg = $('#cancel_msg').val();
+					
+					JDdeleted = $.ajax({
+						url:'../SYS04/Analyze/an_cancel',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						success: function(data){
+							
+							if(data.error){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}else{
+								Lobibox.notify('success', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+								
+								lobibox.destroy();
+								$thisForm.destroy();
+							}
+							
+							JDdeleted = null;
+							$('#loadding').fadeOut(200);
+						},
+						beforeSend: function(){ if(JDdeleted !== null){ JDdeleted.abort(); } },
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+					});
+				}else{
+					Lobibox.notify('info', {
+						title: '',
+						size: 'mini',
+						closeOnClick: false,
+						delay: 5000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						msg: "คุณยังไม่ได้บันทึกข้อมูล"
+					});
+					
+					if ($('#anid').val() == "Auto Genarate"){
+						$('#save').attr('disabled',(_insert == "T" ? false:true));
+						$('#deleted').attr('disabled',true);
+					}else{
+						$('#save').attr('disabled',(_update == "T" ? false:true));
+						$('#deleted').attr('disabled',(_delete == "T" ? false:true));
+					}
+				}
+			}	
+		});	
 	});
 	
 	fn_select2_multiples();

@@ -313,12 +313,13 @@ class Leasing extends MY_Controller {
 				$response["CALDSC"] 	= $row->CALDSC;
 				
 				$MEMO = explode('[explode]',$row->MEMO1);
-				if(sizeof($MEMO) == 2){
+				if(sizeof($MEMO) == 3){
 					$billDAS = explode(',',$MEMO[0]);
 					for($i=0;$i<sizeof($billDAS);$i++){
 						$response["billDAS"][$i] = $billDAS[$i];
 					}
-					$response["MEMO1"] 	= $MEMO[1];
+					$response["MEMO1_FREE"] = $MEMO[1];
+					$response["MEMO1"] 	= $MEMO[2];
 				}else{
 					$response["MEMO1"] 	= $row->MEMO1;
 				}
@@ -435,8 +436,10 @@ class Leasing extends MY_Controller {
 		$contno = $_REQUEST['contno'];
 		$sql = "
 			select NOPAY,convert(varchar(8),DDATE,112) as DDATE,DAMT,V_DAMT,N_DAMT,PAYMENT
-				,V_PAYMENT,TAXINV,convert(varchar(8),TAXDT,112) as TAXDT,GRDCOD 
-			from {$this->MAuth->getdb('ARPAY')}
+				,(select VATRT from ARMAST arm where arm.CONTNO=arp.CONTNO) as VATRT
+				
+				,TAXINV,convert(varchar(8),TAXDT,112) as TAXDT,GRDCOD 
+			from {$this->MAuth->getdb('ARPAY')} arp
 			where CONTNO='".$contno."'
 			order by NOPAY
 		";
@@ -450,9 +453,9 @@ class Leasing extends MY_Controller {
 						<td style='max-width:40px;'>".$row->NOPAY."</td>
 						<td>".$this->Convertdate(2,$row->DDATE)."</td>
 						<td class='text-right'>".number_format($row->DAMT,2)."</td>
-						<td class='text-right'>".number_format($row->V_DAMT,2)."</td>
+						<td class='text-right'>".number_format($row->VATRT,2)."</td>
 						<td class='text-right text-blue'>".number_format($row->N_DAMT,2)."</td>
-						<td class='text-right text-red'>".number_format($row->V_PAYMENT,2)."</td>
+						<td class='text-right text-red'>".number_format($row->V_DAMT,2)."</td>
 						<td class='text-right'>".number_format($row->PAYMENT,2)."</td>
 						<td>".$row->TAXINV."</td>
 						<td>".$this->Convertdate(2,$row->TAXDT)."</td>
@@ -470,7 +473,7 @@ class Leasing extends MY_Controller {
 							<th style='max-width:40px;'>งวดที่</th>
 							<th>ดิวเดท</th>
 							<th>ค่างวดรวม</th>
-							<th>ภาษี</th>
+							<th>% ภาษี</th>
 							<th>มูลค่างวดนี้</th>
 							<th>ภาษีงวดนี้</th>
 							<th>ชำระแล้ว</th>
@@ -1040,10 +1043,16 @@ class Leasing extends MY_Controller {
 								</div>
 							</div>							
 							
-							<div class='2 col-sm-12'>	
+							<div class='2 col-sm-6'>	
 								<div class='form-group'>
 									หมายเหตุ
 									<textarea type='text' id='add_comments' class='form-control input-sm' placeholder='หมายเหตุ'  rows=4 style='resize:vertical;'></textarea>
+								</div>
+							</div>
+							<div class='2 col-sm-6'>	
+								<div class='form-group'>
+									รายละเอียดของแถม
+									<textarea type='text' id='add_comments_free' class='form-control input-sm' placeholder='หมายเหตุ'  rows=4 style='resize:vertical;' readonly></textarea>
 								</div>
 							</div>
 						</div>
@@ -1507,15 +1516,9 @@ class Leasing extends MY_Controller {
 		$locat 	= $_REQUEST['locat'];
 		
 		$sql = "
-			select a.RESVNO,a.LOCAT
-				,a.CUSCOD
+			select a.RESVNO,a.LOCAT,a.CUSCOD
 				,b.SNAM+b.NAME1+' '+b.NAME2+' ('+b.CUSCOD+')'+'-'+b.GRADE CUSNAME
-				,b.GRADE,a.STRNO
-				,a.SMCHQ
-				,a.RESPAY
-				,a.SMPAY
-				,c.CRLOCAT
-				,1 as ADDRNO
+				,b.GRADE,a.STRNO,a.SMCHQ,a.RESPAY,a.SMPAY,c.CRLOCAT,1 as ADDRNO
 				,(
 					select '('+aa.ADDRNO+') '+aa.ADDR1+' '+aa.ADDR2+' ต.'+aa.TUMB
 						+' อ.'+bb.AUMPDES+' จ.'+cc.PROVDES+' '+aa.ZIP as ADDRNODetails 			
@@ -1524,11 +1527,17 @@ class Leasing extends MY_Controller {
 					left join {$this->MAuth->getdb('SETPROV')} cc on bb.PROVCOD=cc.PROVCOD
 					where aa.CUSCOD=a.CUSCOD and aa.ADDRNO=1
 				) as ADDRDES
+				,aa.ACTICOD
+				,(select '('+sa.ACTICOD+') '+sa.ACTIDES from {$this->MAuth->getdb('SETACTI')} sa 
+					where sa.ACTICOD=aa.ACTICOD collate thai_cs_as) as ACTIDES
+				,aa.STDID,aa.SUBID,aa.SHCID
 			from {$this->MAuth->getdb('ARRESV')} a
+			left join {$this->MAuth->getdb('ARRESVOTH')} aa on a.RESVNO=aa.RESVNO collate thai_cs_as
 			left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD
 			left join {$this->MAuth->getdb('INVTRAN')} c on a.STRNO=c.STRNO and c.FLAG='D'
 			where 1=1 and a.RESVNO='".$resvno."' and c.STRNO is not null
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$response = array();
@@ -1543,6 +1552,11 @@ class Leasing extends MY_Controller {
 				$response["GRADE"]   = $row->GRADE;
 				$response["STRNO"]   = $row->STRNO;
 				$response["SMCHQ"]   = str_replace(",","",number_format($row->SMCHQ,2));
+				$response["ACTICOD"] = $row->ACTICOD;
+				$response["ACTIDES"] = $row->ACTIDES;
+				$response["STDID"] = $row->STDID;
+				$response["SUBID"] = $row->SUBID;
+				$response["SHCID"] = $row->SHCID;
 				$response["msg"]   	 = ($row->CRLOCAT == $locat ? ($row->SMCHQ > 0 ? "เช็คเงินจองยังไม่ผ่าน": ($row->RESPAY == $row->SMPAY ? "" : "เลขที่บิลจอง ".$row->RESVNO." ยังชำระเงินจองไม่ครบครับ")) : "ผิดพลาด รถที่จองไม่ได้อยู่ในสาขาที่ทำรายการคีย์ขายครับ");
 			}
 		}else{
@@ -1555,6 +1569,11 @@ class Leasing extends MY_Controller {
 			$response["GRADE"] 	 = "";
 			$response["STRNO"] 	 = "";
 			$response["SMCHQ"]   = "";
+			$response["ACTICOD"] = "";
+			$response["ACTIDES"] = "";
+			$response["STDID"] 	 = "";
+			$response["SUBID"] 	 = "";
+			$response["SHCID"] 	 = "";
 			$response["msg"]   	 = "";
 		}
 		
@@ -1745,7 +1764,7 @@ class Leasing extends MY_Controller {
 			$cond = " and SaleNo in (".$cond.")";
 			
 			$sql = "
-				select sum(TotalAmt) as TotalAmt from DBFREE.dbo.SPSale
+				select sum(TotalAmt) as TotalAmt from dbo.SPSale
 				where 1=1 and BranchNo='".$locatDas."' ".$cond."
 			";
 			//echo $sql; exit;
@@ -1756,7 +1775,7 @@ class Leasing extends MY_Controller {
 			$response["TotalAmt"] = number_format($row->TotalAmt,2);
 			
 			$sql = "
-				select PartName+' '+cast(cast(SaleQTY as decimal(7,0)) as varchar)+' '+UM as item from DBFREE.dbo.SPSaleDetail
+				select PartName+' '+cast(cast(SaleQTY as decimal(7,0)) as varchar)+' '+UM as item from dbo.SPSaleDetail
 				where 1=1 and BranchNo='".$locatDas."' ".$cond."
 			";
 			$query = $DAS->query($sql);
@@ -2967,7 +2986,7 @@ class Leasing extends MY_Controller {
 		$arrs["comoth"] 	= str_replace(',','',($_REQUEST["payother"] == "" ? 0 : $_REQUEST["payother"]));
 		$arrs["calint"] 	= $_REQUEST["calint"];
 		$arrs["discfm"] 	= $_REQUEST["discfm"];
-		$arrs["comments"] 	= $_REQUEST["comments"];
+		$arrs["comments"] 	= $_REQUEST["comments_free"]."[explode]".$_REQUEST["comments"];
 		$arrs["billdas"] 	= (isset($_REQUEST["billdas"]) ? $_REQUEST["billdas"] : array());
 		$arrs["mgar"] 		= (isset($_REQUEST["mgar"]) ? $_REQUEST["mgar"] : array());
 		$arrs["othmgar"] 	= (isset($_REQUEST["othmgar"]) ? $_REQUEST["othmgar"] : array());
@@ -4000,6 +4019,8 @@ class Leasing extends MY_Controller {
 					select '('+sa.OPTCODE+') '+sa.OPTNAME from {$this->MAuth->getdb('OPTMAST')} as sa
 					where sa.LOCAT=a.LOCAT collate thai_cs_as and sa.OPTCODE=h.OPTCODE collate thai_cs_as
 				) as OPTNAME
+				,a.ACTICOD
+				,(select '('+sa.ACTICOD+') '+sa.ACTIDES from {$this->MAuth->getdb('SETACTI')} sa where sa.ACTICOD=a.ACTICOD collate thai_cs_as) as ACTIDES
 			from {$this->MAuth->getdb('ARANALYZE')} a
 			left join {$this->MAuth->getdb('ARANALYZEREF')} b on a.ID=b.ID and b.CUSTYPE=0
 			left join {$this->MAuth->getdb('CUSTMAST')} c on b.CUSCOD=c.CUSCOD collate thai_cs_as

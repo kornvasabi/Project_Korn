@@ -68,7 +68,7 @@ $('#btnt1search').click(function(){
 			
 			$('#jd_result').html(data.html);
 			$('#table-sellCar').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-sellCar',1,250);
+			fn_datatables('table-sellCar',1,225);
 			$('.data-export').prepend('<img id="table-sellCar-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
 			$("#table-sellCar-excel").click(function(){ 	
 				tableToExcel_Export(data.html,"ขายสด","sell"); 
@@ -121,7 +121,7 @@ function loadSell($param){
 		success: function(data){
 			$('#loadding').hide();
 			Lobibox.window({
-				title: 'บันทึกรายการเช่าซื้อ',
+				title: 'บันทึกรายการขายสด',
 				width: $(window).width(),
 				height: $(window).height(),
 				content: data.html,
@@ -207,6 +207,10 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				var strno 		= (typeof $('#add_strno').find(':selected').val() === 'undefined' ? '' : $('#add_strno').find(':selected').val());
 				var paydue 		= (typeof $('#add_paydue').find(':selected').val() === 'undefined' ? '' : $('#add_paydue').find(':selected').val());
 				
+				var stdid 		= $('#add_std').attr('stdid');
+				var subid 		= $('#add_std').attr('subid');
+				var shcid 		= $('#add_std').attr('shcid');
+				
 				switch(index){
 					case 0: //tab1
 						var msg = "";
@@ -216,6 +220,9 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						if(cuscodaddr 	== ''){ msg = "ไม่พบที่อยู่ในการพิมพ์สัญญา โปรดระบุที่อยู่ในการพิมพ์สัญญาก่อนครับ"; }
 						if(cuscod 		== ''){ msg = "ไม่พบรหัสลูกค้า โปรดระบุรหัสลูกค้าก่อนครับ"; }
 						if(sdate 		== ''){ msg = "ไม่พบวันที่ขาย โปรดระบุวันที่ขายก่อนครับ"; }
+						if(shcid 		== ''){ msg = "ไม่พบสแตนดาร์ดรถ(2)"; }
+						if(stdid 		== ''){ msg = "ไม่พบสแตนดาร์ดรถ"; }
+						if(subid 		== ''){ msg = "ไม่พบสแตนดาร์ดรถ"; }
 						
 						if(msg != ""){
 							Lobibox.notify('warning', {
@@ -325,10 +332,11 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
+	var jd_add_cuscod = null;
 	$('#add_cuscod').click(function(){
 		$('#loadding').fadeIn(200);
 		
-		$.ajax({
+		jd_add_cuscod = $.ajax({
 			url:'../Cselect2/getfromCUSTOMER',
 			type: 'POST',
 			dataType: 'json',
@@ -374,10 +382,10 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 										dtp.addrdes = $(this).attr('ADDRDES');
 										
 										$('#add_cuscod').attr('CUSCOD',dtp.cuscod);
+										$('#add_cuscod').attr('disabled',true);
 										$('#add_cuscod').val(dtp.cusname);
 										
 										var newOption = new Option(dtp.addrdes, dtp.addrno, true, true);
-										//$('#add_addrno').attr('disabled',true);
 										$('#add_addrno').empty().append(newOption).trigger('change');	
 										
 										$thisCUS.destroy();
@@ -392,22 +400,23 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 							});
 						}
-						
 					},
 					beforeClose : function(){
-						$('#add_cuscod').attr('disabled',false);
 						$('#add_save').attr('disabled',false);
 					}
 				});
 				
+				jd_add_cuscod = null;
 				$('#loadding').fadeOut(200);
 			},
+			beforeSend: function(){ if(jd_add_cuscod !== null){ jd_add_cuscod.abort(); } },
 			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
 	$('#add_cuscod_removed').click(function(){
 		$('#add_cuscod').attr('CUSCOD','');
+		$('#add_cuscod').attr('disabled',false);
 		$('#add_cuscod').val('');
 	});
 	
@@ -525,7 +534,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					Lobibox.notify('warning', {
 						title: 'ผิดพลาด',
 						size: 'mini',
-						closeOnClick: true,
+						closeOnClick: false,
 						delay: false,
 						pauseDelayOnHover: true,
 						continueDelayOnInactiveTab: false,
@@ -533,11 +542,31 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						messageHeight: '90vh',
 						msg: data.msg
 					});
+					
+					$('#add_std').attr('stdid','');
+					$('#add_std').attr('subid','');
+					$('#add_std').attr('shcid','');
 				}else{
 					$('#add_stdprc').val(data.html.PRICE);
 					$('#add_inprc').val(data.html.PRICE);
+					
+					$('#add_std').attr('stdid',data.html.STDID);
+					$('#add_std').attr('subid',data.html.SUBID);
+					$('#add_std').attr('shcid',data.html.SHCID);
+					if(data.html != ""){
+						Lobibox.notify('info', {
+							title: 'แจ้งเตือน',
+							size: 'mini',
+							closeOnClick: false,
+							delay: false,
+							pauseDelayOnHover: true,
+							continueDelayOnInactiveTab: false,
+							icon: true,
+							messageHeight: '90vh',
+							msg: "ดึงสแตนดาร์ดรถแล้วครับ"
+						});
+					}
 				}
-				
 				
 				jd_add_strno = null;
 			},
@@ -588,13 +617,16 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					var newOption = new Option(data.ADDRDES, data.ADDRNO, true, true);
 					$('#add_addrno').empty().append(newOption).trigger('change');
 					
-					$('#add_strno').select2({
-						dropdownParent: true,
-						disabled: true,
-						width:'100%'
-					});
 					var newOption = new Option(data.STRNO, data.STRNO, true, true);
+					$('#add_strno').attr('disabled',true);
 					$('#add_strno').empty().append(newOption).trigger('change');
+					var newOption = new Option(data.ACTIDES, data.ACTICOD, true, true);
+					$('#add_acticod').attr('disabled',true);
+					$('#add_acticod').empty().append(newOption).trigger('change');
+					$('#add_std').attr('stdid',data.STDID);
+					$('#add_std').attr('subid',data.SUBID);
+					$('#add_std').attr('shcid',data.SHCID);
+					
 				}
 			},
 			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
@@ -607,35 +639,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#add_cuscod').val('');
 		$('#add_addrno').empty().trigger('change');
 		
-		$('#add_strno').select2({ 
-			placeholder: 'เลือก',
-			ajax: {
-				url: '../Cselect2/getSTRNO',
-				data: function (params) {
-					var dataToPost = new Object();
-					dataToPost.now = $('#add_strno').find(':selected').val();
-					dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-					dataToPost.locat = $('#add_locat').find(':selected').val();
-					
-					return dataToPost;				
-				},
-				dataType: 'json',
-				delay: 1000,
-				processResults: function (data) {
-					return {					
-						results: data
-					};
-				},
-				cache: true
-			},
-			allowClear: false,
-			multiple: false,
-			dropdownParent: $("#wizard-sell"),
-			disabled: false,
-			//theme: 'classic',
-			width: '100%'
-		});
-		$('#add_strno').empty().trigger('change');
+		$('#add_strno ,#add_acticod').attr('disabled',false);
+		$('#add_strno ,#add_acticod').empty().trigger('change');
 	});
 	
 	document.getElementById("dataTable-fixed-inopt").addEventListener("scroll", function(){
@@ -842,36 +847,6 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
-	/*
-	$('#add_recomcod').select2({ 
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERS',
-			data: function (params) {
-				var dataToPost = new Object();
-				dataToPost.now = $('#add_recomcod').find(':selected').val();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: false,
-		multiple: false,
-		dropdownParent: $("#wizard-sell"),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	*/
-	
 	$('#add_recomcod').click(function(){
 		$('#loadding').fadeIn(200);
 		
@@ -1021,13 +996,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			msg: 'คุณต้องการบันทึกการขายสดหรือไม่',
 			buttons: {
 				ok : {
-					'class': 'btn btn-primary',
-					text: 'ยืนยัน',
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ยืนยัน',
 					closeOnClick: false,
 				},
 				cancel : {
-					'class': 'btn btn-danger',
-					text: 'ยกเลิก',
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ยกเลิก',
 					closeOnClick: true
 				},
 			},
@@ -1085,6 +1060,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					dataToPost.crdtxno 	= $('#add_crdtxno').val();
 					dataToPost.crdamt	= $('#add_crdamt').val();
 					dataToPost.memo1 	= $('#add_memo1').val();
+					dataToPost.memo1_free = $('#add_memo1_free').val();
 					
 					var billdas = [];
 					$('.add_billdas').each(function(){
@@ -1140,6 +1116,9 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		});
 	});
 	
+	$('#add_save').attr('disabled',(_insert == 'T' ? false:true));
+	$('#add_delete').attr('disabled',true);
+	
 	if($param == 'old'){
 		//เอาข้อมูลที่โหลดมาแสดง
 		permission($dataLoad,$thisWindowLeasing);
@@ -1175,6 +1154,10 @@ function fn_billdasActive(rank){
 				
 				dataToPost.locat = $('#add_locat').find(':selected').val();
 				dataToPost.sdate = $('#add_sdate').val();
+				
+				var customers = new Array();
+				customers.push($('#add_cuscod').attr('cuscod'));
+				dataToPost.customers = (customers.length > 0 ? customers : []);
 				
 				return dataToPost;				
 			},
@@ -1260,7 +1243,6 @@ function fn_billdasActive(rank){
 
 function permission($dataLoad,$thisWindowLeasing){
 	$('#add_resvno').unbind('change'); //เพื่อไม่ให้ชื่อลูกค้า กับเลขที่สัญญาเปลี่ยน
-	$('#add_cuscod').unbind('change'); //เพื่อแสดงข้อมูลการจองของลูกค้าคนนี้ กรณี ไม่ได้ใช้ใบจอง
 	
 	/*tab1*/
 	$('#add_contno').val($dataLoad.CONTNO);
@@ -1270,8 +1252,6 @@ function permission($dataLoad,$thisWindowLeasing){
 	var newOption = new Option($dataLoad.RESVNO, $dataLoad.RESVNO, true, true);
 	$('#add_resvno').empty().append(newOption).trigger('change');
 	$('#add_approve').val($dataLoad.APPVNO);
-	//var newOption = new Option($dataLoad.CUSNAME, $dataLoad.CUSCOD, true, true);
-	//$('#add_cuscod').empty().append(newOption).trigger('change');
 	$('#add_cuscod').attr('CUSCOD',$dataLoad.CUSCOD);
 	$('#add_cuscod').attr('disabled',true);
 	$('#add_cuscod').val($dataLoad.CUSNAME);
@@ -1284,6 +1264,12 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_strno').empty().append(newOption).trigger('change');
 	var newOption = new Option($dataLoad.PAYDESC, $dataLoad.PAYTYP, true, true);
 	$('#add_paydue').empty().append(newOption).trigger('change');
+	var newOption = new Option($dataLoad.ACTINAME, $dataLoad.ACTICOD, true, true);
+	$('#add_acticod').empty().append(newOption).trigger('change');	
+	
+	$('#add_std').attr('stdid',$dataLoad.STDID);
+	$('#add_std').attr('subid',$dataLoad.SUBID);
+	$('#add_std').attr('shcid',$dataLoad.SHCID);
 	/*tab2*/
 	$('#add_inopt').attr('disabled',true);
 	$('#dataTables-inopt tbody').empty().append($dataLoad.option);
@@ -1304,8 +1290,6 @@ function permission($dataLoad,$thisWindowLeasing){
 	/*tab3*/
 	var newOption = new Option($dataLoad.RECOMNAME, $dataLoad.RECOMCOD, true, true);
 	$('#add_recomcod').empty().append(newOption).trigger('change');
-	var newOption = new Option($dataLoad.ACTINAME, $dataLoad.ACTICOD, true, true);
-	$('#add_acticod').empty().append(newOption).trigger('change');
 	$('#add_commission').val($dataLoad.COMEXT);
 	$('#add_free').val($dataLoad.COMOPT);
 	$('#add_payother').val($dataLoad.COMOTH);
@@ -1313,12 +1297,13 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_crdamt').val($dataLoad.CRDAMT);
 	
 	var billDas = (typeof $dataLoad.billDAS === 'undefined' ? [] : $dataLoad.billDAS);
-	for($i=0;$i<billDas.length;$i++){
+	for(var $i=0;$i<billDas.length;$i++){
 		var billdas = "<select class='add_billdas form-control input-sm chosen-select' process='' rank='"+$i+"' data-placeholder='เลขที่บิล'><option value='"+billDas[$i]+"'>"+billDas[$i]+"</option></select>";
 		$('#formBillDas').append(billdas);
 		
 		fn_billdasActive($i);
 	}
+	$('#add_memo1_free').val($dataLoad.MEMO1_FREE);
 	$('#add_memo1').val($dataLoad.MEMO1);
 	
 	
@@ -1342,7 +1327,6 @@ function permission($dataLoad,$thisWindowLeasing){
 	
 	$('#add_stdprc').attr('disabled',true);
 	$('#add_inprc').attr('disabled',true);
-	//$('#add_inprcCal').unbind('click');
 	$('#add_dwninv').attr('disabled',true);
 	$('#add_dwninvDt').attr('disabled',true);
 	$('#add_credtm').attr('disabled',true);
@@ -1351,32 +1335,26 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_crdtxno').attr('disabled',true);
 	$('#add_crdamt').attr('disabled',true);
 	
+	$('#add_acticod').select2({ dropdownParent: true,disabled: true,width:'100%' });
 	
-	if(_update == 'T'){
-		$('#add_save').attr('disabled',false);
-	}else{
+	if(_update != 'T'){
 		$('#add_paydue').select2({ dropdownParent: true,disabled: true,width:'100%' });
 		$('#add_salcod').select2({ dropdownParent: true,disabled: true,width:'100%' });
 		$('#add_comitn').attr('disabled',true);
 		$('#add_issuno').attr('disabled',true);
 		$('#add_issudt').attr('disabled',true);
-		$('#add_recomcod').select2({ dropdownParent: true,disabled: true,width:'100%' });
-		$('#add_acticod').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_recomcod').attr('disabled',true);
+		$('#add_recomcod_removed').attr('disabled',true);
 		$('#add_commission').attr('disabled',true);
 		$('#add_free').attr('disabled',true);
 		$('#add_payother').attr('disabled',true);
 		$('#add_memo1').attr('disabled',true);
 		$('#btn_addBillDas').attr('disabled',true);
 		$('.add_billdas').attr('disabled',true);
-		$('#add_save').attr('disabled',true);
 	}
 	
-	if(_delete == 'T'){
-		$('#add_delete').attr('disabled',false);
-	}else{
-		$('#add_delete').attr('disabled',true);
-	}
-	
+	$('#add_delete').attr('disabled',(_delete == 'T' ? false:true));
+	$('#add_save').attr('disabled',(_update == 'T' ? false:true));
 	$('#btnTax').attr('disabled',false);
 	$('#btnSend').attr('disabled',false);
 	$('#btnApproveSell').attr('disabled',false);
@@ -1387,6 +1365,7 @@ function permission($dataLoad,$thisWindowLeasing){
 }
 
 function btnOther($thisWindowLeasing){
+	var jd_delete = null;
 	$('#add_delete').click(function(){
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
@@ -1394,13 +1373,13 @@ function btnOther($thisWindowLeasing){
 			msg: 'คุณต้องการ<span style="color:red;">ลบเลขที่สัญญา</span> '+$('#add_contno').val()+' หรือไม่',
 			buttons: {
 				ok : {
-					'class': 'btn btn-primary',
-					text: 'ลบ',
-					closeOnClick: true,
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ลบ',
+					closeOnClick: false,
 				},
 				cancel : {
-					'class': 'btn btn-danger',
-					text: 'ยกเลิก',
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ยกเลิก',
 					closeOnClick: true
 				},
 			},
@@ -1409,15 +1388,14 @@ function btnOther($thisWindowLeasing){
 					var dataToPost = new Object();
 					dataToPost.contno = $('#add_contno').val();
 					
-					$('#loadding').show();
-					
-					$.ajax({
+					$('#loadding').fadeIn(200);					
+					jd_delete = $.ajax({
 						url:'../SYS04/Sell/deleteContno',
 						data:dataToPost,
 						type:'POST',
 						dataType:'json',
 						success:function(data){
-							$('#loadding').hide();
+							$('#loadding').fadeOut(200);
 							
 							if(data.status == 'S'){
 								Lobibox.notify('success', {
@@ -1431,8 +1409,8 @@ function btnOther($thisWindowLeasing){
 									messageHeight: '90vh',
 									msg: data.msg
 								});
-								
 								$thisWindowLeasing.destroy();
+								lobibox.destroy();
 							}else{
 								Lobibox.notify('error', {
 									title: 'ผิดพลาด',
@@ -1446,17 +1424,18 @@ function btnOther($thisWindowLeasing){
 									msg: data.msg
 								});
 							}
+							
+							jd_delete = null;
 						},
-						error: function(){
-							$('#loadding').hide();
-						}
+						beforeSend: function(){ if(jd_delete !== null){ jd_delete.abort(); } },
+						error: function(){ $('#loadding').fadeOut(200); }
 					});
 				}
 			}
 		});
 	});
 	
-	$contno = $('#add_contno').val();
+	var $contno = $('#add_contno').val();
 	$('#btnDOSend').click(function(){
 		documents('ใบส่งมอบสินค้า');
 	});
@@ -1487,7 +1466,7 @@ function btnOther($thisWindowLeasing){
 		$('#btnApproveSell').attr('disabled',true);		
 		
 		var baseUrl = $('body').attr('baseUrl');
-		var url = baseUrl+'SYS04/Sell/approvepdf?contno='+$("#add_contno").val();
+		var url = baseUrl+'SYS04/Sell/approvepdf?contno='+encodeURI($("#add_contno").val());
 		var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 		
 		Lobibox.window({
@@ -1513,7 +1492,7 @@ function fn_calbilldas(){
 	});	
 	
 	if(saleno.length > 0){
-		$('#loadding').show();
+		$('#loadding').fadeIn(200);
 		$.ajax({
 			url:'../SYS04/Leasing/calbilldas',
 			data: {saleno:saleno,locat:(typeof $("#add_locat").find(':selected').val() === 'undefined' ? '' : $("#add_locat").find(':selected').val())},
@@ -1522,15 +1501,21 @@ function fn_calbilldas(){
 			success: function(data) {
 				$('#add_free').val(data.TotalAmt);
 				
+				/*
 				var comment = $('#add_memo1').val().split("\n");
 				$('#add_memo1').val(data.Details+"\n"+(typeof comment[1] === 'undefined' ? '' : comment[1]));
-				$('#loadding').hide();
+				*/
+				$('#add_memo1_free').val(data.Details);
+				$('#loadding').fadeOut(200);
 			}
 		})
 	}else{
 		$('#add_free').val('0.00');
+		/*
 		var comment = $('#add_memo1').val().split("\n");
 		$('#add_memo1').val((typeof comment[1] === 'undefined' ? '' : "\n"+comment[1]));
+		*/
+		$('#add_memo1_free').val('');
 	}
 }
 
