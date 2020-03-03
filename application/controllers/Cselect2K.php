@@ -868,13 +868,22 @@ class Cselect2K extends MY_Controller {
 		$sess = $this->session->userdata('cbjsess001');
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
         $dataSearch = trim($_REQUEST["q"]);
-        $taxno = $_REQUEST["taxno"];
-
-        $sql = "
-			select A.RECVNO,A.STRNO,A.RECVNO,B.TAXNO from {$this->MAuth->getdb('INVTRAN')} A
-			left join {$this->MAuth->getdb('TAXBUY')} B on A.RECVNO = B.REFNO 
-			where A.STRNO like '%".$dataSearch."%' and B.TAXNO = '".$taxno."'
-        ";
+        $taxno = (!isset($_REQUEST["taxno"]) ? "" : $_REQUEST["taxno"]);
+		$recvno = (!isset($_REQUEST['recvno']) ? "" : $_REQUEST['recvno']);
+		$vat   = $_REQUEST['vat'];
+		if($vat == "vatcar"){
+			$sql = "
+				select A.RECVNO,A.STRNO,A.RECVNO,B.TAXNO from {$this->MAuth->getdb('INVTRAN')} A
+				left join {$this->MAuth->getdb('TAXBUY')} B on A.RECVNO = B.REFNO 
+				where A.STRNO like '%".$dataSearch."%' and B.TAXNO = '".$taxno."'
+			";
+		}else{
+			$sql = "
+				select RECVNO,STRNO,NETCOST,CRVAT,TOTCOST,VATRT,CRDTXNO,CRDAMT,FLAG from {$this->MAuth->getdb('INVTRAN')}
+				where RECVNO = '".$recvno."'
+			";
+			//echo $sql; exit;
+		}
         $query = $this->db->query($sql);
         $json = array();
         if($query->row()){
@@ -920,11 +929,12 @@ class Cselect2K extends MY_Controller {
 		echo json_encode($response);
 	}
 	function getsearchREDUCECAR(){
-		$locat = $_POST['locat'];
-		$taxno  = $_POST['taxno'];
-		$refno  = $_POST['refno'];
+		$locat    = $_POST['locat'];
+		$taxno    = $_POST['taxno'];
+		$refno    = $_POST['refno'];
+		$vatprice = $_POST['vatprice'];
 		
-		$cond = "";
+		$cond = ""; //$vatprice = "";
 		if($locat != ""){
 			$cond .= "and LOCAT like '%".$locat."%'"; 
 		}
@@ -933,12 +943,20 @@ class Cselect2K extends MY_Controller {
 		}
 		if($refno != ""){
 			$cond .= "and REFNO like '%".$refno."%'";
-		}		
-		$sql = "
-			select LOCAT,TAXNO,convert(varchar(8),TAXDT,112) as TAXDT,REFNO,convert(varchar(8),REFDT,112) as REFDT
-			,CUSCOD,NAME1,TOTAMT,FLAG,STRNO,NETAMT,VATAMT,TOTAMT
-			from {$this->MAuth->getdb('TAXBUY')} where TAXTYP = '1'  ".$cond." 
-		";
+		}
+		if($vatprice == "debtcar"){
+			$sql = "
+				select LOCAT,TAXNO,convert(varchar(8),TAXDT,112) as TAXDT,REFNO,convert(varchar(8),REFDT,112) as REFDT
+				,CUSCOD,NAME1,TOTAMT,FLAG,STRNO,NETAMT,VATAMT,TOTAMT
+				from {$this->MAuth->getdb('TAXBUY')} where TAXTYP = '1'  ".$cond." 
+			";
+		}else{
+			$sql = "
+				select LOCAT,TAXNO,convert(varchar(8),TAXDT,112) as TAXDT,REFNO,convert(varchar(8),REFDT,112) as REFDT
+				,CUSCOD,NAME1,TOTAMT,FLAG,STRNO,NETAMT,VATAMT,TOTAMT
+				from {$this->MAuth->getdb('TAXBUY')} where TAXTYP = '2'  ".$cond." 
+			";
+		}
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		$html = "";
@@ -954,9 +972,9 @@ class Cselect2K extends MY_Controller {
 							STRNO  ='".$row->STRNO."'
 							TAXDT  ='".$this->Convertdate(2,$row->TAXDT)."'
 							REFDT  ='".$this->Convertdate(2,$row->REFDT)."'
-							NETAMT ='".$row->NETAMT."'
-							VATAMT ='".$row->VATAMT."'
-							TOTAMT ='".$row->TOTAMT."'
+							NETAMT ='".number_format($row->NETAMT,2)."'
+							VATAMT ='".number_format($row->VATAMT,2)."'
+							TOTAMT ='".number_format($row->TOTAMT,2)."'
 							FLAG   ='".$row->FLAG."'
 						><b>เลือก</b></td>
 						<td>".$row->LOCAT."</td>

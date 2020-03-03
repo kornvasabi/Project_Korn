@@ -1245,7 +1245,7 @@ class CUSTOMERS extends MY_Controller {
 				return;
 			end catch
 		";
-		//echo $sql; exit;
+		echo $sql; exit;
 		
 		$this->db->query($sql);
 		$sql = "select * from #custmastTemp";

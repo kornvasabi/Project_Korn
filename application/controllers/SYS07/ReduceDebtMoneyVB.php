@@ -1,11 +1,11 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 /********************************************************
-             ______@06/02/2020______
+             ______@21/02/2020______
 			 Pasakorn Boonded
 
 ********************************************************/
-class ReduceDebtCarVB extends MY_Controller {
+class ReduceDebtMoneyVB extends MY_Controller {
 	private $sess = array(); 
 	
 	function __construct(){
@@ -36,7 +36,7 @@ class ReduceDebtCarVB extends MY_Controller {
 							<div class='col-sm-3'>	
 								<div class='form-group' >
 									ประเภทใบลดหนี้
-									<select id='TAXTYP' class='form-control input-sm' disabled><option>1</option></select>
+									<select id='TAXTYP' value='2' class='form-control input-sm' disabled><option>2	</option></select>
 								</div>
 							</div>
 							<div class='col-sm-3'>	
@@ -87,7 +87,8 @@ class ReduceDebtCarVB extends MY_Controller {
 												<div class='form-group'>
 													<b>มูลค่าสินค้า</b>
 													<div class='input-group'>
-														<input type='text' id='NETAMT' class='form-control input-sm' style='text-align:right;' value='0.00'readonly>
+														<!--input id='NETAMT' value='0.00' style='text-align:right;' class='form-control input-sm jzAllowNumber' type='text' onkeyup='format(this)' onchange='format(this)' onblur='if(this.value.indexOf('.')==-1)this.value=this.value+'.00''--> 
+														<input type='text' id='NETAMT' class='form-control input-sm jzAllowNumber' style='text-align:right;' value='0.00'>
 														<span class='input-group-addon'>บาท</span>
 													</div>
 												</div>
@@ -102,7 +103,7 @@ class ReduceDebtCarVB extends MY_Controller {
 												<div class='form-group'>
 													<b>ภาษีมูลค่าเพิ่ม</b>
 													<div class='input-group'>
-														<input type='text' id='VATAMT' class='form-control input-sm text-primary' style='text-align:right;' value='0.00' readonly>
+														<input type='text' id='VATAMT' class='form-control input-sm jzAllowNumber text-primary' style='text-align:right;' value='0.00'>
 														<span class='input-group-addon'>บาท</span>
 													</div>
 												</div>
@@ -115,7 +116,7 @@ class ReduceDebtCarVB extends MY_Controller {
 												<div class='form-group'>
 													<b>ยอดรวมสุทธิ</b>
 													<div class='input-group'>
-														<input type='text' id='TOTAMT' class='form-control input-sm text-danger' style='text-align:right;' value='0.00' readonly>
+														<input type='text' id='TOTAMT' class='form-control input-sm jzAllowNumber text-danger' style='text-align:right;' value='0.00'>
 														<span class='input-group-addon'>บาท</span>
 													</div>
 												</div>
@@ -148,7 +149,7 @@ class ReduceDebtCarVB extends MY_Controller {
 				</div>
 			</div>
 		";
-		$html .="<script src='".base_url('public/js/SYS07/ReduceDebtCarVB.js')."'></script>";
+		$html .="<script src='".base_url('public/js/SYS07/ReduceDebtMoneyVB.js')."'></script>";
 		echo $html;
 	}
 	function getTAXNO(){
@@ -166,6 +167,26 @@ class ReduceDebtCarVB extends MY_Controller {
 			foreach($query->result() as $row){
 				$response['TAXDT'] = $this->Convertdate(2,$row->TAXDT);
 				$response['REFNO'] = $row->REFNO;
+			}
+		}
+		echo json_encode($response);
+	}
+	function getSTRNO(){
+		$STRNO = $_REQUEST['STRNO'];
+		$response = array();
+		
+		$sql = "
+			select STRNO,FLAG,NETCOST,CRVAT,TOTCOST 
+			from {$this->MAuth->getdb('INVTRAN')} where STRNO = '".$STRNO."'
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				if($row->FLAG == 'C'){
+					$response["error"] = true;
+					$response["msg"] = "รถเลขถังตัวนี้ถูกขายไปแล้ว";
+					echo json_encode($response); exit;
+				}
 			}
 		}
 		echo json_encode($response);
@@ -228,35 +249,20 @@ class ReduceDebtCarVB extends MY_Controller {
 		}
 		echo json_encode($response);
 	}
-	function getSTRNO(){
-		$STRNO = $_REQUEST['STRNO'];
+	function getVATAMT(){
+		$NETAMT = $_REQUEST['NETAMT'];
 		$response = array();
-		
-		$sql = "
-			select STRNO,FLAG,NETCOST,CRVAT,TOTCOST 
-			from {$this->MAuth->getdb('INVTRAN')} where STRNO = '".$STRNO."'
-		";
-		$query = $this->db->query($sql);
-		if($query->row()){
-			foreach($query->result() as $row){
-				if($row->FLAG == 'C'){
-					$response["error"] = true;
-					$response["msg"] = "รถเลขถังตัวนี้ถูกขายไปแล้ว";
-					echo json_encode($response); exit;
-				}else{
-					$response['NETCOST'] = number_format($row->NETCOST,2);
-					$response['CRVAT']   = number_format($row->CRVAT,2);
-					$response['TOTCOST'] = number_format($row->TOTCOST,2);
-				}
-			}
-		}else{
-			$response['NETCOST'] = "0.00";
-			$response['CRVAT']   = "0.00";
-			$response['TOTCOST'] = "0.00";
-		}
+		$vat = ''; $vat1 = ''; $vat2 = ''; $netamt = "";
+		$netamt = str_replace(',','',$NETAMT);
+		$vat1 = "7";
+		$vat2 = "100";
+		$vat = $netamt * $vat1 / $vat2;
+		$response['netamt']   = number_format($NETAMT,2);
+		$response['totalvat'] = number_format($netamt * $vat1 / $vat2,2);
+		$response['total']    = number_format($vat + $netamt,2);
 		echo json_encode($response);
 	}
-	function Save_reducecar(){ //วันที่ออก -> TAXDT ลงวันที่ -> REFNO
+	function Save_reducemoney(){
 		$LOCAT 	 = $_REQUEST["LOCAT"];
 		$TAXTYP  = $_REQUEST["TAXTYP"];
 		$TAXNO 	 = $_REQUEST["TAXNO"];
@@ -266,7 +272,7 @@ class ReduceDebtCarVB extends MY_Controller {
 		$REFDT 	 = $this->Convertdate(1,$_REQUEST["REFDT"]);
 		$RECVNO  = $_REQUEST["RECVNO"];
 		$NETAMT  = str_replace(',','',$_REQUEST["NETAMT"]);
-		$VATAMT  = $_REQUEST["VATAMT"];
+		$VATAMT  = str_replace(',','',$_REQUEST["VATAMT"]);
 		$TOTAMT  = str_replace(',','',$_REQUEST["TOTAMT"]);
 		
 		$USERID  = $this->sess["USERID"];
@@ -290,13 +296,30 @@ class ReduceDebtCarVB extends MY_Controller {
 			$response["msg"] = "กรุณาเลือกวันที่ออกก่อนครับ";
 			echo json_encode($response); exit;
 		}
+		if($NETAMT == '0.00'){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกมูลค่าสินค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($VATAMT == '0.00'){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกภาษีมูลค่าเพิ่มก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($TOTAMT == '0.00' && $TOTAMT == ''){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกยอดรวมสุทธิก่อนครับ";
+			echo json_encode($response); exit;
+		}
 		$arrs = array();
 		$sql = "
 			select T.CUSCOD,T.TAXNO,T.TAXDT,T.SNAM,T.NAME1,T.NAME2,T.TAXNO,T.REFDT
 			,I.STRNO,T.VATRT,I.NETCOST,I.CRVAT,I.TOTCOST,T.TAXFLG 
 			from {$this->MAuth->getdb('INVTRAN')} I
 			left join {$this->MAuth->getdb('TAXBUY')} T on I.RECVNO = T.REFNO where I.RECVNO = '".$RECVNO."'
+			and I.STRNO = '".$STRNO."'
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		if($query->row()){
 			foreach($query->result() as $row){
@@ -310,17 +333,23 @@ class ReduceDebtCarVB extends MY_Controller {
 			}
 		}
 		$sql = "
-			if object_id('tempdb..#AddReduceCar') is not null drop table #AddReduceCar;
-			create table #AddReduceCar (id varchar(1),msg varchar(max));
+			if object_id('tempdb..#AddReduceMoney') is not null drop table #AddReduceMoney;
+			create table #AddReduceMoney (id varchar(1),msg varchar(max));
 
 			begin tran AddReduce
 			begin try
 				declare @invtran  varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('INVTRAN')} 
-				where STRNO = '".$STRNO."' and RECVNO = '".$RECVNO."' and CRDAMT = '0.00');
-				
+				where STRNO = '".$STRNO."' and RECVNO = '".$RECVNO."'/* and CRDAMT = '0.00'*/);
 				declare @apinvoi  varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('APINVOI')} 
-				where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."' and RTNAMT = '0.00');
-				
+				where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."'/* and RTNAMT = '0.00'*/);
+				--รอเช็คเงื่อนไข INSERT
+				/*
+				declare @crdamt   decimal(12,2) = (select TOTCOST from {$this->MAuth->getdb('INVTRAN')} 
+				where STRNO = '".$STRNO."' and RECVNO = '".$RECVNO."');
+				declare @kang decimal(12,2) = (select KANG from {$this->MAuth->getdb('APINVOI')} 
+				where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."');
+				*/
+				--declare @year varchar(4) = (select year('".$TAXDT."'));
 				declare @taxdt  varchar(4) = (select YEAR('".$TAXDT."'));
 				declare @month  varchar(2) = (select RIGHT('0' + RTRIM(MONTH('".$TAXDT."')), 2));
 				declare @lastno varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('LASTNO')} 
@@ -328,11 +357,11 @@ class ReduceDebtCarVB extends MY_Controller {
 				
 				if(@invtran = 1 and @apinvoi = 1)
 				begin
-					update {$this->MAuth->getdb('INVTRAN')} set CRDAMT = '".$TOTAMT."' where STRNO = '".$STRNO."' 
+					update {$this->MAuth->getdb('INVTRAN')} set CRDAMT = CRDAMT + '".$TOTAMT."' where STRNO = '".$STRNO."' 
 					and RECVNO = '".$RECVNO."'
 					
-					update {$this->MAuth->getdb('APINVOI')} set KANG = KANG - '".$TOTAMT."',RTNAMT = RTNAMT + '".$TOTAMT."',RTNDATE = '".$TAXDT."' 
-					where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."'
+					update {$this->MAuth->getdb('APINVOI')} set KANG = KANG - '".$TOTAMT."',RTNAMT = '".$TOTAMT."'
+					,RTNDATE = '".$TAXDT."' where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."'
 					
 					begin
 						if(@lastno = 0)
@@ -352,30 +381,30 @@ class ReduceDebtCarVB extends MY_Controller {
 						)values(
 							'".$LOCAT."','".$DEBTNO."','".$TAXDT."','".$arrs['CUSCOD']."','".$arrs['SNAM']."'
 							,'".$arrs['NAME1']."','".$arrs['NAME2']."','".$TAXNO."','".$REFDT."','".$STRNO."'
-							,'".$arrs['VATRT']."','".$NETAMT."','".$VATAMT."','".$TOTAMT."','ใบลดหนี้ซื้อรถทั้งคัน','".$TAXTYP."'
+							,'".$arrs['VATRT']."','".$NETAMT."','".$VATAMT."','".$TOTAMT."','ใบลดหนี้ซื้อรถบางส่วน','".$TAXTYP."'
 							,'".$TAXTYP."',null,null,getdate(),'".$USERID."','".$arrs['TAXFLG']."'
 						)
-						insert into #AddReduceCar select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
+						insert into #AddReduceMoney select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
 						commit tran AddReduce;
 					end	
 				end
 				else
 				begin
 					rollback tran AddReduce;
-					insert into #AddReduceCar select 'N' as id,'ออกใบลดหนี้มากกว่ายอดเงินในใบกำกับภาษี' as msg;
+					insert into #AddReduceMoney select 'N' as id,'ออกใบลดหนี้มากกว่ายอดเงินในใบกำกับภาษี' as msg;
 					return;
 				end
 			end try
 			begin catch
 				rollback tran AddReduce;
-				insert into #AddReduceCar select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				insert into #AddReduceMoney select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
 				return;
 			end catch
 		";
 		//echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "
-			select * from #AddReduceCar
+			select * from #AddReduceMoney
 		";
 		$query = $this->db->query($sql);
 		if($query->row()){
@@ -389,7 +418,7 @@ class ReduceDebtCarVB extends MY_Controller {
 		}
 		echo json_encode($response);
 	}
-	function Del_reducecar(){
+	function Del_reducemoney(){
 		$LOCAT  = $_REQUEST['LOCAT'];
 		$REFNO  = $_REQUEST['REFNO'];
 		$STRNO  = $_REQUEST['STRNO'];
@@ -398,52 +427,48 @@ class ReduceDebtCarVB extends MY_Controller {
 		$TOTAMT = str_replace(',','',$_REQUEST['TOTAMT']);
 		$USERID = $this->sess["USERID"];
 		$sql = "
-			if object_id('tempdb..#DelReduceCar') is not null drop table #DelReduceCar;
-			create table #DelReduceCar (id varchar(1),msg varchar(max));
+			if object_id('tempdb..#DelReduceMoney') is not null drop table #DelReduceMoney;
+			create table #DelReduceMoney (id varchar(1),msg varchar(max));
 
 			begin tran DelReduce
 			begin try
 				declare @taxbuy varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('TAXBUY')} 
 				where LOCAT = '".$LOCAT."' and TAXNO = '".$TAXNO."' and REFNO = '".$REFNO."' 
-				and STRNO = '".$STRNO."' and TAXTYP = '1' and FLAG = '1');
+				and STRNO = '".$STRNO."' and TAXTYP = '2' and FLAG = '2');
 				
 				declare @apinvoi varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('APINVOI')} 
 				where LOCAT = '".$LOCAT."' and TAXNO = '".$REFNO."'
 				and RTNAMT <> '0.00');
-				/*
-				declare @rtnamt decimal(12,2) = (select RTNAMT from {$this->MAuth->getdb('APINVOI')} 
-				where LOCAT = '".$LOCAT."' and TAXNO = '".$REFNO."'
-				and RTNAMT <> '0.00');
-				*/
+				
 				if(@taxbuy = 1 and @apinvoi = 1)
 				begin
 					update {$this->MAuth->getdb('APINVOI')} set KANG = KANG + '".$TOTAMT."',RTNAMT = RTNAMT - '".$TOTAMT."'
 					where LOCAT = '".$LOCAT."' and TAXNO = '".$REFNO."' and RTNAMT <> '0.00'
 					
 					update {$this->MAuth->getdb('TAXBUY')} set FLAG = 'C',CANID = '".$USERID."',CANDT = GETDATE()
-					where LOCAT = '".$LOCAT."' and TAXTYP = '1' and TAXNO = '".$TAXNO."' 
+					where LOCAT = '".$LOCAT."' and TAXTYP = '2' and TAXNO = '".$TAXNO."' 
 					and REFNO = '".$REFNO."' and STRNO = '".$STRNO."'
 					
-					insert into #DelReduceCar select 'Y' as id,'สำเร็จ ลบข้อมูลเรียบร้อยแล้ว' as msg;
+					insert into #DelReduceMoney select 'Y' as id,'สำเร็จ ลบข้อมูลเรียบร้อยแล้ว' as msg;
 					commit tran DelReduce;
 				end
 				else
 				begin
 					rollback tran DelReduce;
-					insert into #DelReduceCar select 'N' as id,'ไม่สำเร็จ' as msg;
+					insert into #DelReduceMoney select 'N' as id,'ไม่สำเร็จ' as msg;
 					return;
 				end
 			end try
 			begin catch
 				rollback tran DelReduce;
-				insert into #DelReduceCar select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				insert into #DelReduceMoney select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
 				return;
 			end catch
 		";
 		//echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "
-			select * from #DelReduceCar
+			select * from #DelReduceMoney
 		";
 		$query = $this->db->query($sql);
 		if($query->row()){
