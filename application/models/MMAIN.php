@@ -224,6 +224,40 @@ class MMAIN extends CI_Model {
 		return $response;
 	}
 	
+	public function send_notify_line($token,$data){
+		require_once './vendor/autoload.php';
+		date_default_timezone_set("Asia/Bangkok");
+		
+		$headers = array( 'Content-type: application/x-www-form-urlencoded', 'Authorization: Bearer '.$token.'', ); 
+		
+		$chOne = curl_init(); 		
+		curl_setopt( $chOne, CURLOPT_URL, "https://notify-api.line.me/api/notify"); 
+		// SSL USE 
+		curl_setopt( $chOne, CURLOPT_SSL_VERIFYHOST, 0); 
+		curl_setopt( $chOne, CURLOPT_SSL_VERIFYPEER, 0); 
+		//POST 
+		curl_setopt( $chOne, CURLOPT_POST, 1);
+		curl_setopt( $chOne, CURLOPT_POSTFIELDS, http_build_query($data));		
+		curl_setopt( $chOne, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt( $chOne, CURLOPT_HTTPHEADER, $headers); 
+		curl_setopt( $chOne, CURLOPT_RETURNTRANSFER, 1); 
+		
+		$result = curl_exec( $chOne ); 
+		//Check error 
+		$response = array();
+		if(curl_error($chOne)) { 
+			$response["status"] = false;
+			$response["msg"]  = 'error:' . curl_error($chOne); 
+		} else { 
+			$result_ = json_decode($result, true); 
+			$response["status"] = ($result_['status'] == 200 ? true : false);
+			$response["msg"] = "status : ".$result_['status']."  ,message : ". $result_['message'];
+		}
+		curl_close( $chOne );
+		
+		return $response;
+	}
+	
 }
 
 

@@ -2637,6 +2637,7 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_empSell').select2({ dropdownParent: true,disabled: true,width:'100%' });
 	$('#add_acticod').select2({ dropdownParent: true,disabled: true,width:'100%' });
 	
+	
 	if(_update == 'T'){
 		$('#add_save').attr('disabled',false);
 	}else{
@@ -2665,11 +2666,37 @@ function permission($dataLoad,$thisWindowLeasing){
 		$('#add_save').attr('disabled',true);
 	}
 	
-	if(_delete == 'T'){
-		$('#add_delete').attr('disabled',false);
-	}else{
-		$('#add_delete').attr('disabled',true);
+	if(_locat != $('#add_locat').find(':selected').val() && _level != 1){ 
+		$('#add_inopt').attr('disabled',true);
+		$('.inoptTab2').attr('disabled',true);
+		$('#add_paydue').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_emp').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_audit').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_intRate').attr('disabled',true);
+		$('#add_delay').attr('disabled',true);
+		$('#add_interestRate').attr('disabled',true);
+		$('#add_agent').attr('disabled',true);
+		$('#add_acticod').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_advisor').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_commission').attr('disabled',true);
+		$('#add_free').attr('disabled',true);
+		$('#add_payother').attr('disabled',true);
+		$("input:radio[name=CALINT]").attr('disabled',true);
+		$("input:radio[name=DISC_FM]").attr('disabled',true);
+		$('#add_comments').attr('disabled',true);
+		$('#btn_addBillDas').attr('disabled',true);
+		$('.add_billdas').attr('disabled',true);
+		$('#add_mgar').attr('disabled',true);
+		$('.mgarTab5').attr('disabled',true); 
+		$('#add_othmgar').attr('disabled',true);
+		$('.othmgarTab5').attr('disabled',true); 
+		
+		$('#add_save').attr('disabled',true);
 	}
+	
+	
+	
+	$('#add_delete').attr('disabled',(_delete == 'T' ? false:true));
 	
 	$('#btnArpay').attr('disabled',false);
 	$('#btnSend').attr('disabled',false);

@@ -1355,6 +1355,26 @@ function permission($dataLoad,$thisWindowLeasing){
 	
 	$('#add_delete').attr('disabled',(_delete == 'T' ? false:true));
 	$('#add_save').attr('disabled',(_update == 'T' ? false:true));
+	
+	if(_locat != $('#add_locat').find(':selected').val() && _level != 1){ 
+		$('#add_paydue').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_salcod').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_comitn').attr('disabled',true);
+		$('#add_issuno').attr('disabled',true);
+		$('#add_issudt').attr('disabled',true);
+		$('#add_recomcod').attr('disabled',true);
+		$('#add_recomcod_removed').attr('disabled',true);
+		$('#add_commission').attr('disabled',true);
+		$('#add_free').attr('disabled',true);
+		$('#add_payother').attr('disabled',true);
+		$('#add_memo1').attr('disabled',true);
+		$('#btn_addBillDas').attr('disabled',true);
+		$('.add_billdas').attr('disabled',true);
+		
+		$('#add_save').attr('disabled',true);
+		$('#add_delete').attr('disabled',true);
+	}
+	
 	$('#btnTax').attr('disabled',false);
 	$('#btnSend').attr('disabled',false);
 	$('#btnApproveSell').attr('disabled',false);

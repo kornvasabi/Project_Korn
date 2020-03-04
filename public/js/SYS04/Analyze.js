@@ -15,6 +15,8 @@ var _delete = $('.tab1[name="home"]').attr('cdel');
 var _level  = $('.tab1[name="home"]').attr('clev');
 var _ismobile  = $('.tab1[name="home"]').attr('is_mobile');
 var JDbtnt1search = null;
+var JDselectPickers_Cache = null;
+
 $(function(){
 	$("#SANSTAT").select2({minimumResultsForSearch: -1,width: '100%'});
 	//fn_search(JDbtnt1search);
@@ -23,7 +25,45 @@ $(function(){
 		//'height':'calc(100vh - '+divcondition+'px)',		
 		'width':'100%'
 	});
+	
+	$("#LOCAT").selectpicker();
 })
+
+$('#LOCAT').on('show.bs.select', function (e, clickedIndex, isSelected, previousValue) { 
+	var filter = $("#LOCAT").parent().find("[aria-label=Search]");
+	FN_JD_BSSELECT("LOCAT",filter,"getLOCAT2");
+});
+
+$("#LOCAT").parent().find("[aria-label=Search]").keyup(function(){ 
+	FN_JD_BSSELECT("LOCAT",$(this),"getLOCAT2");
+});
+
+function FN_JD_BSSELECT($id,$thisSelected,$func){
+	var dataToPost = new Object();
+	dataToPost.filter = $thisSelected.val();
+	dataToPost.now	  = (typeof $("#"+$id).selectpicker('val') == null ? "":$("#"+$id).selectpicker('val'));
+	
+	clearTimeout(JDselectPickers);
+	var JDselectPickers = setTimeout(function(){ getdata(); },250);
+	
+	function getdata(){
+		//$("#"+$id+" UI.dropdown-menu").html("loadding...");
+		JDselectPickers_Cache = $.ajax({
+			url: '../SYS04/Standard/'+$func,
+			data: dataToPost,
+			type: "POST",
+			dataType: "json",
+			success: function(data){
+				$("#"+$id).empty().append(data.opt);
+				$("#"+$id).selectpicker('refresh');
+				
+				JDselectPickers_Cache= null;
+			},
+			beforeSend: function(){ if(JDselectPickers_Cache !== null){ JDselectPickers_Cache.abort(); } },
+			//error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		});
+	}
+}
 
 $("#btnt1search").click(function(){
 	fn_search(JDbtnt1search); 
@@ -40,6 +80,8 @@ function fn_search(JDbtnt1search){
 	dataToPost.SRESVNO 		= $("#SRESVNO").val();
 	dataToPost.SCUSNAME 	= $("#SCUSNAME").val();
 	dataToPost.SANSTAT 		= (typeof $("#SANSTAT").find(":selected").val() === 'undefined' ? "":$("#SANSTAT").find(":selected").val());
+	dataToPost.LOCAT	 	= $("#LOCAT").val();
+	
 	
 	$('#loadding').fadeIn(500);
 	JDbtnt1search = $.ajax({
@@ -194,40 +236,50 @@ function fn_search(JDbtnt1search){
 						dataType: 'json',
 						success: function(data){
 							$('#loadding').fadeOut(200);
-							
-							var WINDOW_DETAILS = null;
-							Lobibox.window({
-								title: 'รายการวิเคราะห์สินเชื่อ',
-								width: $(window).width(),
-								height: $(window).height(),
-								content: data.html,
-								draggable: false,
-								closeOnEsc: false,
-								closeButton: false,
-								shown: function($this){
-									WINDOW_DETAILS = $this;
-									$("#back").click(function(){
-										 $.ajax({
-											url:'../SYS04/Analyze/changeANSTAT',
-											data: dataToPost,
-											type: 'POST',
-											dataType: 'json',
-											success: function(data){
-												// update status PP to P
-											}
-										 });
-										 
-										WINDOW_DETAILS.destroy();
-									});
-								}
-							});
+							if(data.error){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: false,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.html
+								});
+							}else{
+								var WINDOW_DETAILS = null;
+								Lobibox.window({
+									title: 'รายการวิเคราะห์สินเชื่อ',
+									width: $(window).width(),
+									height: $(window).height(),
+									content: data.html,
+									draggable: false,
+									closeOnEsc: false,
+									closeButton: false,
+									shown: function($this){
+										WINDOW_DETAILS = $this;
+										$("#back").click(function(){
+											$.ajax({
+												url:'../SYS04/Analyze/changeANSTAT',
+												data: dataToPost,
+												type: 'POST',
+												dataType: 'json',
+												success: function(data){
+													// update status PP to P
+												}
+											 });
+											 
+											WINDOW_DETAILS.destroy();
+										});
+									}
+								});
+							}
 							
 							// ซ่อนปุ่มอนุมัติ
-							if(_update == "T"){
-								$("#approve").attr('disabled',false);
-							}else{
-								$("#approve").attr('disabled',true);
-							}
+							$("#approve").attr('disabled',(_update == "T" ? false:true));
+							if(_locat != $('#locat').find(':selected').val() && _level != 1){ $("#approve").attr('disabled',true); }
 							
 							$('.cushistory').click(function(){
 								dataToPost.cuscod = $(this).attr('cuscod');
@@ -255,10 +307,7 @@ function fn_search(JDbtnt1search){
 												var insurance = 'ins_'+data.tableName;
 												
 												fn_datatables(transaction,1,100,'YES');
-												
-												setTimeout(function(){
-													fn_datatables(insurance,1,100,'YES');
-												},250);
+												setTimeout(function(){ fn_datatables(insurance,1,100,'YES'); },250);
 											},
 											beforeClose:function(){
 												$("#approve").attr("disabled",false);
@@ -560,9 +609,11 @@ function fn_loadFormAnalyze($_data){
 					if ($('#anid').val() == "Auto Genarate"){
 						$('#save').attr('disabled',(_insert == "T" ? false:true));
 						$('#deleted').attr('disabled',true);
+						if(_locat != $('#locat').find(':selected').val() && _level != 1){ $("#save").attr('disabled',true); }
 					}else{
 						$('#save').attr('disabled',(_update == "T" ? false:true));
 						$('#deleted').attr('disabled',(_delete == "T" ? false:true));
+						if(_locat != $('#locat').find(':selected').val() && _level != 1){ $("#save").attr('disabled',true); }
 					}
 				},
 				beforeClose : function(){

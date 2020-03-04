@@ -88,10 +88,17 @@ class Analyze extends MY_Controller {
 									<option value=''>ทั้งหมด</option>
 									<option value='A'>อนุมัติ</option>
 									<option value='N'>ไม่อนุมัติ</option>
-									<option value='P'>รออนุมัติ</option>
+									<option value=\"P','PP\">รออนุมัติ</option>
 									<option value='I'>สร้างคำร้อง</option>
 									<option value='C'>ยกเลิก</option>
 								</select>	
+							</div>
+						</div>
+						
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								สาขา
+								<select id='LOCAT' class='form-control' title='เลือก'  multiple data-actions-box='true' data-size='8' data-live-search='true'></select>
 							</div>
 						</div>
 					</div>
@@ -148,6 +155,7 @@ class Analyze extends MY_Controller {
 		$arrs['SRESVNO']	= $_POST['SRESVNO'];
 		$arrs['SCUSNAME']	= $_POST['SCUSNAME'];
 		$arrs['SANSTAT']	= $_POST['SANSTAT'];
+		$arrs['LOCAT']		= $_POST['LOCAT'];
 		
 		$cond = "";
 		$condDesc = "";
@@ -189,8 +197,20 @@ class Analyze extends MY_Controller {
 		}
 		
 		if($arrs['SANSTAT'] != ""){
-			$cond .= " and a.ANSTAT = '".$arrs['SANSTAT']."'";
+			$cond .= " and a.ANSTAT in ('".$arrs['SANSTAT']."')";
 			$condDesc .= " [สถานะใบวิเคราะห์ :: ".$arrs['SANSTAT']."]";
+		}
+		
+		if(is_array($arrs['LOCAT'])){
+			$locat_size = sizeof($arrs['LOCAT']);
+			if($locat_size > 0){
+				$locat_all = "";
+				for($i=0;$i<$locat_size;$i++){
+					if($locat_all != ""){ $locat_all .= ","; }
+					$locat_all .= "'".$arrs['LOCAT'][$i]."'";
+				}
+				$cond .= " and a.LOCAT collate thai_cs_as in ({$locat_all})";
+			}
 		}
 		
 		$sql = "
@@ -393,13 +413,13 @@ class Analyze extends MY_Controller {
 		if($query->row()) {
 			foreach ($query->result() as $row) {
 				if($row->error == "y"){
-					$response = array("html"=>$row->msg,"status"=>true);
+					$response = array("html"=>$row->msg,"error"=>true);
 					echo json_encode($response); exit;
 				}
 			}
 		}else{
 			$msg = "ผิดพลาด :: ไม่สามารถทำรายการได้ในขณะนี้ โปรดลองทำรายการใหม่ภายหลัง";
-			$response = array("html"=>$msg,"status"=>true);
+			$response = array("html"=>$msg,"error"=>true);
 			echo json_encode($response); exit;
 		}
 		
@@ -863,7 +883,7 @@ class Analyze extends MY_Controller {
 			</div>
 		";
 		
-		$response = array("html"=>$html,"status"=>true);
+		$response = array("html"=>$html,"error"=>false);
 		echo json_encode($response);
 	}
 	
@@ -3381,8 +3401,10 @@ class Analyze extends MY_Controller {
 		
 		$sql = "
 			if object_id('tempdb..#transaction') is not null drop table #transaction;
-			create table #transaction (error varchar(1),id varchar(12),msg varchar(max));
-
+			create table #transaction (error varchar(1),id varchar(12),msg varchar(max),locat varchar(5));
+			
+			declare @locat varchar(5) = (select LOCAT from {$this->MAuth->getdb('ARANALYZE')} where ID='{$anid}');
+			
 			begin tran upd
 			begin try
 				if exists (
@@ -3397,19 +3419,19 @@ class Analyze extends MY_Controller {
 				else 
 				begin
 					rollback tran upd;
-					insert into #transaction select 'y' as error,'' as id,'ผิดพลาด ส่งคำร้องไม่สำเร็จ เนื่องจากสถานะใบวิเคราะห์สินเชื่อ เลขที่ ".$anid." ไม่ได้อยู่ในสถานะสร้างคำร้อง' as msg;
+					insert into #transaction select 'y' as error,'' as id,'ผิดพลาด ส่งคำร้องไม่สำเร็จ เนื่องจากสถานะใบวิเคราะห์สินเชื่อ เลขที่ ".$anid." ไม่ได้อยู่ในสถานะสร้างคำร้อง' as msg,@locat;
 					return;
 				end
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','SYS04::ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ เลขที่ ".$anid."','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				
-				insert into #transaction select 'n' as error,'".$anid."' as id,'ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ <br>เลขที่ใบวิเคราะห์สินเชื่อ ".$anid." แล้ว' as msg;
+				insert into #transaction select 'n' as error,'".$anid."' as id,'ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ <br>เลขที่ใบวิเคราะห์สินเชื่อ ".$anid." แล้ว' as msg,@locat;
 				commit tran upd;
 			end try
 			begin catch
 				rollback tran upd;
-				insert into #transaction select 'y' as error,'' as id,ERROR_MESSAGE() as msg;
+				insert into #transaction select 'y' as error,'' as id,ERROR_MESSAGE() as msg,@locat;
 			end catch
 		";
 		$this->db->query($sql);
@@ -3426,6 +3448,20 @@ class Analyze extends MY_Controller {
 				$stat = ($row->error == "y" ? true : false);
 				$ARANALYZE_ID = $row->id;
 				$msg = $row->msg;
+				
+				if(!$stat){
+					#แจ้งเตือนไปกลุ่ม Line 
+					$token = "vOaP9LwtP38FNLvh6VIA942P5qoBcDhTIAOpJSxDEu2";
+					$line_msg = "รายการขออนุมัติวิเคราะห์สินเชื่อ (ใหม่)\nสาขา :: ".$row->locat."\nเลขที่ใบวิเคราะห์ :: {$anid}";
+					$data = array(
+						"message" => $line_msg,
+						// "imageThumbnail"=>$imagePath0240,
+						// "imageFullsize"=>$imagePath1024,
+						// "stickerPackageId"=>2,
+						// "stickerId"=>30,
+					);
+					$this->MMAIN->send_notify_line($token,$data);
+				}
 			}
 		}else{
 			$stat = false;
@@ -3445,35 +3481,44 @@ class Analyze extends MY_Controller {
 		
 		$sql = "
 			if object_id('tempdb..#transaction') is not null drop table #transaction;
-			create table #transaction (error varchar(1),id varchar(12),msg varchar(max));
-
+			create table #transaction (error varchar(1),id varchar(12),msg varchar(max),lineNotify varchar(1000));
+			
+			declare @lineNotify varchar(1000);
+			declare @ANID varchar(12) = '{$anid}';
+			declare @locat varchar(5) = (
+				select case when ANSTAT != 'I' then LOCAT else '' end 
+				from {$this->MAuth->getdb('ARANALYZE')} 
+				where ID=@ANID
+			);
+			
 			begin tran upd
 			begin try
 				if exists (
 					select * from {$this->MAuth->getdb('ARANALYZE')} 
-					where ID='{$anid}' and ANSTAT in ('I','P')
+					where ID=@ANID and ANSTAT in ('I','P')
 				)
 				begin
 					update {$this->MAuth->getdb('ARANALYZE')} 
 					set ANSTAT='I'
-					where ID='{$anid}'
+					where ID=@ANID
 				end 
 				else 
 				begin
 					rollback tran upd;
-					insert into #transaction select 'y' as error,'' as id,'ผิดพลาด ดึงคำร้องไม่สำเร็จ เนื่องจากสถานะใบวิเคราะห์สินเชื่อ เลขที่ ".$anid." ไม่ได้อยู่ในสถานะสร้างคำร้อง/รออนุมัติ' as msg;
+					insert into #transaction select 'y' as error,'' as id,'ผิดพลาด ดึงคำร้องไม่สำเร็จ เนื่องจากสถานะใบวิเคราะห์สินเชื่อ เลขที่ '+@ANID+' ไม่ได้อยู่ในสถานะสร้างคำร้อง/รออนุมัติ' as msg,'';
 					return;
 				end
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','SYS04::ดึงคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ เลขที่ ".$anid."','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				
-				insert into #transaction select 'n' as error,'".$anid."' as id,'ดึงคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ <br>เลขที่ใบวิเคราะห์สินเชื่อ ".$anid." แล้ว' as msg;
+				set @lineNotify = 'แก้ไขคำร้องขออนุมัติวิเคราะห์สินเชื่อ\nสาขา :: '+@locat+'\nเลขที่ใบวิเคราะห์ :: '+@ANID;
+				insert into #transaction select 'n' as error,@ANID as id,'ดึงคำร้องขออนุมัติใบวิเคราะห์สินเชื่อ <br>เลขที่ใบวิเคราะห์สินเชื่อ '+@ANID+' แล้ว' as msg,@lineNotify;
 				commit tran upd;
 			end try
 			begin catch
 				rollback tran upd;
-				insert into #transaction select 'y' as error,'' as id,ERROR_MESSAGE() as msg;
+				insert into #transaction select 'y' as error,'' as id,ERROR_MESSAGE() as msg,'';
 			end catch
 		";
 		$this->db->query($sql);
@@ -3494,6 +3539,21 @@ class Analyze extends MY_Controller {
 					$response['error'] = $stat;
 					$response['msg']   = $msg;
 					echo json_encode($response); exit;
+				}
+				
+				if(!$stat && $row->lineNotify != ""){
+					#แจ้งเตือนไปกลุ่ม Line 
+					$token = "vOaP9LwtP38FNLvh6VIA942P5qoBcDhTIAOpJSxDEu2";
+					$line_msg = $row->lineNotify;
+					
+					$data = array(
+						"message" => $line_msg,
+						// "imageThumbnail"=> "data:image/png;base64,%s".base64_encode(ob_get_clean()),
+						// "imageFullsize"=> "data:image/png;base64,%s".base64_encode(ob_get_clean()),
+						"stickerPackageId"=>2,
+						"stickerId"=>43,
+					);
+					$this->MMAIN->send_notify_line($token,$data);
 				}
 			}
 		}
