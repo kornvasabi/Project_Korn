@@ -877,29 +877,52 @@ class Ctransferscars extends MY_Controller {
 
 			begin tran ins
 			begin try
-				declare @rec int = (
-					select count(*) from {$this->MAuth->getdb('INVTransfersDetails')}
+				if exists (
+					select * from {$this->MAuth->getdb('INVTransfersDetails')}
 					where TRANSNO='".$TRANSNO."' collate thai_cs_as and RECEIVEDT is not null
 				)
-
-				if(@rec = 0)
+				begin
+					rollback tran ins;
+					insert into #cancelBill select 'n' as id,'ผิดพลาด ไม่สามารถยกเลิกบิลโอนรถได้ เนื่องจากมีรถบางคันถูกรับโอนแล้วครับ' as msg;
+					return;
+				end
+				else
 				begin
 					update {$this->MAuth->getdb('INVTransfers')}
 					set TRANSSTAT='Cancel'
 					where TRANSNO='".$TRANSNO."' collate thai_cs_as
-
+					
+					/*
 					update c
 					set c.CRLOCAT=a.TRANSFM
 					from {$this->MAuth->getdb('INVTransfers')} a
 					left join {$this->MAuth->getdb('INVTransfersDetails')} b on a.TRANSNO=b.TRANSNO collate thai_cs_as
 					left join {$this->MAuth->getdb('INVTRAN')} c on b.STRNO=c.STRNO collate thai_cs_as
 					where a.TRANSNO='".$TRANSNO."' collate thai_cs_as and c.STRNO is not null
-				end
-				else
-				begin
-					rollback tran ins;
-					insert into #cancelBill select 'n' as id,'ผิดพลาด ไม่สามารถยกเลิกบิลโอนรถได้ เนื่องจากมีรถบางคันถูกรับโอนแล้วครับ' as msg;
-					return;
+					*/
+					
+					declare @TRANSFM varchar(5) = (
+						select TRANSFM from {$this->MAuth->getdb('INVTransfers')} 
+						where TRANSNO='".$TRANSNO."' collate thai_cs_as
+					);
+					
+					declare @strno varchar(30);
+					declare ccstrno cursor for 
+					select STRNO from {$this->MAuth->getdb('INVTransfersDetails')} 
+					where TRANSNO='".$TRANSNO."' collate thai_cs_as and RECEIVEDT is null
+					open ccstrno;
+					
+					fetch next from ccstrno into @strno
+					while @@FETCH_STATUS = 0 
+					begin 
+						update {$this->MAuth->getdb('INVTRAN')}
+						set CRLOCAT = @TRANSFM
+						where STRNO=@strno
+						
+						fetch next from ccstrno into @strno
+					end
+					close ccstrno;
+					deallocate ccstrno;
 				end
 
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
@@ -913,6 +936,7 @@ class Ctransferscars extends MY_Controller {
 				insert into #cancelBill select 'n' as id,ERROR_MESSAGE() as msg;
 			end catch
 		";
+		//echo $sql; exit;
 		$this->db->query($sql);
 
 		$sql = "select * from #cancelBill";
