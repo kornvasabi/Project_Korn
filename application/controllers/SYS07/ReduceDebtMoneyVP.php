@@ -1,11 +1,11 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 /********************************************************
-             ______@21/02/2020______
+             ______@09/03/2020______
 			 Pasakorn Boonded
 
 ********************************************************/
-class ReduceDebtMoneyVB extends MY_Controller {
+class ReduceDebtMoneyVP extends MY_Controller {
 	private $sess = array(); 
 	
 	function __construct(){
@@ -34,9 +34,9 @@ class ReduceDebtMoneyVB extends MY_Controller {
 								</div>
 							</div>
 							<div class='col-sm-3'>	
-								<div class='form-group' >
+								<div class='form-group'>
 									ประเภทใบลดหนี้
-									<select id='TAXTYP' value='2' class='form-control input-sm' disabled><option>2	</option></select>
+									<select id='TAXTYP' value='8' class='form-control input-sm' disabled><option>8</option></select>
 								</div>
 							</div>
 							<div class='col-sm-3'>	
@@ -46,15 +46,15 @@ class ReduceDebtMoneyVB extends MY_Controller {
 								</div>
 							</div>
 							<div class='col-sm-3'>	
-								<div class='form-group' >
+								<div class='form-group'>
 									เลขตัวถัง
-									<select id='STRNO' class='form-control input-sm' data-placeholder='เลือก'></select>
+									<input type='text' id='STRNO' class='form-control input-sm' disabled>
 								</div>
 							</div>
 							<div class='col-sm-3'>	
 								<div class='form-group'>
 									เลขที่ใบลดหนี้
-									<input type='text' id='DEBTNO' class='form-control input-sm'>
+									<input type='text' id='TAXNO2' class='form-control input-sm'>
 								</div>
 							</div>
 							<div class='col-sm-3'>	
@@ -66,13 +66,62 @@ class ReduceDebtMoneyVB extends MY_Controller {
 							<div class='col-sm-3'>	
 								<div class='form-group'>
 									ลงวันที่
-									<input type='text' id='REFDT' class='form-control input-sm' readonly>
+									<input type='text' id='REFDT' class='form-control input-sm' disabled>
 								</div>
 							</div>
 							<div class='col-sm-3'>	
 								<div class='form-group'>
-									เลขที่ใบรับสินค้า
-									<input type='text' id='RECVNO' class='form-control input-sm' readonly>
+									เลขที่สัญญา
+									<input type='text' id='CONTNO' class='form-control input-sm' disabled>
+								</div>
+							</div>
+							
+							<div class='col-sm-4'>	
+								<div class='form-group'>
+									รหัสลูกค้า
+									<input type='text' id='CUSCOD' class='form-control input-sm' disabled>
+								</div>
+							</div>
+							<div class='col-sm-2'>	
+								<div class='form-group'>
+									<br>
+									<input type='text' id='SNAM' class='form-control input-sm' disabled>
+								</div>
+							</div>
+							<div class='col-sm-3'>	
+								<div class='form-group'>
+									<br>
+									<input type='text' id='NAME1' class='form-control input-sm' disabled>
+								</div>
+							</div>
+							<div class='col-sm-3'>	
+								<div class='form-group'>
+									<br>
+									<input type='text' id='NAME2' class='form-control input-sm' disabled>
+								</div>
+							</div>
+							<div class='col-sm-2'>	
+								<div class='form-group'>
+									ประเภทการขาย
+									<input type='text' id='TSALE' class='form-control input-sm' disabled>
+								</div>
+							</div>
+							<div class='col-sm-3'>	
+								<div class='form-group'>
+									รายการ
+									<input type='text' id='DESCP' class='form-control input-sm' disabled>
+								</div>
+							</div>
+							<div class='col-sm-3'>	
+								<div class='form-group'>
+									สาเหตุที่ออกใบลดหนี้
+									<select id='RESONCD' class='form-control input-sm'></select>
+								</div>
+							</div>
+							<div class='col-sm-4'>	
+								<div class='form-group'>
+									<br>
+									<input type='text' id='RESNDES' class='form-control input-sm' disabled>
 								</div>
 							</div>
 						</div>
@@ -139,61 +188,65 @@ class ReduceDebtMoneyVB extends MY_Controller {
 								</div><br><div class='col-sm-2 col-sm-2'>
 									<br>
 									<button id='btnshowRD' type='button' class='btn btn-info btn btn-cyan'style='width:100%;'><span class='fa fa-folder-open'><b>สอบถาม</b></span></button>
-								</div><br><div class='col-sm-2 col-sm-2'>
+								</div><br><!--div class='col-sm-2 col-sm-2'>
 									<br>
 									<button id='btnclearRD' type='button' class='btn btn-info btn btn-light'style='width:100%;'><span class='' style='color:blue;'><b>Clear</b></span></button>
-								</div><br>
+								</div--><br>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		";
-		$html .="<script src='".base_url('public/js/SYS07/ReduceDebtMoneyVB.js')."'></script>";
+		$html .="<script src='".base_url('public/js/SYS07/ReduceDebtMoneyVP.js')."'></script>";
 		echo $html;
 	}
-	function getTAXNO(){
-		$TAXNO = str_replace(chr(0),'',$_REQUEST['TAXNO']);
-		$LOCAT = str_replace(chr(0),'',$_REQUEST['LOCAT']);
+	function getdetailTAXNO(){
+		$TAXNO = $_REQUEST['TAXNO'];
+		//$LOCAT = $_REQUEST['LOCAT'];
 		$response = array();
 		$sql = "
-			select TAXNO,CONVERT(varchar(8),TAXDT,112) as TAXDT,REFNO,TAXTYP 
-			from {$this->MAuth->getdb('TAXBUY')} 
-			where TAXNO = '".$TAXNO."' and TAXTYP = 'B' and LOCAT = '".$LOCAT."'
+			select TAXNO,convert(varchar(8),TAXDT,112) as TAXDT,CONVERT(varchar(8),INPDT,112) as INPDT
+			,STRNO,LOCAT,TSALE,CONTNO,CUSCOD,SNAM,NAME1,NAME2,DESCP,NETAMT,VATAMT,TOTAMT 
+			from {$this->MAuth->getdb('TAXTRAN')} where TAXNO = '".$TAXNO."'
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		if($query->row()){
 			foreach($query->result() as $row){
-				$response['TAXDT'] = $this->Convertdate(2,$row->TAXDT);
-				$response['REFNO'] = $row->REFNO;
-			}
-		}
-		echo json_encode($response);
-	}
-	function getSTRNO(){
-		$STRNO = $_REQUEST['STRNO'];
-		$response = array();
-		
-		$sql = "
-			select STRNO,FLAG,NETCOST,CRVAT,TOTCOST 
-			from {$this->MAuth->getdb('INVTRAN')} where STRNO = '".$STRNO."'
-		";
-		$query = $this->db->query($sql);
-		if($query->row()){
-			foreach($query->result() as $row){
-				if($row->FLAG == 'C'){
-					$response["error"] = true;
-					$response["msg"] = "รถเลขถังตัวนี้ถูกขายไปแล้ว";
+				if($row->TSALE == 'C'){
+					$response['error'] = true;
+					$response['msg'] = "สัญญานี้ออกใบลดหนี้ทางรายการแล้ว";
 					echo json_encode($response); exit;
 				}
+				if($row->TSALE == 'H'){
+					$response['error'] = true;
+					$response['msg'] = "ไม่อนุญาติให้ออกใบลดหนี้สำหรับการขายผ่อน";
+					echo json_encode($response); exit;
+				}
+				if($row->TSALE == 'A'){
+					$response['error'] = true;
+					$response['msg'] = "สัญญานี้ยอดขายเป็นศูนย์";
+					echo json_encode($response); exit;
+				}
+				$response['INPDT']   = $this->Convertdate(2,$row->INPDT);
+				$response['TAXDT']   = $this->Convertdate(2,$row->TAXDT);
+				$response['STRNO']   = $row->STRNO;
+				$response['CONTNO']  = $row->CONTNO;
+				$response['CUSCOD']  = $row->CUSCOD;
+				$response['SNAM']    = $row->SNAM;
+				$response['NAME1']   = $row->NAME1;
+				$response['NAME2']	 = $row->NAME2;
+				$response['TSALE']	 = $row->TSALE;
+				$response['DESCP']	 = str_replace(chr(0),'',$row->DESCP);
 			}
 		}
 		echo json_encode($response);
 	}
-	function getTAXDT(){
+	function getTAXNO(){
+		$LOCAT  = $_REQUEST['LOCAT'];
 		$TAXDT = $this->Convertdate(1,$_REQUEST['TAXDT']);
-		$LOCAT = $_REQUEST['LOCAT'];
+		//echo $TAXDT; exit;
 		$response = array();
 		if($LOCAT ==""){
 			$response["error"] = true;
@@ -201,50 +254,28 @@ class ReduceDebtMoneyVB extends MY_Controller {
 			echo json_encode($response); exit;
 		}
 		$sql = "
-			SELECT RIGHT(YEAR('".$TAXDT."'),2) as Yyear ,RIGHT('0' + RTRIM(MONTH('".$TAXDT."')), 2) as Mmonth
-		";
-		//Right(Year('20260203'),2)
-		//echo $sql; exit;
-		$query = $this->db->query($sql);
-		$year = ""; $month = "";
-		if($query->row()){
-			foreach($query->result() as $row){
-				$year = $row->Yyear;
-				$month = $row->Mmonth;
-			}
-		}
-		$sql = "
-			declare @taxdt varchar(4) = (select YEAR('".$TAXDT."'));
 			declare @locat varchar(3) = (select SHORTL from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD = '".$LOCAT."');
-			declare @tcby  varchar(4) = (select RIGHT('0000'+CAST(MAX(CAST(coalesce(L_TCBUY,0) AS int) + 1) as nvarchar(4)), 4) 
-			as TCBUY from {$this->MAuth->getdb('LASTNO')} where LOCAT = '".$LOCAT."' and CR_YEAR = @taxdt and CR_MONTH = '".$month."');
-			
-			select Llocat+'W-'+year1+CR_MONTH+@tcby as TAXNO
-			from (
-				select @locat Llocat,LOCAT,CR_YEAR,RIGHT(YEAR(CR_YEAR),2) as year1,CR_MONTH,coalesce(L_TCBUY,0) as L_TCBUY  
-				from {$this->MAuth->getdb('LASTNO')} where LOCAT = '".$LOCAT."' and CR_YEAR = @taxdt 
-				and CR_MONTH = '".$month."'	
-			)a
+			declare @YearMonth varchar(4) = (select right(year('".$TAXDT."'),2)+right('0' + rtrim(month('".$TAXDT."')), 2) as DYM); 
+			declare @month varchar(2) = (select right('0' + rtrim(month('".$TAXDT."')), 2));
+			declare @year varchar(4) = (select YEAR('".$TAXDT."'));
+			declare @tcby  varchar(4) = (select RIGHT('0000'+CAST(MAX(CAST(coalesce(L_TCSALE,0) as int) + 1) as nvarchar(4)), 4) 
+			as TCBUY from {$this->MAuth->getdb('LASTNO')} where LOCAT = '".$LOCAT."' and CR_YEAR = @year and CR_MONTH = @month);
+
+			declare @taxno varchar(1) = (select COUNT(*) from LASTNO where LOCAT = '".$LOCAT."' and CR_YEAR = @year and CR_MONTH = @month);
+			if @taxno = 1
+			begin
+				select @locat+'Z'+'-'+@YearMonth+@tcby as TAXNO
+			end
+			else
+			begin
+				select @locat+'Z'+'-'+@YearMonth+'0001' as TAXNO
+			end
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		if($query->row()){
 			foreach($query->result() as $row){
-				$response['DEBTNO'] = $row->TAXNO;
-			}
-		}else{
-			$sql = "
-				declare @locat varchar(3) = (select SHORTL from {$this->MAuth->getdb('INVLOCAT')} 
-				where LOCATCD = '".$LOCAT."');
-				declare @date date = '".$TAXDT."'
-				select @locat+'W-'+CONVERT(varchar(4),@date,12)+'0001' as DEBTNO
-			";
-			//echo $sql; exit;
-			$query = $this->db->query($sql);
-			if($query->row()){
-				foreach($query->result() as $row){
-					$response['DEBTNO'] = $row->DEBTNO;
-				}
+				$response['TAXNO'] = $row->TAXNO;
 			}
 		}
 		echo json_encode($response);
@@ -262,15 +293,22 @@ class ReduceDebtMoneyVB extends MY_Controller {
 		$response['total']    = number_format($vat + $netamt,2);
 		echo json_encode($response);
 	}
-	function Save_reducemoney(){
+	function Save_VatPriceMoney(){
 		$LOCAT 	 = $_REQUEST["LOCAT"];
 		$TAXTYP  = $_REQUEST["TAXTYP"];
 		$TAXNO 	 = $_REQUEST["TAXNO"];
 		$STRNO 	 = $_REQUEST["STRNO"];
-		$DEBTNO  = $_REQUEST["DEBTNO"];
+		$TAXNO2  = $_REQUEST["TAXNO2"];
 		$TAXDT 	 = $this->Convertdate(1,$_REQUEST["TAXDT"]);
-		$REFDT 	 = $this->Convertdate(1,$_REQUEST["REFDT"]);
-		$RECVNO  = $_REQUEST["RECVNO"];
+		$REFDT   = $this->Convertdate(1,$_REQUEST["REFDT"]);
+		//$INPDT 	 = $this->Convertdate(1,$_REQUEST["INPDT"]);
+		$CONTNO  = $_REQUEST["CONTNO"];
+		$CUSCOD  = $_REQUEST["CUSCOD"];
+		$SNAM 	 = $_REQUEST["SNAM"];
+		$NAME1 	 = $_REQUEST["NAME1"];
+		$NAME2   = $_REQUEST["NAME2"];
+		$TSALE  = $_REQUEST["TSALE"];
+		$DESCP  = $_REQUEST["DESCP"];
 		$NETAMT  = str_replace(',','',$_REQUEST["NETAMT"]);
 		$VATAMT  = str_replace(',','',$_REQUEST["VATAMT"]);
 		$TOTAMT  = str_replace(',','',$_REQUEST["TOTAMT"]);
@@ -284,11 +322,6 @@ class ReduceDebtMoneyVB extends MY_Controller {
 		if($TAXNO == ''){
 			$response["error"] = true;
 			$response["msg"] = "กรุณาเลือกอ้างใบกำกับเลขที่ก่อนครับ";
-			echo json_encode($response); exit;
-		}
-		if($STRNO == ''){
-			$response["error"] = true;
-			$response["msg"] = "กรุณาเลือกเลขถังก่อนครับ";
 			echo json_encode($response); exit;
 		}
 		if($TAXDT == ''){
@@ -311,120 +344,69 @@ class ReduceDebtMoneyVB extends MY_Controller {
 			$response["msg"] = "กรุณากรอกยอดรวมสุทธิก่อนครับ";
 			echo json_encode($response); exit;
 		}
-		$arrs = array();
 		$sql = "
-			select TOTCOST,CRDAMT from {$this->MAuth->getdb('INVTRAN')} 
-			where STRNO = '".$STRNO."' and RECVNO = '".$RECVNO."'
+			select TAXNO,TAXDT,VATRT,FPAR,FPAY,LPAR,LPAY,FLAG,TAXTYP,TAXFLG,TMBILL from {$this->MAuth->getdb('TAXTRAN')} 
+			where TAXNO = '".$TAXNO."' and CONTNO = '".$CONTNO."' and CUSCOD = '".$CUSCOD."'
 		";
+		//echo $sql;
 		$query = $this->db->query($sql);
 		if($query->row()){
 			foreach($query->result() as $row){
-				if($TOTAMT > $row->TOTCOST){
-					$response["error"] = true;
-					$response["msg"] = "ออกใบลดหนี้มากกว่ายอดเงินในใบกำกับภาษี";
-					echo json_encode($response); exit;
-				}
-				if(($row->CRDAMT + $TOTAMT) > $row->TOTCOST){
-					$response["error"] = true;
-					$response["msg"] = "ออกใบลดหนี้มากกว่าภาษีซื้อ";
-					echo json_encode($response); exit;
-				}
-			}
-		}
-		$sql = "
-			select T.CUSCOD,T.TAXNO,T.TAXDT,T.SNAM,T.NAME1,T.NAME2,T.TAXNO,T.REFDT
-			,I.STRNO,T.VATRT,I.NETCOST,I.CRVAT,I.TOTCOST,T.TAXFLG 
-			from {$this->MAuth->getdb('INVTRAN')} I
-			left join {$this->MAuth->getdb('TAXBUY')} T on I.RECVNO = T.REFNO where I.RECVNO = '".$RECVNO."'
-			and I.STRNO = '".$STRNO."'
-		";
-		//echo $sql; exit;
-		$query = $this->db->query($sql);
-		if($query->row()){
-			foreach($query->result() as $row){
-				$arrs['CUSCOD']  = $row->CUSCOD;
-				$arrs['SNAM']    = $row->SNAM;
-				$arrs['NAME1']   = $row->NAME1;
-				$arrs['NAME2']   = $row->NAME2;
-				$arrs['REFDT'] 	 = $row->REFDT;
-				$arrs['VATRT']   = $row->VATRT;
-				$arrs['TAXFLG']  = $row->TAXFLG;
-			}
-		}
-		$sql = "
-			if object_id('tempdb..#AddReduceMoney') is not null drop table #AddReduceMoney;
-			create table #AddReduceMoney (id varchar(1),msg varchar(max));
-
-			begin tran AddReduce
-			begin try
-				declare @invtran  varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('INVTRAN')} 
-				where STRNO = '".$STRNO."' and RECVNO = '".$RECVNO."'/* and CRDAMT = '0.00'*/);
-				declare @apinvoi  varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('APINVOI')} 
-				where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."'/* and RTNAMT = '0.00'*/);
-				--รอเช็คเงื่อนไข INSERT
-				/*
-				declare @crdamt   decimal(12,2) = (select TOTCOST from {$this->MAuth->getdb('INVTRAN')} 
-				where STRNO = '".$STRNO."' and RECVNO = '".$RECVNO."');
-				declare @kang decimal(12,2) = (select KANG from {$this->MAuth->getdb('APINVOI')} 
-				where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."');
-				*/
-				--declare @year varchar(4) = (select year('".$TAXDT."'));
-				declare @taxdt  varchar(4) = (select YEAR('".$TAXDT."'));
-				declare @month  varchar(2) = (select RIGHT('0' + RTRIM(MONTH('".$TAXDT."')), 2));
-				declare @lastno varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('LASTNO')} 
-				where LOCAT = '".$LOCAT."' and CR_YEAR = @taxdt and CR_MONTH = @month);
-				
-				if(@invtran = 1 and @apinvoi = 1)
-				begin
-					update {$this->MAuth->getdb('INVTRAN')} set CRDAMT = CRDAMT + '".$TOTAMT."' where STRNO = '".$STRNO."' 
-					and RECVNO = '".$RECVNO."'
-					
-					update {$this->MAuth->getdb('APINVOI')} set KANG = KANG - '".$TOTAMT."',RTNAMT = '".$TOTAMT."'
-					,RTNDATE = '".$TAXDT."' where LOCAT = '".$LOCAT."' and RECVNO = '".$RECVNO."'
-					
-					begin
-						if(@lastno = 0)
-							insert into {$this->MAuth->getdb('LASTNO')}(
-								LOCAT,CR_YEAR,CR_MONTH,L_TCBUY
+				$sql2 = "
+					if object_id('tempdb..#Savevatpricemoney') is not null drop table #Savevatpricemoney;
+					create table #Savevatpricemoney (id varchar(1),msg varchar(max));
+					begin tran AddReduce
+					begin try
+						/*
+						declare @ar_invoi varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('AR_INVOI')} 
+						where CONTNO = '".$CONTNO."' and CUSCOD = '".$CUSCOD."');
+						*/
+						declare @taxdt  varchar(4) = (select YEAR('".$TAXDT."'));
+						declare @month  varchar(2) = (select RIGHT('0' + RTRIM(MONTH('".$TAXDT."')), 2));
+						
+						declare @lastno varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('LASTNO')} 
+						where LOCAT = '".$LOCAT."' and CR_YEAR = @taxdt and CR_MONTH = @month);
+						begin
+							if(@lastno = 0)
+								insert into {$this->MAuth->getdb('LASTNO')}(
+									LOCAT,CR_YEAR,CR_MONTH,L_TCSALE
+								)values(
+									'".$LOCAT."',@taxdt,@month,'1'
+								)
+							else
+								update {$this->MAuth->getdb('LASTNO')} set L_TCSALE = L_TCSALE+1 
+								where LOCAT = '".$LOCAT."'  and CR_YEAR = @taxdt
+						end
+						begin
+							insert into TAXTRAN(
+								[LOCAT],[TAXNO],[TAXDT],[TSALE],[CONTNO],[CUSCOD],[SNAM],[NAME1],[NAME2],[STRNO]
+								,[REFNO],[REFDT],[VATRT],[NETAMT],[VATAMT],[TOTAMT],[DESCP],[FPAR],[FPAY],[LPAR]
+								,[LPAY],[INPDT],[FLAG],[CANDT],[TAXTYP],[TAXFLG],[USERID],[FLCANCL],[TMBILL]
+								,[RTNSTK],[FINCOD],[DOSTAX],[PAYFOR],[RESONCD],[INPTIME]
 							)values(
-								'".$LOCAT."',@taxdt,@month,'1'
+								'".$LOCAT."','".$TAXNO2."','".$TAXDT."','".$TSALE."','".$CONTNO."','".$CUSCOD."'
+								,'".$SNAM."','".$NAME1."','".$NAME2."','".$STRNO."','".$TAXNO."'
+								,'".$REFDT."','".$row->VATRT."','".$NETAMT."','".$VATAMT."','".$TOTAMT."'
+								,'".$DESCP."','','".$row->FPAY."','','".$row->LPAY."'
+								,getdate(),'',null,'".$TAXTYP."','".$row->TAXFLG."','".$USERID."'
+								,'','','N','','','','',null
 							)
-						else
-							update {$this->MAuth->getdb('LASTNO')} set L_TCBUY = L_TCBUY+1 where LOCAT = '".$LOCAT."' 
-							and CR_YEAR = @taxdt
-					end
-					begin
-						insert into {$this->MAuth->getdb('TAXBUY')} (
-							LOCAT,TAXNO,TAXDT,CUSCOD,SNAM,NAME1,NAME2,REFNO,REFDT,STRNO,VATRT
-							,NETAMT,VATAMT,TOTAMT,DESCP,TAXTYP,FLAG,CANID,CANDT,INPDT,USERID,TAXFLG
-						)values(
-							'".$LOCAT."','".$DEBTNO."','".$TAXDT."','".$arrs['CUSCOD']."','".$arrs['SNAM']."'
-							,'".$arrs['NAME1']."','".$arrs['NAME2']."','".$TAXNO."','".$REFDT."','".$STRNO."'
-							,'".$arrs['VATRT']."','".$NETAMT."','".$VATAMT."','".$TOTAMT."','ใบลดหนี้ซื้อรถบางส่วน','".$TAXTYP."'
-							,'".$TAXTYP."',null,null,getdate(),'".$USERID."','".$arrs['TAXFLG']."'
-						)
-						insert into #AddReduceMoney select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
-						commit tran AddReduce;
-					end	
-				end
-				
-				else
-				begin
-					rollback tran AddReduce;
-					insert into #AddReduceMoney select 'I' as id,'ออกใบลดหนี้มากกว่ายอดเงินในใบกำกับภาษี' as msg;
-					return;
-				end
-			end try
-			begin catch
-				rollback tran AddReduce;
-				insert into #AddReduceMoney select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
-				return;
-			end catch
-		";
-		//echo $sql; exit;
-		$this->db->query($sql);
+							insert into #Savevatpricemoney select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
+							commit tran AddReduce;
+						end	
+					end try
+					begin catch
+						rollback tran AddReduce;
+						insert into #Savevatpricemoney select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+						return;
+					end catch
+				";
+				//echo $sql2; exit;
+				$this->db->query($sql2);
+			}
+		}
 		$sql = "
-			select * from #AddReduceMoney
+			select * from #Savevatpricemoney
 		";
 		$query = $this->db->query($sql);
 		if($query->row()){
@@ -438,57 +420,52 @@ class ReduceDebtMoneyVB extends MY_Controller {
 		}
 		echo json_encode($response);
 	}
-	function Del_reducemoney(){
-		$LOCAT  = $_REQUEST['LOCAT'];
-		$REFNO  = $_REQUEST['REFNO'];
-		$STRNO  = $_REQUEST['STRNO'];
-		$TAXNO  = $_REQUEST['TAXNO'];
-		$RECVNO = $_REQUEST['RECVNO'];
-		$TOTAMT = str_replace(',','',$_REQUEST['TOTAMT']);
-		$USERID = $this->sess["USERID"];
+	function Del_VatPriceMoney(){
+		$LOCAT 	 = $_REQUEST["LOCAT"];
+		$TAXTYP  = $_REQUEST["TAXTYP"];
+		$TAXNO 	 = $_REQUEST["TAXNO"];
+		$TAXNO2  = $_REQUEST["TAXNO2"];
+		$CONTNO  = $_REQUEST["CONTNO"];
+		$CUSCOD  = $_REQUEST["CUSCOD"];
+		//$TAXDT 	 = $this->Convertdate(1,$_REQUEST["TAXDT"]);
+		//$REFDT   = $this->Convertdate(1,$_REQUEST["REFDT"]);
+		$USERID  = $this->sess["USERID"];
+		
 		$sql = "
-			if object_id('tempdb..#DelReduceMoney') is not null drop table #DelReduceMoney;
-			create table #DelReduceMoney (id varchar(1),msg varchar(max));
-
+			if object_id('tempdb..#Delvatpricemoney') is not null drop table #Delvatpricemoney;
+			create table #Delvatpricemoney (id varchar(1),msg varchar(max));
 			begin tran DelReduce
 			begin try
-				declare @taxbuy varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('TAXBUY')} 
-				where LOCAT = '".$LOCAT."' and TAXNO = '".$TAXNO."' and REFNO = '".$REFNO."' 
-				and STRNO = '".$STRNO."' and TAXTYP = '2' and FLAG = '2');
+				declare @taxtran varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('TAXTRAN')} 
+				where LOCAT = '".$LOCAT."' and TAXNO = '".$TAXNO2."' and CONTNO = '".$CONTNO."'
+				and CUSCOD = '".$CUSCOD."' and REFNO = '".$TAXNO."' and TAXTYP = '".$TAXTYP."');
 				
-				declare @apinvoi varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('APINVOI')} 
-				where LOCAT = '".$LOCAT."' and TAXNO = '".$REFNO."'
-				and RTNAMT <> '0.00');
-				
-				if(@taxbuy = 1 and @apinvoi = 1)
+				if(@taxtran = 1)
 				begin
-					update {$this->MAuth->getdb('APINVOI')} set KANG = KANG + '".$TOTAMT."',RTNAMT = RTNAMT - '".$TOTAMT."'
-					where LOCAT = '".$LOCAT."' and TAXNO = '".$REFNO."' and RTNAMT <> '0.00'
-					
-					update {$this->MAuth->getdb('TAXBUY')} set FLAG = 'C',CANID = '".$USERID."',CANDT = GETDATE()
-					where LOCAT = '".$LOCAT."' and TAXTYP = '2' and TAXNO = '".$TAXNO."' 
-					and REFNO = '".$REFNO."' and STRNO = '".$STRNO."'
-					
-					insert into #DelReduceMoney select 'Y' as id,'สำเร็จ ลบข้อมูลเรียบร้อยแล้ว' as msg;
+					update {$this->MAuth->getdb('TAXTRAN')} set FLAG = 'C',CANDT = GETDATE(),FLCANCL = '".$USERID."' 
+					where LOCAT = '".$LOCAT."' and TAXNO = '".$TAXNO2."' and CONTNO = '".$CONTNO."'
+					and CUSCOD = '".$CUSCOD."' and REFNO = '".$TAXNO."' and TAXTYP = '".$TAXTYP."'
+					 
+					insert into #Delvatpricemoney select 'Y' as id,'สำเร็จ ลบข้อมูลเรียบร้อยแล้ว' as msg;
 					commit tran DelReduce;
 				end
 				else
 				begin
 					rollback tran DelReduce;
-					insert into #DelReduceMoney select 'N' as id,'ไม่สำเร็จ' as msg;
+					insert into #Delvatpricemoney select 'N' as id,'ไม่พบข้อมูล' as msg;
 					return;
 				end
 			end try
 			begin catch
 				rollback tran DelReduce;
-				insert into #DelReduceMoney select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				insert into #Delvatpricemoney select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
 				return;
 			end catch
 		";
-		//echo $sql; exit;
 		$this->db->query($sql);
+		//echo $sql; exit;
 		$sql = "
-			select * from #DelReduceMoney
+			select * from #Delvatpricemoney
 		";
 		$query = $this->db->query($sql);
 		if($query->row()){

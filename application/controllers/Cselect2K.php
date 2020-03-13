@@ -929,6 +929,7 @@ class Cselect2K extends MY_Controller {
 		echo json_encode($response);
 	}
 	function getsearchREDUCECAR(){
+		$sess = $this->session->userdata('cbjsess001');
 		$locat    = $_POST['locat'];
 		$taxno    = $_POST['taxno'];
 		$refno    = $_POST['refno'];
@@ -972,6 +973,141 @@ class Cselect2K extends MY_Controller {
 							STRNO  ='".$row->STRNO."'
 							TAXDT  ='".$this->Convertdate(2,$row->TAXDT)."'
 							REFDT  ='".$this->Convertdate(2,$row->REFDT)."'
+							NETAMT ='".number_format($row->NETAMT,2)."'
+							VATAMT ='".number_format($row->VATAMT,2)."'
+							TOTAMT ='".number_format($row->TOTAMT,2)."'
+							FLAG   ='".$row->FLAG."'
+						><b>เลือก</b></td>
+						<td>".$row->LOCAT."</td>
+						<td>".$row->TAXNO."</td>
+						<td>".$row->REFNO."</td>
+						<td>".$row->FLAG."</td>
+					</tr>
+				";
+			}
+		}
+		$html = "
+			<div id='tbcont' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>ออกโดยสาขา</th>
+							<th>เลขที่ใบลดหนี้</th>
+							<th>อ้างถีงใบกำกับ</th>
+							<th>#</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getTAXNO_VP(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST["q"]);
+		$locat = $_REQUEST['locat'];
+		$taxno = $_REQUEST['TAXNO'];
+		if($taxno == "ShuntVP"){
+			$sql = "
+				select TAXNO,TAXDT,LOCAT,TSALE,CONTNO,CUSCOD,NAME1,NAME2,TOTAMT,FPAY,FLAG 
+				from {$this->MAuth->getdb('TAXTRAN')} where TSALE in ('C','F') and LOCAT = '".$locat."' 
+				and (FLAG <> 'C' or FLAG is null) and TAXNO like '%".$dataSearch."%'
+			";
+		}else if($taxno == "SendVP"){
+			$sql = "
+				select TAXNO from {$this->MAuth->getdb('TAXTRAN')} where LOCAT = '".$locat."' 
+				and (FLAG <> 'C' or FLAG is null) and TSALE in ('A') and TAXNO like '%".$dataSearch."%' 
+			";
+		}else if($taxno == "MoneyVP"){
+			$sql = "
+				select top 100 TAXNO from {$this->MAuth->getdb('TAXTRAN')} where 
+				TAXNO like '%".$dataSearch."%' --and LOCAT = '".$locat."'
+			";
+		}
+        $query = $this->db->query($sql);
+        $json = array();
+        if($query->row()){
+            foreach($query->result() as $row){
+                $json[] = array(
+                    "id" => $row->TAXNO,
+                    "text" => $row->TAXNO,					 
+                );
+            }
+        }
+        echo json_encode($json);
+	}
+	function getSTRNO_VP(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST["q"]);
+		$locat = $_REQUEST['locat'];
+		$contno = $_REQUEST['contno'];
+		$json = array();
+		if($contno !== ''){
+			$sql = "
+				select STRNO from {$this->MAuth->getdb('INVTRAN')} 
+				where CONTNO = '".$contno."' and STRNO like '%".$dataSearch."%'
+			";
+			//echo $sql; exit;
+			$query = $this->db->query($sql);
+			if($query->row()){
+				foreach($query->result() as $row){
+					$json[]= array(
+						"id" => $row->STRNO,
+						"text" => $row->STRNO,
+					);
+				}
+			}
+		}
+		echo json_encode($json);
+	}
+	function SearchDebtPrice(){
+		$sess = $this->session->userdata('cbjsess001');
+		$locat    = $_POST['locat'];
+		$taxno    = $_POST['taxno'];
+		$refno    = $_POST['refno'];
+		$vatprice = $_POST['vatprice'];
+		if($vatprice == 'debtshunt'){
+			$sql = "
+				select LOCAT,REFNO,STRNO,TAXNO,convert(varchar(8),TAXDT,112) as TAXDT,INPDT
+				,convert(varchar(8),REFDT,112) as REFDT,CONTNO,CUSCOD,SNAM,NAME1,NAME2,TSALE
+				,DESCP,NETAMT,VATAMT,TOTAMT,FPAY,FLAG from {$this->MAuth->getdb('TAXTRAN')} 
+				where TSALE in ('C','F') and TAXTYP = '6'
+			";
+		}else if($vatprice == "debtmoney"){
+			$sql = "
+				select LOCAT,REFNO,STRNO,TAXNO,convert(varchar(8),TAXDT,112) as TAXDT,INPDT
+				,convert(varchar(8),REFDT,112) as REFDT,CONTNO,CUSCOD,SNAM,NAME1,NAME2,TSALE
+				,DESCP,NETAMT,VATAMT,TOTAMT,FPAY,FLAG from {$this->MAuth->getdb('TAXTRAN')}
+				where TAXTYP = '8' and LOCAT like '%".$locat."%' and TAXNO like '%".$taxno."%' 
+				and REFNO like '%".$refno."%' order by INPDT
+			";
+		}		
+        $query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trow' seq='".$NRow."'>
+						<td style='cursor:pointer;' class='getit' seq='".$NRow++."'
+							LOCAT  ='".$row->LOCAT."'
+							REFNO  ='".$row->REFNO."'
+							STRNO  ='".$row->STRNO."'
+							TAXNO  ='".$row->TAXNO."'
+							TAXDT  ='".$this->Convertdate(2,$row->TAXDT)."'
+							REFDT  ='".$this->Convertdate(2,$row->REFDT)."'
+							CONTNO ='".$row->CONTNO."'
+							CUSCOD ='".$row->CUSCOD."'
+							SNAM   ='".$row->SNAM."'
+							NAME1  ='".$row->NAME1."'
+							NAME2  ='".$row->NAME2."'
+							TSALE  ='".$row->TSALE."'
+							DESCP  ='".$row->DESCP."'
 							NETAMT ='".number_format($row->NETAMT,2)."'
 							VATAMT ='".number_format($row->VATAMT,2)."'
 							TOTAMT ='".number_format($row->TOTAMT,2)."'

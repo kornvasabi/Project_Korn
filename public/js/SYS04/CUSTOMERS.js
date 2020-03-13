@@ -359,24 +359,25 @@ function searchcm(){
 					msg: data.msg
 				});
 			}
-			$('#loadding').fadeOut(300);
+			//$('#loadding').fadeOut(300);
 			$('#setgroupResult').find('.spinner, .spinner-backdrop').remove();
 			$('#setgroupResult').html(data.html);
-			
+		
 			fn_datatables('data-table-example2',1,360,'NO');
 			
 			afterSearchcm();
 			
-			//$('#tbScroll').on('draw.dt',function(){ afterSearchcm(); });
-			
-			//$('.btnDetail').unbind('click');
 			$('.btnDetail').click(function(){
 				fn_load_formeditcm($(this),'edit');
 			});
 			CT_Search = null;
 			$('#loadding').fadeOut(200);
 		},
-		beforeSend: function(){ if(CT_Search !== null){ CT_Search.abort(); } }
+		beforeSend: function(){ 
+			if(CT_Search !== null){ 
+				CT_Search.abort(); 
+			} 
+		}
 	});
 }
 function afterSearchcm(){

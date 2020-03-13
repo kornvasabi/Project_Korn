@@ -362,7 +362,7 @@ class ReduceDebtCarVB extends MY_Controller {
 				else
 				begin
 					rollback tran AddReduce;
-					insert into #AddReduceCar select 'N' as id,'ออกใบลดหนี้มากกว่ายอดเงินในใบกำกับภาษี' as msg;
+					insert into #AddReduceCar select 'I' as id,'ออกใบลดหนี้มากกว่ายอดเงินในใบกำกับภาษี' as msg;
 					return;
 				end
 			end try

@@ -81,7 +81,7 @@ class CUSTOMERS extends MY_Controller {
 		}
 		$top = "";
 		if($arrs['cuscod'] != '' || $arrs['surname'] != '' || $arrs['address'] != ''){
-			$top = "";
+			$top = "top 100";
 		}else if($cond == ''){
 			$top = "top 100";
 		}

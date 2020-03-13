@@ -114,6 +114,18 @@ $(function(){
 		$('#btnsaveRD').attr('disabled',true);	
 	}
 	*/
+	$('#LOCAT').change(function(){
+		$('#TAXNO').empty();
+		$('#STRNO').empty();
+		$('#DEBTNO').val('');
+		$('#TAXDT').val('');
+		$('#REFDT').val('');
+		$('#RECVNO').val('');
+		$('#NETAMT').val('0.00');
+		$('#VATAMT').val('0.00');
+		$('#TOTAMT').val('0.00');
+		$('#stana').hide();
+	});
 });
 $('#btnaddRD').click(function(){
 	AddRD();
@@ -344,6 +356,18 @@ function savereducecar(){
 								size: 'mini',
 								closeOnClick: false,
 								delay: 3000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+						}else if(data.status == 'I'){
+							Lobibox.notify('warning', {
+								title: 'แจ้งเตือน',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 5000,
 								pauseDelayOnHover: true,
 								continueDelayOnInactiveTab: false,
 								icon: true,

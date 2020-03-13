@@ -1,5 +1,5 @@
 /********************************************************
-             ______@06/02/2020______
+             ______@09/03/2020______
 			 Pasakorn Boonded
 
 ********************************************************/
@@ -9,7 +9,6 @@ var _update = $('.k_tab1[name="home"]').attr('cup');
 var _delete = $('.k_tab1[name="home"]').attr('cdel');
 var _level  = $('.k_tab1[name="home"]').attr('clev');
 var _today  = $('.k_tab1[name="home"]').attr('today');
-
 $(function(){
 	$('#LOCAT').select2({
 		placeholder: 'เลือก',
@@ -49,10 +48,10 @@ $(function(){
 	$('#TAXNO').select2({
 		placeholder: 'เลือก',
 		ajax: {
-			url: '../Cselect2K/getTAXNO',
+			url: '../Cselect2K/getTAXNO_VP',
 			data: function (params){
 				dataToPost = new Object();
-				dataToPost.now = (typeof $('#TAXNO').find(':selected').val() === 'undefined' ? '':$('#TAXNO').find(':selected').val());
+				dataToPost.TAXNO = "MoneyVP";
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
 				
@@ -74,29 +73,9 @@ $(function(){
 		//theme: 'classic',
 		width: '100%'
 	});
-	$('#STRNO').select2({
+	//RESONCD
+	$('#RESONCD').select2({
 		placeholder: 'เลือก',
-		ajax: {
-			url: '../Cselect2K/getSTRNO',
-			data: function (params){
-				var vatmoney = "vatmoney";
-				dataToPost = new Object();
-				dataToPost.vat = vatmoney;
-				dataToPost.now = (typeof $('#STRNO').find(':selected').val() === 'undefined' ? '':$('#STRNO').find(':selected').val());
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				dataToPost.recvno = $('#RECVNO').val();
-				
-				return dataToPost;
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data){
-				return {
-					results: data
-				};
-			},
-			cache: true
-		},
 		allowClear: true,
 		multiple: false,
 		dropdownParent: $(".k_tab1"),
@@ -106,40 +85,38 @@ $(function(){
 	});
 	$('#btndelRD').attr('disabled',true);
 	$('#stana').hide();
+	
 	$('#LOCAT').change(function(){
-		$('#TAXNO').empty();
-		$('#STRNO').empty();
-		$('#DEBTNO').val('');
-		$('#TAXDT').val('');
-		$('#REFDT').val('');
-		$('#RECVNO').val('');
-		$('#NETAMT').val('0.00');
-		$('#VATAMT').val('0.00');
-		$('#TOTAMT').val('0.00');
-		$('#stana').hide();
+		ClearInput();
+	});
+	$('#btnaddRD').click(function(){
+		$('#LOCAT').empty();
+		ClearInput();
 	});
 });
-$('#btnaddRD').click(function(){
-	AddRD();
-});
-$('#btnclearRD').click(function(){
-	AddRD();
-});
-function AddRD(){
-	$('#stana').hide();
-	$('#LOCAT').empty();
+function ClearInput(){
 	$('#TAXNO').empty();
-	$('#STRNO').empty();
-	$('#DEBTNO').val('');
-	$('#TAXDT').val('');;
-	$('#REFDT').val('');;
+	$('#STRNO').val('');
+	$('#TAXNO2').val('');
+	$('#TAXDT').val('');
+	$('#REFDT').val('');
+	//$('#INPDT').val('');
+	$('#CONTNO').val('');
+	$('#CUSCOD').val('');
+	$('#SNAM').val('');
+	$('#NAME1').val('');
+	$('#NAME2').val('');
+	$('#TSALE').val('');
+	$('#DESCP').val('');
+	$('#RESONCD').val('');
+	$('#RESNDES').val('');
 	$('#NETAMT').val('0.00');
 	$('#VATAMT').val('0.00');
 	$('#TOTAMT').val('0.00');
-	$('#RECVNO').val('');
+	$('#TAXNO2').attr('disabled',false);
+	$('#RESONCD').attr('disabled',false);
 	$('#LOCAT').attr('disabled',false);
 	$('#TAXNO').attr('disabled',false);
-	$('#STRNO').attr('disabled',false);
 	$('#DEBTNO').attr('disabled',false);
 	$('#TAXDT').attr('disabled',false);
 	$('#REFDT').attr('disabled',false);
@@ -150,25 +127,47 @@ function AddRD(){
 	$('#btndelRD').attr('disabled',true);
 	$('#btnclearRD').attr('disabled',false);
 	$('#btnsaveRD').attr('disabled',false);
-	//$('#btnaddRD').attr('disabled',true);
+	$('#stana').hide();
 }
 $('#TAXNO').change(function(){
-	gettaxno();
+	gettaxnodetail();
 });
 var taxnodetail = null;
-function gettaxno(){
+function gettaxnodetail(){
 	dataToPost = new Object();
-	dataToPost.TAXNO = $('#TAXNO').val();
-	dataToPost.LOCAT = $('#LOCAT').val();
-	//alert(dataToPost.BIRTHDT);
+	dataToPost.TAXNO = (typeof $('#TAXNO').find(':selected').val() === 'undefined' ? '':$('#TAXNO').find(':selected').val());
+	dataToPost.LOCAT = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
+
 	taxnodetail = $.ajax({
-		url: '../SYS07/ReduceDebtMonyVB/getTAXNO', 
+		url: '../SYS07/ReduceDebtMoneyVP/getdetailTAXNO', 
 		data: dataToPost,
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
-			$('#RECVNO').val(data.REFNO);
-			$('#REFDT').val(data.TAXDT);
+			if(data.error){
+				Lobibox.notify('warning', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					msg: data.msg
+				});
+				$('#TAXNO').empty();
+			}else{
+				$('#STRNO').val(data.STRNO);
+				$('#REFDT').val(data.TAXDT);
+				$('#CONTNO').val(data.CONTNO);
+				$('#CUSCOD').val(data.CUSCOD);
+				$('#SNAM').val(data.SNAM);
+				$('#NAME1').val(data.NAME1);
+				$('#NAME2').val(data.NAME2);
+				$('#TSALE').val(data.TSALE);
+				$('#DESCP').val(data.DESCP);
+			}
 			taxnodetail = null;
 		},
 		beforeSend: function(){
@@ -179,16 +178,15 @@ function gettaxno(){
 	});
 }
 $('#TAXDT').change(function(){
-	getoutdt();
+	gettexno();
 });
-var outdtdetail = null;
-function getoutdt(){
+var gettaxno = null;
+function gettexno(){
 	dataToPost = new Object();
 	dataToPost.TAXDT = $('#TAXDT').val();
-	dataToPost.LOCAT = $('#LOCAT').val();
-	//alert(dataToPost.BIRTHDT);
-	outdtdetail = $.ajax({
-		url: '../SYS07/ReduceDebtMonyVB/getTAXDT', 
+	dataToPost.LOCAT = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
+	gettaxno = $.ajax({
+		url: '../SYS07/ReduceDebtMoneyVP/getTAXNO', 
 		data: dataToPost,
 		type: 'POST',
 		dataType: 'json',
@@ -207,13 +205,13 @@ function getoutdt(){
 				});
 				$('#TAXDT').val('');
 			}else{
-				$('#DEBTNO').val(data.DEBTNO);
+				$('#TAXNO2').val(data.TAXNO);
 			}
-			outdtdetail = null;
+			gettaxno = null;
 		},
 		beforeSend: function(){
-			if(outdtdetail !== null){
-				outdtdetail.abort();
+			if(gettaxno !== null){
+				gettaxno.abort();
 			}
 		}
 	});
@@ -222,7 +220,7 @@ $('#VATAMT').click(function(){
 	dataToPost = new Object();
 	dataToPost.NETAMT = $('#NETAMT').val();
 	$.ajax({
-		url: '../SYS07/ReduceDebtMoneyVB/getVATAMT', 
+		url: '../SYS07/ReduceDebtMoneyVP/getVATAMT', 
 		data: dataToPost,
 		type: 'POST',
 		dataType: 'json',
@@ -233,114 +231,13 @@ $('#VATAMT').click(function(){
 		}
 	});
 });
-$('#TAXNO').change(function(){
-	gettaxno();
-});
-var taxnodetail = null;
-function gettaxno(){
-	dataToPost = new Object();
-	dataToPost.TAXNO = $('#TAXNO').val();
-	dataToPost.LOCAT = $('#LOCAT').val();
-	taxnodetail = $.ajax({
-		url: '../SYS07/ReduceDebtMoneyVB/getTAXNO', 
-		data: dataToPost,
-		type: 'POST',
-		dataType: 'json',
-		success: function(data){
-			$('#RECVNO').val(data.REFNO);
-			$('#REFDT').val(data.TAXDT);
-			taxnodetail = null;
-		},
-		beforeSend: function(){
-			if(taxnodetail !== null){
-				taxnodetail.abort();
-			}
-		}
-	});
-}
-$('#STRNO').change(function(){
-	getstrno();
-});
-var strnodetail = null;
-function getstrno(){
-	dataToPost = new Object();
-	dataToPost.STRNO = $('#STRNO').val();
-	//alert(dataToPost.BIRTHDT);
-	strnodetail = $.ajax({
-		url: '../SYS07/ReduceDebtMoneyVB/getSTRNO', 
-		data: dataToPost,
-		type: 'POST',
-		dataType: 'json',
-		success: function(data){
-			if(data.error){
-				Lobibox.notify('warning', {
-					title: 'แจ้งเตือน',
-					size: 'mini',
-					closeOnClick: false,
-					delay: 5000,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					icon: true,
-					messageHeight: '90vh',
-					msg: data.msg
-				});
-				$('#STRNO').empty();
-			}
-			strnodetail = null;
-		},
-		beforeSend: function(){
-			if(strnodetail !== null){
-				strnodetail.abort();
-			}
-		}
-	});
-}
-$('#TAXDT').change(function(){
-	getoutdt();
-});
-var outdtdetail = null;
-function getoutdt(){
-	dataToPost = new Object();
-	dataToPost.TAXDT = $('#TAXDT').val();
-	dataToPost.LOCAT = $('#LOCAT').val();
-	outdtdetail = $.ajax({
-		url: '../SYS07/ReduceDebtMoneyVB/getTAXDT', 
-		data: dataToPost,
-		type: 'POST',
-		dataType: 'json',
-		success: function(data){
-			if(data.error){
-				Lobibox.notify('warning', {
-					title: 'แจ้งเตือน',
-					size: 'mini',
-					closeOnClick: false,
-					delay: 5000,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					icon: true,
-					messageHeight: '90vh',
-					msg: data.msg
-				});
-				$('#TAXDT').val('');
-			}else{
-				$('#DEBTNO').val(data.DEBTNO);
-			}
-			outdtdetail = null;
-		},
-		beforeSend: function(){
-			if(outdtdetail !== null){
-				outdtdetail.abort();
-			}
-		}
-	});
-}
 $('#btnshowRD').click(function(){
-	showreducecar();
+	fn_QueryDebtPrice();
 });
-var Show_reducecar = null;
-function showreducecar(){
+var QueryDebtPrice = null;
+function fn_QueryDebtPrice(){
 	$('#loadding').fadeIn(200);
-	Show_reducecar = $.ajax({
+	QueryDebtPrice = $.ajax({
 		url:'../Cselect2K/getfromREDUCECAR',
 		type: 'POST',
 		dataType: 'json',
@@ -364,7 +261,7 @@ function showreducecar(){
 						dataToPost.vatprice = "debtmoney"; 
 						$('#loadding').fadeIn(200);
 						VATsearch = $.ajax({
-							url:'../Cselect2K/getsearchREDUCECAR',
+							url:'../Cselect2K/SearchDebtPrice',
 							data:dataToPost,
 							type: 'POST',
 							dataType: 'json',
@@ -382,85 +279,100 @@ function showreducecar(){
 								$('.getit').click(function(){
 									rdc = new Object();
 									rdc.locat   = $(this).attr('LOCAT');
-									rdc.taxno   = $(this).attr('TAXNO');
-									rdc.name1   = $(this).attr('NAME1');
 									rdc.refno   = $(this).attr('REFNO');
 									rdc.strno   = $(this).attr('STRNO');
+									rdc.taxno   = $(this).attr('TAXNO');
 									rdc.taxdt   = $(this).attr('TAXDT');
 									rdc.refdt   = $(this).attr('REFDT');
+									rdc.inpdt   = $(this).attr('INPDT');
+									rdc.contno  = $(this).attr('CONTNO');
+									rdc.cuscod  = $(this).attr('CUSCOD');
+									rdc.snam    = $(this).attr('SNAM');
+									rdc.name1   = $(this).attr('NAME1');
+									rdc.name2   = $(this).attr('NAME2');
+									rdc.tsale   = $(this).attr('TSALE');
+									rdc.descp   = $(this).attr('DESCP');
 									rdc.netamt  = $(this).attr('NETAMT');
 									rdc.vatamt  = $(this).attr('VATAMT');
 									rdc.totamt  = $(this).attr('TOTAMT');
 									rdc.flag    = $(this).attr('FLAG');
-										var locatOption = new Option(rdc.locat,rdc.locat, false, false);
-										$('#LOCAT').empty().append(locatOption).trigger('click');
-										var refnoOption = new Option(rdc.refno,rdc.refno, false, false);
-										$('#TAXNO').empty().append(refnoOption).trigger('click');
-										var strnoOption = new Option(rdc.strno,rdc.strno, false, false);
-										$('#STRNO').empty().append(strnoOption).trigger('click');
-										
-										$('#DEBTNO').val(rdc.taxno);
-										$('#TAXDT').val(rdc.taxdt);
-										$('#REFDT').val(rdc.refdt);
-										$('#NETAMT').val(rdc.netamt);
-										
-										if(rdc.vatamt == 0){
-											$('#VATAMT').val('0.00');
-										}else{
-											$('#VATAMT').val(rdc.vatamt);
-										}
-										$('#TOTAMT').val(rdc.totamt);
-										if(rdc.flag == 'C'){
-											$('#stana').show();
-										}else{
-											$('#stana').hide();
-											$('#btndelRD').attr('disabled',false);
-										}
-										//$('#btndelRD').attr('disabled',false);
-										
-										$('#LOCAT').attr('disabled',true);
-										$('#TAXNO').attr('disabled',true);
-										$('#STRNO').attr('disabled',true);
-										$('#DEBTNO').attr('disabled',true);
-										$('#TAXDT').attr('disabled',true);
-										$('#REFDT').attr('disabled',true);
-										$('#NETAMT').attr('disabled',true);
-										$('#VATAMT').attr('disabled',true);
-										$('#TOTAMT').attr('disabled',true);
-										$('#RECVNO').attr('disabled',true);
-										
-										$('#btnclearRD').attr('disabled',true);
-										$('#btnsaveRD').attr('disabled',true);
+									
+									var locatOption = new Option(rdc.locat,rdc.locat, false, false);
+									$('#LOCAT').empty().append(locatOption).trigger('click');
+									
+									var refnoOption = new Option(rdc.refno,rdc.refno, false, false);
+									$('#TAXNO').empty().append(refnoOption).trigger('click');
+									
+									$('#STRNO').val(rdc.strno);
+									$('#TAXNO2').val(rdc.taxno);
+									$('#TAXDT').val(rdc.taxdt);
+									$('#REFDT').val(rdc.refdt);
+									$('#CONTNO').val(rdc.contno);
+									$('#CUSCOD').val(rdc.cuscod);
+									$('#SNAM').val(rdc.snam);
+									$('#NAME1').val(rdc.name1);
+									$('#NAME2').val(rdc.name2);
+									$('#TSALE').val(rdc.tsale);
+									$('#DESCP').val(rdc.descp);
+									
+									$('#NETAMT').val(rdc.netamt);
+									$('#VATAMT').val(rdc.vatamt);
+									$('#TOTAMT').val(rdc.totamt);
+									
+									
+									if(rdc.flag == 'C'){
+										$('#stana').show();
+									}else{
+										$('#stana').hide();
+										$('#btndelRD').attr('disabled',false);
+									}
+									//$('#btndelRD').attr('disabled',false);
+									
+									$('#LOCAT').attr('disabled',true);
+									$('#TAXNO').attr('disabled',true);
+									$('#STRNO').attr('disabled',true);
+									$('#DEBTNO').attr('disabled',true);
+									$('#TAXDT').attr('disabled',true);
+									$('#REFDT').attr('disabled',true);
+									$('#NETAMT').attr('disabled',true);
+									$('#VATAMT').attr('disabled',true);
+									$('#TOTAMT').attr('disabled',true);
+									$('#RECVNO').attr('disabled',true);
+									$('#TAXNO2').attr('disabled',true);
+									$('#RESONCD').attr('disabled',true);
+									$('#btnclearRD').attr('disabled',true);
+									$('#btnsaveRD').attr('disabled',true);
 										
 									$this.destroy();
 								});
-								$('#loadding').fadeOut(200);
-								/*
+								//$('#loadding').fadeOut(200);
+								
 								if(_delete == 'T'){
 									$('#btndelRD').attr('disabled',false);	
 								}else{	
 									$('#btndelRD').attr('disabled',true);	
 								}
-								*/
 								VATsearch = null;
 							},
 							beforeSend: function(){
 								if(VATsearch !== null){ VATsearch.abort(); }
 							}
 						});
+						
 					}
 				},
 				beforeClose : function(){
 					
 				}
 			});
-			Show_reducecar = null;
+			QueryDebtPrice = null;
 		},
 		beforeSend:function(){
-			if(Show_reducecar !== null){Show_reducecar.abort();}
+			if(QueryDebtPrice !== null){QueryDebtPrice.abort();}
 		}
 	});
 }
+
 $('#btnsaveRD').click(function(){
 	savereducemoney();
 });
@@ -471,10 +383,20 @@ function savereducemoney(){
 	dataToPost.TAXTYP  = (typeof $('#TAXTYP').find(':selected').val() === 'undefined' ? '':$('#TAXTYP').find(':selected').val());
 	dataToPost.TAXNO   = (typeof $('#TAXNO').find(':selected').val() === 'undefined' ? '':$('#TAXNO').find(':selected').val());
 	dataToPost.STRNO   = (typeof $('#STRNO').find(':selected').val() === 'undefined' ? '':$('#STRNO').find(':selected').val());
-	dataToPost.DEBTNO  = $('#DEBTNO').val();
+	dataToPost.TAXNO2  = $('#TAXNO2').val();
 	dataToPost.TAXDT   = $('#TAXDT').val();
 	dataToPost.REFDT   = $('#REFDT').val();
-	dataToPost.RECVNO  = $('#RECVNO').val();
+	dataToPost.INPDT   = $('#INPDT').val();
+	
+	dataToPost.CONTNO  = $('#CONTNO').val();
+	dataToPost.CUSCOD  = $('#CUSCOD').val();
+	dataToPost.SNAM    = $('#SNAM').val();
+	dataToPost.NAME1   = $('#NAME1').val();
+	dataToPost.NAME2   = $('#NAME2').val();
+	
+	dataToPost.TSALE   = $('#TSALE').val();
+	dataToPost.DESCP   = $('#DESCP').val();
+	
 	dataToPost.NETAMT  = $('#NETAMT').val();
 	dataToPost.VATAMT  = $('#VATAMT').val();
 	dataToPost.TOTAMT  = $('#TOTAMT').val();
@@ -499,7 +421,7 @@ function savereducemoney(){
 			$('#loadding').show();
 			if(type === 'ok'){
 				VBreducemoney = $.ajax({
-					url:'../SYS07/ReduceDebtMoneyVB/Save_reducemoney',
+					url:'../SYS07/ReduceDebtMoneyVP/Save_VatPriceMoney',
 					data:dataToPost,
 					type:'POST',
 					dataType:'json',
@@ -530,25 +452,14 @@ function savereducemoney(){
 								messageHeight: '90vh',
 								msg: data.msg
 							});
-							ClearRD();
+							$('#LOCAT').empty();
+							ClearInput();
 						}else if(data.status == 'N'){
 							Lobibox.notify('error', {
 								title: 'ผิดพลาด',
 								size: 'mini',
 								closeOnClick: false,
 								delay: 3000,
-								pauseDelayOnHover: true,
-								continueDelayOnInactiveTab: false,
-								icon: true,
-								messageHeight: '90vh',
-								msg: data.msg
-							});
-						}else if(data.status == 'I'){
-							Lobibox.notify('warning', {
-								title: 'แจ้งเตือน',
-								size: 'mini',
-								closeOnClick: false,
-								delay: 5000,
 								pauseDelayOnHover: true,
 								continueDelayOnInactiveTab: false,
 								icon: true,
@@ -584,15 +495,31 @@ function savereducemoney(){
 $('#btndelRD').click(function(){
 	delreducemoney();
 });
-var DEL_reducemoney = null;
+var VBreducemoneydel = null;
 function delreducemoney(){
 	dataToPost = new Object();
-	dataToPost.LOCAT   = $('#LOCAT').val();
-	dataToPost.REFNO   = $('#TAXNO').val();
-	dataToPost.STRNO   = $('#STRNO').val();
-	dataToPost.TAXNO   = $('#DEBTNO').val();
-	dataToPost.RECVNO  = $('#RECVNO').val();
+	dataToPost.LOCAT   = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
+	dataToPost.TAXTYP  = (typeof $('#TAXTYP').find(':selected').val() === 'undefined' ? '':$('#TAXTYP').find(':selected').val());
+	dataToPost.TAXNO   = (typeof $('#TAXNO').find(':selected').val() === 'undefined' ? '':$('#TAXNO').find(':selected').val());
+	dataToPost.STRNO   = (typeof $('#STRNO').find(':selected').val() === 'undefined' ? '':$('#STRNO').find(':selected').val());
+	dataToPost.TAXNO2  = $('#TAXNO2').val();
+	dataToPost.TAXDT   = $('#TAXDT').val();
+	dataToPost.REFDT   = $('#REFDT').val();
+	dataToPost.INPDT   = $('#INPDT').val();
+	
+	dataToPost.CONTNO  = $('#CONTNO').val();
+	dataToPost.CUSCOD  = $('#CUSCOD').val();
+	dataToPost.SNAM    = $('#SNAM').val();
+	dataToPost.NAME1   = $('#NAME1').val();
+	dataToPost.NAME2   = $('#NAME2').val();
+	
+	dataToPost.TSALE   = $('#TSALE').val();
+	dataToPost.DESCP   = $('#DESCP').val();
+	
+	dataToPost.NETAMT  = $('#NETAMT').val();
+	dataToPost.VATAMT  = $('#VATAMT').val();
 	dataToPost.TOTAMT  = $('#TOTAMT').val();
+	
 	Lobibox.confirm({
 		title: 'ยืนยันการทำรายการ',
 		iconClass: false,
@@ -610,15 +537,28 @@ function delreducemoney(){
 			},
 		},
 		callback: function(lobibox, type){
+			$('#loadding').show();
 			if(type === 'ok'){
-				$('#loadding').fadeIn(200);
-				DEL_reducemoney = $.ajax({
-					url: '../SYS07/ReduceDebtMoneyVB/Del_reducemoney', 
-					data: dataToPost,
-					type: 'POST',
-					dataType: 'json',
-					success: function(data){
-						$('#loadding').fadeOut(200);
+				VBreducemoneydel = $.ajax({
+					url:'../SYS07/ReduceDebtMoneyVP/Del_VatPriceMoney',
+					data:dataToPost,
+					type:'POST',
+					dataType:'json',
+					success:function(data){
+						$('#loadding').hide();
+						if(data.error){
+							Lobibox.notify('warning', {
+								title: 'แจ้งเตือน',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 5000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+						}
 						if(data.status == 'Y'){
 							Lobibox.notify('success', {
 								title: 'สำเร็จ',
@@ -631,7 +571,8 @@ function delreducemoney(){
 								messageHeight: '90vh',
 								msg: data.msg
 							});
-							AddRD();
+							$('#LOCAT').empty();
+							ClearInput();
 						}else if(data.status == 'N'){
 							Lobibox.notify('error', {
 								title: 'ผิดพลาด',
@@ -645,15 +586,14 @@ function delreducemoney(){
 								msg: data.msg
 							});
 						}
-						DEL_reducemoney = null;
+						VBreducemoneydel = null;
 					},
-					beforeSend: function(){
-						if(DEL_reducemoney !== null){
-							DEL_reducemoney.abort();
-						}
+					beforeSend:function(){
+						if(VBreducemoneydel !== null){VBreducemoneydel.abort();}
 					}
 				});
 			}else{
+				$('#loadding').hide();
 				Lobibox.notify('error', {
 					title: 'แจ้งเตือน',
 					size: 'mini',
