@@ -569,22 +569,24 @@ class Cselect2 extends MY_Controller {
 		$locat = $_REQUEST['locat'];
 		
 		$sql = "
-			select RESVNO from {$this->MAuth->getdb('ARRESV')}
-			where LOCAT = '".$locat."' collate Thai_CI_AS and RESVNO='".$dataNow."' collate Thai_CI_AS 
-				and isnull(STRNO,'') <> '' and SDATE is null
-			union
-			select top 10 RESVNO from {$this->MAuth->getdb('ARRESV')}
-			where LOCAT = '".$locat."' collate Thai_CI_AS and RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
-				and isnull(STRNO,'') <> '' and SDATE is null
-			
-			union
-			--บิลจองจากสาขาอื่น แต่ลูกค้ามาออกรถกับอีกสาขา
-			select top 10 a.RESVNO from {$this->MAuth->getdb('ARRESV')} a
-			left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO and a.RESVNO=b.RESVNO
-			where b.CRLOCAT='".$locat."' and a.RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
-				and isnull(a.STRNO,'') <> '' and a.SDATE is null
+			select a.RESVNO from (
+				select RESVNO from {$this->MAuth->getdb('ARRESV')}
+				where LOCAT = '".$locat."' collate Thai_CI_AS and RESVNO='".$dataNow."' collate Thai_CI_AS 
+					and isnull(STRNO,'') <> '' and SDATE is null
+				union
+				select top 10 RESVNO from {$this->MAuth->getdb('ARRESV')}
+				where LOCAT = '".$locat."' collate Thai_CI_AS and RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
+					and isnull(STRNO,'') <> '' and SDATE is null
 				
-			--order by RESVNO desc
+				union
+				--บิลจองจากสาขาอื่น แต่ลูกค้ามาออกรถกับอีกสาขา
+				select top 10 a.RESVNO from {$this->MAuth->getdb('ARRESV')} a
+				left join {$this->MAuth->getdb('INVTRAN')} b on a.STRNO=b.STRNO and a.RESVNO=b.RESVNO
+				where b.CRLOCAT='".$locat."' and a.RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
+					and isnull(a.STRNO,'') <> '' and a.SDATE is null
+			) as a
+			left join {$this->MAuth->getdb('ARANALYZE')} as b on a.RESVNO=b.RESVNO collate thai_cs_as and b.ANSTAT not in ('C')
+			where b.RESVNO is null
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -664,7 +666,18 @@ class Cselect2 extends MY_Controller {
 		$json = array();
 		if($query->row()){
 			foreach($query->result() as $row){
-				$json[] = ['id'=>str_replace(chr(0),'',$row->STRNO), 'text'=>str_replace(chr(0),'',$row->STRNO)];
+				$sql = "
+					select count(*) r from {$this->MAuth->getdb('ARANALYZE')} 
+					where ANSTAT!='C' and STRNO='{$row->STRNO}'
+				";
+				$query = $this->db->query($sql);
+				$row_check = $query->row();
+				
+				$json[] = array(
+					'id'=>str_replace(chr(0),'',$row->STRNO), 
+					'text'=>str_replace(chr(0),'',$row->STRNO),
+					'disabled'=>($row_check->r > 0 ? true:false)
+				);
 			}
 		}
 		
@@ -759,9 +772,32 @@ class Cselect2 extends MY_Controller {
 	function getBILLDAS(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_REQUEST['q']);
-		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
-		$locat = $_REQUEST['locat'];
-		$sdate = $this->Convertdate(1,$_REQUEST['sdate']);
+		$dataNow 	= (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		$locat 		= $_REQUEST['locat'];
+		$sdate 		= $this->Convertdate(1,$_REQUEST['sdate']);
+		$customers 	= $_REQUEST['customers'];
+		
+		$cond = "";
+		foreach($customers as $key => $val){
+			if($cond != ""){ $cond .= ","; }
+			$cond .= "'".$val."'";
+		}
+		
+		if ($cond != ""){
+			$sql = "
+				select IDNO from {$this->MAuth->getdb('CUSTMAST')} 
+				where CUSCOD in (".$cond.")
+			";
+			$query = $this->db->query($sql);
+			
+			$cond = "'NONE'";
+			if($query->row()){
+				foreach($query->result() as $row){
+					if($cond != ""){ $cond .= ","; }
+					$cond .= "'".$row->IDNO."'";
+				}
+			}
+		}
 		
 		$sql = "
 			select free from serviceweb.dbo.fn_branchMaps
@@ -777,20 +813,28 @@ class Cselect2 extends MY_Controller {
 			@@ SLCP ขายแคมเปญ
 		@@@@@@@@@@@@@@@@@@@@@@@@*/
 		$sql = "
-			select SaleNo from DBFREE.dbo.SPSale 
-			where cast(left(SaleDate,4)-543 as varchar(4))+CAST(replace(right(SaleDate,5),'/','') as varchar(4))='".$sdate."'
-				and BranchNo='".$row->free."' and SaleNo = '".$dataNow."'
+			select SaleNo from dbo.SPSale a 
+			left join dbo.Customer b on a.CustID=b.CustID
+			where cast(left(a.SaleDate,4)-543 as varchar(4))+CAST(replace(right(a.SaleDate,5),'/','') as varchar(4))='".$sdate."'
+				and a.BranchNo='".$row->free."' 
+				and a.SaleNo = '".$dataNow."' 
+				and a.SaleStatus='paid' collate thai_ci_as
+				and b.CustIDCardNo collate thai_cs_as in (".$cond.")
 			union 
-			select SaleNo from DBFREE.dbo.SPSale 
-			where cast(left(SaleDate,4)-543 as varchar(4))+CAST(replace(right(SaleDate,5),'/','') as varchar(4))='".$sdate."'
-				and BranchNo='".$row->free."' and SaleNo like '%".$dataSearch."%'
+			select SaleNo from dbo.SPSale a
+			left join dbo.Customer b on a.CustID=b.CustID
+			where cast(left(a.SaleDate,4)-543 as varchar(4))+CAST(replace(right(a.SaleDate,5),'/','') as varchar(4))='".$sdate."'
+				and a.BranchNo='".$row->free."' 
+				and a.SaleNo like '%".$dataSearch."%' 
+				and a.SaleStatus='paid' collate thai_ci_as
+				and b.CustIDCardNo collate thai_cs_as in (".$cond.")
 		";
 		//echo $sql; exit;
 		$DAS = $this->load->database('DAS',true);
 		$query = $DAS->query($sql);
 		$row = $query->row();
 		
-		$html = "";
+		$json  = array();
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>str_replace(chr(0),'',$row->SaleNo), 'text'=>str_replace(chr(0),'',$row->SaleNo)];
@@ -807,15 +851,17 @@ class Cselect2 extends MY_Controller {
 		$locat = ($_REQUEST["locat"]);
 		
 		$sql = "
-			select ID,ANSTAT
-			from {$this->MAuth->getdb('ARANALYZE')}
-			where 1=1 and ID='".$dataNow."' collate Thai_CI_AS and LOCAT='".$locat."' 
-				
-			union
-			select ID,ANSTAT
-			from {$this->MAuth->getdb('ARANALYZE')}
-			where 1=1 and ID like '%".$dataSearch."%' collate Thai_CI_AS 
-				and LOCAT='".$locat."' and isnull(CONTNO,'')=''
+			select * from (
+				select ID,ANSTAT
+				from {$this->MAuth->getdb('ARANALYZE')}
+				where 1=1 and ID='".$dataNow."' collate Thai_CI_AS and LOCAT='".$locat."' 
+					
+				union
+				select ID,ANSTAT
+				from {$this->MAuth->getdb('ARANALYZE')}
+				where 1=1 and ID like '%".$dataSearch."%' collate Thai_CI_AS 
+					and LOCAT='".$locat."' and isnull(CONTNO,'')=''
+			) as a
 			order by ID
 		";
 		//echo $sql; exit;
@@ -846,7 +892,7 @@ class Cselect2 extends MY_Controller {
 			where 1=1 and CONTTYP='".$dataNow."' collate Thai_CS_AS 
 				
 			union
-			select top 20 CONTTYP,'('+CONTTYP+') '+CONTDESC as CONTDESC
+			select CONTTYP,'('+CONTTYP+') '+CONTDESC as CONTDESC
 			from {$this->MAuth->getdb('TYPCONT')}
 			where 1=1 and CONTTYP+' '+CONTDESC like '%".$dataSearch."%' collate Thai_CS_AS 
 			order by CONTTYP
@@ -905,6 +951,12 @@ class Cselect2 extends MY_Controller {
 		$lname = $_POST['lname'];
 		$idno  = $_POST['idno'];
 		
+		$cuscod = array();
+		$cuscod[] = (isset($_POST['cuscod']) ? $_POST['cuscod']:'');
+		$cuscod[] = (isset($_POST['is1_cuscod']) ? $_POST['is1_cuscod']:'');
+		$cuscod[] = (isset($_POST['is2_cuscod']) ? $_POST['is2_cuscod']:'');
+		$cuscod[] = (isset($_POST['is3_cuscod']) ? $_POST['is3_cuscod']:'');
+		
 		$cond = "";
 		if($fname != ""){
 			$cond .= " and a.NAME1 like '%".$fname."%'";
@@ -915,7 +967,6 @@ class Cselect2 extends MY_Controller {
 		if($idno != ""){
 			$cond .= " and a.IDNo like '%".$idno."%'";
 		}
-		
 		
 		$sql = "
 			select top 100 a.CUSCOD,a.SNAM+a.NAME1+' '+a.NAME2 as CUSNAME,a.GRADE
@@ -942,6 +993,8 @@ class Cselect2 extends MY_Controller {
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
+				if(in_array($row->CUSCOD,$cuscod)){ $row->GRADESTAT = 'F'; }
+				
 				$html .= "
 					<tr style='".($row->GRADESTAT == 'F' ? "color:#aaa;":"")."'>
 						<td style='width:40px;'>

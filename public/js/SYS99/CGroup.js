@@ -25,17 +25,14 @@ $('#btnt1search').click(function(){
 	dataToPost.groupCode = $('#groupCode').val();
 	dataToPost.groupName = $('#groupName').val();
 	
-	var spinner = $('body>.spinner').clone().removeClass('hide');
-    $('#resultt1group').html('');
-	$('#resultt1group').append(spinner);
-	
+	$('#resultt1group').html('');
+	$('#loadding').fadeIn(200);
 	$.ajax({
 		url:'../SYS99/CGroup/search',
 		data:dataToPost,
 		type:'POST',
 		dataType:'json',
 		success:function(data){
-			$('#resultt1group').find('.spinner, .spinner-backdrop').remove();
 			$('#resultt1group').html(data.html);
 			
 			document.getElementById("table-fixed-CGroup").addEventListener("scroll", function(){
@@ -59,6 +56,8 @@ $('#btnt1search').click(function(){
 				
 				getMenuSearch(dataToPost);
 			});
+			
+			$('#loadding').fadeOut(200);
 		}
 	});
 });
@@ -71,6 +70,7 @@ function getMenuSearch(dataToPost){
 	dataToPost.keyword = ((typeof keyword === 'undefined') ? '' : keyword);
 	dataToPost.menustat = ((typeof menustat === 'undefined') ? 'Y' : menustat);
 	
+	$('#loadding').fadeIn(200);
 	$.ajax({
 		url:'../SYS99/CGroup/getClaimGroup',
 		data:dataToPost,
@@ -145,6 +145,7 @@ function getMenuSearch(dataToPost){
 				dataToPost.groupCode = $('#tab2dbData').attr('groupCode');
 				dataToPost.data 	 = data;
 				
+				$('#loadding').fadeIn(200);
 				$.ajax({
 					url:'../SYS99/CGroup/setClaim_Groupusers',
 					data:dataToPost,
@@ -164,6 +165,7 @@ function getMenuSearch(dataToPost){
 							soundExt: '.ogg',
 							msg: data.success
 						});
+						$('#loadding').fadeOut(200);
 					}
 				});
 			});
@@ -323,6 +325,7 @@ function getMenuSearch(dataToPost){
 				dataToPost.dblocat   = $('#tab2dbData').attr('dblocat');
 				dataToPost.groupCode = $('#tab2dbData').attr('groupCode');
 				
+				$('#loadding').fadeIn(200);
 				$.ajax({
 					url:'../SYS99/CGroup/getFormClaimADD',
 					data:dataToPost,
@@ -343,6 +346,7 @@ function getMenuSearch(dataToPost){
 									dataToPost.menuid    = $('#w1menuid').val();
 									dataToPost.menuname  = $('#w1menuname').val();
 									
+									$('#loadding').fadeIn(200);
 									$.ajax({
 										url:'../SYS99/CGroup/getMenu',
 										data:dataToPost,
@@ -350,14 +354,19 @@ function getMenuSearch(dataToPost){
 										dataType:'json',
 										success:function(data){
 											$("#w1resultSearch").html(data.html);
+											$('#loadding').fadeOut(200);
 										}
 									});	
 								});
 							}
 						});	
+						
+						$('#loadding').fadeOut(200);
 					}
 				});
 			});
+			
+			$('#loadding').fadeOut(200);
 		}
 	});
 }

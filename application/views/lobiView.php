@@ -1,6 +1,6 @@
-﻿<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-?><!DOCTYPE html>
+﻿<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<!DOCTYPE html>
+<!-- Author : @s.anutin -->
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
@@ -42,6 +42,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			line-height: 1;
 			//vertical-align: text-bottom;
 			//border-top: 1px solid #ddd;
+		}
+		
+		input[type="number"]:disabled {
+			background: #ccc;
 		}
 	</style>
 </head>
@@ -551,8 +555,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 				success: function(data){
 					$('#loadding').hide();
 					
-					var content = "<iframe src='"+data.url+"' style='width:100%;height:100%;'></iframe>";
-					window.open(data.url,'_blank');
+					var content = "<iframe src='"+encodeURI(data.url)+"' style='width:100%;height:100%;'></iframe>";
+					window.open(encodeURI(data.url),'_blank');
 					/*
 					Lobibox.window({
 						title: 'Help',
@@ -693,6 +697,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		$('.lobibox-notify').css({'z-index':'99999','border-radius':'50px'});
 		$('.lobibox-close').fadeOut(0);
 	},function(){
+		$('.lobibox-notify').css({'z-index':'99999','border-radius':'0px'});
+		$('.lobibox-close').fadeIn(0);
 		LobiboxNotify.remove();
 	});
 	

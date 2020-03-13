@@ -372,9 +372,9 @@ class ARother extends MY_Controller {
 				select arcont, filePath, [1] as PIC1, [2] as PIC2, [3] as PIC3
 				from(
 					select a.arcont , a.refno, a.refname, b.filePath
-					from YTKManagement.dbo.AROTHR_UPLOAD a
-					left join YTKManagement.dbo.config_fileupload b on a.config_id = b.id 
-					where b.refno = '".$this->sess["db"]."' and a.arcont = '".$arcont."'
+					from {$this->MAuth->getdb('AROTHR_UPLOAD')} a
+					left join {$this->MAuth->getdb('config_fileupload')} b on a.config_id = b.id 
+					where b.refno = '".$this->sess["db"]."' and b.ftpfolder like 'Senior/%/AROTHER' and b.ftpstatus = 'Y' and a.arcont = '".$arcont."'
 				)a pivot( max(refname) for refno in ([1],[2],[3]))as data
 		";
 		//echo $sql; exit;
@@ -442,15 +442,15 @@ class ARother extends MY_Controller {
 			$TPIC3	= $TPIC3[(sizeof($TPIC3)-1)];
 			
 			$uploadpic = "
-				declare @config_id int = (select id from YTKManagement.dbo.config_fileupload where refno = '".$this->sess["db"]."')
+				declare @config_id int = (select id from {$this->MAuth->getdb('config_fileupload')} where refno = '".$this->sess["db"]."'  and ftpfolder like 'Senior/%/AROTHER' and ftpstatus = 'Y')
 
-				insert into YTKManagement.dbo.AROTHR_UPLOAD (arcont, config_id, refno, refname, reftype, insby, insdt, updby, upddt)
+				insert into {$this->MAuth->getdb('AROTHR_UPLOAD')} (arcont, config_id, refno, refname, reftype, insby, insdt, updby, upddt)
 				values(@CONTNO, @config_id, 1, '".$PIC1."', '".$TPIC1."', '".$this->sess["USERID"]."', GETDATE(), null, null)
 
-				insert into YTKManagement.dbo.AROTHR_UPLOAD (arcont, config_id, refno, refname, reftype, insby, insdt, updby, upddt)
+				insert into {$this->MAuth->getdb('AROTHR_UPLOAD')} (arcont, config_id, refno, refname, reftype, insby, insdt, updby, upddt)
 				values(@CONTNO, @config_id, 2, '".$PIC2."', '".$TPIC2."', '".$this->sess["USERID"]."', GETDATE(), null, null)
 
-				insert into YTKManagement.dbo.AROTHR_UPLOAD (arcont, config_id, refno, refname, reftype, insby, insdt, updby, upddt)
+				insert into {$this->MAuth->getdb('AROTHR_UPLOAD')} (arcont, config_id, refno, refname, reftype, insby, insdt, updby, upddt)
 				values(@CONTNO, @config_id, 3, '".$PIC3."', '".$TPIC3."', '".$this->sess["USERID"]."', GETDATE(), null, null)
 			";
 		}else{
@@ -540,7 +540,7 @@ class ARother extends MY_Controller {
 			
 			if($PIC1 != ""){
 				$uploadpic .= "
-					update YTKManagement.dbo.AROTHR_UPLOAD
+					update {$this->MAuth->getdb('AROTHR_UPLOAD')}
 					set refname = '".$PIC1."', reftype = '".$TPIC1."', updby = '".$this->sess["USERID"]."', upddt = getdate()
 					where arcont = @CONTNO collate thai_cs_as and refno = 1 and config_id = @id
 				";
@@ -548,7 +548,7 @@ class ARother extends MY_Controller {
 			
 			if($PIC2 != ""){
 				$uploadpic .= "
-					update YTKManagement.dbo.AROTHR_UPLOAD
+					update {$this->MAuth->getdb('AROTHR_UPLOAD')}
 					set refname = '".$PIC2."', reftype = '".$TPIC2."', updby = '".$this->sess["USERID"]."', upddt = getdate()
 					where arcont = @CONTNO collate thai_cs_as and refno = 2 and config_id = @id
 				";
@@ -556,7 +556,7 @@ class ARother extends MY_Controller {
 			
 			if($PIC3 != ""){
 				$uploadpic .= "
-					update YTKManagement.dbo.AROTHR_UPLOAD
+					update {$this->MAuth->getdb('AROTHR_UPLOAD')}
 					set refname = '".$PIC3."', reftype = '".$TPIC3."', updby = '".$this->sess["USERID"]."', upddt = getdate()
 					where arcont = @CONTNO collate thai_cs_as and refno = 3 and config_id = @id
 				";
@@ -573,7 +573,7 @@ class ARother extends MY_Controller {
 			begin try
 			
 				declare @CONTNO varchar(max) = '".$ARCONT."';
-				declare @id varchar(max) = (select id from YTKManagement.dbo.config_fileupload where refno = '".$this->sess["db"]."');
+				declare @id varchar(max) = (select id from {$this->MAuth->getdb('config_fileupload')} where refno = '".$this->sess["db"]."' and ftpfolder like 'Senior/%/AROTHER' and ftpstatus = 'Y');
 				
 				update {$this->MAuth->getdb('AROTHR')}
 				set PAYFOR = '".$PAYFOR."', MEMO1 = '".$MEMO."'
@@ -628,13 +628,13 @@ class ARother extends MY_Controller {
 			begin try
 			
 				declare @CONTNO varchar(max) = '".$ARCONT."';
-				declare @id varchar(max) = (select id from YTKManagement.dbo.config_fileupload where refno = '".$this->sess["db"]."');
+				declare @id varchar(max) = (select id from {$this->MAuth->getdb('config_fileupload')} where refno = '".$this->sess["db"]."' and ftpfolder like 'Senior/%/AROTHER' and ftpstatus = 'Y');
 				
 				delete {$this->MAuth->getdb('AROTHR')}
 				where ARCONT = '".$ARCONT."' and CONTNO = '".$CONTNO."'
 				and CUSCOD = '".$CUSCOD."' and LOCAT = '".$LOCAT."'
 				
-				delete YTKManagement.dbo.AROTHR_UPLOAD
+				delete {$this->MAuth->getdb('AROTHR_UPLOAD')}
 				where config_id = @id and arcont = @CONTNO
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
@@ -703,8 +703,8 @@ class ARother extends MY_Controller {
 		
 		$sql = "
 			select ftpserver, ftpuser, ftppass, ftpfolder, filePath
-			from YTKManagement.dbo.config_fileupload
-			where refno = '".$this->sess["db"]."' and ftpstatus = 'Y'
+			from {$this->MAuth->getdb('config_fileupload')}
+			where refno = '".$this->sess["db"]."' and ftpfolder like 'Senior/%/AROTHER' and ftpstatus = 'Y'
 		";
 		$query = $this->db->query($sql);
 		
@@ -801,8 +801,8 @@ class ARother extends MY_Controller {
 		
 		$sql = "
 			select ftpserver, ftpuser, ftppass, ftpfolder, filePath
-			from YTKManagement.dbo.config_fileupload
-			where refno = '".$this->sess["db"]."' and ftpstatus = 'Y'
+			from {$this->MAuth->getdb('config_fileupload')}
+			where refno = '".$this->sess["db"]."' and ftpfolder like 'Senior/%/AROTHER' and ftpstatus = 'Y'
 		";
 		$query = $this->db->query($sql);
 		

@@ -106,6 +106,7 @@ $('#btnt1search').click(function(){
 
 function redraw(){
 	var jd_leasingEdit = null;
+	$('.leasingEdit').unbind('click');
 	$('.leasingEdit').click(function(){
 		$('.leasingEdit').attr('disabled',true);
 		

@@ -7,6 +7,7 @@
                           _ _/ /
                          /___ /
 ********************************************************/
+"use strict";
 var _locat  = $('.tab1[name="home"]').attr('locat');
 var _insert = $('.tab1[name="home"]').attr('cin');
 var _update = $('.tab1[name="home"]').attr('cup');
@@ -19,7 +20,7 @@ $(function(){
         ajax: {
 			url: '../Cselect2/getCUSTOMERS',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_cuscod').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				
@@ -45,8 +46,7 @@ $(function(){
 
 var jd_btnt1search = null;
 $('#btnt1search').click(function(){
-	//$('#btnt1search').attr('disabled',true);
-	dataToPost = new Object();
+	var dataToPost = new Object();
 	dataToPost.contno 	= $('#CONTNO').val();
 	dataToPost.sdatefrm = $('#SDATEFRM').val();
 	dataToPost.sdateto 	= $('#SDATETO').val();
@@ -62,11 +62,11 @@ $('#btnt1search').click(function(){
 		dataType: 'json',
 		success: function(data){
 			$('#jd_result').html(data.html);
-			
 			$('#table-LeasingCar').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-LeasingCar',1,250);
+			fn_datatables('table-LeasingCar',1,225);
 			
 			function redraw(){
+				$('[data-toggle="tooltip"]').tooltip();
 				$('.leasingDetails').unbind('click');
 				$('.leasingDetails').click(function(){
 					leasingDetails($(this).attr('contno'),'search');
@@ -86,7 +86,7 @@ $('#btnt1search').click(function(){
 });
 
 function leasingDetails($contno,$event){
-	dataToPost = new Object();
+	var dataToPost = new Object();
 	dataToPost.contno = $contno;
 	
 	$('#loadding').show();
@@ -170,7 +170,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getLOCAT',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_locat').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				
@@ -199,7 +199,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getRESVNO',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_resvno').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = $('#add_locat').find(':selected').val();
@@ -228,7 +228,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getCUSTOMERS',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_cuscod').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				
@@ -256,7 +256,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getANALYZE',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = (typeof $('#add_approve').find(':selected').val() === 'undefined' ? '' : $('#add_approve').find(':selected').val());
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
@@ -280,9 +280,41 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		width: '100%'
 	});
 	
+	var jd_dateChanged = null;
+	$('#add_sdate').change(function(){ dateChanged(); });
+	function dateChanged(){
+		var dataToPost = new Object();
+		dataToPost.sdate = $('#add_sdate').val();
+		dataToPost.nopay = $('#add_nopay').val();
+		
+		$('#loadding').fadeIn(200);
+		jd_dateChanged = $.ajax({
+			url:'../SYS04/Leasing/dateChanged',
+			data:dataToPost,
+			type:'POST',
+			dataType:'json',
+			success: function(data){
+				$('#add_released').val(data.released);
+				$('#add_duefirst').val(data.fdate);
+				$('#add_duelast').val(data.ldate);
+				
+				jd_dateChanged = null;
+				$('#loadding').fadeOut(200);
+			},
+			beforeSend: function(){
+				if(jd_dateChanged !== null){ jd_dateChanged.abort(); }
+				$('#loadding').fadeOut(200);
+			},
+			error: function(jqXHR, exception){ 
+				fnAjaxERROR(jqXHR,exception);
+				$('#loadding').fadeOut(200);
+			}
+		});
+	}
+	
 	var jd_add_approve = null;
 	$('#add_approve').on("select2:select",function(){
-		dataToPost = new Object();
+		var dataToPost = new Object();
 		dataToPost.ANID = $(this).find(':selected').val();
 		
 		$('#loadding').show();
@@ -308,11 +340,49 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				$('#add_strno').attr('disabled',true);
 				$('#add_strno').empty().append(newOption).trigger('change');
 				
+				var newOption = new Option(data.ACTIDES, data.ACTICOD, true, true);
+				$('#add_acticod').attr('disabled',true);
+				$('#add_acticod').empty().append(newOption).trigger('change');
+				
 				/*tab 2*/
 				$('#add_inprc').val(addCommas(data.PRICE_TOTAL));
 				$('#add_indwn').val(addCommas(data.DWN));
 				$('#add_nopay').val(data.NOPAY);
 				$('#add_upay').val(data.NOPAYPerMonth);
+				
+				if(data.OPTCODE != "NOTUSE"){
+					var ref_size = Object.keys(data.REF).length; // นับว่ามีคนค้ำกี่คน
+					$('#dataTables-inopt tbody').empty(); // เคลียข้อมูลคนค้ำ
+					for(var i = 1;i<=ref_size;i++){
+						var rank 	 = data.REF[i]['rank']; //ลำดับ
+						var cuscod 	 = data.REF[i]['cuscod']; //รหัสลูกค้า
+						var refname  = data.REF[i]['refname']; //ชื่อลูกค้า
+						var relation = data.REF[i]['relation']; //ความสัมพันธ์
+						
+						var row = '<tr seq="new">';							
+						row += "<td align='center'> ";
+						row += "	<i class='inoptTab2 btn btn-xs btn-danger glyphicon glyphicon-minus' ";
+						row += "		opcode='"+data.OPTCODE+"' total1='0.00' total2='0.00' price1='0.00' price2='0.00' vat1='0.00' vat2='0.00' qty='1' uprice='0' ";
+						row += "		style='cursor:pointer;'> ลบ   ";
+						row += "	</i> ";
+						row += "</td> ";
+						row += '<td>'+data.OPTNAME+'</td>';
+						row += '<td class="text-right">0</td>';
+						row += '<td class="text-right">1</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '</tr>';
+						
+						$('#dataTables-inopt tbody').append(row);
+						
+						$('#add2_optcost').val('0.00');
+						$('#add2_optsell').val('0.00');
+					}
+				}
 				
 				/*tab 3*/
 				$('#add_payfirst').val(addCommas(data.PERMONTH_TOTAL));
@@ -324,8 +394,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				
 				$('#add_intRate').val(data.INT_RATE);
 				$('#add_delay').val(data.DELAY_DAY);
-				$('#add_interestRate').val(data.INTERAST_RATE);
-				$('#add_interestRateReal').val(data.INTERAST_RATE_REAL);
+				$('#add_interestRate').val(data.INTERAST_RATE).attr('disabled',true);
+				$('#add_interestRateReal').val(data.INTERAST_RATE_REAL).attr('disabled',true);
 				
 				/*tab 5*/
 				var ref_size = Object.keys(data.REF).length; // นับว่ามีคนค้ำกี่คน
@@ -351,6 +421,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					$('#dataTable_ARMGAR tbody').append(row);
 				}
 				
+				dateChanged(); //update วันที่ทำสัญญา ดิวเดต lastดิว วันที่ปล่อยรถ
 				jd_add_approve = null;
 				$('#loadding').hide();
 			},
@@ -376,6 +447,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#add_indwn').val('');
 		$('#add_nopay').val('');
 		$('#add_upay').val('');
+		$('#dataTables-inopt tbody').empty();
 		
 		/*tab 3*/
 		$('#add_payfirst').val('');
@@ -394,7 +466,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#dataTable_ARMGAR tbody').empty();
 	});
 	
-	$('#add_inclvat').select2({ 
+	$('#add_inclvat').select2({
 		dropdownParent: $("#wizard-leasing"), 
 		minimumResultsForSearch: -1,
 		width: '100%'
@@ -405,7 +477,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getCUSTOMERSADDRNo',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_addrno').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.cuscod = $('#add_cuscod').find(':selected').val();
@@ -434,7 +506,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getSTRNO',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_strno').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = $('#add_locat').find(':selected').val();
@@ -463,7 +535,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getPAYDUE',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_paydue').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				
@@ -488,7 +560,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	
 	//$('#add_cuscod').change(function(){
 	$('#add_cuscod').on("select2:select",function(){	
-		dataToPost = new Object();
+		var dataToPost = new Object();
 		dataToPost.cuscod = $(this).find(':selected').val();
 		
 		$.ajax({
@@ -551,7 +623,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	
 	//$('#add_resvno').change(function(){
 	$('#add_resvno').on("select2:select",function(){	
-		dataToPost = new Object();
+		var dataToPost = new Object();
 		dataToPost.resvno = (typeof $(this).find(':selected').val() === 'undefined' ? '' : $(this).find(':selected').val());
 		dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
 		
@@ -593,6 +665,10 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					var newOption = new Option(data.STRNO, data.STRNO, true, true);
 					$('#add_strno').attr('disabled',true);
 					$('#add_strno').empty().append(newOption).trigger('change');
+					
+					var newOption = new Option(data.ACTIDES, data.ACTICOD, true, true);
+					$('#add_acticod').attr('disabled',true);
+					$('#add_acticod').empty().append(newOption).trigger('change');
 				}
 				
 				$('#add_cuscod').trigger('select2:select');
@@ -605,8 +681,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#add_cuscod').attr('disabled',false);
 		$('#add_cuscod').empty().trigger('change');
 		$('#add_addrno').empty().trigger('change');
-		$('#add_strno').attr('disabled',false);
-		$('#add_strno').empty().trigger('change');
+		$('#add_strno ,#add_acticod').attr('disabled',false);
+		$('#add_strno ,#add_acticod').empty().trigger('change');
 	});
 	
 	$('#add_vatrt').attr('disabled',true);
@@ -643,7 +719,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 							ajax: {
 								url: '../Cselect2/getOPTMAST',
 								data: function (params) {
-									dataToPost = new Object();
+									var dataToPost = new Object();
 									dataToPost.now = $('#op_code').find(':selected').val();
 									dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 									dataToPost.locat = $('#add_locat').find(':selected').val();
@@ -669,7 +745,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						
 						$('#receipt_inopt').hide();
 						$('#cal_inopt').click(function(){
-							dataToPost = new Object();
+							var dataToPost = new Object();
 							dataToPost.qty 	   = $('#op_qty').val();
 							dataToPost.uprice  = $('#op_uprice').val();
 							dataToPost.cvt     = $('#op_cvt').val();
@@ -800,43 +876,12 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	$('#add_interestRateReal').attr('disabled',true);	
 	*/
 	
-	
-	function manualCal(){
-		dataToPost = new Object();
-		dataToPost.inclvat 	 = $('#add_inclvat').find(':selected').val();
-		dataToPost.vatrt 	 = $('#add_vatrt').val();
-		dataToPost.inprc 	 = $('#add_inprc').val();
-		dataToPost.indwn 	 = $('#add_indwn').val();
-		dataToPost.nopay 	 = $('#add_nopay').val();
-		
-		dataToPost.payfirst	 = $('#add_payfirst').val();
-		dataToPost.paynext 	 = $('#add_paynext').val();
-		dataToPost.paylast 	 = $('#add_paylast').val();
-		dataToPost.sell 	 = $('#add_sell').val();
-		dataToPost.totalSell = $('#add_totalSell').val();
-		dataToPost.interest	 = $('#add_interest').val();
-		
-		$.ajax({
-			url: '../SYS04/Leasing/manualCal',
-			data: dataToPost,
-			type: 'POST',
-			dataType: 'json',
-			success: function(data){
-				
-			},
-			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
-		});
-		
-	}
-	
-	
-	
 	$('#add_emp').select2({ 
 		placeholder: 'เลือก',
         ajax: {
 			url: '../Cselect2/getUSERS',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_emp').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
 				
@@ -864,7 +909,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getUSERS',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_audit').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
 				
@@ -894,7 +939,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getACTI',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_acticod').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
 				
@@ -922,7 +967,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         ajax: {
 			url: '../Cselect2/getCUSTOMERS',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $('#add_acticod').find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
 				
@@ -937,7 +982,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			},
 			cache: true
         },
-		allowClear: false,
+		allowClear: true,
 		multiple: false,
 		dropdownParent: $("#wizard-leasing"),
 		//disabled: true,
@@ -1000,7 +1045,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 							ajax: {
 								url: '../Cselect2/getCUSTOMERS',
 								data: function (params) {
-									dataToPost = new Object();
+									var dataToPost = new Object();
 									dataToPost.now = $('#mgar_cuscod').find(':selected').val();
 									dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 									
@@ -1032,7 +1077,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 							ajax: {
 								url: '../Cselect2/getCUSTOMERSADDRNo',
 								data: function (params) {
-									dataToPost = new Object();
+									var dataToPost = new Object();
 									dataToPost.now = $('#mgar_addrno').find(':selected').val();
 									dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 									dataToPost.cuscod = $('#mgar_cuscod').find(':selected').val();
@@ -1070,12 +1115,12 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 							});
 							
 							if(stat){
-								$msg = "";
-								if(relation == ''){ $msg = "ความสัมพันธ์คนค้ำ"; }
-								if(addrno   == ''){ $msg = "ที่อยู่ผู้ค้ำ"; }
-								if(cuscod   == ''){ $msg = "รหัส/ชื่อ ผู้ค้ำประกัน"; }
+								var msg = "";
+								if(relation == ''){ msg = "ความสัมพันธ์คนค้ำ"; }
+								if(addrno   == ''){ msg = "ที่อยู่ผู้ค้ำ"; }
+								if(cuscod   == ''){ msg = "รหัส/ชื่อ ผู้ค้ำประกัน"; }
 								
-								if($msg != ""){
+								if(msg != ""){
 									Lobibox.notify('warning', {
 										title: 'แจ้งเตือน',
 										size: 'mini',
@@ -1085,7 +1130,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 										continueDelayOnInactiveTab: false,
 										icon: true,
 										messageHeight: '90vh',
-										msg: 'คุณยังไม่ได้ระบุ'+$msg+' โปรดระบุ'+$msg+' ก่อนครับ'
+										msg: 'คุณยังไม่ได้ระบุ'+msg+' โปรดระบุ'+msg+' ก่อนครับ'
 									});	
 								}else{
 									var row = '<tr seq="new">';							
@@ -1172,11 +1217,11 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 							});
 							
 							if(stat){
-								$msg = "";
-								if(garcod == ''){ $msg = "รหัสหลักทรัพย์"; }
-								if(refno  == ''){ $msg = "เลขที่อ้างอิง"; }
+								var msg = "";
+								if(garcod == ''){ msg = "รหัสหลักทรัพย์"; }
+								if(refno  == ''){ msg = "เลขที่อ้างอิง"; }
 								
-								if($msg != ""){
+								if(msg != ""){
 									Lobibox.notify('warning', {
 										title: 'แจ้งเตือน',
 										size: 'mini',
@@ -1186,7 +1231,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 										continueDelayOnInactiveTab: false,
 										icon: true,
 										messageHeight: '90vh',
-										msg: 'คุณยังไม่ได้ระบุ'+$msg+' โปรดระบุ'+$msg+' ก่อนครับ'
+										msg: 'คุณยังไม่ได้ระบุ'+msg+' โปรดระบุ'+msg+' ก่อนครับ'
 									});	
 								}else{
 									var row = '<tr seq="new">';							
@@ -1260,15 +1305,15 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				
 				switch(index){
 					case 0: //tab1
-						$msg = "";
+						var msg = "";
 						
-						if(paydue 		== ''){ $msg = "ไม่พบวิธีชำระค่างวด โปรดระบุวิธีชำระค่างวดก่อนครับ"; }
-						if(strno 		== ''){ $msg = "ไม่พบเลขตัวถัง โปรดระบุเลขตัวถังก่อนครับ"; }
-						if(cuscodaddr 	== ''){ $msg = "ไม่พบที่อยู่ในการพิมพ์สัญญา โปรดระบุที่อยู่ในการพิมพ์สัญญาก่อนครับ"; }
-						if(cuscod 		== ''){ $msg = "ไม่พบรหัสลูกค้า โปรดระบุรหัสลูกค้าก่อนครับ"; }
-						if(sdate 		== ''){ $msg = "ไม่พบวันที่ขาย โปรดระบุวันที่ขายก่อนครับ"; }
+						if(paydue 		== ''){ msg = "ไม่พบวิธีชำระค่างวด โปรดระบุวิธีชำระค่างวดก่อนครับ"; }
+						if(strno 		== ''){ msg = "ไม่พบเลขตัวถัง โปรดระบุเลขตัวถังก่อนครับ"; }
+						if(cuscodaddr 	== ''){ msg = "ไม่พบที่อยู่ในการพิมพ์สัญญา โปรดระบุที่อยู่ในการพิมพ์สัญญาก่อนครับ"; }
+						if(cuscod 		== ''){ msg = "ไม่พบรหัสลูกค้า โปรดระบุรหัสลูกค้าก่อนครับ"; }
+						if(sdate 		== ''){ msg = "ไม่พบวันที่ขาย โปรดระบุวันที่ขายก่อนครับ"; }
 						
-						if($msg != ""){
+						if(msg != ""){
 							Lobibox.notify('warning', {
 								title: 'แจ้งเตือน',
 								size: 'mini',
@@ -1278,7 +1323,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								continueDelayOnInactiveTab: false,
 								icon: true,
 								messageHeight: '90vh',
-								msg: $msg
+								msg: msg
 							});
 							
 							return false;
@@ -1323,7 +1368,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	}
 	
 	$('#add_inprcCal').click(function(){
-		dataToPost = new Object();
+		var dataToPost = new Object();
 		dataToPost.strno = (typeof $('#add_strno').find(':selected').val() === 'undefined' ? '' : $('#add_strno').find(':selected').val());
 		dataToPost.inclvat = (typeof $('#add_inclvat').find(':selected').val() === 'undefined' ? '' : $('#add_inclvat').find(':selected').val());
 		dataToPost.vatrt = $('#add_vatrt').val();
@@ -1469,7 +1514,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 							$('#btnStd').click(function(){ 
 								$('#btnStd').attr('disabled',true);
 								
-								dataToPost = new Object();
+								var dataToPost = new Object();
 								dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
 								dataToPost.strno = (typeof $('#add_strno').find(':selected').val() === 'undefined' ? '' : $('#add_strno').find(':selected').val());
 								
@@ -1492,7 +1537,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 													ajax: {
 														url: '../Cselect2/getACTI',
 														data: function (params) {
-															dataToPost = new Object();
+															var dataToPost = new Object();
 															dataToPost.now = $('#add_acticod').find(':selected').val();
 															dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
 															
@@ -1516,7 +1561,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 												});
 												
 												$('#btnStdSearch').click(function(){
-													dataToPost = new Object();
+													var dataToPost = new Object();
 													dataToPost.locat 	= (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '' : $('#add_locat').find(':selected').val());
 													dataToPost.sdate    = $('#add_sdate').val();
 													dataToPost.model 	= $(this).attr('MODEL');
@@ -1734,7 +1779,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 																});
 																
 																$('#btnStdReceipt').click(function(){
-																	dataToPost = new Object();
+																	var dataToPost = new Object();
 																	dataToPost.stdCond1 = ($('#stdCond1').is(':checked') ? 'T' : 'F');
 																	dataToPost.stdCond2 = ($('#stdCond2').is(':checked') ? 'T' : 'F');
 																	dataToPost.stdCond3 = ($('#stdCond3').is(':checked') ? 'T' : 'F');
@@ -1838,7 +1883,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 							$('#calc_decimal').change(function(){ fnCalculate(); });
 							
 							function fnCalculate(){
-								dataToPost = new Object();
+								var dataToPost = new Object();
 								dataToPost.nprice 	= $('#calc_nprice').val();
 								dataToPost.npricev 	= $('#calc_npricev').val();
 								dataToPost.ndownv 	= $('#calc_ndownv').val();
@@ -1924,7 +1969,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 							}
 							
 							$('#btnReceived').click(function(){
-								dataToPost = new Object();
+								var dataToPost = new Object();
 								dataToPost.aincvat	= $('#add_inclvat').find(':selected').val();
 								dataToPost.avatrt  	= $('#add_vatrt').val();
 								dataToPost.cincvat	= $('#calc_incvat').find(':selected').val();
@@ -2011,7 +2056,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	});
 	
 	$('#add_detailsCond').click(function(){
-		dataToPost = new Object();
+		var dataToPost = new Object();
 		dataToPost.aincvat		= $('#add_inclvat').find(':selected').val();
 		dataToPost.avatrt  		= $('#add_vatrt').val();
 		dataToPost.ainprc  		= $('#add_inprc').val();
@@ -2086,7 +2131,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			},
 			callback: function(lobibox, type){
 				if (type === 'ok'){
-					dataToPost = new Object();
+					var dataToPost = new Object();
 					dataToPost.contno = $('#add_contno').val();
 					dataToPost.locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '':$('#add_locat').find(':selected').val() );
 					dataToPost.sdate = $('#add_sdate').val();
@@ -2157,6 +2202,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					dataToPost.calint 	= $("input:radio[name=CALINT]:checked").val();
 					dataToPost.discfm 	= $("input:radio[name=DISC_FM]:checked").val();
 					dataToPost.comments = $('#add_comments').val();
+					dataToPost.comments_free = $('#add_comments_free').val();
 					
 					var billdas = [];
 					$('.add_billdas').each(function(){
@@ -2263,12 +2309,19 @@ function fn_billdasActive(rank){
 		ajax: {
 			url: '../Cselect2/getBILLDAS',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = $(this).find(':selected').val();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
 				
 				dataToPost.locat = $('#add_locat').find(':selected').val();
 				dataToPost.sdate = $('#add_sdate').val();
+				
+				var customers = new Array();
+				if(typeof $('#add_cuscod').find(':selected').val() !== 'undefined'){
+					customers.push($('#add_cuscod').find(':selected').val());
+				}
+				$('.mgarTab5').each(function(){ customers.push($(this).attr('cuscod')); });
+				dataToPost.customers = (customers.length > 0 ? customers : []);
 				
 				return dataToPost;				
 			},
@@ -2355,33 +2408,39 @@ function fn_billdasActive(rank){
 }
 
 function fn_calbilldas(){
-	$saleno = new Array();
+	var saleno = new Array();
 	$('.add_billdas').each(function(){
 		if(typeof $(this).find(':selected').val() !== 'undefined'){
-			$saleno.push($(this).find(':selected').val());
+			saleno.push($(this).find(':selected').val());
 		}
 	});	
 	
-	if($saleno.length > 0){
+	if(saleno.length > 0){
 		$('#loadding').show();
 		$.ajax({
 			url:'../SYS04/Leasing/calbilldas',
-			data: {saleno:$saleno,locat:(typeof $("#add_locat").find(':selected').val() === 'undefined' ? '' : $("#add_locat").find(':selected').val())},
+			data: {saleno:saleno,locat:(typeof $("#add_locat").find(':selected').val() === 'undefined' ? '' : $("#add_locat").find(':selected').val())},
 			type: 'POST',
 			dataType: 'json',
 			success: function(data) {
 				$('#add_free').val(data.TotalAmt);
 				
+				/*
 				var comment = $('#add_comments').val().split("\n");
 				$('#add_comments').val(data.Details+"\n"+(typeof comment[1] === 'undefined' ? '' : comment[1]));
+				*/
+				$('#add_comments_free').val(data.Details);
 				$('#loadding').hide();
 			},
 			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		})
 	}else{
 		$('#add_free').val('0.00');
+		/*
 		var comment = $('#add_comments').val().split("\n");
 		$('#add_comments').val((typeof comment[1] === 'undefined' ? '' : "\n"+comment[1]));
+		*/
+		$('#add_comments_free').val('');
 	}
 }
 
@@ -2449,7 +2508,8 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_sdate').val($dataLoad.SDATE);
 	var newOption = new Option($dataLoad.RESVNO, $dataLoad.RESVNO, true, true);
 	$('#add_resvno').empty().append(newOption).trigger('change');
-	$('#add_approve').val($dataLoad.APPVNO);
+	var newOption = new Option($dataLoad.APPVNO, $dataLoad.APPVNO, true, true);
+	$('#add_approve').empty().append(newOption).trigger('change');
 	var newOption = new Option($dataLoad.CUSNAME, $dataLoad.CUSCOD, true, true);
 	$('#add_cuscod').empty().append(newOption).trigger('change');
 	$('#add_inclvat').val($dataLoad.INCLVAT).trigger('change');
@@ -2521,12 +2581,13 @@ function permission($dataLoad,$thisWindowLeasing){
 	});
 	
 	var billDas = (typeof $dataLoad.billDAS === 'undefined' ? [] : $dataLoad.billDAS);
-	for($i=0;$i<billDas.length;$i++){
-		var billdas = "<select class='add_billdas form-control input-sm chosen-select' process='' rank='"+$i+"' data-placeholder='เลขที่บิล'><option value='"+billDas[$i]+"'>"+billDas[$i]+"</option></select>";
+	for(var i=0;i<billDas.length;i++){
+		var billdas = "<select class='add_billdas form-control input-sm chosen-select' process='' rank='"+i+"' data-placeholder='เลขที่บิล'><option value='"+billDas[i]+"'>"+billDas[i]+"</option></select>";
 		$('#formBillDas').append(billdas);
 		
-		fn_billdasActive($i);
+		fn_billdasActive(i);
 	}
+	$('#add_comments_free').val($dataLoad.MEMO1_FREE);
 	$('#add_comments').val($dataLoad.MEMO1);
 	/*tab5*/
 	$('#dataTable_ARMGAR tbody').empty().append($dataLoad.mgar);
@@ -2576,6 +2637,7 @@ function permission($dataLoad,$thisWindowLeasing){
 	$('#add_empSell').select2({ dropdownParent: true,disabled: true,width:'100%' });
 	$('#add_acticod').select2({ dropdownParent: true,disabled: true,width:'100%' });
 	
+	
 	if(_update == 'T'){
 		$('#add_save').attr('disabled',false);
 	}else{
@@ -2604,11 +2666,37 @@ function permission($dataLoad,$thisWindowLeasing){
 		$('#add_save').attr('disabled',true);
 	}
 	
-	if(_delete == 'T'){
-		$('#add_delete').attr('disabled',false);
-	}else{
-		$('#add_delete').attr('disabled',true);
+	if(_locat != $('#add_locat').find(':selected').val() && _level != 1){ 
+		$('#add_inopt').attr('disabled',true);
+		$('.inoptTab2').attr('disabled',true);
+		$('#add_paydue').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_emp').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_audit').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_intRate').attr('disabled',true);
+		$('#add_delay').attr('disabled',true);
+		$('#add_interestRate').attr('disabled',true);
+		$('#add_agent').attr('disabled',true);
+		$('#add_acticod').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_advisor').select2({ dropdownParent: true,disabled: true,width:'100%' });
+		$('#add_commission').attr('disabled',true);
+		$('#add_free').attr('disabled',true);
+		$('#add_payother').attr('disabled',true);
+		$("input:radio[name=CALINT]").attr('disabled',true);
+		$("input:radio[name=DISC_FM]").attr('disabled',true);
+		$('#add_comments').attr('disabled',true);
+		$('#btn_addBillDas').attr('disabled',true);
+		$('.add_billdas').attr('disabled',true);
+		$('#add_mgar').attr('disabled',true);
+		$('.mgarTab5').attr('disabled',true); 
+		$('#add_othmgar').attr('disabled',true);
+		$('.othmgarTab5').attr('disabled',true); 
+		
+		$('#add_save').attr('disabled',true);
 	}
+	
+	
+	
+	$('#add_delete').attr('disabled',(_delete == 'T' ? false:true));
 	
 	$('#btnArpay').attr('disabled',false);
 	$('#btnSend').attr('disabled',false);
@@ -2624,7 +2712,7 @@ function permission($dataLoad,$thisWindowLeasing){
 var JDbtnOther = null;
 function btnOther($thisWindowLeasing){
 	$('#btnArpay').click(function(){
-		dataToPost = new Object();
+		var dataToPost = new Object();
 		dataToPost.contno = $('#add_contno').val();
 		
 		$('#btnArpay').attr('disabled',true);
@@ -2684,7 +2772,7 @@ function btnOther($thisWindowLeasing){
 			},
 			callback: function(lobibox, type){
 				if (type === 'ok'){
-					dataToPost = new Object();
+					var dataToPost = new Object();
 					dataToPost.contno = $('#add_contno').val();
 					
 					$('#loadding').fadeIn(200);
@@ -2772,9 +2860,9 @@ function btnOther($thisWindowLeasing){
 	});	
 	
 	function documents($type){
-		$contno = $("#add_contno").val();
+		var contno = $("#add_contno").val();
 		var baseUrl = $('body').attr('baseUrl');
-		var url = baseUrl+'SYS04/Agent/sendpdf?contno='+$contno+'&document='+$type;
+		var url = baseUrl+'SYS04/Agent/sendpdf?contno='+contno+'&document='+$type;
 		var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 		
 		Lobibox.window({

@@ -223,15 +223,15 @@ class Standard extends MY_Controller {
 		
 		if($arrs['events'] != "" && $arrs['evente'] != ""){
 			$cond .= " 
-				and ''".$arrs['events']."'' between b.EVENTStart and b.EVENTEnd
-				and ''".$arrs['evente']."'' <= b.EVENTEnd
+				and '".$arrs['events']."' between b.EVENTStart and b.EVENTEnd
+				and '".$arrs['evente']."' <= b.EVENTEnd
 			";
 			$condDesc .= " วันที่บังคับใช้ std. ::  [".$_POST['events']." - ".$_POST['evente']."]";
 		}else if($arrs['events'] != "" && $arrs['evente'] == ""){
-			$cond .= " and ''".$arrs['events']."'' between b.EVENTStart and b.EVENTEnd";
+			$cond .= " and '".$arrs['events']."' between b.EVENTStart and b.EVENTEnd";
 			$condDesc .= " วันที่บังคับใช้ std. ::  [".$_POST['events']." เป็นต้นไป]";
 		}else if($arrs['events'] == "" && $arrs['evente'] != ""){
-			$cond .= " and ''".$arrs['evente']."'' between b.EVENTStart and b.EVENTEnd";
+			$cond .= " and '".$arrs['evente']."' between b.EVENTStart and b.EVENTEnd";
 			$condDesc .= " วันที่บังคับใช้ std. :: ถึงวันที่ [".$_POST['evente']."]";
 		}
 		
@@ -3350,6 +3350,68 @@ class Standard extends MY_Controller {
 		return;
 	}
 	
+	function DeleteSTD(){
+		$STDID = ($_POST["STDID"]);
+		$SUBID = ($_POST["SUBID"]);
+		
+		$sql = "
+			if object_id('tempdb..#tempResult') is not null drop table #tempResult;
+			create table #tempResult (error varchar(1),msg varchar(max));
+			
+			begin tran tsins
+			begin try
+				declare @STDID bigint = {$STDID}
+				declare @SUBID bigint = {$SUBID}
+	
+				if exists (
+					select * from {$this->MAuth->getdb('ARANALYZE')}
+					where STDID=@STDID and SUBID=@SUBID and ANSTAT != 'C'
+				)
+				begin 
+					rollback tran tsins;
+					insert into #tempResult select 'y','ผิดพลาด สแตนดาร์ดนี้ถูกนำไปใช้งานแล้ว ไม่สามารถลบได้';
+					return;
+				end
+				
+				delete from {$this->MAuth->getdb('STDVehiclesDetail')} where STDID=@STDID and SUBID=@SUBID
+				delete from {$this->MAuth->getdb('STDVehiclesACTI')} where STDID=@STDID and SUBID=@SUBID
+				delete from {$this->MAuth->getdb('STDVehiclesBAAB')} where STDID=@STDID and SUBID=@SUBID
+				delete from {$this->MAuth->getdb('STDVehiclesCOLOR')} where STDID=@STDID and SUBID=@SUBID
+				delete from {$this->MAuth->getdb('STDVehiclesDown')} where STDID=@STDID and SUBID=@SUBID
+				delete from {$this->MAuth->getdb('STDVehiclesLOCAT')} where STDID=@STDID and SUBID=@SUBID
+				delete from {$this->MAuth->getdb('STDVehiclesPackages')} where STDID=@STDID and SUBID=@SUBID
+				delete from {$this->MAuth->getdb('STDVehiclesPRICE')} where STDID=@STDID and SUBID=@SUBID
+			
+				declare @stdlog varchar(100) = 'STDID::'+cast(@STDID as varchar)+'_SUBID::'+cast(@SUBID as varchar)+'_';
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS04::ลบ standard รถ',@stdlog+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+
+				insert into #tempResult select 'n','ลบสแตนดาร์ดเรียบร้อยแล้ว';
+				commit tran tsins;
+			end try
+			begin catch
+				rollback tran tsins;
+				insert into #tempResult select 'y',ERROR_MESSAGE();
+			end catch
+		";
+		//echo $sql; exit;
+		$this->db->query($sql);
+		$sql = "select * from #tempResult";
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["error"] = ($row->error == "n" ? false:true);
+				$response["msg"] = $row->msg;
+			}
+		}else{
+			$response["error"] = true;
+			$response["msg"] = 'ผิดพลาดไม่สามารถลบสแตนดาร์ดได้ โปรดติดต่อฝ่ายไอที';
+		}
+		
+		echo json_encode($response);
+	}
+	
 	function SaveSTD(){
 		$this->certificate_std();
 		
@@ -3579,6 +3641,7 @@ class Standard extends MY_Controller {
 
 			declare @tbACTI table (ACTICOD varchar(20));
 			insert into @tbACTI select * from #tempACTI
+			declare @TYPECOD varchar(20) = 'HONDA';
 			declare @MODEL varchar(20) = '".$MODEL."';
 			declare @tbBAAB table (BAAB varchar(20));
 			insert into @tbBAAB select * from #tempBAAB
@@ -3628,10 +3691,18 @@ class Standard extends MY_Controller {
 			begin try
 				if (@STDID = 'Auto Genarate')
 				begin 
+					if not exists (select 1 from {$this->MAuth->getdb('SETMODEL')} where MODELCOD=@MODEL)
+					begin
+						rollback tran tsins;
+						insert into #tempResult 
+						select 'y','ผิดพลาด รุ่นที่คุณระบุมายังไม่มีในระบบ โปรดแจ้งฝ่ายเช่าซื้อ เพื่อเพิ่มรุ่น';
+						return;
+					end
+			
 					set @STDID = isnull((select MAX(STDID)+1 from {$this->MAuth->getdb('STDVehicles')}),1);
 					
 					insert into {$this->MAuth->getdb('STDVehicles')}
-					select @STDID,@MODEL,@insby,@insdt
+					select @STDID,@TYPECOD,@MODEL,@insby,@insdt 
 				end
 				
 				if (@SUBID = 'Auto Genarate')
@@ -3773,6 +3844,7 @@ class Standard extends MY_Controller {
 				insert into #tempResult select 'y',ERROR_MESSAGE();
 			end catch
 		";			
+		//echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "select * from #tempResult";
 		$query = $this->db->query($sql);
@@ -3945,6 +4017,7 @@ class Standard extends MY_Controller {
 						where STDID=@STDID and SUBID=@SUBID and STAT=@STAT
 					)
 					begin
+						/*
 						declare @eve datetime = (
 							select convert(varchar(8),EVENTEnd,112) from {$this->MAuth->getdb('STDVehiclesDetail')}
 							where STDID=@STDID and SUBID=@SUBID and STAT=@STAT 
@@ -3966,6 +4039,13 @@ class Standard extends MY_Controller {
 							select 'y','ผิดพลาด วันที่บังคับใช้งาน ต้องไม่เกินวันปัจจุบันครับ';
 							return;
 						end
+						*/
+						update {$this->MAuth->getdb('STDVehiclesDetail')}
+						set EVENTStart=@EVENTS
+							,EVENTEnd=@EVENTE
+							,STDNAME=@EVENTNAME
+							,STDDESC=@DETAIL
+						where STDID=@STDID and SUBID=@SUBID and STAT=@STAT		
 					end
 					
 					-- แก้ไขกิจกรรมการขาย
@@ -4216,7 +4296,7 @@ class Standard extends MY_Controller {
 			insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 			values ('".$this->sess["IDNo"]."','SYS04::เปลี่ยนแปลง standard รถ',@stdlog+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 		*/
-		//echo $sql; exit;
+		// echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "select * from #tempResult";
 		$query = $this->db->query($sql);
