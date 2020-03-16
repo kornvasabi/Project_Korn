@@ -87,6 +87,10 @@ $(function(){
 	$('#LOCAT').change(function(){
 		ClearInput();
 	});
+	$('#btnaddRD').click(function(){
+		ClearInput();
+		$('#LOCAT').empty();
+	});
 });
 function ClearInput(){
 	$('#TAXNO').empty();
@@ -94,7 +98,7 @@ function ClearInput(){
 	$('#TAXNO2').val('');
 	$('#TAXDT').val('');
 	$('#REFDT').val('');
-	//$('#INPDT').val('');
+	//$('#LOCAT').empty();
 	$('#CONTNO').val('');
 	$('#CUSCOD').val('');
 	$('#SNAM').val('');
@@ -137,6 +141,19 @@ function gettaxnodetail(){
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
+			if(data.error){
+				Lobibox.notify('warning', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					msg: data.msg
+				});
+			}
 			$('#STRNO').val(data.STRNO);
 			$('#REFDT').val(data.TAXDT);
 			$('#CONTNO').val(data.CONTNO);
@@ -341,6 +358,234 @@ function fn_QueryDebtPrice(){
 		},
 		beforeSend:function(){
 			if(QueryDebtPrice !== null){QueryDebtPrice.abort();}
+		}
+	});
+}
+$('#btnsaveRD').click(function(){
+	savereduceshunt();
+});
+var VPreduceshunt = null;
+function savereduceshunt(){
+	dataToPost = new Object();
+	dataToPost.LOCAT   = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
+	dataToPost.TAXTYP  = (typeof $('#TAXTYP').find(':selected').val() === 'undefined' ? '':$('#TAXTYP').find(':selected').val());
+	dataToPost.TAXNO   = (typeof $('#TAXNO').find(':selected').val() === 'undefined' ? '':$('#TAXNO').find(':selected').val());
+	dataToPost.STRNO   = $('#STRNO').val();
+	dataToPost.TAXNO2  = $('#TAXNO2').val();
+	dataToPost.TAXDT   = $('#TAXDT').val();
+	dataToPost.REFDT   = $('#REFDT').val();
+	
+	dataToPost.CONTNO  = $('#CONTNO').val();
+	dataToPost.CUSCOD  = $('#CUSCOD').val();
+	dataToPost.SNAM    = $('#SNAM').val();
+	dataToPost.NAME1   = $('#NAME1').val();
+	dataToPost.NAME2   = $('#NAME2').val();
+	
+	dataToPost.TSALE   = $('#TSALE').val();
+	dataToPost.DESCP   = $('#DESCP').val();
+	
+	dataToPost.NETAMT  = $('#NETAMT').val();
+	dataToPost.VATAMT  = $('#VATAMT').val();
+	dataToPost.TOTAMT  = $('#TOTAMT').val();
+	
+	Lobibox.confirm({
+		title: 'ยืนยันการทำรายการ',
+		iconClass: false,
+		msg: "คุณต้องการบันทึก ?",
+		buttons: {
+			ok : {
+				'class': 'btn btn-primary',
+				text: 'ยืนยัน',
+				closeOnClick: true,
+			},
+			cancel : {
+				'class': 'btn btn-danger',
+				text: 'ยกเลิก',
+				closeOnClick: true
+			},
+		},
+		callback: function(lobibox, type){
+			$('#loadding').show();
+			if(type === 'ok'){
+				VPreduceshunt = $.ajax({
+					url:'../SYS07/ReduceDebtShuntVP/Save_VatPriceShunt',
+					data:dataToPost,
+					type:'POST',
+					dataType:'json',
+					success:function(data){
+						$('#loadding').hide();
+						if(data.error){
+							Lobibox.notify('warning',{
+								title: 'แจ้งเตือน',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 5000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+						}
+						if(data.status == 'Y'){
+							Lobibox.notify('success',{
+								title: 'สำเร็จ',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 3000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+							$('#LOCAT').empty();
+							ClearInput();
+						}else if(data.status == 'N'){
+							Lobibox.notify('error',{
+								title: 'ผิดพลาด',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 3000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+						}
+						VPreduceshunt = null;
+					},
+					beforeSend:function(){
+						if(VPreduceshunt !== null){VPreduceshunt.abort();}
+					}
+				});
+			}else{
+				$('#loadding').hide();
+				Lobibox.notify('error', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: true,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+					//soundExt: '.ogg',
+					msg: 'ยังไม่บันทึกรายการ'
+				});
+			}	
+		}
+	});
+}
+$('#btndelRD').click(function(){
+	delreduceshunt();
+});
+var VPreduceshuntdel = null;
+function delreduceshunt(){
+	dataToPost = new Object();
+	dataToPost.LOCAT   = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
+	dataToPost.TAXTYP  = (typeof $('#TAXTYP').find(':selected').val() === 'undefined' ? '':$('#TAXTYP').find(':selected').val());
+	dataToPost.TAXNO   = (typeof $('#TAXNO').find(':selected').val() === 'undefined' ? '':$('#TAXNO').find(':selected').val());
+	dataToPost.STRNO   = $('#STRNO').val();
+	dataToPost.TAXNO2  = $('#TAXNO2').val();
+	dataToPost.TAXDT   = $('#TAXDT').val();
+	dataToPost.REFDT   = $('#REFDT').val();
+	dataToPost.TSALE   = $('#TSALE').val();
+	dataToPost.CONTNO  = $('#CONTNO').val();
+	dataToPost.CUSCOD  = $('#CUSCOD').val();
+	dataToPost.NETAMT  = $('#NETAMT').val();
+	dataToPost.VATAMT  = $('#VATAMT').val();
+	dataToPost.TOTAMT  = $('#TOTAMT').val();
+	Lobibox.confirm({
+		title: 'ยืนยันการทำรายการ',
+		iconClass: false,
+		msg: "คุณต้องการลบ ?",
+		buttons: {
+			ok : {
+				'class': 'btn btn-primary',
+				text: 'ยืนยัน',
+				closeOnClick: true,
+			},
+			cancel : {
+				'class': 'btn btn-danger',
+				text: 'ยกเลิก',
+				closeOnClick: true
+			},
+		},
+		callback: function(lobibox, type){
+			$('#loadding').show();
+			if(type === 'ok'){
+				VPreduceshuntdel = $.ajax({
+					url:'../SYS07/ReduceDebtShuntVP/Del_VatPriceShunt',
+					data:dataToPost,
+					type:'POST',
+					dataType:'json',
+					success:function(data){
+						$('#loadding').hide();
+						if(data.error){
+							Lobibox.notify('warning', {
+								title: 'แจ้งเตือน',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 5000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+						}
+						if(data.status == 'Y'){
+							Lobibox.notify('success', {
+								title: 'สำเร็จ',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 3000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+							$('#LOCAT').empty();
+							ClearInput();
+						}else if(data.status == 'N'){
+							Lobibox.notify('error', {
+								title: 'ผิดพลาด',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 3000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.msg
+							});
+						}
+						VPreduceshuntdel = null;
+					},
+					beforeSend:function(){
+						if(VPreduceshuntdel !== null){VPreduceshuntdel.abort();}
+					}
+				});
+			}else{
+				$('#loadding').hide();
+				Lobibox.notify('error', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: true,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					//soundPath: $("#maincontents").attr("baseurl")+'public/lobibox-master/sounds/',   // The folder path where sounds are located
+					//soundExt: '.ogg',
+					msg: 'ยังไม่บันทึกรายการ'
+				});
+			}	
 		}
 	});
 }

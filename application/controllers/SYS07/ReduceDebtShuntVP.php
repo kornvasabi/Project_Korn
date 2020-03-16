@@ -206,6 +206,20 @@ class ReduceDebtShuntVP extends MY_Controller {
 		$LOCAT = $_REQUEST['LOCAT'];
 		$response = array();
 		$sql = "
+			select REFNO from {$this->MAuth->getdb('TAXTRAN')} 
+			where LOCAT = '".$LOCAT."' and REFNO <> '' and TSALE in ('C','F') 
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				if($TAXNO == $row->REFNO){
+					$response["error"] = true;
+					$response["msg"] = "สัญญานี้ออกใบลดหนี้ทั้งรายการแล้ว";
+					echo json_encode($response); exit;
+				}
+			}
+		}
+		$sql = "
 			select TAXNO,convert(varchar(8),TAXDT,112) as TAXDT,STRNO,LOCAT,TSALE,CONTNO,CUSCOD
 			,SNAM,NAME1,NAME2,TSALE,DESCP,NETAMT,VATAMT,TOTAMT 
 			from {$this->MAuth->getdb('TAXTRAN')} where TSALE in ('C','F') and LOCAT = '".$LOCAT."' 
@@ -267,5 +281,229 @@ class ReduceDebtShuntVP extends MY_Controller {
 			}
 		}
 		echo json_encode($response);
+	}
+	function Save_VatPriceShunt(){
+		$LOCAT 	 = $_REQUEST["LOCAT"];
+		$TAXTYP  = $_REQUEST["TAXTYP"];
+		$TAXNO 	 = $_REQUEST["TAXNO"];
+		$STRNO 	 = $_REQUEST["STRNO"];
+		$TAXNO2  = $_REQUEST["TAXNO2"];
+		$TAXDT 	 = $this->Convertdate(1,$_REQUEST["TAXDT"]);
+		$REFDT   = $this->Convertdate(1,$_REQUEST["REFDT"]);
+		$CONTNO  = $_REQUEST["CONTNO"];
+		$CUSCOD  = $_REQUEST["CUSCOD"];
+		$SNAM 	 = $_REQUEST["SNAM"];
+		$NAME1 	 = $_REQUEST["NAME1"];
+		$NAME2   = $_REQUEST["NAME2"];
+		$TSALE  = $_REQUEST["TSALE"];
+		$DESCP  = $_REQUEST["DESCP"];
+		$NETAMT  = str_replace(',','',$_REQUEST["NETAMT"]);
+		$VATAMT  = str_replace(',','',$_REQUEST["VATAMT"]);
+		$TOTAMT  = str_replace(',','',$_REQUEST["TOTAMT"]);
+		
+		$USERID  = $this->sess["USERID"];
+		if($LOCAT == ''){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกออกใบลดหนี้ที่สาขาก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($TAXNO == ''){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกอ้างใบกำกับเลขที่ก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($TAXDT == ''){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกวันที่ออกก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($NETAMT == '0.00'){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกมูลค่าสินค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($VATAMT == '0.00'){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกภาษีมูลค่าเพิ่มก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($TOTAMT == '0.00' && $TOTAMT == ''){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกยอดรวมสุทธิก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		$sql = "
+			select TAXNO,TAXDT,VATRT,FPAR,FPAY,LPAR,LPAY,FLAG,TAXTYP,TAXFLG,TMBILL from {$this->MAuth->getdb('TAXTRAN')} 
+			where TAXNO = '".$TAXNO."' and CONTNO = '".$CONTNO."' and CUSCOD = '".$CUSCOD."'
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$sql2 = "
+					if object_id('tempdb..#Savevatpriceshunt') is not null drop table #Savevatpriceshunt;
+					create table #Savevatpriceshunt (id varchar(1),msg varchar(max));
+					begin tran AddReduce
+					begin try
+						declare @arcred varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('ARCRED')}
+						where CONTNO = '".$CONTNO."' and CUSCOD = '".$CUSCOD."' and STRNO = '".$STRNO."'
+						and CRDTXNO = '' and CRDAMT = 0);
+						
+						declare @invtran varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('INVTRAN')} 
+						where TSALE in ('C','F') and FLAG = 'C' and PRICE <> '0.00' and STRNO = '".$STRNO."' 
+						and CONTNO = '".$CONTNO."');
+
+						declare @arinopt varchar(1) =(select COUNT(*) from {$this->MAuth->getdb('ARINOPT')} 
+						where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."');
+						
+						/*สร้าง TAXNO ในการบันทึกข้อมูลในแต่ละการบันทึก*/
+						declare @taxdt  varchar(4) = (select YEAR('".$TAXDT."'));
+						declare @month  varchar(2) = (select RIGHT('0' + RTRIM(MONTH('".$TAXDT."')), 2));
+						
+						declare @lastno varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('LASTNO')} 
+						where LOCAT = '".$LOCAT."' and CR_YEAR = @taxdt and CR_MONTH = @month);
+						/*เงื่อนไขเช็คก่อนบันทึก*/
+						if(@arcred = 1 and @invtran = 1 and @arinopt = 1) 
+						begin		
+							update {$this->MAuth->getdb('ARCRED')} set NKANG = NKANG - '".$NETAMT."',TKANG = TKANG - '".$TOTAMT."'
+							,VKANG = VKANG - '".$VATAMT."',CRDTXNO = '".$TAXNO2."',CRDAMT = CRDAMT + '".$TOTAMT."',
+							NPRICE = NPRICE - '".$NETAMT."',VATPRC = VATPRC - '".$VATAMT."',TOTPRC = TOTPRC - '".$TOTAMT."'
+							where STRNO = '".$STRNO."' and CONTNO = '".$CONTNO."' and CUSCOD = '".$CUSCOD."'
+							
+							update {$this->MAuth->getdb('INVTRAN')} set SDATE = null,PRICE = PRICE - '".$TOTAMT."',TSALE = '',CONTNO =''
+							,FLAG = 'D' where STRNO = '".$STRNO."'
+							
+							update {$this->MAuth->getdb('ARINOPT')} set RTNFLAG = 'R' where CONTNO = '".$CONTNO."'
+							
+							begin
+								if(@lastno = 0)
+									insert into {$this->MAuth->getdb('LASTNO')}(
+										LOCAT,CR_YEAR,CR_MONTH,L_TCSALE
+									)values(
+										'".$LOCAT."',@taxdt,@month,'1'
+									)
+								else
+									update {$this->MAuth->getdb('LASTNO')} set L_TCSALE = L_TCSALE+1 
+									where LOCAT = '".$LOCAT."' and CR_YEAR = @taxdt
+							end
+							begin
+								insert into TAXTRAN(
+									[LOCAT],[TAXNO],[TAXDT],[TSALE],[CONTNO],[CUSCOD],[SNAM],[NAME1],[NAME2],[STRNO]
+									,[REFNO],[REFDT],[VATRT],[NETAMT],[VATAMT],[TOTAMT],[DESCP],[FPAR],[FPAY],[LPAR]
+									,[LPAY],[INPDT],[FLAG],[CANDT],[TAXTYP],[TAXFLG],[USERID],[FLCANCL],[TMBILL]
+									,[RTNSTK],[FINCOD],[DOSTAX],[PAYFOR],[RESONCD],[INPTIME]
+								)values(
+									'".$LOCAT."','".$TAXNO2."','".$TAXDT."','".$TSALE."','".$CONTNO."','".$CUSCOD."'
+									,'".$SNAM."','".$NAME1."','".$NAME2."','".$STRNO."','".$TAXNO."','".$REFDT."'
+									,'".$row->VATRT."','".$NETAMT."','".$VATAMT."','".$TOTAMT."','".$DESCP."','','0'
+									,'','0',getdate(),'','','".$TAXTYP."','".$row->TAXFLG."','".$USERID."','','','Y','',''
+									,'','',null
+								)
+								insert into #Savevatpriceshunt select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
+								commit tran AddReduce;
+							end
+						end
+						else
+						begin
+							rollback tran AddReduce;
+							insert into #Savevatpriceshunt select 'N' as id,'รอเงื่อนไข' as msg;
+							return;
+						end
+					end try
+					begin catch
+						rollback tran AddReduce;
+						insert into #Savevatpriceshunt select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+						return;
+					end catch
+				";
+				echo $sql2; exit;
+			}
+		}
+		$response = array();
+		$sql = "
+			select * from #Savevatpriceshunt
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response['status'] = $row->id;
+				$response['msg']    = $row->mag;
+			}
+		}else{
+			$response['status'] = false;
+			$response['msg']    = "ผิดพลาด";
+		}
+	}
+	function Del_VatPriceShunt(){
+		$LOCAT 	 = $_REQUEST["LOCAT"];
+		$TAXTYP  = $_REQUEST["TAXTYP"];
+		$TAXNO 	 = $_REQUEST["TAXNO"];
+		$STRNO   = $_REQUEST["STRNO"];
+		$TAXNO2  = $_REQUEST["TAXNO2"];
+		$CONTNO  = $_REQUEST["CONTNO"];
+		$CUSCOD  = $_REQUEST["CUSCOD"];
+		$REFDT   = $this->Convertdate(1,$_REQUEST["REFDT"]);
+		$TSALE   = $_REQUEST['TSALE'];
+		
+		$NETAMT  = str_replace(',','',$_REQUEST["NETAMT"]);
+		$VATAMT  = str_replace(',','',$_REQUEST["VATAMT"]);
+		$TOTAMT  = str_replace(',','',$_REQUEST["TOTAMT"]);
+		$USERID  = $this->sess["USERID"];
+		
+		$sql = "
+			if object_id('tempdb..#Delvatpriceshunt') is not null drop table #Delvatpriceshunt;
+			create table #Delvatpriceshunt (id varchar(1),msg varchar(max));
+			begin tran AddReduce
+			begin try
+				declare @taxtran varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('TAXTRAN')} 
+				where LOCAT = '".$LOCAT."' and TAXNO = '".$TAXNO2."' and CONTNO = '".$CONTNO."'
+				and CUSCOD = '".$CUSCOD."' and REFNO = '".$TAXNO."' and TAXTYP = '".$TAXTYP."');
+			
+				declare @arcred varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('ARCRED')}
+				where CONTNO = '".$CONTNO."' and CUSCOD = '".$CUSCOD."' and STRNO = '".$STRNO."'
+				and CRDTXNO = '".$TAXNO2."' and CRDAMT = '".$TOTAMT."');
+				
+				declare @invtran varchar(1) = (select COUNT(*) from {$this->MAuth->getdb('INVTRAN')} 
+				where STRNO = '".$STRNO."' and CONTNO = '' and PRICE <> '".$TOTAMT."' and TSALE = '' and 
+				FLAG = 'D');
+				
+				declare @arinopt varchar(1) =(select COUNT(*) from {$this->MAuth->getdb('ARINOPT')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and RTNFLAG = 'R');
+				
+				/*เงื่อนไขเช็คก่อนบันทึก*/
+				if(@taxtran = 1 and @arcred = 1 and @invtran = 1 and @arinopt = 1) 
+				begin
+					update {$this->MAuth->getdb('TAXTRAN')} set FLAG = 'C',CANDT = GETDATE(),FLCANCL = '".$USERID."' 
+					where LOCAT = '".$LOCAT."' and TAXNO = '".$TAXNO2."' and CONTNO = '".$CONTNO."'
+					and CUSCOD = '".$CUSCOD."' and REFNO = '".$TAXNO."' and TAXTYP = '".$TAXTYP."'
+					
+					update {$this->MAuth->getdb('ARCRED')} set NKANG = NKANG + '".$NETAMT."',TKANG = TKANG + '".$TOTAMT."'
+					,VKANG = VKANG + '".$VATAMT."',CRDTXNO = '',CRDAMT = CRDAMT + '".$TOTAMT."',
+					NPRICE = NPRICE + '".$NETAMT."',VATPRC = VATPRC + '".$VATAMT."',TOTPRC = TOTPRC + '".$TOTAMT."'
+					where STRNO = '".$STRNO."' and CONTNO = '".$CONTNO."' and CUSCOD = '".$CUSCOD."'
+					
+					update {$this->MAuth->getdb('INVTRAN')} set SDATE = '".$REFDT."',PRICE = PRICE - '".$TOTAMT."'
+					,TSALE = '".$TSALE."',CONTNO = '".$CONTNO."',FLAG = 'C' where STRNO = '".$STRNO."'
+					
+					update {$this->MAuth->getdb('ARINOPT')} set RTNFLAG = '' where CONTNO = '".$CONTNO."' 
+					and LOCAT = '".$LOCAT."'
+					
+					insert into #Delvatpriceshunt select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
+					commit tran AddReduce;
+				
+				end
+				else
+				begin
+					rollback tran AddReduce;
+					insert into #Delvatpriceshunt select 'N' as id,'รอเงื่อนไข' as msg;
+					return;
+				end
+			end try
+			begin catch
+				rollback tran AddReduce;
+				insert into #Delvatpriceshunt select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				return;
+			end catch
+		";
+		echo $sql; exit;
 	}
 }

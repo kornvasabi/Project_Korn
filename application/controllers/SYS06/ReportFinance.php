@@ -2382,7 +2382,7 @@ class ReportFinance extends MY_Controller {
 				select STRNO,NPRICE,VATPRC,TOTPRC
 				into #LISTCAR
 				FROM(
-					select STRNO,NPRICE,VATPRC,TOTPRC from AR_TRANS where CONTNO = '".$contno."' and LOCAT = '".$locat."'
+					select STRNO,NPRICE,VATPRC,TOTPRC from {$this->MAuth->getdb('AR_TRANS')} where CONTNO = '".$contno."' and LOCAT = '".$locat."'
 				)LISTCAR
 			";
 			//echo $sql3; exit;

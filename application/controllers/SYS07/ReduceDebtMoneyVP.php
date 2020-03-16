@@ -214,21 +214,24 @@ class ReduceDebtMoneyVP extends MY_Controller {
 		$query = $this->db->query($sql);
 		if($query->row()){
 			foreach($query->result() as $row){
-				if($row->TSALE == 'C'){
-					$response['error'] = true;
-					$response['msg'] = "สัญญานี้ออกใบลดหนี้ทางรายการแล้ว";
-					echo json_encode($response); exit;
-				}
 				if($row->TSALE == 'H'){
 					$response['error'] = true;
 					$response['msg'] = "ไม่อนุญาติให้ออกใบลดหนี้สำหรับการขายผ่อน";
 					echo json_encode($response); exit;
 				}
+				/*
+				if($row->TSALE == 'C'){
+					$response['error'] = true;
+					$response['msg'] = "สัญญานี้ออกใบลดหนี้ทางรายการแล้ว";
+					echo json_encode($response); exit;
+				}
+				
 				if($row->TSALE == 'A'){
 					$response['error'] = true;
 					$response['msg'] = "สัญญานี้ยอดขายเป็นศูนย์";
 					echo json_encode($response); exit;
 				}
+				*/
 				$response['INPDT']   = $this->Convertdate(2,$row->INPDT);
 				$response['TAXDT']   = $this->Convertdate(2,$row->TAXDT);
 				$response['STRNO']   = $row->STRNO;
