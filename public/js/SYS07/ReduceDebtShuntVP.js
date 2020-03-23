@@ -75,6 +75,23 @@ $(function(){
 	});
 	$('#RESONCD').select2({
 		placeholder: 'เลือก',
+		ajax: {
+			url: '../Cselect2K/getRESONCD',
+			data: function (params){
+				dataToPost = new Object();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data){
+				return {
+					results: data
+				};
+			},
+			cache: true
+		},
 		allowClear: true,
 		multiple: false,
 		dropdownParent: $(".k_tab1"),
@@ -215,6 +232,19 @@ function gettexno(){
 		}
 	});
 }
+$('#RESONCD').change(function(){
+	dataToPost = new Object();
+	dataToPost.RESONCD = (typeof $('#RESONCD').find(':selected').val() === 'undefined' ? '':$('#RESONCD').find(':selected').val());
+	$.ajax({
+		url: '../SYS07/ReduceDebtShuntVP/getRESNDES',
+		data: dataToPost,
+		type: 'POST',
+		dataType: 'json',
+		success: function(data){
+			$('#RESNDES').val(data.RESNDES);
+		}
+	});
+});
 $('#btnshowRD').click(function(){
 	fn_QueryDebtPrice();
 });

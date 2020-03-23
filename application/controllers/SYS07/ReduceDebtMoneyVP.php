@@ -241,7 +241,7 @@ class ReduceDebtMoneyVP extends MY_Controller {
 				$response['NAME1']   = $row->NAME1;
 				$response['NAME2']	 = $row->NAME2;
 				$response['TSALE']	 = $row->TSALE;
-				$response['DESCP']	 = str_replace(chr(0),'',$row->DESCP);
+				$response['DESCP']	 = "ใบลดหนี้ขายบางส่วน";
 			}
 		}
 		echo json_encode($response);
@@ -280,6 +280,22 @@ class ReduceDebtMoneyVP extends MY_Controller {
 			foreach($query->result() as $row){
 				$response['TAXNO'] = $row->TAXNO;
 			}
+		}
+		echo json_encode($response);
+	}
+	function getRESNDES(){
+		$RESONCD = $_REQUEST['RESONCD'];
+		$sql = "
+			select RESONCD,RESNDES from {$this->MAuth->getdb('SETRESON')}
+			where RESONCD = '".$RESONCD."'
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response['RESNDES'] = str_replace(chr(0),'',$row->RESNDES);
+			}
+		}else{
+			$response['RESNDES'] = "";
 		}
 		echo json_encode($response);
 	}
