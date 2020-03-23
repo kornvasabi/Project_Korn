@@ -1,11 +1,11 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 /********************************************************
-             ______@05/03/2020______
+             ______@16/03/2020______
 			 Pasakorn Boonded
 
 ********************************************************/
-class ReduceDebtSendVP extends MY_Controller {
+class ReduceDebtBookVP extends MY_Controller {
 	private $sess = array(); 
 	
 	function __construct(){
@@ -36,7 +36,7 @@ class ReduceDebtSendVP extends MY_Controller {
 							<div class='col-sm-3'>	
 								<div class='form-group'>
 									ประเภทใบลดหนี้
-									<select id='TAXTYP' value='7' class='form-control input-sm' disabled><option>7</option></select>
+									<select id='TAXTYP' value='9' class='form-control input-sm' disabled><option>9</option></select>
 								</div>
 							</div>
 							<div class='col-sm-3'>	
@@ -48,7 +48,7 @@ class ReduceDebtSendVP extends MY_Controller {
 							<div class='col-sm-3'>	
 								<div class='form-group'>
 									เลขตัวถัง
-									<select id='STRNO' class='form-control input-sm' data-placeholder='เลือก'></select>
+									<input type='text' id='STRNO' class='form-control input-sm' disabled>
 								</div>
 							</div>
 							<div class='col-sm-3'>	
@@ -66,7 +66,7 @@ class ReduceDebtSendVP extends MY_Controller {
 							<div class='col-sm-3'>	
 								<div class='form-group'>
 									ลงวันที่
-									<input type='text' id='INPDT' class='form-control input-sm' disabled>
+									<input type='text' id='REFDT' class='form-control input-sm' disabled>
 								</div>
 							</div>
 							<div class='col-sm-3'>	
@@ -198,108 +198,7 @@ class ReduceDebtSendVP extends MY_Controller {
 				</div>
 			</div>
 		";
-		$html .="<script src='".base_url('public/js/SYS07/ReduceDebtSendVP.js')."'></script>";
+		$html .="<script src='".base_url('public/js/SYS07/ReduceDebtBookVP.js')."'></script>";
 		echo $html;
-	}
-	function getdetailTAXNO(){
-		$TAXNO = $_REQUEST['TAXNO'];
-		$LOCAT = $_REQUEST['LOCAT'];
-		$response = array();
-		$sql = "
-			select TAXNO,convert(varchar(8),TAXDT,112) as TAXDT,CONVERT(varchar(8),INPDT,112) as INPDT
-			,STRNO,LOCAT,TSALE,CONTNO,CUSCOD,SNAM,NAME1,NAME2,TSALE,DESCP,NETAMT,VATAMT,TOTAMT 
-			from {$this->MAuth->getdb('TAXTRAN')} where TSALE in ('A') and LOCAT = '".$LOCAT."' 
-			and (FLAG <> 'C' or FLAG is null) and TAXNO = '".$TAXNO."'
-		";
-		//echo $sql; exit;
-		$query = $this->db->query($sql);
-		if($query->row()){
-			foreach($query->result() as $row){
-				$response['INPDT']   = $this->Convertdate(2,$row->INPDT);
-				$response['STRNO']   = $row->STRNO;
-				$response['CONTNO']  = $row->CONTNO;
-				$response['CUSCOD']  = $row->CUSCOD;
-				$response['SNAM']    = $row->SNAM;
-				$response['NAME1']   = $row->NAME1;
-				$response['NAME2']	 = $row->NAME2;
-				$response['TSALE']	 = $row->TSALE;
-				$response['DESCP']	 = "ใบลดหนี้ขายรถทั้งคัน";
-			}
-		}
-		echo json_encode($response);
-	}
-	function getdetailSTRNO(){
-		$STRNO = $_REQUEST['STRNO'];
-		$response = array();
-		$sql = "
-			select CONTNO,LOCAT,STRNO,NPRICE,VATPRC,TOTPRC from {$this->MAuth->getdb('AR_TRANS')} 
-			where STRNO = '".$STRNO."'
-		";
-		$query = $this->db->query($sql);
-		if($query->row()){
-			foreach($query->result() as $row){
-				$response['NPRICE'] = number_format($row->NPRICE,2);
-				$response['VATPRC'] = number_format($row->VATPRC,2);
-				$response['TOTPRC'] = number_format($row->TOTPRC,2);
-			}
-		}else{
-			$response['NPRICE'] = "0.00";
-			$response['VATPRC'] = "0.00";
-			$response['TOTPRC'] = "0.00";
-		}
-		echo json_encode($response);
-	}
-	function getTAXNO(){
-		$LOCAT  = $_REQUEST['LOCAT'];
-		$TAXDT = $this->Convertdate(1,$_REQUEST['TAXDT']);
-		//echo $TAXDT; exit;
-		$response = array();
-		if($LOCAT ==""){
-			$response["error"] = true;
-			$response["msg"] = "ไม่พบรหัสสาขา กรุณาเลือกรหัสสาขาก่อนครับ";
-			echo json_encode($response); exit;
-		}
-		$sql = "
-			declare @locat varchar(3) = (select SHORTL from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD = '".$LOCAT."');
-			declare @YearMonth varchar(4) = (select right(year('".$TAXDT."'),2)+right('0' + rtrim(month('".$TAXDT."')), 2) as DYM); 
-			declare @month varchar(2) = (select right('0' + rtrim(month('".$TAXDT."')), 2));
-			declare @year varchar(4) = (select YEAR('".$TAXDT."'));
-			declare @tcby  varchar(4) = (select RIGHT('0000'+CAST(MAX(CAST(coalesce(L_TCSALE,0) as int) + 1) as nvarchar(4)), 4) 
-			as TCBUY from {$this->MAuth->getdb('LASTNO')} where LOCAT = '".$LOCAT."' and CR_YEAR = @year and CR_MONTH = @month);
-
-			declare @taxno varchar(1) = (select COUNT(*) from LASTNO where LOCAT = '".$LOCAT."' and CR_YEAR = @year and CR_MONTH = @month);
-			if @taxno = 1
-			begin
-				select @locat+'Z'+'-'+@YearMonth+@tcby as TAXNO
-			end
-			else
-			begin
-				select @locat+'Z'+'-'+@YearMonth+'0001' as TAXNO
-			end
-		";
-		//echo $sql; exit;
-		$query = $this->db->query($sql);
-		if($query->row()){
-			foreach($query->result() as $row){
-				$response['TAXNO'] = $row->TAXNO;
-			}
-		}
-		echo json_encode($response);
-	}
-	function getRESNDES(){
-		$RESONCD = $_REQUEST['RESONCD'];
-		$sql = "
-			select RESONCD,RESNDES from {$this->MAuth->getdb('SETRESON')}
-			where RESONCD = '".$RESONCD."'
-		";
-		$query = $this->db->query($sql);
-		if($query->row()){
-			foreach($query->result() as $row){
-				$response['RESNDES'] = str_replace(chr(0),'',$row->RESNDES);
-			}
-		}else{
-			$response['RESNDES'] = "";
-		}
-		echo json_encode($response);
 	}
 }

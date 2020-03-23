@@ -4915,7 +4915,7 @@ class ReportFinance extends MY_Controller {
 				from {$this->MAuth->getdb('STATTRAN')} A
 				left join {$this->MAuth->getdb('ARMAST')} B on A.CONTNO = B.CONTNO
 				left join {$this->MAuth->getdb('CUSTMAST')} C on B.CUSCOD = C.CUSCOD
-				where A.CONTNO like '%".$CONTNO."%' and A.LOCAT like '%".$LOCAT."%'
+				where A.CONTNO = '".$CONTNO."' and A.LOCAT = '".$LOCAT."'
 			)RCT
 		";
 		//echo $sql; exit;

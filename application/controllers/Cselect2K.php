@@ -23,10 +23,10 @@ class Cselect2K extends MY_Controller {
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		
 		$sql = "
-			select LOCATCD from {$this->MAuth->getdb('INVLOCAT')}
+			select LOCATCD,LOCATNM from {$this->MAuth->getdb('INVLOCAT')}
 			where LOCATCD = '".$dataNow."' collate Thai_CI_AS
 			union
-			select top 20 LOCATCD from {$this->MAuth->getdb('INVLOCAT')}
+			select top 20 LOCATCD,LOCATNM from {$this->MAuth->getdb('INVLOCAT')}
 			where LOCATCD like '%".$dataSearch."%' collate Thai_CI_AS or LOCATNM like '%".$dataSearch."%' collate Thai_CI_AS
 			order by LOCATCD
 		";
@@ -39,7 +39,6 @@ class Cselect2K extends MY_Controller {
 				$json[] = ['id'=>str_replace(chr(0),'',$row->LOCATCD), 'text'=>str_replace(chr(0),'',$row->LOCATCD)];
 			}
 		}
-		
 		echo json_encode($json);
 	}
 	function getGROUP1(){
@@ -1141,6 +1140,45 @@ class Cselect2K extends MY_Controller {
 		";
 		$response = array("html"=>$html);
 		echo json_encode($response);
+	}
+	function getTAXNO_Reduce(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST["q"]);	
+		$locat = $_REQUEST['locat'];
+		$sql = "
+			select TAXNO from {$this->MAuth->getdb('TAXTRAN')}
+			where LOCAT = '".$locat."' and TAXTYP between '1' and '9' and TAXNO like '%".$dataSearch."%'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[]= array(
+					"id" => $row->TAXNO,
+					"text" => $row->TAXNO,
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getRESONCD(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST["q"]);
+		$sql = "
+			select RESONCD,RESNDES from {$this->MAuth->getdb('SETRESON')} where RESONCD like '%".$dataSearch."%'
+			and RESNDES like '%".$dataSearch."%'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[]= array(
+					"id" => str_replace(chr(0),'',$row->RESONCD),
+					"text" => str_replace(chr(0),'',$row->RESONCD),
+				);
+			}
+		}
+		echo json_encode($json);
 	}
 }
 	
