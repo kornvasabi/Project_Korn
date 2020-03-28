@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 /********************************************************
-             _______________________
+            ________________________
             Pasakorn Boonded
 ********************************************************/
 class Cselect2K extends MY_Controller {
@@ -1179,6 +1179,254 @@ class Cselect2K extends MY_Controller {
 			}
 		}
 		echo json_encode($json);
+	}
+	function getCONTNO_V(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST["q"]);
+		$locat = $_REQUEST['locat'];
+		$vatstop = $_REQUEST['vatstop'];
+		$status = "";
+		if($vatstop == "save"){
+			$status = "<>";
+		}else{
+			$status = "=";
+		}
+		$sql = "
+			select A.LOCAT,A.CONTNO,A.CUSCOD,C.SNAM,C.NAME1,C.NAME2,A.STRNO,A.RESVNO,I.REGNO,I.CURSTAT,A.BILLCOLL 
+			,C.SNAM+C.NAME1+' '+C.NAME2+'('+A.CONTNO+')' as CONTNOC from {$this->MAuth->getdb('ARMAST')} A
+			left join {$this->MAuth->getdb('CUSTMAST')} C on A.CUSCOD = C.CUSCOD
+			left join {$this->MAuth->getdb('INVTRAN')} I on A.STRNO = I.STRNO
+			where A.FLSTOPV ".$status." 'S' and A.LOCAT = '".$locat."' and A.CONTNO like '%".$dataSearch."%' order by A.CONTNO
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[]= array(
+					"id" => str_replace(chr(0),'',$row->CONTNO),
+					"text" => str_replace(chr(0),'',$row->CONTNOC),
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getSearchfromstopvat(){
+		$html = "
+			<div class='row'>
+				<div class='col-sm-12'>
+					<div class='form-group'>
+						เลขที่หยุด Vat
+						<input type='text' id='stopvno' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-12'>
+					<button id='btnSearchResult' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'>ค้นหา</span></button>
+				</div>
+				<br>
+				<div id='StopVat_result' class='col-sm-12'></div>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getResultstopvat(){
+		$sess = $this->session->userdata('cbjsess001');
+		$stopvno  = $_REQUEST['stopvno'];
+		$sql = "
+			select STOPVNO,LOCAT,convert(varchar(8),STOPDT,112) as STOPDT,EXP_PRD,USERID,CANCELID,FRMCONTNO,TOCONTNO
+			from {$this->MAuth->getdb('STOPVHD')} where STOPVNO like '%".$stopvno."%'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trow' seq='".$NRow."'>
+						<td style='cursor:pointer;' class='getit' seq='".$NRow++."'
+							STOPVNO   = '".$row->STOPVNO."'
+							LOCAT     = '".$row->LOCAT."'
+							STOPDT    = '".$this->Convertdate(2,$row->STOPDT)."'
+							EXP_PRD   = '".$row->EXP_PRD."'
+							USERID    = '".$row->USERID."'
+							CANCELID  = '".$row->CANCELID."'
+							FRMCONTNO = '".$row->FRMCONTNO."'
+							TOCONTNO  = '".$row->TOCONTNO."'
+						><b>เลือก</b></td>
+						<td>".$row->STOPVNO."</td>
+						<td>".$row->LOCAT."</td>
+						<td>".$this->Convertdate(2,$row->STOPDT)."</td>
+						<td>".$row->EXP_PRD."</td>
+						<td>".$row->USERID."</td>
+						<td>".$row->CANCELID."</td>
+					</tr>
+				";
+			}
+		}
+		$html = "
+			<div id='tbcont' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>เลขที่หยุด Vat</th>
+							<th>รหัสสาขา</th>
+							<th>วันที่หยุด Vat</th>
+							<th>จำนวนงวด</th>
+							<th>ผู้ทำการ</th>
+							<th>ผู้ยกเลิก</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response['html'] = $html; 
+		echo json_encode($response);
+	}
+	function getResultstopvat_TR(){
+		$sess = $this->session->userdata('cbjsess001');
+		$STOPVTR  = !isset($_REQUEST['STOPVTR']) ? '' : $_REQUEST['STOPVTR'];
+		
+		$sql = "
+			select A.CONTNO,CONVERT(varchar(8),A.STOPDT,112) as STOPDT,A.EXP_PRD
+			,A.LOCAT,C.SNAM+C.NAME1+' '+C.NAME2 as CUSNAM from {$this->MAuth->getdb('STOPVTR')} A
+			left join {$this->MAuth->getdb('CUSTMAST')} C on A.CUSCOD = C.CUSCOD 
+			where A.STOPVNO = '".$STOPVTR."'	
+		";
+		//echo $sql; exit; 
+		$query = $this->db->query($sql);
+		$tr_stopvat = ""; $i = 0;
+		if($query->row()){
+			foreach($query->result() as $row){$i++;
+				$tr_stopvat .= "
+					<tr class='trow' seq='old'>
+						<td>
+							<input type='checkbox' id='checkstopvat' class='form-check-input checklist' style='cursor:pointer;max-width:20px;max-height:10px;' checked>
+						</td>
+						<td>".$row->CONTNO."</td>
+						<td>".$row->CUSNAM."</td>
+						<td>".$row->EXP_PRD."</td>
+						<td>".$this->Convertdate(2,$row->STOPDT)."</td>
+					</tr>
+				";	
+			}
+		}
+		$response['countrow'] = $i;
+		$response['tr_stopvat'] = $tr_stopvat;
+		echo json_encode($response);
+	}
+	function getSearchfromcancelstopvat(){
+		$html = "
+			<div class='row'>
+				<div class='col-sm-12'>
+					<div class='form-group'>
+						เลขที่ยกเลิกหยุด Vat
+						<input type='text' id='canstvno' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-12'>
+					<button id='btnSearchResult' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'>ค้นหา</span></button>
+				</div>
+				<br>
+				<div id='StopVat_result' class='col-sm-12'></div>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getResultcancelstopvat(){
+		$sess = $this->session->userdata('cbjsess001');
+		$canstvno  = $_REQUEST['canstvno'];
+		$sql = "
+			select CANSTVNO,LOCAT,convert(varchar(8),STOPDT,112) as STOPDT,EXP_PRD,USERID,CANCELID,FRMCONTNO,TOCONTNO
+			from {$this->MAuth->getdb('CANSTVHD')} where CANSTVNO like '%".$canstvno."%'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trow' seq='".$NRow."'>
+						<td style='cursor:pointer;' class='getit' seq='".$NRow++."'
+							CANSTVNO   = '".$row->CANSTVNO."'
+							LOCAT     = '".$row->LOCAT."'
+							STOPDT    = '".$this->Convertdate(2,$row->STOPDT)."'
+							EXP_PRD   = '".$row->EXP_PRD."'
+							USERID    = '".$row->USERID."'
+							CANCELID  = '".$row->CANCELID."'
+							FRMCONTNO = '".$row->FRMCONTNO."'
+							TOCONTNO  = '".$row->TOCONTNO."'
+						><b>เลือก</b></td>
+						<td>".$row->CANSTVNO."</td>
+						<td>".$row->LOCAT."</td>
+						<td>".$this->Convertdate(2,$row->STOPDT)."</td>
+						<td>".$row->EXP_PRD."</td>
+						<td>".$row->USERID."</td>
+						<td>".$row->CANCELID."</td>
+					</tr>
+				";
+			}
+		}
+		$html = "
+			<div id='tbcont' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>เลขที่ยกเลิกหยุด Vat</th>
+							<th>รหัสสาขา</th>
+							<th>วันที่ยกเลิกหยุด Vat</th>
+							<th>จำนวนงวด</th>
+							<th>ผู้ทำการ</th>
+							<th>ผู้ยกเลิก</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response['html'] = $html; 
+		echo json_encode($response);
+	}
+	function getResultcancelstopvat_TR(){
+		$sess = $this->session->userdata('cbjsess001');
+		$CANSTVNO  = $_REQUEST['CANSTVNO'];
+		
+		$sql = "
+			select A.CONTNO,CONVERT(varchar(8),A.STOPDT,112) as STOPDT,A.EXP_PRD
+			,A.LOCAT,C.SNAM+C.NAME1+' '+C.NAME2 as CUSNAM from {$this->MAuth->getdb('CANSTVTR')} A
+			left join {$this->MAuth->getdb('CUSTMAST')} C on A.CUSCOD = C.CUSCOD 
+			where A.CANSTVNO = '".$CANSTVNO."'	
+		";
+		//echo $sql; exit; 
+		$query = $this->db->query($sql);
+		$tr_stopvat = ""; $i = 0;
+		if($query->row()){
+			foreach($query->result() as $row){$i++;
+				$tr_stopvat .= "
+					<tr class='trow' seq='old'>
+						<td>
+							<input type='checkbox' id='checkstopvat' class='form-check-input checklist' style='cursor:pointer;max-width:20px;max-height:10px;' checked>
+						</td>
+						<td>".$row->CONTNO."</td>
+						<td>".$row->CUSNAM."</td>
+						<td>".$row->EXP_PRD."</td>
+						<td>".$this->Convertdate(2,$row->STOPDT)."</td>
+					</tr>
+				";	
+			}
+		}
+		$response['countrow'] = $i;
+		$response['tr_stopvat'] = $tr_stopvat;
+		echo json_encode($response);
 	}
 }
 	

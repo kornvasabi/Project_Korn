@@ -1176,6 +1176,7 @@ class CUSTOMERS extends MY_Controller {
 				)
 			";
         }
+		//print_r ($sql_addr); exit;
 		$sql ="
 			if OBJECT_ID('tempdb..#custmastTemp') is not null drop table #custmastTemp;
 			create table #custmastTemp (id varchar(1),msg varchar(max));
@@ -1245,7 +1246,7 @@ class CUSTOMERS extends MY_Controller {
 				return;
 			end catch
 		";
-		echo $sql; exit;
+		//echo $sql; exit;
 		
 		$this->db->query($sql);
 		$sql = "select * from #custmastTemp";
