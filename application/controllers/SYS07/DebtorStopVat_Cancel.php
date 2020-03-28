@@ -5,7 +5,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			 Pasakorn Boonded
 
 ********************************************************/
-class DebtorStopVat_Save extends MY_Controller {
+class DebtorStopVat_Cancel extends MY_Controller {
 	private $sess = array(); 
 	
 	function __construct(){
@@ -47,7 +47,7 @@ class DebtorStopVat_Save extends MY_Controller {
 							<div class='col-sm-4'>	
 								<div class='form-group'>
 									เลขที่ทำการหยุด Vat
-									<input type='text' id='STOPVNO' class='form-control input-sm text-danger' style='font-size:12pt;' readonly>
+									<input type='text' id='CANSTVNO' class='form-control input-sm text-danger' style='font-size:12pt;' readonly>
 								</div>
 							</div>
 							<div class='col-sm-12 text-info'>
@@ -61,21 +61,21 @@ class DebtorStopVat_Save extends MY_Controller {
 											<div class='col-sm-4'>	
 												<div class='form-group'>
 													จากเลขที่สัญญา
-													<select id='CONTNO1' class='form-control input-sm'></select>
+													<select id='FRMCONTNO' class='form-control input-sm'></select>
 												</div>
 											</div>
 											<div class='col-sm-4'>	
 												<div class='form-group'>
 													ถึงเลขที่สัญญา
-													<select id='CONTNO2' class='form-control input-sm'></select>
+													<select id='TOCONTNO' class='form-control input-sm'></select>
 												</div>
 											</div>
 											<div class='col-sm-4'>	
 												<div class='form-group'>
-													หยุด Vat สำหรับลูกหนี้ค้างชำระตั้งแต่
+													ยกเลิกหยุด Vat สำหรับลูกหนี้ค้างชำระ >=
 													<div class='input-group'>
 														<input type='text' id='EXP_PRD' value='0' class='form-control input-sm' style='text-align:right;'>
-														<span class='input-group-addon'>งวดเป็นต้นไป</span>
+														<span class='input-group-addon'>งวด</span>
 													</div>
 												</div>
 											</div>
@@ -108,7 +108,7 @@ class DebtorStopVat_Save extends MY_Controller {
 											<div id='dataTable-stop-vat' class='dataTables_wrapper dt-bootstrap4 table-responsive' style='height:100%;width:100%;overflow:auto;'>
 												<table id='dataTable-stopvat' class='table table-bordered dataTable table-hover' stat='' aria-describedby='dataTable_info' cellspacing='0' width='calc(100% - 1px)'>
 													<thead>
-														<tr role='row' style='height:30px;font-size:8pt;background-color:#48c9b0;color:white;'>
+														<tr role='row' style='height:30px;font-size:8pt;background-color:#e67e22;color:white;'>
 															<th width='1%' style='vertical-align:middle;'>เลือก</th>
 															<th width='12%' style='vertical-align:middle;'>เลขที่สัญญา</th>
 															<th width='12%' style='vertical-align:middle;'>ชื่อ - สกุล ลูกค้า</th>
@@ -144,77 +144,74 @@ class DebtorStopVat_Save extends MY_Controller {
 				</div>
 			</div>
 		";
-		$html .="<script src='".base_url('public/js/SYS07/DebtorStopVat_Save.js')."'></script>";
+		$html .="<script src='".base_url('public/js/SYS07/DebtorStopVat_Cancel.js')."'></script>";
 		echo $html;
 	}
 	function getSTOPVNO(){
 		$LOCAT = $_REQUEST['LOCAT'];
 		$STOPDT  = $this->Convertdate(1,$_REQUEST['STOPDT']);
-		$CONTNO1 = $_REQUEST['CONTNO1'];
-		if($CONTNO1 <> ''){
+		$FRMCONTNO = $_REQUEST['FRMCONTNO'];
+		if($FRMCONTNO <> ''){
 			$sql = "
 				declare @year varchar(2) = (select SUBSTRING('".$STOPDT."',3,2));
 				declare @month varchar(2) = (select SUBSTRING('".$STOPDT."',5,2));
 				declare @locat varchar(2) = (select SHORTL from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD = '".$LOCAT."');
-				declare @stopvno varchar(4) = (
-					select RIGHT('0000'+CAST(MAX(SUBSTRING(STOPVNO,10,10)+1) as nvarchar(4)), 4) from {$this->MAuth->getdb('STOPVHD')}
-					where LOCAT = '".$LOCAT."' and SUBSTRING(STOPVNO,3,1) = 'U' 
+				declare @canstvno varchar(4) = (
+					select RIGHT('0000'+CAST(MAX(SUBSTRING(CANSTVNO,10,10)+1) as nvarchar(4)), 4) from {$this->MAuth->getdb('CANSTVHD')}
+					where LOCAT = '".$LOCAT."' and SUBSTRING(CANSTVNO,3,1) = 'V' 
 					and SUBSTRING(CONVERT(varchar(8),STOPDT,112),3,2) = @year and SUBSTRING(convert(varchar(8),STOPDT,112),5,2) = @month
 				);
 				declare @stopvhd varchar(1) = (
-					select count(*) from {$this->MAuth->getdb('STOPVHD')} where LOCAT = '".$LOCAT."' and SUBSTRING(STOPVNO,3,1) = 'U' 
+					select count(*) from {$this->MAuth->getdb('CANSTVHD')} where LOCAT = '".$LOCAT."' and SUBSTRING(CANSTVNO,3,1) = 'V' 
 					and SUBSTRING(CONVERT(varchar(8),STOPDT,112),3,2) = @year and SUBSTRING(convert(varchar(8),STOPDT,112),5,2) = @month
 				);
 				--select @stopvhd
 				if @stopvhd = 1
 				begin
-					select @locat+'U-'+@year+@month+@stopvno as STOPVNO
+					select @locat+'V-'+@year+@month+@canstvno as CANSTVNO
 				end
 				else
 				begin
-					select @locat+'U-'+@year+@month+'0001' as STOPVNO
+					select @locat+'V-'+@year+@month+'0001' as CANSTVNO
 				end
 			";
 			//echo $sql; exit;
 			$query = $this->db->query($sql);
 			if($query->row()){
 				foreach($query->result() as $row){
-					$response['STOPVNO'] = $row->STOPVNO;
+					$response['CANSTVNO'] = $row->CANSTVNO;
 				}
 			}
 		}else{
-			$response['STOPVNO'] = "";
+			$response['CANSTVNO'] = "";
 		}
 		echo json_encode($response);
 	}
 	function ResultStopVat(){
-		$LOCAT   = $_REQUEST['LOCAT'];
+		$LOCAT     = $_REQUEST['LOCAT'];
 		$STOPDT    = $_REQUEST['STOPDT'];
-		$CONTNO1 = $_REQUEST['CONTNO1'];
-		$CONTNO2 = $_REQUEST['CONTNO2'];
-		$EXP_PRD = $_REQUEST['EXP_PRD'];
-		if($CONTNO1 == ""){
+		$FRMCONTNO = $_REQUEST['FRMCONTNO'];
+		$TOCONTNO  = $_REQUEST['TOCONTNO'];
+		$EXP_PRD   = $_REQUEST['EXP_PRD'];
+		if($FRMCONTNO == ""){
 			$response["error"] = true;
 			$response["msg"]   = 'กรุณาเลือกเลขที่สัญญาถึงเลขที่สัญญาก่อนครับ';	
 			echo json_encode($response); exit;
 		}
-		if($CONTNO2 == ""){
+		if($TOCONTNO == ""){
 			$response["error"] = true;
 			$response["msg"]   = 'กรุณาเลือกเลขที่สัญญาถึงเลขที่สัญญาก่อนครับ';	
 			echo json_encode($response); exit;
 		}
-		if($EXP_PRD == '0'){
-			$response["error"] = true;
-			$response["msg"]   = 'หยุด Vat 0 งวดไม่ได้ กรุณาระบุงวดก่อนครับ';	
-			echo json_encode($response); exit;
-		}
+		
 		$sql = "
 			select A.CONTNO,A.LOCAT,A.CUSCOD,floor(A.EXP_PRD) as EXP_PRD,C.SNAM+C.NAME1+' '+C.NAME2 as CUSNAM from {$this->MAuth->getdb('ARMAST')} A 
 			left join {$this->MAuth->getdb('CUSTMAST')} C on A.CUSCOD = C.CUSCOD
-			where A.FLSTOPV <> 'S' and A.LOCAT = '".$LOCAT."' and A.CONTNO between '".$CONTNO1."' and '".$CONTNO2."'
+			where A.FLSTOPV = 'S' and A.LOCAT = '".$LOCAT."' and A.CONTNO between '".$FRMCONTNO."' and '".$TOCONTNO."'
 			and A.EXP_PRD >= '".$EXP_PRD."' 
 		";
 		//echo $sql; exit; 
+		
 		$query = $this->db->query($sql);
 		$stopvat = ""; $i = 0;
 		if($query->row()){
@@ -245,82 +242,78 @@ class DebtorStopVat_Save extends MY_Controller {
 		$response['countcontno'] = $i;
 		echo json_encode($response);
 	}
-	function SanveStopvat(){
-		$LOCAT   = $_REQUEST['LOCAT'];
-		$STOPDT  = $this->Convertdate(1,$_REQUEST['STOPDT']);
-		$STOPVNO = $_REQUEST['STOPVNO'];
-		$CONTNO1 = $_REQUEST['CONTNO1'];
-		$CONTNO2 = $_REQUEST['CONTNO2'];
-		$EXP_PRD = $_REQUEST['EXP_PRD'];
-		$USERID  = $this->sess['USERID'];
+	function SanveCancelStopvat(){
+		$LOCAT     = $_REQUEST['LOCAT'];
+		$STOPDT    = $this->Convertdate(1,$_REQUEST['STOPDT']);
+		$CANSTVNO  = $_REQUEST['CANSTVNO'];
+		$FRMCONTNO = $_REQUEST['FRMCONTNO'];
+		$TOCONTNO  = $_REQUEST['TOCONTNO'];
+		$EXP_PRD   = $_REQUEST['EXP_PRD'];
+		$USERID    = $this->sess['USERID'];
 		
 		//print_r ($SVAT);
-		if($CONTNO1 == ""){
+		if($FRMCONTNO == ""){
 			$response["error"] = true;
 			$response["msg"]   = 'กรุณาเลือกเลขที่สัญญาถึงเลขที่สัญญาก่อนครับ';	
 			echo json_encode($response); exit;
 		}
-		if($CONTNO2 == ""){
+		if($TOCONTNO == ""){
 			$response["error"] = true;
 			$response["msg"]   = 'กรุณาเลือกเลขที่สัญญาถึงเลขที่สัญญาก่อนครับ';	
 			echo json_encode($response); exit;
 		}
-		if($EXP_PRD == '0'){
-			$response["error"] = true;
-			$response["msg"]   = 'หยุด Vat 0 งวดไม่ได้ กรุณาระบุงวดก่อนครับ';	
-			echo json_encode($response); exit;
-		}
-		if(isset($_REQUEST['SVAT'])){}else{
+		if(isset($_REQUEST['CVAT'])){}else{
 			$response["error"] = true;
 			$response["msg"]   = 'กรุณาค้นหาสัญญาที่จะหยุด Vat ก่อนครับ';	
 			echo json_encode($response); exit;
 		}
-		$SVAT    = $_REQUEST['SVAT'];
+		$CVAT    = $_REQUEST['CVAT'];
 		
 		$savesvat = "";
-		$sizecus = count($SVAT);
+		$sizecus = count($CVAT);
 		for($i=0; $i < $sizecus; $i++){
 			$savesvat .= "
-				update {$this->MAuth->getdb('ARMAST')} set FLSTOPV = 'S',DTSTOPV = '".$STOPDT."'
-				where CONTNO = '".$SVAT[$i][0]."' and LOCAT = '".$LOCAT."'
+				update {$this->MAuth->getdb('ARMAST')} set FLSTOPV = '',DTSTOPV = null
+				where CONTNO = '".$CVAT[$i][0]."' and LOCAT = '".$LOCAT."'
 				
-				insert into {$this->MAuth->getdb('STOPVTR')}(
-					[STOPVNO],[STOPDT],[LOCAT],[CONTNO],[EXP_PRD],[USERID]
+				insert into {$this->MAuth->getdb('CANSTVTR')}(
+					[CANSTVNO],[STOPDT],[LOCAT],[CONTNO],[EXP_PRD],[USERID]
 					,[INPDT],[CANCELID],[CANCELDT],[MARK],[CUSCOD]
 				)values(
-					'".$STOPVNO."','".$STOPDT."','".$LOCAT."','".$SVAT[$i][0]."','".$SVAT[$i][1]."'
-					,'".$USERID."',getdate(),null,null,'Y','".$SVAT[$i][2]."'
+					'".$CANSTVNO."','".$STOPDT."','".$LOCAT."','".$CVAT[$i][0]."','".$CVAT[$i][1]."'
+					,'".$USERID."',getdate(),null,null,'Y','".$CVAT[$i][2]."'
 				)
 			";
 		}
 		//print_r($savesvat);
 		$sql = "
-			if object_id('tempdb..#Savevatstop') is not null drop table #Savevatstop;
-			create table #Savevatstop (id varchar(1),msg varchar(max));
+			if object_id('tempdb..#Cancelvatstop') is not null drop table #Cancelvatstop;
+			create table #Cancelvatstop (id varchar(1),msg varchar(max)); 	
 			begin tran Vatstop
 			begin try
-				insert into {$this->MAuth->getdb('STOPVHD')}(
-					[STOPVNO],[LOCAT],[STOPDT],[EXP_PRD],[USERID],[INPDT]
+				insert into {$this->MAuth->getdb('CANSTVHD')}(
+					[CANSTVNO],[LOCAT],[STOPDT],[EXP_PRD],[USERID],[INPDT]
 					,[CANCELID],[CANCELDT],[FRMCONTNO],[TOCONTNO]
 				)values(
-					'".$STOPVNO."','".$LOCAT."','".$STOPDT."','".$EXP_PRD."','".$USERID."'
-					,getdate(),null,null,'".$CONTNO1."','".$CONTNO2."'
+					'".$CANSTVNO."','".$LOCAT."','".$STOPDT."','".$EXP_PRD."','".$USERID."'
+					,getdate(),null,null,'".$FRMCONTNO."','".$TOCONTNO."'
 				)
 				".$savesvat."
-				insert into #Savevatstop select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
+				
+				insert into #Cancelvatstop select 'Y' as id,'สำเร็จ บันทึกข้อมูลเรียบร้อยแล้ว' as msg;
 				commit tran Vatstop;
 			end try
 			begin catch
 				rollback tran Vatstop;
-				insert into #Savevatstop select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				insert into #Cancelvatstop select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
 				return;
 			end catch
 		";
 		//echo $sql; exit;
-		$this->db->query($sql);
+		$this->db->query($sql);	
 		
 		$sql = "
-			select * from #Savevatstop
+			select * from #Cancelvatstop
 		";
 		$query = $this->db->query($sql);
 		if($query->row()){

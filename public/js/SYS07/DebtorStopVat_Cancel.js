@@ -1,5 +1,5 @@
 /********************************************************
-             ______@23/02/2020______
+             ______@27/02/2020______
 			 Pasakorn Boonded
 
 ********************************************************/
@@ -19,7 +19,7 @@ $(function(){
 		//theme: 'classic',
 		width: '100%'
 	});
-	$('#CONTNO1').select2({
+	$('#FRMCONTNO').select2({
 		placeholder: 'เลือก',
 		ajax: {
 			url: '../Cselect2K/getCONTNO_V',
@@ -27,7 +27,8 @@ $(function(){
 				dataToPost = new Object();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? "":$('#LOCAT').find(':selected').val());
-				dataToPost.vatstop = "save";
+				dataToPost.vatstop = "cancel";
+				
 				return dataToPost;
 			},
 			dataType: 'json',
@@ -46,7 +47,7 @@ $(function(){
 		//theme: 'classic',
 		width: '100%'
 	});
-	$('#CONTNO2').select2({
+	$('#TOCONTNO').select2({
 		placeholder: 'เลือก',
 		ajax: {
 			url: '../Cselect2K/getCONTNO_V',
@@ -54,7 +55,7 @@ $(function(){
 				dataToPost = new Object();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? "":$('#LOCAT').find(':selected').val());
-				dataToPost.vatstop = "save";
+				dataToPost.vatstop = "cancel";
 				return dataToPost;
 			},
 			dataType: 'json',
@@ -88,9 +89,9 @@ $('#btnclear').click(function(){
 	fn_Clearinput();
 });
 function fn_Clearinput(){
-	$('#STOPVNO').val('');
-	$('#CONTNO1').empty();
-	$('#CONTNO2').empty();
+	$('#CANSTVNO').val('');
+	$('#FRMCONTNO').empty();
+	$('#TOCONTNO').empty();
 	$('#EXP_PRD').val('0');
 	$('#data-tbody').empty();
 	$('#COUNTCONTNO').val('0');
@@ -100,34 +101,34 @@ $('#btnadd').click(function(){
 });
 function fn_Addinput(){
 	$('#STOPDT').attr('disabled',false);
-	$('#STOPVNO').attr('disabled',false);
-	$('#CONTNO1').attr('disabled',false);
-	$('#CONTNO2').attr('disabled',false);
+	$('#CANSTVNO').attr('disabled',false);
+	$('#FRMCONTNO').attr('disabled',false);
+	$('#TOCONTNO').attr('disabled',false);
 	$('#EXP_PRD').attr('disabled',false);
 	$('#btnsearch').attr('disabled',false);
 	$('#btnlist').attr('disabled',false);
 	$('#btnlistall').attr('disabled',false);
-	$('#STOPVNO').val('');
-	$('#CONTNO1').empty();
-	$('#CONTNO2').empty();
+	$('#CANSTVNO').val('');
+	$('#FRMCONTNO').empty();
+	$('#TOCONTNO').empty();
 	$('#EXP_PRD').val('0');
 	$('#data-tbody').empty();
 	$('#COUNTCONTNO').val('0');
 	$('#btnsave').attr('disabled',false);
 	$('#btnclear').attr('disabled',false);
 }
-$('#CONTNO1').change(function(){
+$('#FRMCONTNO').change(function(){
 	dataToPost = new Object();
 	dataToPost.LOCAT = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
 	dataToPost.STOPDT = $('#STOPDT').val();
-	dataToPost.CONTNO1 = (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
+	dataToPost.FRMCONTNO = (typeof $('#FRMCONTNO').find(':selected').val() === 'undefined' ? '':$('#FRMCONTNO').find(':selected').val());
 	$.ajax({
-		url: '../SYS07/DebtorStopVat_Save/getSTOPVNO',
+		url: '../SYS07/DebtorStopVat_Cancel/getSTOPVNO',
 		data: dataToPost,
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
-			$('#STOPVNO').val(data.STOPVNO);
+			$('#CANSTVNO').val(data.CANSTVNO);
 		}
 	});
 });
@@ -139,8 +140,8 @@ function fn_Search(){
 	dataToPost = new Object();
 	dataToPost.LOCAT = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
 	dataToPost.STOPDT = $('#STOPDT').val();
-	dataToPost.CONTNO1 = (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.CONTNO2 = (typeof $('#CONTNO2').find(':selected').val() === 'undefined' ? '':$('#CONTNO2').find(':selected').val());
+	dataToPost.FRMCONTNO = (typeof $('#FRMCONTNO').find(':selected').val() === 'undefined' ? '':$('#FRMCONTNO').find(':selected').val());
+	dataToPost.TOCONTNO = (typeof $('#TOCONTNO').find(':selected').val() === 'undefined' ? '':$('#TOCONTNO').find(':selected').val());
 	dataToPost.EXP_PRD  = $('#EXP_PRD').val();
 	$('#loadding').show();
 	
@@ -148,11 +149,16 @@ function fn_Search(){
 	$('#dataTable-stopvat tbody').html("<table width='100%' height='100%'><tr><td colspan='8'><img src='../public/images/loading-icon2.gif' style='width:50px;height:15px;'></td></tr></table>");
 	
 	searchstopvat = $.ajax({
-		url: '../SYS07/DebtorStopVat_Save/ResultStopVat',
+		url: '../SYS07/DebtorStopVat_Cancel/ResultStopVat',
 		data: dataToPost,
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
+			$('#loadding').hide();
+			$('#dataTable-stopvat tr').click(function(e) {
+				$('#dataTable-stopvat tr').removeClass('highlighted');
+				$(this).addClass('highlighted');
+			});
 			if(data.error){
 				Lobibox.notify('warning', {
 					title: 'แจ้งเตือน',
@@ -167,10 +173,6 @@ function fn_Search(){
 				});
 				$('#dataTable-stopvat tbody').empty().append(data.stopvat);
 			}
-			$('#dataTable-stopvat tr').click(function(e) {
-				$('#dataTable-stopvat tr').removeClass('highlighted');
-				$(this).addClass('highlighted');
-			});
 			$('#dataTable-stopvat tbody').empty().append(data.stopvat);
 			document.getElementById("dataTable-stop-vat").addEventListener("scroll", function(){
 				var translate = "translate(0,"+(this.scrollTop - 7)+"px)";
@@ -178,8 +180,6 @@ function fn_Search(){
 				this.querySelector("thead").style.zIndex = 100;
 			});
 			$('#COUNTCONTNO').val(data.countcontno);
-			$('#loadding').hide();
-			
 			$('#btnlistall').click(function(){
 				$('.checklist').each(function(){
 					this.checked = true;
@@ -192,6 +192,7 @@ function fn_Search(){
 				$('#COUNTCONTNO').val(rows);
 				//alert(rows);
 			});
+			
 			searchstopvat = null;
 		},
 		beforeSend: function(){
@@ -206,7 +207,7 @@ var selectstopvat = null;
 function fn_selectstopvat(){
 	$('#loadding').fadeIn(200);
 	selectstopvat = $.ajax({
-		url:'../Cselect2K/getSearchfromstopvat',
+		url:'../Cselect2K/getSearchfromcancelstopvat',
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
@@ -223,10 +224,10 @@ function fn_selectstopvat(){
 					var R_stopvat = null;
 					function fnResultSV(){
 						dataToPost = new Object();
-						dataToPost.stopvno = $('#stopvno').val();
+						dataToPost.canstvno = $('#canstvno').val();
 						$('#loadding').fadeIn(200);
 						R_stopvat = $.ajax({
-							url:'../Cselect2K/getResultstopvat',
+							url:'../Cselect2K/getResultcancelstopvat',
 							data: dataToPost,
 							type: 'POST',
 							dataType: 'json',
@@ -243,19 +244,20 @@ function fn_selectstopvat(){
 								var result_tr = null;
 								$('.getit').unbind('click');
 								$('.getit').click(function(){
+									//$this.destroy();
 									$('#STOPDT').val($(this).attr('STOPDT'));
-									$('#STOPVNO').val($(this).attr('STOPVNO'));
+									$('#CANSTVNO').val($(this).attr('CANSTVNO'));
 									var frmcontnoOption = new Option($(this).attr('FRMCONTNO'),$(this).attr('FRMCONTNO'), false, false);
-									$('#CONTNO1').empty().append(frmcontnoOption).trigger('click');
+									$('#FRMCONTNO').empty().append(frmcontnoOption).trigger('click');
 									
 									var tocontnoOption = new Option($(this).attr('TOCONTNO'),$(this).attr('TOCONTNO'), false, false);
-									$('#CONTNO2').empty().append(tocontnoOption).trigger('click');
+									$('#TOCONTNO').empty().append(tocontnoOption).trigger('click');
 									
 									$('#EXP_PRD').val($(this).attr('EXP_PRD'));
 									dataToPost = new Object();
-									dataToPost.STOPVTR = $(this).attr('STOPVNO');
+									dataToPost.CANSTVNO = $(this).attr('CANSTVNO');
 									result_tr = $.ajax({
-										url:'../Cselect2K/getResultstopvat_TR',
+										url:'../Cselect2K/getResultcancelstopvat_TR',
 										data: dataToPost,
 										type: 'POST',
 										dataType: 'json',
@@ -270,9 +272,9 @@ function fn_selectstopvat(){
 										}
 									});
 									$('#STOPDT').attr('disabled',true);
-									$('#STOPVNO').attr('disabled',true);
-									$('#CONTNO1').attr('disabled',true);
-									$('#CONTNO2').attr('disabled',true);
+									$('#CANSTVNO').attr('disabled',true);
+									$('#FRMCONTNO').attr('disabled',true);
+									$('#TOCONTNO').attr('disabled',true);
 									$('#EXP_PRD').attr('disabled',true);
 									$('#btnsearch').attr('disabled',true);
 									$('#btnlist').attr('disabled',true);
@@ -295,12 +297,11 @@ function fn_selectstopvat(){
 		}
 	});
 }
-$('#btnsave').click(function(){
-	var stopvno = $('#STOPVNO').val();
+$('#btnsave').click(function(){	
 	Lobibox.confirm({
 		title: 'ยืนยันการทำรายการ',
 		iconClass: false,
-		msg: 'คุณต้องการบันทึกลูกหนี้หยุด Vat รหัส :  '+stopvno+'?',
+		msg: 'คุณต้องการยกเลิกลูกหนี้หยุด Vat รหัส :  '+$('#CANSTVNO').val()+'?',
 		buttons: {
 			ok : {
 				'class': 'btn btn-primary',
@@ -316,7 +317,7 @@ $('#btnsave').click(function(){
 		callback: function(lobibox, type){
 			var btnType;
 			if (type === 'ok'){
-				fn_SanveStopvat();
+				fn_SanveCancelStopvat();
 			}else{
 				Lobibox.notify('error', {
 					title: 'แจ้งเตือน',
@@ -336,28 +337,28 @@ $('#btnsave').click(function(){
 	});
 	//fn_SanveStopvat();
 });
-var SanveStopvat = null;
-function fn_SanveStopvat(){
+var SanveCancelStopvat = null;
+function fn_SanveCancelStopvat(){
 	dataToPost = new Object();
-	dataToPost.LOCAT   = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
-	dataToPost.STOPDT  = $('#STOPDT').val();
-	dataToPost.STOPVNO = $('#STOPVNO').val();
-	dataToPost.CONTNO1 = (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
-	dataToPost.CONTNO2 = (typeof $('#CONTNO2').find(':selected').val() === 'undefined' ? '':$('#CONTNO2').find(':selected').val());
-	dataToPost.EXP_PRD = $('#EXP_PRD').val();
+	dataToPost.LOCAT     = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
+	dataToPost.STOPDT    = $('#STOPDT').val();
+	dataToPost.CANSTVNO  = $('#CANSTVNO').val();
+	dataToPost.FRMCONTNO = (typeof $('#FRMCONTNO').find(':selected').val() === 'undefined' ? '':$('#FRMCONTNO').find(':selected').val());
+	dataToPost.TOCONTNO  = (typeof $('#TOCONTNO').find(':selected').val() === 'undefined' ? '':$('#TOCONTNO').find(':selected').val());
+	dataToPost.EXP_PRD   = $('#EXP_PRD').val();
 	
-	var sv = [];
+	var cv = [];
 	$("table input[type='checkbox']:checked").each(function(){
-		var svs = [];
-		svs.push($(this).attr('CONTNO'));
-		svs.push($(this).attr('EXP_PRD'));
-		svs.push($(this).attr('CUSCOD'));
-		sv.push(svs);
+		var cvs = [];
+		cvs.push($(this).attr('CONTNO'));
+		cvs.push($(this).attr('EXP_PRD'));
+		cvs.push($(this).attr('CUSCOD'));
+		cv.push(cvs);
 		//alert($(this).attr('LOCAT')+$(this).attr('CONTNO'));
 	});
-	dataToPost.SVAT = sv;
-	SanveStopvat = $.ajax({
-		url: '../SYS07/DebtorStopVat_Save/SanveStopvat',
+	dataToPost.CVAT = cv;
+	SanveCancelStopvat = $.ajax({
+		url: '../SYS07/DebtorStopVat_Cancel/SanveCancelStopvat',
 		data: dataToPost,
 		type: 'POST',
 		dataType: 'json',
@@ -401,10 +402,10 @@ function fn_SanveStopvat(){
 					msg: data.msg
 				});
 			}
-			SanveStopvat = null;
+			SanveCancelStopvat = null;
 		},
 		beforeSend: function(){
-			if(SanveStopvat !== null){SanveStopvat.abort();}
+			if(SanveCancelStopvat !== null){SanveCancelStopvat.abort();}
 		}
 	});
 }
