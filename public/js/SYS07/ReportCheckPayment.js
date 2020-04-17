@@ -1,5 +1,5 @@
 /********************************************************
-             ______@28/02/2020______
+             ______@31/02/2020______
 			 Pasakorn Boonded
 
 ********************************************************/
@@ -13,7 +13,7 @@ $(function(){
 	$('#LOCAT').select2({
 		placeholder: 'เลือก',
 		ajax: {
-			url: '../Cselect2K/getLOCAT',
+			url: '../Cselect2K/getLOCATNM',
 			data: function (params){
 				dataToPost = new Object();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
@@ -36,62 +36,36 @@ $(function(){
 		//theme: 'classic',
 		width: '100%'
 	});
-	$('#FRMCONTNO').select2({
+	$('#CUSCOD').select2({
+		placeholder: 'เลือก',
+		ajax: {
+			url: '../Cselect2K/getCUSCODNM',
+			data: function (params){
+				dataToPost = new Object();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data){
+				return {
+					results: data
+				};
+			},
+			cache: true
+		},
+		allowClear: true,
+		multiple: false,
+		dropdownParent: $(".k_tab1"),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	$('#CONTNO').select2({
 		placeholder: 'เลือก',
 		ajax: {
 			url: '../Cselect2K/getReportCONTNOVAT',
-			data: function (params){
-				dataToPost = new Object();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data){
-				return {
-					results: data
-				};
-			},
-			cache: true
-		},
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $(".k_tab1"),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	$('#TOCONTNO').select2({
-		placeholder: 'เลือก',
-		ajax: {
-			url: '../Cselect2K/getReportCONTNOVAT',
-			data: function (params){
-				dataToPost = new Object();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data){
-				return {
-					results: data
-				};
-			},
-			cache: true
-		},
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $(".k_tab1"),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	$('#BILLCOLL').select2({
-		placeholder: 'เลือก',
-		ajax: {
-			url: '../Cselect2K/getOFFICER',
 			data: function (params){
 				dataToPost = new Object();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
@@ -116,36 +90,30 @@ $(function(){
 	});
 });
 $('#btnReportVat').click(function(){
-	fn_ReportStopVat();
+	fn_ReportCheckPayment();
 });
-var SV_Report = null;
-function fn_ReportStopVat(){
+var CP_Report = null;
+function fn_ReportCheckPayment(){
 	var order = null;
 	if($('#or1').is(":checked")){
-		order = "CONTNO";
+		order = "CUSCOD";
 	}else if($('#or2').is(":checked")){
-		order = "BILLCOLL";
-	}else if($('#or3').is(":checked")){
-		order = "DTSTOPV";
-	}else if($('#or4').is(":checked")){
-		order = "STRNO";
+		order = "CONTNO";
 	}
 	dataToPost = new Object();
-	dataToPost.LOCAT      = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
-	dataToPost.FRMCONTNO  = (typeof $('#FRMCONTNO').find(':selected').val() === 'undefined' ? '':$('#FRMCONTNO').find(':selected').val());
-	dataToPost.TOCONTNO   = (typeof $('#TOCONTNO').find(':selected').val() === 'undefined' ? '':$('#TOCONTNO').find(':selected').val());
-	dataToPost.BILLCOLL   = (typeof $('#BILLCOLL').find(':selected').val() === 'undefined' ? '':$('#BILLCOLL').find(':selected').val());
-	dataToPost.FRMDATE    = $('#FRMDATE').val();
-	dataToPost.TODATE	  = $('#TODATE').val();
-	dataToPost.order      = order;
-	SV_Report = $.ajax({
-		url:'../SYS07/ReportStopVat/conditiontopdf',
+	dataToPost.LOCAT   = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
+	dataToPost.CUSCOD  = (typeof $('#CUSCOD').find(':selected').val() === 'undefined' ? '':$('#CUSCOD').find(':selected').val());
+	dataToPost.CONTNO  = (typeof $('#CONTNO').find(':selected').val() === 'undefined' ? '':$('#CONTNO').find(':selected').val());
+	dataToPost.DATE	   = $('#DATE').val();
+	dataToPost.order   = order;
+	CP_Report = $.ajax({
+		url:'../SYS07/ReportCheckPayment/conditiontopdf',
 		data:dataToPost,
 		type:'POST',
 		dataType:'json',
 		success:function(data){
 			var baseUrl = $('body').attr('baseUrl');
-			var url = baseUrl+'/SYS07/ReportStopVat/pdf?condpdf='+data[0];
+			var url = baseUrl+'/SYS07/ReportCheckPayment/pdf?condpdf='+data[0];
 			var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 			Lobibox.window({
 				title:'พิมพ์รายงาน',
@@ -154,10 +122,10 @@ function fn_ReportStopVat(){
 				height:$(window).height(),
 				width:$(window).width()
 			});
-			SV_Report = null;
+			CP_Report = null;
 		},
 		beforeSend:function(){
-			if(SV_Report !== null){SV_Report.abort();}
+			if(CP_Report !== null){CP_Report.abort();}
 		}
 	});
 }

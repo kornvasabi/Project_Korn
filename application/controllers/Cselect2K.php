@@ -41,6 +41,50 @@ class Cselect2K extends MY_Controller {
 		}
 		echo json_encode($json);
 	}
+	function getLOCATNM(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		
+		$sql = "
+			select LOCATCD,LOCATNM+' ('+LOCATCD+')' as LOCATNM from {$this->MAuth->getdb('INVLOCAT')}
+			where LOCATCD like '%".$dataSearch."%' or LOCATNM like '%".$dataSearch."%'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->LOCATCD)
+				,'text'=>str_replace(chr(0),'',$row->LOCATNM)];
+			}
+		}
+		echo json_encode($json);
+	}
+	function getCUSCODNM(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		
+		$sql = "
+			select top 20 CUSCOD,CUSNAM,CUSNAME from (
+				select CUSCOD,SNAM+NAME1+'  '+NAME2 as CUSNAME,+NAME1+'  '+NAME2+' ('+CUSCOD+')' as CUSNAM 
+				from {$this->MAuth->getdb('CUSTMAST')}
+			)a where CUSCOD like '%".$dataSearch."%' or CUSNAME like '%".$dataSearch."%'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					'id'=>str_replace(chr(0),'',$row->CUSCOD),
+					'text'=>str_replace(chr(0),'',$row->CUSNAM)
+				);
+			}
+		}
+		echo json_encode($json);
+	}
 	function getGROUP1(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = trim($_REQUEST['q']);
@@ -385,7 +429,7 @@ class Cselect2K extends MY_Controller {
 	function getResultCONTNO(){
 		$s_contno = $_POST['s_contno'];
 		$s_name1  = $_POST['s_name1'];
-		$s_name2 = $_POST['s_name2'];
+		$s_name2  = $_POST['s_name2'];
 		
 		$cond = "";
 		if($s_contno != ""){
@@ -607,7 +651,7 @@ class Cselect2K extends MY_Controller {
 		$dataSearch = trim($_REQUEST['q']);
 		
 		$sql = "
-			select top 20 CODE,NAME from {$this->MAuth->getdb('OFFICER')} 
+			select top 20 CODE,NAME,NAME+'('+CODE+')' as CNAM from {$this->MAuth->getdb('OFFICER')} 
 			where CODE like '%".$dataSearch."%' order by CODE
 		";
 		//echo $sql; exit;
@@ -616,7 +660,7 @@ class Cselect2K extends MY_Controller {
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
-				$json[] = ['id'=>str_replace(chr(0),'',$row->CODE), 'text'=>str_replace(chr(0),'',$row->NAME)];
+				$json[] = ['id'=>str_replace(chr(0),'',$row->CODE), 'text'=>str_replace(chr(0),'',$row->CNAM)];
 			}
 		}
 		echo json_encode($json);
@@ -1427,6 +1471,30 @@ class Cselect2K extends MY_Controller {
 		$response['countrow'] = $i;
 		$response['tr_stopvat'] = $tr_stopvat;
 		echo json_encode($response);
+	}
+	function getReportCONTNOVAT(){
+		$sess 		   = $this->session->userdata('cbjsess001');
+		$dataSearch    = trim($_REQUEST['q']);
+		
+		$sql = "
+			select top 100 CONTNO,CUSNAM from (
+				select A.CONTNO,C.SNAM+C.NAME1+' '+C.NAME2+'('+A.CONTNO+')' as CUSNAM 
+				from {$this->MAuth->getdb('ARMAST')} A
+				left join {$this->MAuth->getdb('CUSTMAST')} C on A.CUSCOD = C.CUSCOD
+				left join {$this->MAuth->getdb('INVTRAN')} I on A.STRNO = I.STRNO
+			)a where 1=1 and CONTNO like '%".$dataSearch."%' or CUSNAM like '%".$dataSearch."%'  order by CONTNO
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					"id" => $row->CONTNO,
+					"text" => $row->CUSNAM
+				);
+			}
+		}
+		echo json_encode($json);
 	}
 }
 	

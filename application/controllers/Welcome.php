@@ -59,6 +59,7 @@ class Welcome extends MY_Controller {
 		$data = array();
 		$data["menu"] = $this->MLogin->getmenuclaim();
 		$data["branch"] = $this->sess["branch"];
+		$data["codejob"] = $this->sess['employeeCode'];
 		$data["name"] = $this->sess["employeeCode"].'<br>'.$this->sess["name"];
 		$data["db"] = $this->sess["db"];
 		$data["baseUrl"] = base_url();
@@ -509,6 +510,7 @@ class Welcome extends MY_Controller {
 			</script>
 		";
 		*/
+		
 		$html = "
 			<div class='col-md-12' style='height:20vh;'>&emsp;</div>
 			<div class='col-md-12' style='font-size:50pt;' align='center'>

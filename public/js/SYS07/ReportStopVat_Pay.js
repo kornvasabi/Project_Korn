@@ -1,5 +1,5 @@
 /********************************************************
-             ______@28/02/2020______
+             ______@31/02/2020______
 			 Pasakorn Boonded
 
 ********************************************************/
@@ -13,59 +13,7 @@ $(function(){
 	$('#LOCAT').select2({
 		placeholder: 'เลือก',
 		ajax: {
-			url: '../Cselect2K/getLOCAT',
-			data: function (params){
-				dataToPost = new Object();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data){
-				return {
-					results: data
-				};
-			},
-			cache: true
-		},
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $(".k_tab1"),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	$('#FRMCONTNO').select2({
-		placeholder: 'เลือก',
-		ajax: {
-			url: '../Cselect2K/getReportCONTNOVAT',
-			data: function (params){
-				dataToPost = new Object();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data){
-				return {
-					results: data
-				};
-			},
-			cache: true
-		},
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $(".k_tab1"),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	$('#TOCONTNO').select2({
-		placeholder: 'เลือก',
-		ajax: {
-			url: '../Cselect2K/getReportCONTNOVAT',
+			url: '../Cselect2K/getLOCATNM',
 			data: function (params){
 				dataToPost = new Object();
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
@@ -132,20 +80,16 @@ function fn_ReportStopVat(){
 	}
 	dataToPost = new Object();
 	dataToPost.LOCAT      = (typeof $('#LOCAT').find(':selected').val() === 'undefined' ? '':$('#LOCAT').find(':selected').val());
-	dataToPost.FRMCONTNO  = (typeof $('#FRMCONTNO').find(':selected').val() === 'undefined' ? '':$('#FRMCONTNO').find(':selected').val());
-	dataToPost.TOCONTNO   = (typeof $('#TOCONTNO').find(':selected').val() === 'undefined' ? '':$('#TOCONTNO').find(':selected').val());
 	dataToPost.BILLCOLL   = (typeof $('#BILLCOLL').find(':selected').val() === 'undefined' ? '':$('#BILLCOLL').find(':selected').val());
-	dataToPost.FRMDATE    = $('#FRMDATE').val();
-	dataToPost.TODATE	  = $('#TODATE').val();
 	dataToPost.order      = order;
 	SV_Report = $.ajax({
-		url:'../SYS07/ReportStopVat/conditiontopdf',
+		url:'../SYS07/ReportStopVat_Pay/conditiontopdf',
 		data:dataToPost,
 		type:'POST',
 		dataType:'json',
 		success:function(data){
 			var baseUrl = $('body').attr('baseUrl');
-			var url = baseUrl+'/SYS07/ReportStopVat/pdf?condpdf='+data[0];
+			var url = baseUrl+'/SYS07/ReportStopVat_Pay/pdf?condpdf='+data[0];
 			var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 			Lobibox.window({
 				title:'พิมพ์รายงาน',

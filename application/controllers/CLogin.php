@@ -39,21 +39,21 @@ class CLogin extends MY_Controller {
 		$this->load->model('MLogin');
 		$arrs = array();
 		
-		if(isset($_REQUEST['user'])){
+		if($_REQUEST['user'] !== ""){
 			$arrs["user"] = $_REQUEST['user'];
 		}else{
 			$response = array("status"=>false,"msg"=>"กรุณาระบุชื่อผู้ใช้ด้วยครับ");
 			echo json_encode($response); exit;
 		}
 		
-		if(isset($_REQUEST['pass'])){
+		if($_REQUEST['pass'] !== ""){
 			$arrs["pass"] = $_REQUEST['pass'];
 		}else{
 			$response = array("status"=>false,"msg"=>"กรุณาระบุรหัสผ่านด้วยครับ");
 			echo json_encode($response); exit;
 		}
 		
-		if(isset($_REQUEST['db'])){
+		if($_REQUEST['db']!== ""){
 			$arrs["db"] = ($_REQUEST['db'] == "YTKMANAGEMENT" ? "YTKManagement" : $_REQUEST['db']);
 		}else{
 			$response = array("status"=>false,"msg"=>"กรุณาฐานข้อมูลด้วยครับ");
