@@ -67,7 +67,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			<ul class="nav navbar-nav navbar-right user-actions">
 				<li class="dropdown">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-						<!--img class="user-avatar" src="../public/lobiadmin-master/version/1.0/ajax/img/users/me-160.jpg" alt="..."/-->
+						<img class="user-avatar" src="../public/lobiadmin-master/version/1.0/ajax/img/users/<?php echo $codejob ?>.jpg" alt="User"/>
+						
 						<div class='glyphicon glyphicon-user'></div>
 						<b class="caret"></b>
 					</a>

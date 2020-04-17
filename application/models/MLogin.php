@@ -6,7 +6,7 @@ class MLogin extends CI_Model {
 	public function vertifylogin($username,$dblocat){
 		$sql = "			
 			select a.*,b.USERID,c.LOCATCD,c.dblocat 
-				,(select lower(allow) from itsupport.dbo.md5_topsecret where db='".$dblocat."') as allow
+				,(select lower(allow) from YTKManagement.dbo.md5_topsecret where db='".$dblocat."') as allow
 			from YTKManagement.dbo.hp_vusers a
 			left join YTKManagement.dbo.hp_mapusers b on a.employeeCode=b.employeeCode and a.IDNo=b.IDNo
 			left join YTKManagement.dbo.hp_maplocat c on b.USERID=c.USERID and b.dblocat=c.dblocat
@@ -46,12 +46,11 @@ class MLogin extends CI_Model {
 		
 		return $html;
 	}
-	
 	public function getmenuclaim(){
 		$sess = $this->session->userdata('cbjsess001');
 		//print_r($sess); exit;
 		$sql = "
-			select e.* from {$sess["db"]}.dbo.PASSWRD a
+			select e.* from YTKManagement.dbo.PASSWRD a
 			left join YTKManagement.dbo.hp_mapusers b on a.USERID=b.USERID collate Thai_CS_AS
 			left join YTKManagement.dbo.hp_vusers c on b.employeeCode=c.employeeCode and b.IDNo=c.IDNo
 			left join YTKManagement.dbo.hp_groupuser_detail d on b.groupCode=d.groupCode collate Thai_CS_AS and b.dblocat=d.dblocat collate Thai_CS_AS
@@ -498,12 +497,11 @@ class MLogin extends CI_Model {
 			return $html;
 		}
 	}
-	
 	function getclaim($mid){
 		$sess = $this->session->userdata('cbjsess001');
 		
 		$sql = "
-			select c.*,a.LEVEL_1 as level from {$sess["db"]}.dbo.PASSWRD a
+			select c.*,a.LEVEL_1 as level from YTKManagement.dbo.PASSWRD a
 			left join YTKManagement.dbo.hp_mapusers b on a.USERID=b.USERID collate Thai_CI_AS and b.dblocat='".$sess["db"]."'
 			left join YTKManagement.dbo.hp_groupuser_detail c on b.groupCode=c.groupCode collate Thai_CI_AS and c.dblocat='".$sess["db"]."'
 			left join YTKManagement.dbo.hp_menu d on c.menuid=d.menuid
