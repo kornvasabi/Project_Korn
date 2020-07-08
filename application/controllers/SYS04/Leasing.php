@@ -21,6 +21,9 @@ class Leasing extends MY_Controller {
                 $this->sess[$key] = $value;
             }
 		}
+		
+		$this->config_db['database'] = $this->sess["db"];
+		$this->connect_db = $this->load->database($this->config_db,true);
 	}
 	
 	function index(){
@@ -28,7 +31,7 @@ class Leasing extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+			<div class='tab1' name='home' groupType='{$claim["groupType"]}' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
 				<div class='col-sm-12'>
 					<div class='row'>
 						<div class=' col-sm-2'>	
@@ -228,7 +231,8 @@ class Leasing extends MY_Controller {
 		$sql = "
 			select a.CONTNO,a.LOCAT,convert(varchar(8),a.SDATE,112) as SDATE ,a.RESVNO
 				,a.APPVNO,a.CUSCOD,b.SNAM+b.NAME1+' '+b.NAME2+' ('+b.CUSCOD+')'+'-'+b.GRADE as CUSNAME
-				,a.INCLVAT,a.VATRT,a.ADDRNO,(select '('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB from {$this->MAuth->getdb('CUSTADDR')} where CUSCOD=a.CUSCOD and ADDRNO=a.ADDRNO) as ADDRDetail
+				,a.INCLVAT,a.VATRT,a.ADDRNO,(select '('+ADDRNO+') '+ADDR1+' '+isnull(ADDR2,'')+' '+isnull(TUMB,'') from {$this->MAuth->getdb('CUSTADDR')} 
+					where CUSCOD=a.CUSCOD and ADDRNO=a.ADDRNO) as ADDRDetail
 				,a.STRNO,a.PAYTYP,'('+c.PAYCODE+') '+c.PAYDESC PAYDESC
 				,a.OPTCTOT,a.OPTPTOT
 				,a.KEYINPRC,a.KEYINDWN,a.TAXNO,convert(varchar(8),a.TAXDT,112) as TAXDT,a.T_NOPAY,a.T_UPAY
@@ -443,7 +447,7 @@ class Leasing extends MY_Controller {
 			where CONTNO='".$contno."'
 			order by NOPAY
 		";
-		$query = $this->db->query($sql);
+		$query = $this->connect_db->query($sql);
 		
 		$html = "";
 		if($query->row()){
@@ -503,11 +507,12 @@ class Leasing extends MY_Controller {
 		$row = $query->row();
 		$data["vatrt"] = number_format($row->VATRT,2);
 		
-		$sql = "select CALINT,DISC_FM from {$this->MAuth->getdb('CONDPAY')}";
+		$sql = "select CALINT,DISC_FM,FNANALYZE from {$this->MAuth->getdb('CONDPAY')}";
 		$query = $this->db->query($sql);
 		$row = $query->row();
 		$data["CALINT"] = str_replace(chr(0),'',$row->CALINT);
 		$data["DISC_FM"] = str_replace(chr(0),'',$row->DISC_FM);
+		$data["FNANALYZE"] = str_replace(chr(0),'',$row->FNANALYZE);
 		
 		$sql = "select top 1 PAYCODE,'('+PAYCODE+') '+PAYDESC PAYDESC from {$this->MAuth->getdb('PAYDUE')} order by PAYCODE";
 		$query = $this->db->query($sql);
@@ -577,13 +582,33 @@ class Leasing extends MY_Controller {
 			</div>
 			<div>
 				<div class='col-sm-6 text-left'>
-					<input type='button' id='btnArpay' class='btn btn-xs btn-info' style='width:100px;' value='ตาราง' disabled>
+					<!-- input type='button' id='btnArpay' class='btn btn-xs btn-info' style='width:100px;' value='ตาราง' disabled>
 					<input type='button' id='btnSend' class='btn btn-xs btn-info' style='width:100px;' value='ใบส่งมอบ' disabled>
 					<input type='button' id='btnTax' class='btn btn-xs btn-info' style='width:100px;' value='ใบกำกับ' disabled>
 					<br>
 					<input type='button' id='btnApproveSell' class='btn btn-xs btn-info' style='width:100px;' value='ใบอนุมัติขาย' disabled>
 					<input type='button' id='btnContno' class='btn btn-xs btn-info' style='width:100px;' value='สัญญา' disabled>
-					<input type='button' id='btnLock' class='btn btn-xs btn-info' style='width:100px;' value='Lock สัญญา' disabled>
+					<input type='button' id='btnLock' class='btn btn-xs btn-info' style='width:100px;' value='Lock สัญญา' disabled -->
+					
+					<br>
+					<div class='btn-group btn-group-xs dropup'>
+						<button type='button' id='btnDocument' class='btn btn-xs btn-info'>
+							เอกสาร
+						</button>
+						<button type='button' id='btnDocumentOption' class='btn btn-xs btn-info dropdown-toggle' data-toggle='dropdown' aria-expanded='false'>
+							<i class='fa fa-cog'></i>
+							<span class='sr-only'>Toggle Dropdown</span>
+						</button>
+						<ul class='dropdown-menu'>
+							<span id='btnArpay' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>1.ตารางค่างวด</span>
+							<span id='btnSend' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>2.ใบส่งมอบ</span>
+							<span id='btnTax' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left' disabled>3.ใบกำกับภาษี</span>
+							<span id='btnApproveSell' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>4.ใบอนุมัติขาย</span>
+							<span id='btnContno' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left' disabled>5.สัญญา</span>
+							<span id='btnLock' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left' disabled>6.Lock สัญญา</span>
+							<span id='btnEFF' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>7.ตารางแสดงภาระหนี้ตามสัญญา</span>
+						</ul>
+					</div>
 				</div>
 				<div class='col-sm-6 text-right'>
 					<br>
@@ -635,8 +660,8 @@ class Leasing extends MY_Controller {
 								<div class='col-sm-4'>	
 									<div class='form-group'>
 										เลขที่ใบอนุมัติ
-										<!-- input type='text' id='add_approve' class='form-control input-sm' placeholder='เลขที่ใบอนุมัติ'  -->
-										<select id='add_approve' class='form-control input-sm' data-placeholder='เลขที่ใบอนุมัติ'></select>
+										<!-- input type='text' id='add_approve' FNANALYZE='{$data["FNANALYZE"]}' class='form-control input-sm' placeholder='เลขที่ใบอนุมัติ'  -->
+										<select id='add_approve' class='form-control input-sm' FNANALYZE='{$data["FNANALYZE"]}' data-placeholder='เลขที่ใบอนุมัติ'></select>
 									</div>
 								</div>
 								<div class='col-sm-4'>	
@@ -1061,7 +1086,7 @@ class Leasing extends MY_Controller {
 						<div class='row'>
 							<div class='2 col-sm-12'>	
 								<div id='formBillDas' class='form-group'>
-									<span id='btn_addBillDas' class='glyphicon glyphicon-plus btn btn-xs btn-block btn-info'> บิลจาก DASI(FREE)</span>
+									<span id='btn_addBillDas' class='glyphicon glyphicon-plus btn btn-xs btn-block btn-info'> บิลจาก DASI</span>
 									<!-- select class='add_billdas form-control input-sm' use=false data-placeholder='เลขที่บิล'></select -->
 								</div>
 							</div>
@@ -1598,9 +1623,13 @@ class Leasing extends MY_Controller {
 		}
 		
 		$sql = "
-			select top 1 ADDRNO,'('+ADDRNO+') '+ADDR1+' '+ADDR2+' '+TUMB as ADDRDT from {$this->MAuth->getdb('CUSTADDR')}
-			where CUSCOD='".$cuscod."'
-			order by ADDRNO
+			select top 1 ADDRNO,'('+a.ADDRNO+') '+isnull(a.ADDR1,'')+' '+isnull(a.ADDR2,'')+' ต.'+isnull(a.TUMB,'')
+				+' อ.'+isnull(b.AUMPDES,'')+' จ.'+isnull(c.PROVDES,'')+' '+isnull(a.ZIP,'')	as ADDRDT 
+			from {$this->MAuth->getdb('CUSTADDR')} a
+			left join {$this->MAuth->getdb('SETAUMP')} b on a.AUMPCOD=b.AUMPCOD
+			left join {$this->MAuth->getdb('SETPROV')} c on b.PROVCOD=c.PROVCOD
+			where a.CUSCOD='".$cuscod."'
+			order by a.ADDRNO
 		";
 		$query = $this->db->query($sql);
 		
@@ -1746,26 +1775,43 @@ class Leasing extends MY_Controller {
 		$size 	= sizeof($saleno);
 		
 		$sql = "
-			select free from serviceweb.dbo.fn_branchMaps
+			select senior,free,spss from serviceweb.dbo.fn_branchMaps
 			where senior='".$locat."'
 		";
 		$query = $this->db->query($sql);
 		$row = $query->row();
-		$locatDas = $row->free;
+		$locatDasFREE = $row->free;
+		$locatDasSPS = $row->spss;
 		
-		$cond = "";
+		$condFREE = "";
+		$condSPS = "";
 		for($i=0;$i<$size;$i++){
-			if($cond != ""){ $cond .= ","; }
-			$cond .= "'".$saleno[$i]."'";
+			
+			if(substr($saleno[$i],0,1) == "F"){
+				//if($condFREE != ""){ $condFREE .= ","; }
+				$condFREE .= ",";
+				$condFREE .= "'".substr($saleno[$i],1,strlen($saleno[$i]))."'";
+			}else if(substr($saleno[$i],0,1) == "S"){
+				//if($condSPS != ""){ $condSPS .= ","; }
+				$condSPS .= ",";
+				$condSPS .= "'".substr($saleno[$i],1,strlen($saleno[$i]))."'";
+			}
 		}
 		
 		$response = array();
-		if($cond != ''){
-			$cond = " and SaleNo in (".$cond.")";
+		if($condFREE != '' || $condSPS != ''){
+			$condFREE = " and SaleNo in (''".$condFREE.")";
+			$condSPS = " and SaleNo in (''".$condSPS.")";
 			
 			$sql = "
-				select sum(TotalAmt) as TotalAmt from dbo.SPSale
-				where 1=1 and BranchNo='".$locatDas."' ".$cond."
+				select sum(TotalAmt) as TotalAmt from (
+					select Discount as TotalAmt from DBFREE.dbo.SPSale
+					where 1=1 and BranchNo='".$locatDasFREE."' ".$condFREE."
+					
+					union all
+					select Discount as TotalAmt from DBSPS.dbo.SPSale
+					where 1=1 and BranchNo='".$locatDasSPS."' ".$condSPS."
+				) as data
 			";
 			//echo $sql; exit;
 			$DAS = $this->load->database('DAS',true);
@@ -1775,8 +1821,12 @@ class Leasing extends MY_Controller {
 			$response["TotalAmt"] = number_format($row->TotalAmt,2);
 			
 			$sql = "
-				select PartName+' '+cast(cast(SaleQTY as decimal(7,0)) as varchar)+' '+UM as item from dbo.SPSaleDetail
-				where 1=1 and BranchNo='".$locatDas."' ".$cond."
+				select PartName+' '+cast(cast(SaleQTY as decimal(7,0)) as varchar)+' '+UM as item from DBFREE.dbo.SPSaleDetail
+				where 1=1 and BranchNo='".$locatDasFREE."' ".$condFREE."
+				
+				union all
+				select PartName+' '+cast(cast(SaleQTY as decimal(7,0)) as varchar)+' '+UM as item from DBSPS.dbo.SPSaleDetail
+				where 1=1 and BranchNo='".$locatDasSPS."' ".$condSPS."
 			";
 			$query = $DAS->query($sql);
 			
@@ -3259,6 +3309,7 @@ class Leasing extends MY_Controller {
 			if OBJECT_ID('tempdb..#leasingTemp') is not null drop table #leasingTemp;
 			create table #leasingTemp (id varchar(20),contno varchar(20),msg varchar(max));
 			
+			SET NOCOUNT ON;
 			begin tran leasingTran
 			begin try
 			
@@ -3431,11 +3482,14 @@ class Leasing extends MY_Controller {
 			end catch
 		";
 		//echo $sql; exit;
-		
+		$this->connect_db->query($sql);
+		$sql = "select * from #leasingTemp";
+		$query = $this->connect_db->query($sql);
+		/*
 		$this->db->query($sql);
 		$sql = "select * from #leasingTemp";
 		$query = $this->db->query($sql);
-	  
+		*/
 		if($query->row()){
 			foreach($query->result() as $row){
 				$response["status"] = $row->id;
@@ -3533,9 +3587,9 @@ class Leasing extends MY_Controller {
 			end catch
 		";
 		//echo $sql; exit;
-		$this->db->query($sql);
+		$this->connect_db->query($sql);
 		$sql = "select * from #leasingTemp";
-		$query = $this->db->query($sql);
+		$query = $this->connect_db->query($sql);
 	  
 		if($query->row()){
 			foreach($query->result() as $row){
@@ -3579,7 +3633,7 @@ class Leasing extends MY_Controller {
 				end				
 				
 				update {$this->MAuth->getdb('INVTRAN')} 
-				set SDATE=null,PRICE=null,CONTNO=null,FLAG='D'
+				set SDATE=null,PRICE=null,CONTNO=null,FLAG='D',TSALE=null
 				where CONTNO=@CONTNO
 				
 				delete from {$this->MAuth->getdb('AROTHGAR')}  
@@ -3621,9 +3675,9 @@ class Leasing extends MY_Controller {
 			end catch
 		";
 		//echo $sql; exit;
-		$this->db->query($sql);
+		$this->connect_db->query($sql);
 		$sql = "select * from #leasingTemp";
-		$query = $this->db->query($sql);
+		$query = $this->connect_db->query($sql);
 	  
 		if($query->row()){
 			foreach($query->result() as $row){
@@ -3640,7 +3694,142 @@ class Leasing extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function effpdf(){
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8', 
+			'format' => 'A4',
+			'margin_top' => 0, 	//default = 16
+			'margin_left' => 15, 	//default = 15
+			'margin_right' => 15, 	//default = 15
+			'margin_bottom' => 16, 	//default = 16
+			'margin_header' => 9, 	//default = 9
+			'margin_footer' => 9, 	//default = 9
+		]);
+		
+		$dataHead = array(
+			"STRNO"=>"",
+			"TYPE"=>"",
+			"MODEL"=>"",
+			"BAAB"=>"",
+			"COLOR"=>"",
+			"CC"=>"",
+			
+			"CONTNO"=>"",
+			"SNAM"=>"",
+			"NAME1"=>"",
+			"NAME2"=>"",
+			"SDATE"=>"",
+			
+			"TCSHPRC"=>0,
+			"TOTPRC"=>0,
+			"TOTDWN"=>0,
+			"T_NOPAY"=>0,
+			
+			"FDATE"=>"",
+			"LDATE"=>"",
+			"DLDAY"=>"",
+			
+			"INTRT"=>"",
+			"EFF"=>0,
+			"NKANG"=>0,
+			"head"=>"",
+		);
+		
+		$content = "
+			<table style='width:100%;'>
+				<tr>
+					<td style='width:200px;'></td>
+					<td align='center' style='font-size:16pt;'>
+						<b>ตารางแสดงภาระหนี้ตามสัญญา </b>
+					</td>
+					<td align='right' style='width:200px;font-size:9pt;'>{PAGENO} / {nbpg}</td>
+				</tr>
+				<tr>
+					<td colspan='3'>&emsp;</td>
+				</tr>
+			</table>
+			
+			<div class='row' style='font-size:8.5pt;'>
+				<div style='text-align:left;width:100px;height:26px;float:left;border:0px;'>เลขที่สัญญา : </div>
+				<div style='text-align:left;width:100px;height:26px;float:left;border:0px;'>".$dataHead["CONTNO"]."</div>
+				<div style='text-align:center;width:80px;height:26px;float:left;border:0px;'>ชื่อลูกค้า : </div>
+				<div style='text-align:left;width:180px;height:26px;float:left;border:0px;'>".$dataHead["SNAM"].$dataHead["NAME1"]." ".$dataHead["NAME2"]."</div>
+				<div style='text-align:center;width:100px;height:26px;float:left;border:0px;'>ทำสัญญาวันที่ : </div>
+				<div style='text-align:left;width:150px;height:26px;float:left;border:0px;'>".($this->Convertdate(2,$dataHead["SDATE"]))."</div>
+			</div>
+			
+			<div class='row' style='font-size:8.5pt;width:720;'>
+				<div style='text-align:left;width:100%;height:26px;float:left;border:0px;'>
+					เลขตัวถัง : ".$dataHead["STRNO"]." 
+					&nbsp; ยี่ห้อ : ".$dataHead["TYPE"]."
+					&nbsp; รุ่น : ".$dataHead["MODEL"]."
+					&nbsp; แบบ : ".$dataHead["BAAB"]."
+					&nbsp; สี : ".$dataHead["COLOR"]."
+					&nbsp; ขนาด : ".$dataHead["CC"]."
+					&nbsp; ทะเบียน : -
+				</div>
+			</div>
+			<div class='row' style='font-size:8.5pt;'>
+				<div style='width:110px;height:26px;float:left;border:0px;'>ราคาขายสดรวม VAT : </div>
+				<div style='width:90px;height:26px;float:left;border:0px;'>".number_format($dataHead["TCSHPRC"],2)." บาท</div>
+				<div style='width:120px;height:26px;float:left;border:0px;'>ราคาขายผ่อนรวม VAT : </div>
+				<div style='width:100px;height:26px;float:left;border:0px;'>".number_format($dataHead["TOTPRC"],2)." บาท</div>
+				<div style='text-align:left;width:70px;height:26px;float:left;border:0px;'>เงินดาวน์ : </div>
+				<div style='text-align:center;width:70px;height:26px;float:left;border:0px;'>".number_format($dataHead["TOTDWN"],2)." บาท</div>
+				<div style='text-align:left;width:80px;height:26px;float:left;border:0px;'>ผ่อนจำนวน : </div>
+				<div style='text-align:center;width:40px;height:26px;float:left;border:0px;'>".$dataHead["T_NOPAY"]." งวด</div>
+			</div>
+			<div class='row' style='font-size:8.5pt;'>
+				<div style='width:120px;height:26px;float:left;border:0px;'>วันครบกำหนดงวดแรก : </div>
+				<div style='width:80px;height:26px;float:left;border:0px;'>".($this->Convertdate(2,$dataHead["FDATE"]))."</div>
+				<div style='width:150px;height:26px;float:left;border:0px;'>วันครบกำหนดงวดสุดท้าย : </div>
+				<div style='width:80px;height:26px;float:left;border:0px;'>".($this->Convertdate(2,$dataHead["LDATE"]))."</div>
+				<div style='text-align:center;width:120px;height:26px;float:left;border:0px;'>เงื่อนไขล่าช้าไม่เกิน</div>
+				<div style='width:120px;height:26px;float:left;border:0px;'>".$dataHead["DLDAY"]." วัน</div>
+			</div>
+			<div class='row' style='font-size:8.5pt;'>
+				<div style='text-align:left;width:100px;height:40px;float:left;border:0px;'>อัตราดอกเบี้ยร้อยละ</div>
+				<div style='text-align:left;width:50px;height:40px;float:left;border:0px;'>".number_format($dataHead["INTRT"],2)."</div>
+				<div style='text-align:left;width:80px;height:40px;float:left;border:0px;'>ต่อปี (Flat Rate)</div>
+				<div style='text-align:left;width:100px;height:40px;float:left;border:0px;'>อัตราดอกเบี้ยร้อยละ</div>
+				<div style='text-align:left;width:50px;height:40px;float:left;border:0px;'>".number_format(($row->EFF*12),2)."</div>
+				<div style='text-align:left;width:130px;height:40px;float:left;border:0px;'>ต่อปี (Effective Rate)</div>
+				<div style='text-align:left;width:90px;height:40px;float:left;border:0px;'>ดอกผลเช่าซื้อ</div>
+				<div style='text-align:left;width:100px;height:40px;float:left;border:0px;'>".number_format($dataHead["NKANG"],2)." บาท</div>
+			</div>
+			
+			<table style='font-size:8.5pt;'>".$dataHead['head']."</table>
+		";
+		
+		$stylesheet = "
+			<style>
+				body { font-family: garuda;font-size:10pt; }
+				.wf { width:100%; }
+				.h10 { height:10px; }
+				.tc { text-align:center; }
+				.pf { position:fixed; }
+				.bor { border:0.1px solid black; }
+				.bor2 { border:0.1px dotted black; }
+				.data { background-color:#fff;font-size:9pt; }
+			</style>
+		";
+		
+		$mpdf->WriteHTML($content.$other.$stylesheet);
+		$mpdf->SetHTMLFooter("<div class='wf pf' style='top:1060;left:0;font-size:6pt;width:720px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
+		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
+		$mpdf->Output();
+	}
+	
+	function Decode(){
+		$data = $this->generateData(array($_POST["CONTNO"]),"encode");
+		$response = array("CONTNO"=>$data[0]);
+		echo json_encode($response);
+	}
+	
 	function approvepdf(){
+		$data = $this->generateData(array($_REQUEST["contno"]),"decode");
+		$_REQUEST['contno'] = $data[0];
+		
 		$mpdf = new \Mpdf\Mpdf([
 			'mode' => 'utf-8', 
 			'format' => 'A4',
@@ -3673,7 +3862,7 @@ class Leasing extends MY_Controller {
 		
 		$sql = "
 			select a.RESVNO 
-				,(select LOCATNM from INVLOCAT where LOCATCD=a.LOCAT) as LOCAT
+				,(select LOCATNM from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD=a.LOCAT) as LOCAT
 				,case when a.TSALE = 'H' then 'ขายผ่อน' else a.TSALE end TSALE
 				,convert(varchar(8),b.RECVDT,112) as RECVDT
 				,convert(varchar(8),a.SDATE,112) as SDATE
@@ -3681,7 +3870,7 @@ class Leasing extends MY_Controller {
 				,a.CONTNO
 				,a.CUSCOD
 				,(select 'คุณ'+NAME1+' '+NAME2 from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD=a.CUSCOD) as CUSNAME
-				,(select ADDR1+' '+ADDR2+' ต.'+TUMB
+				,(select ADDR1+' '+isnull(ADDR2,'')+' ต.'+isnull(TUMB,'')
 					+' อ.'+(select AUMPDES from {$this->MAuth->getdb('SETAUMP')} where AUMPCOD=ca.AUMPCOD and PROVCOD=ca.PROVCOD)
 					+' จ.'+(select PROVDES from {$this->MAuth->getdb('SETPROV')} where PROVCOD=ca.PROVCOD)
 					+' '+ZIP
@@ -3726,7 +3915,7 @@ class Leasing extends MY_Controller {
 			where a.CONTNO='".$_REQUEST['contno']."'
 		";
 		//echo $sql; exit;
-		$query = $this->db->query($sql);
+		$query = $this->connect_db->query($sql);
 		
 		$data = array();
 		if($query->row()){
@@ -3911,9 +4100,9 @@ class Leasing extends MY_Controller {
 			<div class='wf pf' style='top:595;left:420;font-size:10pt;width:100px;text-align:left;'>หมายเลขตัวถัง</div>
 			<div class='wf pf data' style='top:595;left:530;width:160px;'>{$data[25]}</div>
 			
-			<div class='wf pf' style='top:595;left:0;font-size:10pt;'>อัตราดอกเบี้ยเช่าซื้อจริง</div>
+			<!-- div class='wf pf' style='top:595;left:0;font-size:10pt;'>อัตราดอกเบี้ยเช่าซื้อจริง</div>
 			<div class='wf pf data' style='top:595;left:200;width:140px;text-align:right;'>{$data[26]}</div>
-			<div class='wf pf' style='top:595;left:360;font-size:10pt;'>%</div>
+			<div class='wf pf' style='top:595;left:360;font-size:10pt;'>%</div -->
 			<div class='wf pf' style='top:625;left:420;font-size:10pt;width:100px;text-align:left;'>หมายเลขเครื่อง</div>
 			<div class='wf pf data' style='top:625;left:530;width:160px;'>{$data[27]}</div>
 			
@@ -4001,18 +4190,70 @@ class Leasing extends MY_Controller {
 				,(case when isnull(h.NOPAY,0) = 0 then a.NOPAY else h.NOPAY end) as NOPAY
 				
 				,1 as NOPAYPerMonth
-				,a.STRNO,a.MODEL,a.BAAB,a.COLOR
-				,a.PRICE
+				--,a.STRNO
+				,case when isnull(i.STRNO,'') != '' then i.STRNO collate thai_cs_as else a.STRNO end as STRNO
+				,a.MODEL,a.BAAB,a.COLOR,a.STAT
+				,a.PRICE - isnull(a.PRICE_DIS,0) as PRICE
 				,(case when isnull(h.INTEREST_RT,0) = 0 then a.INTEREST_RT else h.INTEREST_RT end) as INTEREST_RT
 				,b.CUSCOD
 				,c.SNAM+c.NAME1+' '+c.NAME2+' ('+c.CUSCOD+')'+'-'+c.GRADE as CUSNAME
+				,c.GRADE as CUS_GRADE
 				,b.ADDRDOCNO
-				,'('+d.ADDRNO+') '+d.ADDR1+' '+d.ADDR2+' ต.'+d.TUMB+' อ.'+e.AUMPDES+' จ.'+f.PROVDES+' '+d.ZIP as ADDRNODetails 	
-				--,a.STDID,a.STDPLRANK
+				,'('+d.ADDRNO+') '+d.ADDR1+' '+isnull(d.ADDR2,'')+' ต.'+isnull(d.TUMB,'')+' อ.'+e.AUMPDES+' จ.'+f.PROVDES+' '+d.ZIP as ADDRNODetails 	
 				,@INT_RATE as INT_RATE
 				,@DELAY_DAY as DELAY_DAY
-				,(isnull(g.insurance,0)+isnull(g.transfers,0)+isnull(g.regist,0)+isnull(g.act,0)+isnull(g.coupon,0))
-					- isnull(a.DWN_INSURANCE,0) as STD_OPT_TOTAL
+				
+				
+				--กรณีวิเคราะห์เปลี่ยนแปลงเงินดาวน์  จะใช้ std ในขั้นเงินดาวน์ที่สาขาคีย์มา   20200420 
+				--,((case when a.INSURANCE_TYP = 1 then isnull(g.insurance,0) else 0 end)
+				,((case when a.INSURANCE_TYP = 1 then (
+						case when isnull(h.INSURANCE,0) > 0 
+						then h.INSURANCE else g.INSURANCE end
+					) else 0 end)
+					+(case when a.CALTRANS = 'Y' then isnull(g.transfers,0) else 0 end)
+					+(case when a.CALREGIST = 'Y' then isnull(g.regist,0) else 0 end)
+					+(case when a.CALACT = 'Y' then isnull(g.act,0) else 0 end)
+					+(case when a.CALCOUPON = 'Y' then isnull(g.coupon,0) else 0 end)				
+					-(case when a.INSURANCE_TYP=1 then isnull(a.DWN_INSURANCE,0) else 0 end) 
+				 ) as STD_OPT_TOTAL
+				
+				--,((case when a.INSURANCE_TYP = 1 then ' ประกัน '+cast((isnull(g.insurance,0) - isnull(a.DWN_INSURANCE,0)) as varchar) else '' end)
+				,((case when a.INSURANCE_TYP = 1 then ' ประกัน '+cast((isnull(
+					case when isnull(h.INSURANCE,0) > 0 then h.INSURANCE else g.INSURANCE end
+					,0) - isnull(a.DWN_INSURANCE,0)) as varchar) else '' end)
+				+(case when a.CALTRANS = 'Y' then ' โอน '+cast(isnull(g.transfers,0) as varchar) else '' end)
+				+(case when a.CALREGIST = 'Y' then ' จด '+cast(isnull(g.regist,0) as varchar) else '' end)
+				+(case when a.CALACT = 'Y' then ' พรบ. '+cast(isnull(g.act,0) as varchar) else '' end)
+				+(case when a.CALCOUPON = 'Y' then ' คูปองชิงโชค '+cast(isnull(g.coupon,0) as varchar) else '' end)
+				) as STD_OPT_TOTAL_DESC
+				
+				/*
+				-- กรณีวิเคราะห์เปลี่ยนแปลงเงินดาวน์  จะใช้ std ในขั้นเงินดาวน์ที่วิเคราะห์เปลี่ยน 20200619
+				,((case when a.INSURANCE_TYP = 1 then (case when isnull(h.DWN,0) > 0 then isnull(j.insurance,0) else isnull(g.insurance,0) end) else 0 end)
+					+(case when a.CALTRANS = 'Y' then isnull(g.transfers,0) else 0 end)
+					+(case when a.CALREGIST = 'Y' then isnull(g.regist,0) else 0 end)
+					+(case when a.CALACT = 'Y' then isnull(g.act,0) else 0 end)
+					+(case when a.CALCOUPON = 'Y' then isnull(g.coupon,0) else 0 end)				
+					-(case when a.INSURANCE_TYP=1 then isnull(a.DWN_INSURANCE,0) else 0 end) 
+				 ) as STD_OPT_TOTAL
+				
+				,((case when a.INSURANCE_TYP = 1 then ' ประกัน '
+					+cast(
+						(case when isnull(h.DWN,0) > 0 then isnull(j.insurance,0) else isnull(g.insurance,0) end)
+						- isnull(a.DWN_INSURANCE,0) as varchar
+					) else '' end)
+				+(case when a.CALTRANS = 'Y' then ' โอน '+cast(isnull(g.transfers,0) as varchar) else '' end)
+				+(case when a.CALREGIST = 'Y' then ' จด '+cast(isnull(g.regist,0) as varchar) else '' end)
+				+(case when a.CALACT = 'Y' then ' พรบ. '+cast(isnull(g.act,0) as varchar) else '' end)
+				+(case when a.CALCOUPON = 'Y' then ' คูปองชิงโชค '+cast(isnull(g.coupon,0) as varchar) else '' end)
+				) as STD_OPT_TOTAL_DESC
+				*/
+				
+				,((case when a.CALTRANS = 'Y' then isnull(g.transfers,0) else 0 end)
+				+(case when a.CALREGIST = 'Y' then isnull(g.regist,0) else 0 end)
+				+(case when a.CALACT = 'Y' then isnull(g.act,0) else 0 end)
+				+(case when a.CALCOUPON = 'Y' then isnull(g.coupon,0) else 0 end)) as PAYOTHER
+								
 				,isnull(a.DWN_INSURANCE,0) as DWN_INSURANCE
 				,h.OPTCODE
 				,(
@@ -4029,6 +4270,8 @@ class Leasing extends MY_Controller {
 			left join {$this->MAuth->getdb('SETPROV')} f on d.PROVCOD=f.PROVCOD
 			left join {$this->MAuth->getdb('STDVehiclesDown')} g on a.STDID=g.STDID and a.SUBID=g.SUBID and a.DWN between g.DOWNS and g.DOWNE
 			left join {$this->MAuth->getdb('ARANALYZEAPPR')} h on a.ID=h.ID collate thai_cs_as
+			left join {$this->MAuth->getdb('ARRESV')} i on a.RESVNO=i.RESVNO collate thai_cs_as
+			left join {$this->MAuth->getdb('STDVehiclesDown')} j on a.STDID=j.STDID and a.SUBID=j.SUBID and h.DWN between j.DOWNS and j.DOWNE
 			where a.ID='".$ANID."'
 		";
 		//echo $sql; exit;
@@ -4039,6 +4282,7 @@ class Leasing extends MY_Controller {
 			foreach($query->result() as $row){
 				foreach($row  as $key => $val){
 					switch($key){
+						case 'PAYOTHER': $data[$key] = number_format($val,2); break;
 						case 'DWN': 
 							$data[$key] = number_format($val,2);
 							$data['ORI_DWN'] = $val;
@@ -4076,19 +4320,22 @@ class Leasing extends MY_Controller {
 				}
 				
 				$sql = "
-					select a.CUSTYPE,a.CUSCOD,b.SNAM+b.NAME1+' '+b.NAME2+' ('+b.CUSCOD+')-'+b.GRADE as REFNAME 
+					select a.CUSTYPE,a.CUSCOD,b.SNAM+b.NAME1+' '+b.NAME2+' ('+b.CUSCOD+')-'+b.GRADE as REFNAME ,a.CUSRELATION
 					from {$this->MAuth->getdb('ARANALYZEREF')} a
 					left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD collate thai_cs_as
-					where a.CUSTYPE<>0 and a.ID='".$data["ID"]."'
+					where a.CUSTYPE<>0 and a.ID='".$data["ID"]."' and a.CUSCOD != 'cannot'
 				";
+				//echo $sql; exit;
 				$qref = $this->db->query($sql);
 				
 				if($qref->row()){
+					$r = 1;
 					foreach($qref->result() as $row_qref){
-						$data['REF'][$row_qref->CUSTYPE]['rank'] = $row_qref->CUSTYPE;
-						$data['REF'][$row_qref->CUSTYPE]['cuscod'] = $row_qref->CUSCOD;
-						$data['REF'][$row_qref->CUSTYPE]['refname'] = $row_qref->REFNAME;
-						$data['REF'][$row_qref->CUSTYPE]['relation'] = '';
+						$data['REF'][$r]['rank'] = $r;
+						$data['REF'][$r]['cuscod'] = $row_qref->CUSCOD;
+						$data['REF'][$r]['refname'] = $row_qref->REFNAME;
+						$data['REF'][$r]['relation'] = $row_qref->CUSRELATION;
+						$r += 1;
 					}
 				}
 			}
@@ -4632,6 +4879,147 @@ class Leasing extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	
+	//20200321
+	//ดึงราคารถ กำหนดให้ขายราคาพิเศษ
+	function getSTDSpecial(){
+		$ANID  = $_POST["ANID"];
+		$STRNO = $_POST["STRNO"];
+		
+		$data = array("error"=>false,"analyze"=>false);
+		if( $ANID != "" ) // ดึงข้อมูลจากใบวิเคราะห์
+		{
+			$data["analyze"] = true;
+			$sql = "
+				declare @INT_RATE decimal(7,2) = (select INT_RATE from {$this->MAuth->getdb('CONDPAY')});
+				declare @DELAY_DAY decimal(7,2) = (select DELAY_DAY from {$this->MAuth->getdb('CONDPAY')});
+				declare @PRICE decimal(18,2) = (select PRICE from {$this->MAuth->getdb('STDSpecial')} where STRNO='{$STRNO}' and isnull(contno,'')='')
+				
+				select a.ID,isnull(a.RESVNO,'') as RESVNO
+					,(case when isnull(h.DWN,0) = 0 then a.DWN else h.DWN end) as DWN
+					,(case when isnull(h.NOPAY,0) = 0 then a.NOPAY else h.NOPAY end) as NOPAY
+					
+					,1 as NOPAYPerMonth
+					,'{$STRNO}' as STRNO,a.MODEL,a.BAAB,a.COLOR,a.STAT
+					,case when isnull(@PRICE,0) > 0 then @PRICE else a.PRICE end as PRICE
+					,(case when isnull(h.INTEREST_RT,0) = 0 then a.INTEREST_RT else h.INTEREST_RT end) as INTEREST_RT
+					,b.CUSCOD
+					,c.SNAM+c.NAME1+' '+c.NAME2+' ('+c.CUSCOD+')'+'-'+c.GRADE as CUSNAME
+					,b.ADDRDOCNO
+					,'('+d.ADDRNO+') '+d.ADDR1+' '+d.ADDR2+' ต.'+d.TUMB+' อ.'+e.AUMPDES+' จ.'+f.PROVDES+' '+d.ZIP as ADDRNODetails 			
+					,@INT_RATE as INT_RATE
+					,@DELAY_DAY as DELAY_DAY				
+					
+					/*
+					
+					,((case when a.INSURANCE_TYP = 1 then isnull(g.insurance,0) else 0 end)
+					+(case when a.CALTRANS = 'Y' then isnull(g.transfers,0) else 0 end)
+					+(case when a.CALREGIST = 'Y' then isnull(g.regist,0) else 0 end)
+					+(case when a.CALACT = 'Y' then isnull(g.act,0) else 0 end)
+					+isnull(g.coupon,0)) - isnull(a.DWN_INSURANCE,0) as STD_OPT_TOTAL
+					*/
+					
+					,((case when a.INSURANCE_TYP = 1 then isnull(g.insurance,0) else 0 end)
+						+(case when a.CALTRANS = 'Y' then isnull(g.transfers,0) else 0 end)
+						+(case when a.CALREGIST = 'Y' then isnull(g.regist,0) else 0 end)
+						+(case when a.CALACT = 'Y' then isnull(g.act,0) else 0 end)
+						+(case when a.CALCOUPON = 'Y' then isnull(g.coupon,0) else 0 end)				
+						-(case when a.INSURANCE_TYP=1 then isnull(a.DWN_INSURANCE,0) else 0 end) 
+					 ) as STD_OPT_TOTAL
+					
+					
+					
+					,isnull(a.DWN_INSURANCE,0) as DWN_INSURANCE
+					,h.OPTCODE
+					,(
+						select '('+sa.OPTCODE+') '+sa.OPTNAME from {$this->MAuth->getdb('OPTMAST')} as sa
+						where sa.LOCAT=a.LOCAT collate thai_cs_as and sa.OPTCODE=h.OPTCODE collate thai_cs_as
+					) as OPTNAME
+					,a.ACTICOD
+					,(select '('+sa.ACTICOD+') '+sa.ACTIDES from {$this->MAuth->getdb('SETACTI')} sa where sa.ACTICOD=a.ACTICOD collate thai_cs_as) as ACTIDES
+				from {$this->MAuth->getdb('ARANALYZE')} a
+				left join {$this->MAuth->getdb('ARANALYZEREF')} b on a.ID=b.ID and b.CUSTYPE=0
+				left join {$this->MAuth->getdb('CUSTMAST')} c on b.CUSCOD=c.CUSCOD collate thai_cs_as
+				left join {$this->MAuth->getdb('CUSTADDR')} d on b.CUSCOD=d.CUSCOD collate thai_cs_as and b.ADDRDOCNO=d.ADDRNO collate thai_cs_as
+				left join {$this->MAuth->getdb('SETAUMP')} e on d.AUMPCOD=e.AUMPCOD
+				left join {$this->MAuth->getdb('SETPROV')} f on d.PROVCOD=f.PROVCOD
+				left join {$this->MAuth->getdb('STDVehiclesDown')} g on a.STDID=g.STDID and a.SUBID=g.SUBID and a.DWN between g.DOWNS and g.DOWNE
+				left join {$this->MAuth->getdb('ARANALYZEAPPR')} h on a.ID=h.ID collate thai_cs_as
+				where a.ID='".$ANID."'
+			";
+			//echo $sql; exit;
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					foreach($row  as $key => $val){
+						switch($key){
+							case 'DWN': 
+								$data[$key] = number_format($val,2);
+								$data['ORI_DWN'] = $val;
+								break;
+							default:
+								$data[$key] = str_replace(chr(0),'',$val);
+								break;
+						}
+					}
+					
+					$sql = "
+						select * from {$this->MAuth->getdb('fn_jd_calPriceForSale')}(
+							'".$data["PRICE"]."',
+							'".$data["ORI_DWN"]."',
+							(select VATRT from {$this->MAuth->getdb('VATMAST')} where getdate() between FRMDATE and TODATE),
+							'".$data["STD_OPT_TOTAL"]."',
+							'".$data["INTEREST_RT"]."',
+							'".$data["NOPAY"]."',
+							'5' 
+						)
+					";
+					//echo $sql; exit;
+					$q = $this->db->query($sql);
+					
+					if($q->row()){
+						foreach($q->result() as $row_q){
+							foreach($row_q  as $key_q => $val_q){
+								switch($key_q){
+									default:
+										$data[$key_q] = $val_q;
+										break;
+								}
+							}
+						}
+					}
+					
+					$sql = "
+						select a.CUSTYPE,a.CUSCOD,b.SNAM+b.NAME1+' '+b.NAME2+' ('+b.CUSCOD+')-'+b.GRADE as REFNAME 
+						from {$this->MAuth->getdb('ARANALYZEREF')} a
+						left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD collate thai_cs_as
+						where a.CUSTYPE<>0 and a.ID='".$data["ID"]."'
+					";
+					$qref = $this->db->query($sql);
+					
+					if($qref->row()){
+						foreach($qref->result() as $row_qref){
+							$data['REF'][$row_qref->CUSTYPE]['rank'] = $row_qref->CUSTYPE;
+							$data['REF'][$row_qref->CUSTYPE]['cuscod'] = $row_qref->CUSCOD;
+							$data['REF'][$row_qref->CUSTYPE]['refname'] = $row_qref->REFNAME;
+							$data['REF'][$row_qref->CUSTYPE]['relation'] = '';
+						}
+					}
+				}
+			}else{
+				$sql = "
+					select PRICE from {$this->MAuth->getdb('STDSpecial')} 
+					where STRNO='{$STRNO}'
+				";
+				$data["error"] = true;
+			}
+		}
+		
+		$response = array();
+		$response["html"] = $data;
+		echo json_encode($response);
+	}
 }
 
 

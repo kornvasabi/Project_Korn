@@ -133,7 +133,7 @@ class ReduceDebtFormVP extends MY_Controller {
 				where A.ADDRNO = '1' and LOCAT = '".$LOCAT."' and TAXNO between '".$TAXNO1."' and '".$TAXNO2."'
 			)DFVP
 		";
-		//echo $sql; exit;
+		//echo $sql;
 		$this->db->query($sql);
 		$sql = "
 			select A.LOCATNM,A.TAXNO,A.TAXDT,A.REFNO,A.REFDT,A.CUSNAM1,A.CUSNAM2,A.ADDR1,A.ADDR2,A.CUSCAR1,CUSCAR2
@@ -143,8 +143,9 @@ class ReduceDebtFormVP extends MY_Controller {
 		//echo $sql;exit;
 		$html = ""; $content = "";
 		$query = $this->db->query($sql);
+		$i = 0;
 		if($query->row()){
-			foreach($query->result() as $row){
+			foreach($query->result() as $row){$i++;
 				$cuscar = ""; $cusnam = "";
 				if($snam == 'S1'){
 					$cuscar = $row->CUSCAR1;

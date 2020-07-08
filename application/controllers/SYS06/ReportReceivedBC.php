@@ -232,15 +232,15 @@ class ReportReceivedBC extends MY_Controller {
 
 				,(select case when SUM(B.PAYAMT) is null then 0 else SUM(B.PAYAMT) end from {$this->MAuth->getdb('CHQTRAN')} B
 				where (B.NOPAY <= T.L_PAY) and (B.CONTNO = T.CONTNO) and B.FLAG<>'C' and B.PAYFOR in ('006','007')) as TPAY  
-				from CHQMAS M
+				from {$this->MAuth->getdb('CHQMAS')} M
 				left join {$this->MAuth->getdb('CHQTRAN')} T on M.TMBILL = T.TMBILL 
 				left join {$this->MAuth->getdb('ARMAST')} A on A.CONTNO = T.CONTNO
 				left join {$this->MAuth->getdb('CUSTMAST')} C on C.CUSCOD = M.CUSCOD
 				left join {$this->MAuth->getdb('PAYFOR')} P on T.PAYFOR = P.FORCODE
 				left join {$this->MAuth->getdb('OFFICER')} F on F.CODE = A.BILLCOLL
 				left join {$this->MAuth->getdb('CUSTMAST')} D on D.CUSCOD = A.CUSCOD
-				left join CUSTADDR E on D.CUSCOD = E.CUSCOD and D.ADDRNO = E.ADDRNO
-				left join SETAUMP G on G.AUMPCOD = E.AUMPCOD and G.PROVCOD = E.PROVCOD 
+				left join {$this->MAuth->getdb('CUSTADDR')} E on D.CUSCOD = E.CUSCOD and D.ADDRNO = E.ADDRNO
+				left join {$this->MAuth->getdb('SETAUMP')} G on G.AUMPCOD = E.AUMPCOD and G.PROVCOD = E.PROVCOD 
 				where (T.PAYFOR = '002' or T.PAYFOR = '006' or T.PAYFOR = '007') and (M.FLAG <> 'C' or M.FLAG is null) and
 				M.LOCATRECV like '%".$LOCATRECV."%' and (A.LOCAT like '%".$LOCAT."%') and T.PAYDT between '".$DATE1."' and '".$DATE2."' 
 				and (A.BILLCOLL like '%".$BILLCOLL."%')and (M.PAYTYP like '%".$PAYTYP."%') and (E.TUMB like '%".$TUMB."%' or E.TUMB is null) 
@@ -253,6 +253,7 @@ class ReportReceivedBC extends MY_Controller {
 			select *,case when TTPAY1<=0 then '0.00' else TTPAY1 end as DPAY1
 			,case when TTPAY2<=0 then '0.00' else TTPAY2 end as DPAY2 from #OFFICER order by ".$order."
 		";
+		//echo $sql; exit;
 		$query1 = $this->db->query($sql);
 		$sql = "
 			select COUNT(CONTNO) as countCONTNO,SUM(DAMT) as DAMT,SUM(PAYAMT) as PAYAMT,SUM(DISCT) as DISCT
@@ -262,7 +263,7 @@ class ReportReceivedBC extends MY_Controller {
 		";
 		$query2 = $this->db->query($sql);
 		$sql = "
-			select CODE,NAME from OFFICER where CODE = '".$BILLCOLL."'
+			select CODE,NAME from {$this->MAuth->getdb('OFFICER')} where CODE = '".$BILLCOLL."'
 		";
 		$query3 = $this->db->query($sql);
 		$BILL = "";
@@ -272,7 +273,7 @@ class ReportReceivedBC extends MY_Controller {
 			}
 		}
 		$sql = "
-			select PAYCODE,PAYDESC from PAYTYP where PAYCODE = '".$PAYTYP."'
+			select PAYCODE,PAYDESC from {$this->MAuth->getdb('PAYTYP')} where PAYCODE = '".$PAYTYP."'
 		";
 		$PAYDESC = "";
 		$query4 = $this->db->query($sql);

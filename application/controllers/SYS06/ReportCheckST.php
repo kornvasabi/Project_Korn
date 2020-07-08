@@ -166,7 +166,7 @@ class ReportCheckST extends MY_Controller {
 		$order     = $tx[6];
 		
 		$sql = "
-			select LOCATCD,LOCATNM from INVLOCAT where LOCATCD = '".$LOCATRECV."'
+			select LOCATCD,LOCATNM from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD = '".$LOCATRECV."'
 		";
 		$query = $this->db->query($sql);
 		$locatnm = "";

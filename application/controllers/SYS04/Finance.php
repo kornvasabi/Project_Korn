@@ -2674,10 +2674,10 @@ class Finance extends MY_Controller {
 						'".$arrs["locat"]."',@TAXNO,@TAXDT,'H',@CONTNO,
 						'".$arrs["cuscod"]."','','','','".$arrs["strno"]."',
 						'',null,'".$arrs["vatrt"]."',".str_replace(",","",number_format($arrs["ndawn"],2)).",".str_replace(",","",number_format($arrs["vatdwn"],2)).",
-						".str_replace(",","",number_format($arrs["totdwn"],2)).",'ใบกำกับเงินดาวน์ขายผ่อน','',0,'',
+						".str_replace(",","",number_format($arrs["totdwn"],2)).",'ใบกำกับภาษีขายส่งไฟแนนซ์','',0,'',
 						0,getdate(),'',null,'S',
 						'N','".$this->sess["USERID"]."','','','',
-						'','','','',null
+						'','','','',getdate()
 					);
 				END;
 				

@@ -5,8 +5,8 @@ class MLogin extends CI_Model {
 	
 	public function vertifylogin($username,$dblocat){
 		$sql = "			
-			select a.*,b.USERID,c.LOCATCD,c.dblocat 
-				,(select lower(allow) from YTKManagement.dbo.md5_topsecret where db='".$dblocat."') as allow
+			select a.*,b.USERID,c.LOCATCD,c.dblocat ,b.groupCode
+				,(select lower(allow) from itsupport.dbo.md5_topsecret where db='".$dblocat."') as allow
 			from YTKManagement.dbo.hp_vusers a
 			left join YTKManagement.dbo.hp_mapusers b on a.employeeCode=b.employeeCode and a.IDNo=b.IDNo
 			left join YTKManagement.dbo.hp_maplocat c on b.USERID=c.USERID and b.dblocat=c.dblocat
@@ -46,11 +46,12 @@ class MLogin extends CI_Model {
 		
 		return $html;
 	}
+	
 	public function getmenuclaim(){
 		$sess = $this->session->userdata('cbjsess001');
 		//print_r($sess); exit;
 		$sql = "
-			select e.* from YTKManagement.dbo.PASSWRD a
+			select e.* from {$sess["db"]}.dbo.PASSWRD a
 			left join YTKManagement.dbo.hp_mapusers b on a.USERID=b.USERID collate Thai_CS_AS
 			left join YTKManagement.dbo.hp_vusers c on b.employeeCode=c.employeeCode and b.IDNo=c.IDNo
 			left join YTKManagement.dbo.hp_groupuser_detail d on b.groupCode=d.groupCode collate Thai_CS_AS and b.dblocat=d.dblocat collate Thai_CS_AS
@@ -497,14 +498,16 @@ class MLogin extends CI_Model {
 			return $html;
 		}
 	}
+	
 	function getclaim($mid){
 		$sess = $this->session->userdata('cbjsess001');
 		
 		$sql = "
-			select c.*,a.LEVEL_1 as level from YTKManagement.dbo.PASSWRD a
+			select c.*,a.LEVEL_1 as level,e.groupType from {$sess["db"]}.dbo.PASSWRD a
 			left join YTKManagement.dbo.hp_mapusers b on a.USERID=b.USERID collate Thai_CI_AS and b.dblocat='".$sess["db"]."'
 			left join YTKManagement.dbo.hp_groupuser_detail c on b.groupCode=c.groupCode collate Thai_CI_AS and c.dblocat='".$sess["db"]."'
 			left join YTKManagement.dbo.hp_menu d on c.menuid=d.menuid
+			left join YTKManagement.dbo.hp_groupuser e on c.groupCode=e.groupCode
 			where a.USERID='".$sess["USERID"]."' and d.menulink = '".$mid."'
         ";
 		//echo $sql; exit;
@@ -513,6 +516,8 @@ class MLogin extends CI_Model {
         if($query->row()){
 			foreach($query->result() as $row){
 				$data["groupCode"] = $row->groupCode;
+				$data["groupType"] = $row->groupType;
+				
 				$data["menuid"] = $row->menuid;	
 				$data["m_access"] = $row->m_access;	
 				$data["m_insert"] = $row->m_insert;	

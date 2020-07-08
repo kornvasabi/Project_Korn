@@ -211,6 +211,14 @@ function fn_selectstopvat(){
 		dataType: 'json',
 		success: function(data){
 			$('#loadding').fadeOut(200);
+			/*
+			.lobibox.lobibox-window .lobibox-header {
+				background-color:#b83022;
+				color: #eee;
+				font-size: 18px;
+			}
+			*/
+			//$(".lobibox.lobibox-window .lobibox-header").css({'background-color':'red'});
 			Lobibox.window({
 				title: 'FORM SEARCH',
 				width: 600,

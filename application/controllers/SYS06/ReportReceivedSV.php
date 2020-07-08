@@ -296,7 +296,7 @@ class ReportReceivedSV extends MY_Controller {
 				and (B.PAYFOR = '004' or B.PAYFOR = '011') where (C.GROUP1 like '%".$GROUP1."%' or C.GROUP1 is null) 
 				and (A.LOCATRECV like '%".$LOCATRECV."%') AND (A.INPDT >= '".$DATE1."' and A.INPDT < '".$DATE2."') 
 				and (A.PAYTYP like '%".$PAYTYP."%') and (A.USERID like '%".$USERID."%') and (A.TMBILL in 
-				(select TMBILL from CHQTRAN T where (LOCATPAY like '%".$LOCATPAY."%') and (PAYFOR like '%".$PAYFOR."%'))) --order by  A.TMBILDT,A.TMBILL
+				(select TMBILL from {$this->MAuth->getdb('CHQTRAN')} T where (LOCATPAY like '%".$LOCATPAY."%') and (PAYFOR like '%".$PAYFOR."%'))) --order by  A.TMBILDT,A.TMBILL
 			)ALLR
 		";
 		//echo $sql; exit;
@@ -605,8 +605,8 @@ class ReportReceivedSV extends MY_Controller {
 					,sum(A.PAYAMT) as T04 ,sum(A.PAYAMT_N) as N04 ,sum(A.PAYAMT_V) AS V04 ,sum(A.DISCT) as D04 
 					,sum(A.PAYINT-A.DSCINT) as I04 
 					,sum(A.NETPAY) as NET04 from {$this->MAuth->getdb('CHQTRAN')} A  
-				left join PAYFOR   B on B.FORCODE = A.PAYFOR  
-				left join CUSTMAST C on A.CUSCOD = C.CUSCOD where A.USERID like '%".$USERID."%' 
+				left join {$this->MAuth->getdb('PAYFOR')}   B on B.FORCODE = A.PAYFOR  
+				left join {$this->MAuth->getdb('CUSTMAST')} C on A.CUSCOD = C.CUSCOD where A.USERID like '%".$USERID."%' 
 				and A.LOCATRECV like '%".$LOCATRECV."%' 
 				and A.LOCATPAY like '%".$LOCATPAY."%' and A.INPDT BETWEEN '".$DATE1."' and '".$DATE2."' 
 				and A.PAYTYP like '%".$PAYTYP."%' 

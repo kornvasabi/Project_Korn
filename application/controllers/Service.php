@@ -15,9 +15,10 @@ class Service extends MY_Controller {
 		parent::__construct();
 	}
 	
-	function index(){	
+	function index(){
 		header('Access-Control-Allow-Origin: *'); 
 		header('Content-Type: application/json');
+		
 		/*
 		POST 	เพิ่ม
 		GET 	ดึง

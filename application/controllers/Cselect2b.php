@@ -560,7 +560,7 @@ class Cselect2b extends MY_Controller {
 		
 		$sql = "
 			select top 10 FORCODE, FORCODE+' - '+FORDESC as FORDESC, 
-			case when FORCODE = '102' then 'disabled' else '' end as disabled
+				case when FORCODE = '102' and '{$this->sess["groupusers"]}'!='HP' then 'disabled' else '' end as disabled
 			from {$this->MAuth->getdb('PAYFOR')} 
 			where FORCODE not like '0%' and (FORCODE like '".$dataSearch."%' or FORDESC like '%".$dataSearch."%')
 			order by FORCODE
@@ -607,7 +607,7 @@ class Cselect2b extends MY_Controller {
 						from(
 							select distinct a.CONTNO, a.CUSCOD, isnull(b.TSALE,'H') as TSALE
 							from {$this->MAuth->getdb('ARHOLD')} a
-							left join HINVTRAN b on a.CONTNO = b.CONTNO 
+							left join {$this->MAuth->getdb('HINVTRAN')} b on a.CONTNO = b.CONTNO 
 						)a
 						where 1=1 and CUSCOD = '".$dataNow."' collate thai_cs_as 
 
@@ -633,7 +633,7 @@ class Cselect2b extends MY_Controller {
 						from(
 							select distinct a.CONTNO, a.CUSCOD, isnull(b.TSALE,'H') as TSALE
 							from {$this->MAuth->getdb('ARHOLD')} a
-							left join HINVTRAN b on a.CONTNO = b.CONTNO 
+							left join {$this->MAuth->getdb('HINVTRAN')} b on a.CONTNO = b.CONTNO 
 							".$tsales."
 						)a
 						where 1=1 and CONTNO like '%".$dataSearch."%' collate thai_cs_as
@@ -1502,6 +1502,69 @@ class Cselect2b extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>$row->TAXNO, 'text'=>$row->TAXNO];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function getTAXNO_DUE(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			declare @no varchar(3)	= (select H_TXPAY from {$this->MAuth->getdb('CONDPAY')});
+			select top 30 TAXNO
+			from {$this->MAuth->getdb('TAXTRAN')}
+			where TAXNO like '%'+@no+'%' and TAXNO like '%".$dataSearch."%' collate Thai_CI_AS
+			ORDER BY FLAG, TAXDT desc
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->TAXNO, 'text'=>$row->TAXNO];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function getTAXBUY(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select top 50 TAXNO
+			from {$this->MAuth->getdb('TAXBUY')}
+			where TAXNO like '%".$dataSearch."%' collate Thai_CI_AS
+			ORDER BY TAXDT desc
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->TAXNO), 'text'=>str_replace(chr(0),'',$row->TAXNO)];
+			}
+		}
+		echo json_encode($json);
+	}
+	
+	function getCONTNOinTAX(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_GET['q']);
+		$sql = "
+			select top 50 CONTNO from {$this->MAuth->getdb('TAXTRAN')}  
+			where CONTNO like '%".$dataSearch."%' collate Thai_CI_AS
+			group by CONTNO
+		"; 
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>$row->CONTNO, 'text'=>$row->CONTNO];
 			}
 		}
 		echo json_encode($json);

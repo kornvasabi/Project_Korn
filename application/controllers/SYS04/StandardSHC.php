@@ -307,8 +307,8 @@ class StandardSHC extends MY_Controller {
 						<td>".$row->ID."</td>
 						<td>".$row->MODEL."</td>
 						<td>".$row->BAAB."</td>
-						<td><span style='max-height:150px;overflow:auto;'>".str_replace(",","<br>",$row->COLOR)."</span></td>
-						<td><span style='max-height:150px;overflow:auto;'>".str_replace(",","<br>",$row->LOCAT)."</span></td>
+						<td><div style='max-height:150px;overflow:auto;'>".str_replace(",","<br>",$row->COLOR)."</div></td>
+						<td><div style='max-height:150px;overflow:auto;'>".str_replace(",","<br>",$row->LOCAT)."</div></td>
 						<td>".$row->MANUYR."</td>
 						<td>".$row->GDESC."</td>
 						<td align='right'>".number_format($row->NPRICE,2)."</td>
@@ -868,48 +868,53 @@ class StandardSHC extends MY_Controller {
 				$row = $objPHPExcel->getActiveSheet()->getCell($cell)->getRow();
 				$data_value = $objPHPExcel->getActiveSheet()->getCell($cell)->getValue();
 				
+				$check_column_a = "A".$row;
+				$check_column_a_value = $objPHPExcel->getActiveSheet()->getCell($check_column_a)->getValue();
+				
 				if($arrs["old"] == 1){
 					$arrs["now"] = 1;
 				}else if($arrs["old"] == $row){
 					$arrs["now"] = $arrs["now"];
 				}else{
-					$arrs["now"] += 1;
+					if(trim($check_column_a_value) != "") $arrs["now"] += 1;
 				}
 				//The header will/should be in row 1 only. of course, this can be modified to suit your need.
 				if ($row == 1 and $sheetIndex == 0) {
 					$header[$row][$column] = $data_value;
 				} else {
-					switch($column){
-						case 'G':
-							if($data_value != ''){
-								$arr_data[$arrs["now"]][$column] = $data_value; 								
-							}else{
-								$response = array();
-								$response["error"] 		= true;
-								$response["errorMsg"] 	= "ผิดพลาด คุณยังไม่ได้ระบุราคารถใหม่";
-								echo json_encode($response); exit;
-							}
-							break;
-						case 'H':
-							if($data_value != ''){
-								$arr_data[$arrs["now"]][$column] = $data_value; 								
-							}else{
-								$response = array();
-								$response["error"] 		= true;
-								$response["errorMsg"] 	= "ผิดพลาด คุณยังไม่ได้ระบุราคามือสอง";
-								echo json_encode($response); exit;
-							}
-							break;
-						case 'I': $arr_data[$arrs["now"]][$column] = explode(",\n",$data_value); break;
-						case 'J': $arr_data[$arrs["now"]][$column] = explode(",\n",$data_value); break;
-						default: $arr_data[$arrs["now"]][$column] = $data_value; break;
+					if(trim($check_column_a_value) != ""){
+						switch($column){
+							case 'G':
+								if($data_value != ''){
+									$arr_data[$arrs["now"]][$column] = $data_value; 								
+								}else{
+									$response = array();
+									$response["error"] 		= true;
+									$response["errorMsg"] 	= $data_value."ผิดพลาด คุณยังไม่ได้ระบุราคารถใหม่".$objPHPExcel->getActiveSheet()->getCell('A'.$arrs["now"])->getValue();
+									echo json_encode($response); exit;
+								}
+								break;
+							case 'H':
+								if($data_value != ''){
+									$arr_data[$arrs["now"]][$column] = $data_value; 								
+								}else{
+									$response = array();
+									$response["error"] 		= true;
+									$response["errorMsg"] 	= "ผิดพลาด คุณยังไม่ได้ระบุราคามือสอง";
+									echo json_encode($response); exit;
+								}
+								break;
+							case 'I': $arr_data[$arrs["now"]][$column] = explode(",",$data_value); break;
+							case 'J': $arr_data[$arrs["now"]][$column] = explode(",",$data_value); break;
+							default: $arr_data[$arrs["now"]][$column] = $data_value; break;
+						}
 					}
 				}
-				
 				
 				$arrs["old"] = $row;
 			}
 		}
+		//print_r($arr_data[5]); exit;
 		
 		$column = array(
 			"A"=>"RANK",
@@ -923,37 +928,56 @@ class StandardSHC extends MY_Controller {
 			"I"=>"COLOR",
 			"J"=>"LOCAT"
 		);
+		
 		$arrs = array("A","B","C","D","E","F","G","H","I","I");
 		$datasize = sizeof($arr_data);
 		for($i=1;$i<=$datasize;$i++){
 			foreach($arrs as $key => $val){
 				if(!isset($arr_data[$i][$val])){
-					$arr_data[$i][$val] = '';
+					$arr_data[$i][$val] = " ";
 				}
 			}
 		}
+		//print_r($arr_data[5]); exit;
+		//echo $arr_data[45]["D"]; exit;
 		
 		$sizeof = sizeof($arr_data);
+		
+		$sql = "
+			if object_id('tempdb..#tempshc_declare') is not null drop table #tempshc_declare;
+			create table #tempshc_declare (dt datetime);
+			
+			insert into #tempshc_declare select getdate();
+		";
+		$this->db->query($sql);
+		
 		$sql = "";
+		//echo date('d-m-Y h:i:s')."-- นำข้อมูลใส่ STDSHCARTemp<br><br>";
 		for($i=1;$i<=$sizeof;$i++){
-			if( $arr_data[$i]["B"] != "" ){
-				$sql .= ($sql == "" ? "select " : " union all select ");
-				$sql .= "
-					'{$arr_data[$i]["A"]}',
-					'{$arr_data[$i]["B"]}',
-					'{$arr_data[$i]["C"]}',
-					'{$arr_data[$i]["D"]}',
-					'{$arr_data[$i]["E"]}',
-					'{$arr_data[$i]["F"]}',
-					'{$arr_data[$i]["G"]}',
-					'{$arr_data[$i]["H"]}',
+			if( trim($arr_data[$i]["B"]) != "" ){
+				$sql = "
+					insert into {$this->MAuth->getdb('STDSHCARTemp')} (
+						[keyid],[typecod],[model],[baab],[manuyr],[gcode]
+						,[nprice],[oprice],[color],[locat],[insby],[insdt]
+					)
+					select '".$arr_data[$i]["A"]."',
+					'".$arr_data[$i]["B"]."',
+					'".$arr_data[$i]["C"]."',
+					'".$arr_data[$i]["D"]."',
+					'".$arr_data[$i]["E"]."',
+					'".$arr_data[$i]["F"]."',
+					'".$arr_data[$i]["G"]."',
+					'".$arr_data[$i]["H"]."',
 					'".(IS_ARRAY($arr_data[$i]["I"]) ? IMPLODE(",",array_unique($arr_data[$i]["I"])):$arr_data[$i]["I"])."',
 					'".(IS_ARRAY($arr_data[$i]["J"]) ? IMPLODE(",",array_unique($arr_data[$i]["J"])):$arr_data[$i]["J"])."',
-					'{$this->sess["IDNo"]}'
-					,@datetime
-				";			
+					'".$this->sess["IDNo"]."',
+					(select dt from #tempshc_declare)
+				";
+				//echo $sql; exit;
+				$this->db->query($sql);
 			}			
 		}
+		//echo date('d-m-Y h:i:s')."<br><br>";
 		
 		if($sql != ""){			
 			$sql = "
@@ -962,21 +986,15 @@ class StandardSHC extends MY_Controller {
 				
 				begin tran ts_shctemp
 				begin try
-					declare @datetime datetime = getdate();			
-					insert into {$this->MAuth->getdb('STDSHCARTemp')} (
-						[keyid],[typecod],[model],[baab],[manuyr],[gcode]
-						,[nprice],[oprice],[color],[locat],[insby],[insdt]
-					) ".$sql."
+					delete from {$this->MAuth->getdb('STDSHCARTemp')} 
+					where insby = '{$this->sess["IDNo"]}' and insdt = (select dt from #tempshc_declare) and nprice is null and oprice is null
 					
 					delete from {$this->MAuth->getdb('STDSHCARTemp')} 
-					where insby = '{$this->sess["IDNo"]}' and insdt = @datetime and nprice is null and oprice is null
-					
-					delete from {$this->MAuth->getdb('STDSHCARTemp')} 
-					where insby = '{$this->sess["IDNo"]}' and insdt < @datetime 
+					where insby = '{$this->sess["IDNo"]}' and insdt < (select dt from #tempshc_declare)
 					
 					if exists (
 						select keyid 
-						from STDSHCARTemp 
+						from {$this->MAuth->getdb('STDSHCARTemp')}  
 						where insby = '{$this->sess["IDNo"]}' 
 						group by keyid
 						having count(*) > 1
@@ -1009,10 +1027,155 @@ class StandardSHC extends MY_Controller {
 						echo json_encode($response); exit;
 					}
 				}
+			}else{
+				$response = array();
+				$response["error"] 		= true;
+				$response["errorMsg"] 	= 'Not connect database';
+				echo json_encode($response); exit;
 			}
 			
-			$sql = "
-				select a.* 
+			$this->response_confirm(1,100);
+		}else{
+			$response = array();
+			$response["error"] 		= true;
+			$response["errorMsg"] 	= "ผิดพลาด ไม่พบข้อมูลที่นำเข้าได้";
+			echo json_encode($response); 
+		}
+	}
+	
+	function loadSTDSHC(){
+		$this->response_confirm($_POST["to"]+1,$_POST["to"]+100);
+	}
+	
+	private function response_confirm_bak(){
+		$sql = "
+			select a.* 
+				,isnull(z.TYPECOD,'NOT') as settype
+				,isnull(b.MODELCOD,'NOT') as setmodel
+				,isnull(c.BAABCOD,'NOT') as setbaab
+				,isnull(d.GCODE,'NOT') as setgroup
+			from {$this->MAuth->getdb('STDSHCARTemp')}  a
+			left join {$this->MAuth->getdb('SETTYPE')} z on a.typecod=z.TYPECOD collate thai_cs_as 
+			left join {$this->MAuth->getdb('SETMODEL')} b on a.model=b.MODELCOD collate thai_cs_as and b.TYPECOD=a.typecod collate thai_cs_as
+			left join {$this->MAuth->getdb('SETBAAB')} c on a.model=c.MODELCOD collate thai_cs_as and a.baab=c.BAABCOD collate thai_cs_as
+			left join {$this->MAuth->getdb('SETGROUP')} d on a.gcode=d.GCODE collate thai_cs_as				
+			where insby = '{$this->sess["IDNo"]}'
+			order by a.ID
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$table = "";			
+		if($query->row()){
+			$i = 1;
+			//echo date('d-m-Y h:i:s')."Query ดึงข้อมูลมาแสดง<br><br>";
+			foreach($query->result() as $row){
+				//if($i++ == 500) exit;	
+				$sql = "
+					declare @xml xml = '<r>'+replace('".$row->color."',',','</r>,<r>')+'</r>';						
+					select a.COLORCOD,isnull(b.COLORCOD,'NOT') indb from (
+						select replace(replace(cast(t.col.query('.') as varchar(max)),'<r>',''),'</r>','') as COLORCOD
+						from @xml.nodes('/r') t(col)
+					) as a
+					left join {$this->MAuth->getdb('JD_SETCOLOR')} b on a.COLORCOD=b.COLORCOD collate thai_cs_as
+						and b.MODELCOD='{$row->model}' and b.BAABCOD in ('".(str_replace(",","','",$row->baab))."')
+				";
+				//echo $sql; exit;
+				$query = $this->db->query($sql);
+				
+				$this_color = "";
+				if($query->row()){
+					//echo date('d-m-Y h:i:s')."Query ดึงข้อมูล ***สี*** มาแสดง<br><br>"; 
+					foreach($query->result() as $row_locat){
+						if($this_color != ""){ $this_color .= "<br>"; }
+						$this_color .= "<span style='".($row_locat->indb == "NOT" ? "color:red;":"")."'>".$row_locat->COLORCOD."</span>";
+					}
+				}
+				
+				
+				$sql = "
+					declare @xml xml = '<r>'+replace('".$row->locat."',',','</r>,<r>')+'</r>';
+					select top 1 a.LOCAT,isnull(b.LOCATCD,'NOT') indb from (
+						select replace(replace(cast(t.col.query('.') as varchar(max)),'<r>',''),'</r>','') as LOCAT
+						from @xml.nodes('/r') t(col)
+					) as a
+					left join {$this->MAuth->getdb('INVLOCAT')} b on a.LOCAT=b.LOCATCD collate thai_cs_as
+				";
+				//echo $sql; exit;
+				$query = $this->db->query($sql);
+				
+				$this_locat = "";
+				if($query->row()){
+					//echo date('d-m-Y h:i:s')."Query ดึงข้อมูล ***สาขา*** มาแสดง<br><br>"; 
+					foreach($query->result() as $row_locat){
+						if($this_locat != ""){ $this_locat .= "<br>"; }
+						$this_locat .= "<span style='".($row_locat->indb == "NOT" ? "color:red;":"")."'>".$row_locat->LOCAT."</span>";
+					}
+				}
+				
+				$r = "";
+				/*
+				if($row->settype == "NOT" or $row->setmodel == "NOT" or $row->setbaab == "NOT" or $row->setgroup == "NOT"){
+					$r = "background-color:#fab7b7;color:white;";
+				}
+				*/
+				
+				$table .= "
+					<tr style='{$r}'>
+						<td>".$row->keyid."</td>
+						<td style='".($row->settype == "NOT" ? "color:red;":"")."'>".$row->typecod."</td>
+						<td style='".($row->setmodel == "NOT" ? "color:red;":"")."'>".$row->model."</td>
+						<td style='".($row->setbaab == "NOT" ? "color:red;":"")."'>".$row->baab."</td>
+						<td>".$row->manuyr."</td>
+						<td style='".($row->setgroup == "NOT" ? "color:red;":"")."'>".$row->gcode."</td>
+						<td>".$row->nprice."</td>
+						<td>".$row->oprice."</td>
+						<td>".$this_color."</td>
+						<td><div style='max-height:150px;overflow:auto;'>".$this_locat."</div></td>
+					</tr>
+				";
+			}
+		}
+		
+		$table = "
+			<table border=1 width='100%'>
+				<thead style='background-color:yellow;'>
+					<tr>
+						<th>ลำดับ</th>
+						<th>ยี่ห้อ</th>
+						<th>รุ่น</th>
+						<th>แบบ</th>
+						<th>ปีรถ</th>
+						<th>กลุ่มรถ</th>
+						<th>รถราคารถใหม่</th>
+						<th>รถราคามือสอง</th>
+						<th>สี</th>
+						<th>สาขา</th>
+					</tr>
+				</thead>
+				<tbody style='vertical-align:text-top;'>{$table}</tbody>
+			</table>
+			* หมายเหตุ : <span style='color:red;'>ข้อมูลที่มีตัว<b>อักษรสีแดง</b></span> หมายถึง ไม่พบข้อมูลในระบบ <u>ซึ่งจะไม่ถูกเพิ่มในสแตนดาร์ด</u> <br>
+			<span style='background-color:#fab7b7;color:white;'>พื้นหลังเป็นสีชมพู</span> หมายถึง ไม่พบข้อมูลยี่ห้อ รุ่น แบบ สี หรือกลุ่มรถ <u>ซึ่งจะไม่ถูกเพิ่มในสแตนดาร์ด ต้องแก้ไขข้อมูลใหม่อีกครั้ง</u>
+			<br>
+			<div class='col-sm-12' align='right'>
+				<button id='mp_save' class='btn btn-xs btn-primary'><span class='glyphicon glyphicon-upload'> นำเข้า</span></button>
+			</div>
+			&emsp;
+		";
+		
+		$response = array();
+		$response["error"] 		= false;
+		$response["errorMsg"] 	= $table;
+		echo json_encode($response); 
+	}
+	
+	private function response_confirm($s,$e){
+		$data = array();
+		$process_start = (date('H:i:s'));
+		$sql = "
+			select * from (
+				select ROW_NUMBER() over(order by a.ID) r,a.* 
 					,isnull(z.TYPECOD,'NOT') as settype
 					,isnull(b.MODELCOD,'NOT') as setmodel
 					,isnull(c.BAABCOD,'NOT') as setbaab
@@ -1022,115 +1185,98 @@ class StandardSHC extends MY_Controller {
 				left join {$this->MAuth->getdb('SETMODEL')} b on a.model=b.MODELCOD collate thai_cs_as and b.TYPECOD=a.typecod collate thai_cs_as
 				left join {$this->MAuth->getdb('SETBAAB')} c on a.model=c.MODELCOD collate thai_cs_as and a.baab=c.BAABCOD collate thai_cs_as
 				left join {$this->MAuth->getdb('SETGROUP')} d on a.gcode=d.GCODE collate thai_cs_as				
-				where insby = '{$this->sess["IDNo"]}' 
-			";
-			//echo $sql; exit;
-			$query = $this->db->query($sql);
-			
-			$table = "";
-			if($query->row()){
-				foreach($query->result() as $row){
-					$sql = "
-						declare @xml xml = '<r>'+replace('".$row->color."',',','</r>,<r>')+'</r>';						
-						select a.COLORCOD,isnull(b.COLORCOD,'NOT') indb from (
-							select replace(replace(cast(t.col.query('.') as varchar(max)),'<r>',''),'</r>','') as COLORCOD
-							from @xml.nodes('/r') t(col)
-						) as a
-						left join {$this->MAuth->getdb('JD_SETCOLOR')} b on a.COLORCOD=b.COLORCOD collate thai_cs_as
-							and b.MODELCOD='{$row->model}' and b.BAABCOD in ('".(str_replace(",","','",$row->baab))."')
-					";
-					//echo $sql; exit;
-					$query = $this->db->query($sql);
-					
-					$this_color = "";
-					if($query->row()){
-						foreach($query->result() as $row_locat){
-							if($this_color != ""){ $this_color .= "<br>"; }
-							$this_color .= "<span style='".($row_locat->indb == "NOT" ? "color:red;":"")."'>".$row_locat->COLORCOD."</span>";
-						}
+				where insby = '{$this->sess["IDNo"]}'
+			) as data
+			where r between '{$s}' and '{$e}'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$process_query = (date('H:i:s'));
+		
+		$table = "";
+		$load = 0;
+		if($query->row()){
+			$i = 1;
+			foreach($query->result() as $row){
+				$load					= $row->r;
+				$data[$i]["keyid"] 		= $row->keyid;
+				$data[$i]["settype"] 	= str_replace(chr(0),"",$row->settype);
+				$data[$i]["setmodel"] 	= str_replace(chr(0),"",$row->setmodel);
+				$data[$i]["setbaab"] 	= str_replace(chr(0),"",$row->setbaab);
+				$data[$i]["setgroup"] 	= str_replace(chr(0),"",$row->setgroup);
+				$data[$i]["manuyr"] 	= $row->manuyr;
+				$data[$i]["typecod"] 	= str_replace(chr(0),"",$row->typecod);
+				$data[$i]["model"] 		= str_replace(chr(0),"",$row->model);
+				$data[$i]["baab"] 		= str_replace(chr(0),"",$row->baab);
+				$data[$i]["gcode"] 		= str_replace(chr(0),"",$row->gcode);
+				$data[$i]["nprice"] 	= $row->nprice;
+				$data[$i]["oprice"] 	= $row->oprice;
+				
+				$sql = "
+					declare @xml xml = '<r>'+replace('".$row->color."',',','</r>,<r>')+'</r>';						
+					select a.COLORCOD,isnull(b.COLORCOD,'NOT') indb from (
+						select replace(replace(cast(t.col.query('.') as varchar(max)),'<r>',''),'</r>','') as COLORCOD
+						from @xml.nodes('/r') t(col)
+					) as a
+					left join {$this->MAuth->getdb('JD_SETCOLOR')} b on a.COLORCOD=b.COLORCOD collate thai_cs_as
+						and b.MODELCOD='{$row->model}' and b.BAABCOD in ('".(str_replace(",","','",$row->baab))."')
+				";
+				$query = $this->db->query($sql);
+				
+				$this_color = "";
+				if($query->row()){
+					$i_color = 1;
+					foreach($query->result() as $row_locat){
+						$data[$i]["color"][$i_color]["indb"] 	= $row_locat->indb;
+						$data[$i]["color"][$i_color]["color"] 	= $row_locat->COLORCOD;
+						
+						$i_color++;
 					}
-					
-					
-					$sql = "
-						declare @xml xml = '<r>'+replace('".$row->locat."',',','</r>,<r>')+'</r>';
-						select a.LOCAT,isnull(b.LOCATCD,'NOT') indb from (
-							select replace(replace(cast(t.col.query('.') as varchar(max)),'<r>',''),'</r>','') as LOCAT
-							from @xml.nodes('/r') t(col)
-						) as a
-						left join {$this->MAuth->getdb('INVLOCAT')} b on a.LOCAT=b.LOCATCD collate thai_cs_as
-					";
-					//echo $sql; exit;
-					$query = $this->db->query($sql);
-					
-					$this_locat = "";
-					if($query->row()){
-						foreach($query->result() as $row_locat){
-							if($this_locat != ""){ $this_locat .= "<br>"; }
-							$this_locat .= "<span style='".($row_locat->indb == "NOT" ? "color:red;":"")."'>".$row_locat->LOCAT."</span>";
-						}
-					}
-					
-					$r = "";
-					/*
-					if($row->settype == "NOT" or $row->setmodel == "NOT" or $row->setbaab == "NOT" or $row->setgroup == "NOT"){
-						$r = "background-color:#fab7b7;color:white;";
-					}
-					*/
-					
-					$table .= "
-						<tr style='{$r}'>
-							<td>".$row->keyid."</td>
-							<td style='".($row->settype == "NOT" ? "color:red;":"")."'>".$row->typecod."</td>
-							<td style='".($row->setmodel == "NOT" ? "color:red;":"")."'>".$row->model."</td>
-							<td style='".($row->setbaab == "NOT" ? "color:red;":"")."'>".$row->baab."</td>
-							<td>".$row->manuyr."</td>
-							<td style='".($row->setgroup == "NOT" ? "color:red;":"")."'>".$row->gcode."</td>
-							<td>".$row->nprice."</td>
-							<td>".$row->oprice."</td>
-							<td>".$this_color."</td>
-							<td>".$this_locat."</td>
-						</tr>
-					";
 				}
+				
+				$sql = "
+					declare @xml xml = '<r>'+replace('".$row->locat."',',','</r>,<r>')+'</r>';
+					select a.LOCAT,isnull(b.LOCATCD,'NOT') indb from (
+						select replace(replace(cast(t.col.query('.') as varchar(max)),'<r>',''),'</r>','') as LOCAT
+						from @xml.nodes('/r') t(col)
+					) as a
+					left join {$this->MAuth->getdb('INVLOCAT')} b on a.LOCAT=b.LOCATCD collate thai_cs_as
+				";
+				//echo $sql; exit;
+				$query = $this->db->query($sql);
+				
+				$this_locat = "";
+				if($query->row()){
+					$i_locat = 1;
+					foreach($query->result() as $row_locat){
+						$data[$i]["locat"][$i_locat]["indb"] 	= $row_locat->indb;
+						$data[$i]["locat"][$i_locat]["locat"] 	= $row_locat->LOCAT;
+						
+						$i_locat++;
+					}
+				}
+				
+				$i++;
 			}
-			
-			$table = "
-				<table border=1 width='100%'>
-					<thead style='background-color:yellow;'>
-						<tr>
-							<th>ลำดับ</th>
-							<th>ยี่ห้อ</th>
-							<th>รุ่น</th>
-							<th>แบบ</th>
-							<th>ปีรถ</th>
-							<th>กลุ่มรถ</th>
-							<th>รถราคารถใหม่</th>
-							<th>รถราคามือสอง</th>
-							<th>สี</th>
-							<th>สาขา</th>
-						</tr>
-					</thead>
-					<tbody style='vertical-align:text-top;'>{$table}</tbody>
-				</table>
-				* หมายเหตุ : <span style='color:red;'>ข้อมูลที่มีตัว<b>อักษรสีแดง</b></span> หมายถึง ไม่พบข้อมูลในระบบ <u>ซึ่งจะไม่ถูกเพิ่มในสแตนดาร์ด</u> <br>
-				<span style='background-color:#fab7b7;color:white;'>พื้นหลังเป็นสีชมพู</span> หมายถึง ไม่พบข้อมูลยี่ห้อ รุ่น แบบ สี หรือกลุ่มรถ <u>ซึ่งจะไม่ถูกเพิ่มในสแตนดาร์ด ต้องแก้ไขข้อมูลใหม่อีกครั้ง</u>
-				<br>
-				<div class='col-sm-12' align='right'>
-					<button id='mp_save' class='btn btn-xs btn-primary'><span class='glyphicon glyphicon-upload'> นำเข้า</span></button>
-				</div>
-				&emsp;
-			";
-			
-			$response = array();
-			$response["error"] 		= false;
-			$response["errorMsg"] 	= $table;
-			echo json_encode($response); 
-		}else{
-			$response = array();
-			$response["error"] 		= true;
-			$response["errorMsg"] 	= "ผิดพลาด ไม่พบข้อมูลที่นำเข้าได้";
-			echo json_encode($response); 
 		}
+		$process_json = (date('H:i:s'));
+		
+		header('Access-Control-Allow-Origin: *'); 
+		header('Content-Type: application/json');
+		
+		$response = array();
+		$response["error"] 		= false;
+		$response["errorMsg"] 	= "";
+		$response["data"] 		= $data;
+		$response["from"] 		= $s;
+		$response["to"] 		= $e;
+		$response["load"] 		= $load;
+		$response["process"] 	= array(
+			"process_start" =>  $process_start,
+			"process_query" =>  $process_query,
+			"process_json" =>  $process_json,
+		);
+		echo json_encode($response); 
 	}
 	
 	function import_save_20200123(){
@@ -1315,8 +1461,15 @@ class StandardSHC extends MY_Controller {
 		
 		$sql = "
 			if object_id('tempdb..#tempResult') is not null drop table #tempResult;
-			create table #tempResult (error varchar(1),msg varchar(max));
-				
+			create table #tempResult (error varchar(1),msg varchar(max)
+				,typecod varchar(20)
+				,model varchar(20)
+				,baab varchar(20)
+				,gcode varchar(5)
+				,cond int
+			);
+			
+			SET NOCOUNT ON;
 			begin tran import_transaction
 			begin try
 				declare @keyid int;
@@ -1346,42 +1499,43 @@ class StandardSHC extends MY_Controller {
 					
 					if not exists (
 						select * from {$this->MAuth->getdb('SETTYPE')}
-						where TYPECOD=@typecod
+						where TYPECOD=@typecod collate thai_ci_as
 					)
-					begin
-						close csimportshc; deallocate csimportshc;
-						rollback tran import_transaction
-						insert into #tempResult select 'y','ผิดพลาด ไม่พบยี่ห้อ '+@typecod+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง';
-						return;
+					begin 
+						insert into {$this->MAuth->getdb('SETTYPE')}
+						select @typecod,convert(varchar(8),GETDATE(),112);
 					end
-					else if not exists (
+					
+					if not exists (
 						select * from {$this->MAuth->getdb('SETMODEL')}
-						where TYPECOD=@typecod and MODELCOD=@model
+						where TYPECOD=@typecod collate thai_ci_as and MODELCOD=@model collate thai_ci_as
 					)
-					begin
-						close csimportshc; deallocate csimportshc;
-						rollback tran import_transaction
-						insert into #tempResult select 'y','ผิดพลาด ไม่พบรุ่น '+@model+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง';
-						return;
+					begin 
+						insert into {$this->MAuth->getdb('SETMODEL')}
+						select @typecod,@model,convert(varchar(8),GETDATE(),112);
 					end
-					else if not exists (
+					
+					if not exists (
 						select * from {$this->MAuth->getdb('SETBAAB')}
-						where TYPECOD=@typecod and MODELCOD=@model and BAABCOD=@baab
+						where TYPECOD=@typecod collate thai_ci_as and MODELCOD=@model collate thai_ci_as and BAABCOD=@baab collate thai_ci_as 
 					)
-					begin
-						close csimportshc; deallocate csimportshc;
-						rollback tran import_transaction
-						insert into #tempResult select 'y','ผิดพลาด ไม่พบแบบ '+@baab+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง';
-						return;
+					begin 
+						if(@baab != '')
+						begin	
+							insert into {$this->MAuth->getdb('SETBAAB')}
+							select @typecod,@model,@baab,convert(varchar(8),GETDATE(),112);
+						end
 					end
-					else if not exists (
+					
+					if not exists (
 						select * from {$this->MAuth->getdb('SETGROUP')}
 						where GCODE=@gcode
 					)
 					begin
 						close csimportshc; deallocate csimportshc;
 						rollback tran import_transaction
-						insert into #tempResult select 'y','ผิดพลาด ไม่พบกลุ่ม '+@gcode+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง';
+						insert into #tempResult select 'y','ผิดพลาด ไม่พบกลุ่ม '+@gcode+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง'
+							,@typecod,@model,@baab,@gcode,4;
 						return;
 					end
 					begin
@@ -1416,7 +1570,8 @@ class StandardSHC extends MY_Controller {
 							
 							close csimportshc; deallocate csimportshc;
 							rollback tran import_transaction
-							insert into #tempResult select 'y','ผิดพลาด ไม่พบสี '+@color_issue+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง';
+							insert into #tempResult select 'y','ผิดพลาด ไม่พบสี '+@color_issue+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง'
+								,@typecod,@model,@baab,@gcode,0;
 							return;
 						end
 						
@@ -1442,7 +1597,8 @@ class StandardSHC extends MY_Controller {
 							
 							close csimportshc; deallocate csimportshc;
 							rollback tran import_transaction
-							insert into #tempResult select 'y','ผิดพลาด ไม่พบสาขา '+@locat_issue+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง';
+							insert into #tempResult select 'y','ผิดพลาด ไม่พบสาขา '+@locat_issue+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง'
+								,@typecod,@model,@baab,@gcode,0;
 							return;
 						end						
 						
@@ -1481,7 +1637,8 @@ class StandardSHC extends MY_Controller {
 									close cs_intables; deallocate cs_intables;
 									close csimportshc; deallocate csimportshc;
 									rollback tran import_transaction
-									insert into #tempResult select 'y','ผิดพลาด ข้อมูลลำดับที่ '+cast(@keyid as varchar)+' ซ้ำซ้อนกับสแตนดาร์ดปัจจุบัน('+CAST(@ID as varchar)+') โปรดตรวจสอบใหม่อีกครั้ง';
+									insert into #tempResult select 'y','ผิดพลาด ข้อมูลลำดับที่ '+cast(@keyid as varchar)+' ซ้ำซ้อนกับสแตนดาร์ดปัจจุบัน('+CAST(@ID as varchar)+') โปรดตรวจสอบใหม่อีกครั้ง'
+										,@typecod,@model,@baab,@gcode,0;
 									return;
 								end
 								fetch next from cs_intables into @ID;
@@ -1490,10 +1647,11 @@ class StandardSHC extends MY_Controller {
 						end
 						
 						begin
-							insert into {$this->MAuth->getdb('STDSHCAR')} (TYPECOD,MODEL,BAAB,MANUYR,GCODE,ACTIVE,INSBY,INSDT)
-							select @typecod,@model,@baab,@manuyr,@gcode,'Yes',@insby,@datetime
+							set @ID=(isnull((select MAX(ID) from {$this->MAuth->getdb('STDSHCAR')}),0) + 1);
 							
-							set @ID=IDENT_CURRENT('HIC2SHORTL.dbo.STDSHCAR');
+							insert into {$this->MAuth->getdb('STDSHCAR')} (ID,TYPECOD,MODEL,BAAB,MANUYR,GCODE,ACTIVE,INSBY,INSDT)
+							select @ID,@typecod,@model,(case when @baab = '' then 'all' else @baab end),@manuyr,@gcode,'Yes',@insby,@datetime
+							
 							insert into {$this->MAuth->getdb('STDSHCARDetails')} (ID,NPRICE,OPRICE,ACTIVE,INSBY,INSDT)
 							select @ID,@nprice,@oprice,'Yes',@insby,@datetime
 							
@@ -1515,15 +1673,16 @@ class StandardSHC extends MY_Controller {
 				end
 				close csimportshc; deallocate csimportshc;
 				
-				insert into #tempResult select 'n','บันทึกข้อมูลแล้ว'
+				insert into #tempResult select 'n','บันทึกข้อมูลแล้ว',@typecod,@model,@baab,@gcode,0;
 				commit tran import_transaction
 			end try
 			begin catch
 				rollback tran import_transaction
-				insert into #tempResult select 'y',cast(ERROR_LINE() as varchar)+'::'+ERROR_MESSAGE();
+				insert into #tempResult select 'y',cast(ERROR_LINE() as varchar)+'::'+ERROR_MESSAGE(),@typecod,@model,@baab,@gcode,0;
 			end catch
 		";
 		//echo $sql; exit;
+		
 		$this->db->query($sql);
 		$sql = "select * from #tempResult";
 		$query = $this->db->query($sql);
@@ -1542,7 +1701,7 @@ class StandardSHC extends MY_Controller {
 								where lc.ID=a.ID for xml path('')),1,1,''),',','<br>') as LOCAT
 						from {$this->MAuth->getdb('STDSHCAR')} a
 						left join {$this->MAuth->getdb('SETGROUP')} b on a.GCODE=b.GCODE collate thai_cs_as
-						left join STDSHCARDetails c on a.ID=c.ID
+						left join {$this->MAuth->getdb('STDSHCARDetails')} c on a.ID=c.ID
 						where a.INSBY='{$this->sess["IDNo"]}' 
 					";
 					//echo $sql; exit;
@@ -1599,7 +1758,13 @@ class StandardSHC extends MY_Controller {
 					$response["html"] = $html;
 				}else{
 					$response["error"] = true;
+					$response["errorMsg"] = $row->typecod;
+					$response["errorMsg"] = $row->model;
+					$response["errorMsg"] = $row->baab;
+					$response["errorMsg"] = $row->gcode;
+					$response["errorMsg"] = $row->cond;
 					$response["errorMsg"] = $row->msg;
+					
 				}
 			}
 		}else{

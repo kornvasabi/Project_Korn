@@ -143,7 +143,7 @@ function getMenuSearch(dataToPost){
 				dataToPost = new Object();				
 				dataToPost.dblocat   = $('#tab2dbData').attr('dblocat');
 				dataToPost.groupCode = $('#tab2dbData').attr('groupCode');
-				dataToPost.data 	 = data;
+				dataToPost.data 	 = JSON.stringify(data);
 				
 				$('#loadding').fadeIn(200);
 				$.ajax({

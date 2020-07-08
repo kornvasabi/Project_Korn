@@ -21,6 +21,10 @@ class Sell extends MY_Controller {
                 $this->sess[$key] = $value;
             }
 		}
+		
+		//print_r($this->config_db); exit;
+		$this->config_db['database'] = $this->sess["db"];
+		$this->connect_db = $this->load->database($this->config_db,true);
 	}
 	
 	function index(){
@@ -1459,9 +1463,9 @@ class Sell extends MY_Controller {
 		";
 		//echo $sql; exit;
 		
-		$this->db->query($sql);
+		$this->connect_db->query($sql);
 		$sql = "select * from #sellTemp";
-		$query = $this->db->query($sql);
+		$query = $this->connect_db->query($sql);
 	  
 		if($query->row()){
 			foreach($query->result() as $row){
@@ -1518,9 +1522,9 @@ class Sell extends MY_Controller {
 			end catch
 		";
 		
-		$this->db->query($sql);
+		$this->connect_db->query($sql);
 		$sql = "select * from #sellTemp";
-		$query = $this->db->query($sql);
+		$query = $this->connect_db->query($sql);
 	  
 		if($query->row()){
 			foreach($query->result() as $row){
@@ -1596,9 +1600,9 @@ class Sell extends MY_Controller {
 			end catch
 		";
 		//echo $sql; exit;
-		$this->db->query($sql);
+		$this->connect_db->query($sql);
 		$sql = "select * from #sellTemp";
-		$query = $this->db->query($sql);
+		$query = $this->connect_db->query($sql);
 	  
 		if($query->row()){
 			foreach($query->result() as $row){
@@ -1649,7 +1653,7 @@ class Sell extends MY_Controller {
 		
 		$sql = "
 			select a.RESVNO 
-				,(select LOCATNM from INVLOCAT where LOCATCD=a.LOCAT) as LOCAT
+				,(select LOCATNM from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD=a.LOCAT) as LOCAT
 				,case when a.TSALE = 'C' then 'ขายสด' else a.TSALE end TSALE
 				,convert(varchar(8),b.RECVDT,112) as RECVDT
 				,convert(varchar(8),a.SDATE,112) as SDATE
@@ -1886,9 +1890,9 @@ class Sell extends MY_Controller {
 			<div class='wf pf' style='top:595;left:420;font-size:10pt;width:100px;text-align:left;'>หมายเลขตัวถัง</div>
 			<div class='wf pf data' style='top:595;left:530;width:160px;'>{$data[25]}</div>
 			
-			<div class='wf pf' style='top:595;left:0;font-size:10pt;'>อัตราดอกเบี้ยเช่าซื้อจริง</div>
+			<!-- div class='wf pf' style='top:595;left:0;font-size:10pt;'>อัตราดอกเบี้ยเช่าซื้อจริง</div>
 			<div class='wf pf data' style='top:595;left:200;width:140px;text-align:right;'>{$data[26]}</div>
-			<div class='wf pf' style='top:595;left:360;font-size:10pt;'>%</div>
+			<div class='wf pf' style='top:595;left:360;font-size:10pt;'>%</div -->
 			<div class='wf pf' style='top:625;left:420;font-size:10pt;width:100px;text-align:left;'>หมายเลขเครื่อง</div>
 			<div class='wf pf data' style='top:625;left:530;width:160px;'>{$data[27]}</div>
 			

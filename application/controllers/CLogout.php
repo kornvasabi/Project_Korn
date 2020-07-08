@@ -46,6 +46,7 @@ class CLogout extends MY_Controller {
 			'branch' => $sess['branch'],
 			'lock' => 'yes',
 			'is_mobile' => ($this->agent->is_mobile() == 1 ? "yes":"no"),
+			'groupusers' => $sess['groupusers'],
 			'db' => $sess['db']
 		);
 		$this->session->set_userdata('cbjsess001',$sess_array);
@@ -84,6 +85,7 @@ class CLogout extends MY_Controller {
 				'branch' => $sess['branch'],
 				'lock' => 'no',
 				'is_mobile' => ($this->agent->is_mobile() == 1 ? "yes":"no"),
+				'groupusers' => $sess['groupusers'],
 				'db' => $sess['db']
 			);
 			$this->session->set_userdata('cbjsess001',$sess_array);

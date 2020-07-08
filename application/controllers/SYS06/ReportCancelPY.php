@@ -129,7 +129,8 @@ class ReportCancelPY extends MY_Controller {
 		$order     = $tx[4];
 		
 		$sql = "
-			select LOCATCD,LOCATNM from INVLOCAT where LOCATCD = '".$LOCATRECV."'
+			select LOCATCD,LOCATNM from {$this->MAuth->getdb('INVLOCAT')} 
+			where LOCATCD = '".$LOCATRECV."'
 		";
 		$query1 = $this->db->query($sql);
 		$locatnm = "";
@@ -164,7 +165,7 @@ class ReportCancelPY extends MY_Controller {
 		$sql = "
 			select COUNT(TMBILL) as countTMBILL,SUM(PAYAMT) as sumPAYAMT,SUM(DISCT) as sumDISCT
 			,SUM(PAYINT) as sumPAYINT,SUM(DSCINT) as sumDSCINT,SUM(NETPAY) as sumNETPAY
-			from CHQTRAN where TMBILL in (select TMBILL from #RPY)
+			from {$this->MAuth->getdb('CHQTRAN')} where TMBILL in (select TMBILL from #RPY)
 		";
 		$query4 = $this->db->query($sql);
 		

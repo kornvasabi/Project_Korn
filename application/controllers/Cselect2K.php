@@ -91,12 +91,12 @@ class Cselect2K extends MY_Controller {
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		
 		$sql = "
-            select ARGCOD,ARGDES from {$this->MAuth->getdb('ARGROUP')}
+            select ARGCOD,'('+ARGCOD+') '+ARGDES as ARGDES from {$this->MAuth->getdb('ARGROUP')}
             where ARGCOD='".$dataNow."' 
 
             union
-            select top 20 ARGCOD,ARGDES from {$this->MAuth->getdb('ARGROUP')}
-            where ARGDES like '%".$dataSearch."%' 
+            select top 20 ARGCOD,'('+ARGCOD+') '+ARGDES as ARGDES from {$this->MAuth->getdb('ARGROUP')}
+            where ARGDES like '".$dataSearch."%' or ARGCOD like '".$dataSearch."%'
             ";
         
         $query = $this->db->query($sql);
@@ -117,13 +117,14 @@ class Cselect2K extends MY_Controller {
 		$dataSearch = trim($_REQUEST['q']);
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
 		
-		$sql = "select GRDCOD,GRDDES from {$this->MAuth->getdb('SETGRADCUS')}  
+		$sql = "
+			select GRDCOD,'('+GRDCOD+') '+GRDDES as GRDDES from {$this->MAuth->getdb('SETGRADCUS')}  
             where GRDCOD ='".$dataNow."' 
 
             union
-            select GRDCOD,GRDDES from {$this->MAuth->getdb('SETGRADCUS')}
-            where GRDDES like '%".$dataSearch."%' 
-            ";
+            select GRDCOD,'('+GRDCOD+') '+GRDDES as GRDDES from {$this->MAuth->getdb('SETGRADCUS')}
+            where GRDDES like '".$dataSearch."%' or GRDCOD like '".$dataSearch."%'
+        ";
         
         $query = $this->db->query($sql);
 
@@ -132,7 +133,7 @@ class Cselect2K extends MY_Controller {
             foreach($query->result() as $row){
                 $json[] = array(
                     "id" =>str_replace(chr(0),"",$row->GRDCOD),
-                    "text" =>str_replace(chr(0),"",$row->GRDCOD)."  ".str_replace(chr(0),"",$row->GRDDES),					 
+                    "text" =>str_replace(chr(0),"",$row->GRDDES),					 
                 );
             }
         }
@@ -178,12 +179,15 @@ class Cselect2K extends MY_Controller {
             $cond = " and PROVCOD = '".$provcod."'";
         }
         $sql = "
-            select AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
+            select PROVCOD,AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
             where AUMPCOD = '".$dataNow."' 
             union
-            select top 20 AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
-            where AUMPDES like '%".$dataSearch."%' ".$cond."
-            ";
+            select PROVCOD,AUMPCOD,AUMPDES from (
+				select PROVCOD,AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
+				where AUMPCOD like '".$dataSearch."%' or AUMPDES like '".$dataSearch."%'
+			)a where 1=1 ".$cond."
+        ";
+		//echo $sql; exit;
         $query = $this->db->query($sql);
 
         $json = array();
@@ -458,6 +462,7 @@ class Cselect2K extends MY_Controller {
 					<tr class='trow' seq='".$NRow."'>
 						<td  style='cursor:pointer;' class='getit' seq='".$NRow++."'
 							CONTNO ='".$row->CONTNO."'
+							LOCAT  ='".$row->LOCAT."'
 						><b>เลือก</b></td>
 						<td>".$row->CONTNO."</td>
 						<td>".$row->LOCAT."</td>
@@ -523,7 +528,8 @@ class Cselect2K extends MY_Controller {
 		$sql = "
 			select top 100 A.CONTNO,A.LOCAT,convert(varchar(8),A.CREATEDT,112) as CREATEDT,convert(varchar(8),A.STARTDT,112) as STARTDT
 			,convert(varchar(8),A.ENDDT,112) as ENDDT,A.MEMO1,case when A.USERID <>'XX' then 'แดง' else 'น้ำเงิน' end as USERID 
-			,B.STRNO from ALERTMSG A left join ARMAST B on A.CONTNO = B.CONTNO where 1=1 ".$cond." 
+			,B.STRNO from {$this->MAuth->getdb('ALERTMSG')} A 
+			left join {$this->MAuth->getdb('ARMAST')} B on A.CONTNO = B.CONTNO where 1=1 ".$cond." 
 			order by A.STARTDT desc	";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -873,6 +879,7 @@ class Cselect2K extends MY_Controller {
 			left join {$this->MAuth->getdb('CUSTMAST')} C on A.CUSCOD = C.CUSCOD
 			left join {$this->MAuth->getdb('INVTRAN')} I on A.STRNO = I.STRNO where 1=1 
 			and A.CONTNO like '%".$dataSearch."%' or C.NAME1 like '%".$dataSearch."%' or C.NAME2 like '%".$dataSearch."%'
+			order by A.CONTNO
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -880,7 +887,7 @@ class Cselect2K extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>str_replace(chr(0),'',$row->CONTNO)
-						  ,'text'=>str_replace(chr(0),'',$row->CUSNAME)];
+				,'text'=>str_replace(chr(0),'',$row->CUSNAME)];
 			}
 		}
 		echo json_encode($json);
@@ -1244,6 +1251,7 @@ class Cselect2K extends MY_Controller {
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
+		$json = array();
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[]= array(
@@ -1491,6 +1499,291 @@ class Cselect2K extends MY_Controller {
 				$json[] = array(
 					"id" => $row->CONTNO,
 					"text" => $row->CUSNAM
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getSTRNO_ST(){
+		$sess 		   = $this->session->userdata('cbjsess001');
+		$dataSearch    = trim($_REQUEST['q']);
+		$no 		   = $_REQUEST['no'];
+		if($no == "sno"){
+			$sql = "
+				select top 20 STRNO from {$this->MAuth->getdb('INVTRAN')}
+				where STRNO like '%".$dataSearch."%' order by STRNO desc
+			";
+		}else{
+			$sql = "
+				select top 20 STRNO from {$this->MAuth->getdb('INVTRAN')}
+				where STRNO like '%".$dataSearch."%' and TSALE <> '' order by STRNO desc
+			";
+		}
+		
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					"id" => str_replace(chr(0),'',$row->STRNO),
+					"text" => str_replace(chr(0),'',$row->STRNO)
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getTYPECOD(){
+		$sess 		   = $this->session->userdata('cbjsess001');
+		$dataSearch    = trim($_REQUEST['q']);
+		
+		$sql = "
+			select TYPECOD from {$this->MAuth->getdb('SETTYPE')}
+			where TYPECOD like '%".$dataSearch."%' order by TYPECOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					"id" => str_replace(chr(0),'',$row->TYPECOD),
+					"text" => str_replace(chr(0),'',$row->TYPECOD)
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getMODELCOD(){
+		$sess 		   = $this->session->userdata('cbjsess001');
+		$dataSearch    = trim($_REQUEST['q']);
+		
+		$sql = "
+			select top 20 MODELCOD from {$this->MAuth->getdb('SETMODEL')}
+			where MODELCOD like '%".$dataSearch."%' order by MODELCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					"id" => str_replace(chr(0),'',$row->MODELCOD),
+					"text" => str_replace(chr(0),'',$row->MODELCOD)
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getBAABCOD(){
+		$sess 		   = $this->session->userdata('cbjsess001');
+		$dataSearch    = trim($_REQUEST['q']);
+		
+		$sql = "
+			select top 20 BAABCOD,BAABCOD+' ('+TYPECOD+')' as BAABNAM from {$this->MAuth->getdb('SETBAAB')}
+			where BAABCOD like '%".$dataSearch."%' order by BAABCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					"id" => str_replace(chr(0),'',$row->BAABCOD),
+					"text" => str_replace(chr(0),'',$row->BAABNAM)
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getCOLORCOD(){
+		$sess 		   = $this->session->userdata('cbjsess001');
+		$dataSearch    = trim($_REQUEST['q']);
+		
+		$sql = "
+			select top 20 COLORCOD from {$this->MAuth->getdb('SETCOLOR')}
+			where COLORCOD like '%".$dataSearch."%' order by COLORCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					"id" => str_replace(chr(0),'',$row->COLORCOD),
+					"text" => str_replace(chr(0),'',$row->COLORCOD)
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getCCCOD(){
+		$sess 		   = $this->session->userdata('cbjsess001');
+		$dataSearch    = trim($_REQUEST['q']);
+		
+		$sql = "
+			select top 20 CCCOD from {$this->MAuth->getdb('SETCC')}
+			where CCCOD like '%".$dataSearch."%' order by CCCOD
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					"id" => str_replace(chr(0),'',$row->CCCOD),
+					"text" => str_replace(chr(0),'',$row->CCCOD)
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getTableclearnull(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = $_REQUEST['q'];
+		
+		$sql = "
+			select A.NAME from ".$this->sess["db"].".dbo.sysobjects A
+			left join ".$this->sess["db"].".dbo.syscolumns B on A.ID = B.ID
+			left join ".$this->sess["db"].".dbo.systypes C on B.xtype = C.xtype 
+			where A.NAME like '%".$dataSearch."%' and A.type = 'U' group by A.NAME
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					"id" => $row->NAME,
+					"text" => $row->NAME
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getOPTCODE(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = $_REQUEST['q'];
+		
+		$sql = "
+			select top 100 OPTCODE,OPTNAME,OPTCODE+'('+OPTNAME+')' as OPTNAM 
+			from {$this->MAuth->getdb('OPTMAST')} where OPTCODE like '".$dataSearch."%'
+			or OPTNAME like '".$dataSearch."%'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					"id" => $row->OPTCODE,
+					"text" => $row->OPTNAM
+				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getformCUSTMAST(){
+		$html = "
+			<div class='row'>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						ชื่อ
+						<input type='text' id='name1' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						นามสกุล
+						<input type='text' id='name2' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						เลขที่บัตร
+						<input type='text' id='idno' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-12'>
+					<button id='btn_search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'>ค้นหา</span></button>
+				</div>
+				<br>
+				<div id='cus_result' class='col-sm-12'></div>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getSearchCUSTMAST(){
+		$name1  = $_POST['name1'];
+		$name2  = $_POST['name2'];
+		$idno   = $_POST['idno'];
+		
+		$cond = "";
+		if($name1 != ""){
+			$cond .= "and NAME1 like '".$name1."%'";
+		}
+		if($name2 != ""){
+			$cond .= "and NAME2 like '".$name2."%'";
+		}		
+		if($idno != ""){
+			$cond .= "and IDNO like '".$idno."%'"; 
+		}
+		$sql = "
+			select top 100 CUSCOD,IDNO,GRADE
+				,SNAM+NAME1+' '+NAME2 as CUSNAME1,NAME1,NAME2
+				,SNAM+NAME1+' '+NAME2+' ('+CUSCOD+')' as CUSNAME2
+			from {$this->MAuth->getdb('CUSTMAST')} where 1=1 ".$cond."
+			order by NAME1,NAME2
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trow' seq='".$NRow."'>
+						<td style='cursor:pointer;' class='getit' seq='".$NRow++."'
+							CUSCOD    ='".$row->CUSCOD."'
+							CUSNAME2  ='".$row->CUSNAME2."'
+						><b>เลือก</b></td>
+						<td>".$row->CUSCOD."</td>
+						<td>".$row->CUSNAME1."</td>
+						<td>".$row->GRADE."</td>
+					</tr>
+				";
+			}
+		}
+		$html = "
+			<div id='tbcont' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>รหัสลูกค้า</th>
+							<th>ชื่อ-สกุล</th>
+							<th>เกรด</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getOPTCODE_ACS(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = $_REQUEST['q'];
+		$add_locat = $_REQUEST['add_locat'];
+		
+		$sql = "
+			select top 100 OPTCODE,OPTNAME,OPTCODE+'('+OPTNAME+')' as OPTNAM 
+			from {$this->MAuth->getdb('OPTMAST')} where LOCAT = '".$add_locat."' and 
+			(OPTCODE like '".$dataSearch."%' or OPTNAME like '".$dataSearch."%') ORDER BY OPTCODE
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = array(
+					"id" => str_replace(chr(0),'',$row->OPTCODE),
+					"text" => str_replace(chr(0),'',$row->OPTNAM)
 				);
 			}
 		}

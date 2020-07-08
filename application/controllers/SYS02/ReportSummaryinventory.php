@@ -379,7 +379,7 @@ class ReportSummaryinventory extends MY_Controller {
 						<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumQTY)."</th>
 						<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumNET,2)."</th>
 						<th style='border-right:1px solid #ddd;border-left:0px;border-bottom:0px;border-top:0px;vertical-align:middle;text-align:right;'>".number_format($row->sumVAT,2)."</th>
-						<th style='border:0px;text-align:right;'>".number_format($row->sumTOT,2)."</th>
+						<th style='vertical-align:middle;border:0px;text-align:right;'>".number_format($row->sumTOT,2)."</th>
 					</tr>
 				";	
 			}

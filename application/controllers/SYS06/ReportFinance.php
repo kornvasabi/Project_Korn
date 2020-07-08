@@ -19,6 +19,9 @@ class ReportFinance extends MY_Controller {
 		}
 	}
 	function index(){
+		//jong add $cuscod
+		$cuscod = (!isset($_GET["cc"])?'':$_GET["cc"]);
+		
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		$html = "
@@ -78,7 +81,7 @@ class ReportFinance extends MY_Controller {
 									</li>
 								</ul>
 								<div class='tab-content bg-white'>
-									".$this->getfromFinanceTab11()."
+									".$this->getfromFinanceTab11($cuscod)."
 									".$this->getfromFinanceTab22()."
 									".$this->getfromFinanceTab33()."
 									".$this->getfromFinanceTab44()."
@@ -97,7 +100,7 @@ class ReportFinance extends MY_Controller {
 		$html .="<script src='".base_url('public/js/SYS06/ReportFinance.js')."'></script>";
 		echo ($html);
 	}
-	function getfromFinanceTab11(){
+	function getfromFinanceTab11($cuscod){
 		$html = "
 			<div class='tab-pane active' name='tab11' style='height:calc(100vh - 260px);overflow:auto;'>
 				<fieldset style='height:100%'>
@@ -109,7 +112,9 @@ class ReportFinance extends MY_Controller {
 									<div class='row'>
 										<div class='col-sm-3 text-primary'>
 											<b>รหัสลูกค้า</b>
-											<select id='CUSCOD1' class='form-control input-sm' data-placeholder='รหัสลูกค้า'></select>
+											<select id='CUSCOD1' class='form-control input-sm' data-placeholder='รหัสลูกค้า'>
+												<option value='".$cuscod."'>".$cuscod."</option>
+											</select>
 										</div>
 										<div class='col-sm-3 text-primary'>
 											<b>เลขที่สัญญา</b>
@@ -1442,7 +1447,8 @@ class ReportFinance extends MY_Controller {
 			echo json_encode($response); exit;
 		}
 		$sql = "
-			select LOCAT,INPDT,USERID from {$this->MAuth->getdb('ARMAST')} where CONTNO = '".$arrs['CONTNO']."' 
+			select LOCAT,INPDT,USERID from {$this->MAuth->getdb('ARMAST')} 
+			where CONTNO = '".$arrs['CONTNO']."' 
 		";
 		$querym = $this->db->query($sql);
 		$rowm = $querym->row();
@@ -1459,14 +1465,18 @@ class ReportFinance extends MY_Controller {
 		
 		$data = "";
 		$data .="
-			declare @isval int = isnull((select count(*) from {$this->MAuth->getdb('ALERTMSG')} where CONTNO='".$arrs['CONTNO']."'),0);
+			declare @isval int = isnull((
+				select count(*) from {$this->MAuth->getdb('ALERTMSG')} 
+				where CONTNO='".$arrs['CONTNO']."'
+			),0);
 			if(@isval = 0)
 			begin 
 				insert into {$this->MAuth->getdb('ALERTMSG')} (
 					[CONTNO],[LOCAT],[CREATEDT],[STARTDT],[ENDDT],[MEMO1],[INPDT],[USERID]
 				)values(
-					'".$arrs['CONTNO']."','".$arrs['LOCAT']."','".$arrs['DATESAVE']."','".$arrs['DATESTART']."'
-					,'".$arrs['DATEENG']."','".$arrs['MSGMEMO']."','".$arrs['INPDT']."','".$arrs['radio']."'
+					'".$arrs['CONTNO']."','".$arrs['LOCAT']."','".$arrs['DATESAVE']."'
+					,'".$arrs['DATESTART']."','".$arrs['DATEENG']."','".$arrs['MSGMEMO']."'
+					,'".$arrs['INPDT']."','".$arrs['radio']."'
 				)
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')}(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','ข้อความแจ้งเตือน เพิ่ม','".$arrs['CONTNO']."'+'".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
@@ -1606,7 +1616,7 @@ class ReportFinance extends MY_Controller {
 		$sql2 = "
 			select SUM(PAYINT) as sumPAID,SUM(DSCINT) as sumDSCINT from {$this->MAuth->getdb('CHQTRAN')} 
 			where CONTNO = '".$CONTNO."' and LOCATPAY = '".$LOCAT."'
-			and (PAYFOR='006' or PAYFOR = '007') and FLAG<>'C' and (PAYDT IS NOT NULL)
+			and (PAYFOR='006' or PAYFOR = '007') and FLAG <> 'C' and (PAYDT IS NOT NULL)
 		";
 		//echo $sql2; exit;
 		$query2 = $this->db->query($sql2);
@@ -1727,6 +1737,19 @@ class ReportFinance extends MY_Controller {
 		$LOCAT      = $_REQUEST['LOCAT'];
 		$DATESEARCH = $this->Convertdate(1,$_REQUEST['DATESEARCH']);
 		$arrs = array();
+		
+		$sql = "
+			select COUNT(*) checknull from {$this->MAuth->getdb('ARMAST')} 
+			where CONTNO = '".$CONTNO."'
+		";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$arrs['checknull'] = $row->checknull;
+		if($arrs['checknull'] == 0){
+			$response['error'] = true;
+			$response['msg']   = "ไม่มีข้อมูลส่วนลดตัดสดครับ";
+			echo json_encode($response); exit;
+		}
 		$sql = "
 			select CONVERT(varchar(8),GETDATE(),112) as GDATE
 		";
@@ -1747,17 +1770,68 @@ class ReportFinance extends MY_Controller {
 		$sql = "
 			exec [dbo].[FN_JD_LatePenalty] @contno ='".$CONTNO."',@dt = '".$datesr."'
 		";
+		$this->db->query($sql);
+		
+		$sql = "
+			--จำนวนงวด
+			declare @T_NOPAY int =(
+				select T_NOPAY from {$this->MAuth->getdb('ARMAST')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			);
+			declare @num_PERD varchar(max) = (
+				select
+				case
+					when @T_NOPAY <= 10 then '10'
+					when @T_NOPAY <= 12 then '12'
+					when @T_NOPAY <= 18 then '18'
+					when @T_NOPAY <= 24 then '24'
+					when @T_NOPAY <= 30 then '30'
+					when @T_NOPAY <= 36 then '36'
+					when @T_NOPAY <= 42 then '42'
+					when @T_NOPAY <= 48 then '48'
+					when @T_NOPAY <= 54 then '54'
+					when @T_NOPAY <= 60 then '60'
+					else '60' 
+				end
+			);
+			
+			--ตาราง setup
+			declare @CALDSC varchar(max) = (
+				select CALDSC from {$this->MAuth->getdb('ARMAST')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			);
+			select @num_PERD as N_PERD,@CALDSC as CALDSC,@T_NOPAY as T_NOPAY
+		";
+		//echo $sql;
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$num_perd = $row->N_PERD;
+		
+		$caldsc3 = $row->CALDSC;
+		$caldsc   = "TABLE".($row->CALDSC == 3 ? 1:$row->CALDSC);
+		//echo $caldsc; exit;
+		
 		$sql = "
 			declare @DISPAY decimal(8,2) = (
 				select isnull(MIN(NOPAY),0) as DISPAY from {$this->MAuth->getdb('ARPAY')} 
 				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and DDATE >= '".$DATESEARCH."'
 			)
-			declare @NPROF decimal(8,2)	= ( select sum(NPROF) as NPROF
-			from(
-				select case when PAYMENT > 0 then (NPROF/DAMT)*PAYMENT else NPROF end as  NPROF  
-				from {$this->MAuth->getdb('ARPAY')}  
-				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and PAYMENT < DAMT and DDATE >= '".$DATESEARCH."'
-			)A)
+			/*
+			declare @NPROF decimal(8,2)	= (
+				select sum(NPROF) as NPROF from(
+					select case when PAYMENT > 0 then (NPROF/DAMT) * PAYMENT else NPROF end as  NPROF  
+					from {$this->MAuth->getdb('ARPAY')}  
+					where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and PAYMENT < DAMT and DDATE > '".$DATESEARCH."'
+				)A
+			)
+			*/
+			declare @NPROF decimal(8,2)	= (
+				select sum(NPROF) as NPROF from(
+					select NPROF from {$this->MAuth->getdb('ARPAY')} 
+					where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' 
+					and DDATE > '".$DATESEARCH."'
+				)A
+			)
 			declare @AROTH decimal(8,2)= (
 				select isnull(SUM(PAYAMT-(SMPAY+SMCHQ)),0) as AROTH  from {$this->MAuth->getdb('AROTHR')}  
 				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
@@ -1775,38 +1849,29 @@ class ReportFinance extends MY_Controller {
 				select top 1 NPROF from {$this->MAuth->getdb('ARPAY')}  
 				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' order by NOPAY desc
 			)
-
+			declare @PERD decimal(18,1) = (
+				select case when ".$caldsc3." = 3 then 0 else PERD".$num_perd." / 100 end
+				from ".$this->MAuth->getdb($caldsc)." 
+				where NOPAY = ISNULL(@DISPAY,0)		
+			);
 			select TOTPRC-SMPAY-SMCHQ as TOTAR
-				,case when @DISPAY > 0 then @NPROF*0.3 else 0 end as PERC30
-				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3) else TOTPRC-SMPAY-SMCHQ end as TOTPAY
+				,case when @DISPAY > 0 then @NPROF * @PERD else 0 end as PERC30
+				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF * @PERD) else TOTPRC-SMPAY-SMCHQ end as TOTPAY
 				,@INTAMT-@PAID as INTAMT
 				,0 as OPERT
-				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3)+(@INTAMT-@PAID)+@AROTH 
+				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF * @PERD)+(@INTAMT-@PAID)+@AROTH 
 				else TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH end as NETPAY
 				,@NPROF as NPROF, @NPROF*0.5 as PERC50
 				,case when isnull(@NPROF,0) = 0 then @NPROF2 else @NPROF end as NPROF
-				,case when isnull(@NPROF,0) = 0 then @NPROF2*0.5 else @NPROF*0.5 end as PERC50
+				,case when isnull(@NPROF,0) = 0 then @NPROF2 * 0.5 else @NPROF*0.5 end as PERC50
 			from {$this->MAuth->getdb('ARMAST')} 
 			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
-			union
-			select TOTPRC-SMPAY-SMCHQ as TOTAR
-				,case when @DISPAY > 0 then @NPROF*0.3 else 0 end as PERC30
-				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3) else TOTPRC-SMPAY-SMCHQ end as TOTPAY
-				,@INTAMT-@PAID as INTAMT
-				,0 as OPERT
-				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3)+(@INTAMT-@PAID)+@AROTH 
-				else TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH end as NETPAY
-				,@NPROF as NPROF, @NPROF*0.5 as PERC50
-				,case when isnull(@NPROF,0) = 0 then @NPROF2 else @NPROF end as NPROF
-				,case when isnull(@NPROF,0) = 0 then @NPROF2*0.5 else @NPROF*0.5 end as PERC50
-			from {$this->MAuth->getdb('HARMAST')} 
-			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
 		";
-		$query = $this->db->query($sql);
 		//echo $sql; exit;
+		$query = $this->db->query($sql);
 		$i = 0;
-		if($query->row()){$i++;
-			foreach($query->result() as $row){
+		if($query->row()){
+			foreach($query->result() as $row){$i++;
 				$arrs['TOTAR']   = number_format($row->TOTAR,2);
 				$arrs['PERC30']  = number_format($row->PERC30,2);
 				$arrs['TOTPAY']  = number_format($row->TOTPAY,2);
@@ -1826,13 +1891,7 @@ class ReportFinance extends MY_Controller {
 			$arrs['NPROF']   = '0.00';
 			$arrs['PERC50']  = '0.00';
 		}
-		/*
-		if($i == 0){
-			$response["error"] = true;
-			$response["msg"] = "ไม่มีข้อมูลครับ";
-			echo json_encode ($response); exit;
-		}
-		*/
+		//echo $i; exit;
 		$html = "
 			<div class='k_Discount' style='width:800px;height:480px;overflow:auto;background-color:white;'>
 				<fieldset style='height:100%  background-color:#6aa705'>
@@ -1943,63 +2002,64 @@ class ReportFinance extends MY_Controller {
 		$response = array(); 
 		//tab11
 		$sql = "
-			IF OBJECT_ID('tempdb..##RPFN') IS NOT NULL DROP TABLE ##RPFN
-			select CONTNO,CUSCOD,TYPESALE,LOCAT,convert(varchar(8),SDATE,112) as SDATE,TOTPRC,SMPAY,BALANCE,SMCHQ,TKANG,STRNO,RESVNO,TSALE,FL
-			into ##RPFN
+			IF OBJECT_ID('tempdb..#RPFN') IS NOT NULL DROP TABLE #RPFN
+			select CONTNO,CUSCOD,TYPESALE,LOCAT,convert(varchar(8),SDATE,112) as SDATE,TOTPRC,SMPAY,BALANCE
+			,SMCHQ,TKANG,STRNO,RESVNO,TSALE,FL
+			into #RPFN
 			FROM(
-				select a. * from (select CONTNO,CUSCOD,'ขายผ่อน' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARMAST')} where DELDT is null and CUSCOD like '%".$CUSCOD1."%' and 
-				CONTNO like '%".$CONTNO1."%' and STRNO like '%".$STRNO1."%'
-				union
-				select CONTNO,CUSCOD,'ขายผ่อน' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARMAST')} where DELDT is null and CUSCOD like '%".$CUSCOD1."%' and 
-				CONTNO like '%".$CONTNO1."%' and STRNO like '%".$STRNO1."%'
-				union 
-				select CONTNO,CUSCOD,'ขายสด' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARCRED')} where DELDT is null and CUSCOD like '%".$CUSCOD1."%' and 
-				CONTNO like '%".$CONTNO1."%' and STRNO like '%".$STRNO1."%'
-				union 
-				select CONTNO,CUSCOD,'ขายสด' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARCRED')} where DELDT is null and CUSCOD like '%".$CUSCOD1."%' and 
-				CONTNO like '%".$CONTNO1."%' and STRNO like '%".$STRNO1."%'
-				union 
-				select CONTNO,CUSCOD,'ขายไปแนนซ์' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARFINC')} where DELDT is null and CUSCOD like '%".$CUSCOD1."%' and 
-				CONTNO like '%".$CONTNO1."%' and STRNO like '%".$STRNO1."%'
-				union 
-				select CONTNO,CUSCOD,'ขายไปแนนซ์' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARFINC')} where DELDT is null and CUSCOD like '%".$CUSCOD1."%' and 
-				CONTNO like '%".$CONTNO1."%' and STRNO like '%".$STRNO1."%'
-				union 
-				select A.CONTNO,A.CUSCOD,'ขายส่งเอเยนต์' as TYPESALE,A.LOCAT,A.SDATE,A.TOTPRC,A.SMPAY,(A.TOTPRC-A.SMPAY)
-				as BALANCE,A.SMCHQ,0 as TKANG,B.STRNO,'' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('AR_INVOI')} A,{$this->MAuth->getdb('INVTRAN')} B
-				where A.DELDT is null and A.CONTNO = B.CONTNO and A.CUSCOD like '%".$CUSCOD1."%' and A.CONTNO like '%".$CONTNO1."%' and B.STRNO like '%".$STRNO1."%'
-				union
-				select A.CONTNO,A.CUSCOD,'ขายส่งเอเยนต์' as TYPESALE,A.LOCAT,A.SDATE,A.TOTPRC,A.SMPAY,(A.TOTPRC-A.SMPAY)
-				as BALANCE,A.SMCHQ,0 as TKANG,B.STRNO,'*' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('HAR_INVO')} A,{$this->MAuth->getdb('HINVTRAN')} B
-				where A.DELDT is null and A.CONTNO = B.CONTNO and A.CUSCOD like '%".$CUSCOD1."%' and A.CONTNO like '%".$CONTNO1."%' and B.STRNO like '%".$STRNO1."%'
-				union 	
-				select A.ARCONT as CONTNO,A.CUSCOD,'ลูกหนี้อื่น' as TYPESALE,A.LOCAT,A.ARDATE as SDATE,A.PAYAMT
-				as TOTPRC,A.SMPAY,(A.PAYAMT-A.SMPAY) as BALANCE,A.SMCHQ,0 as TKANG,'' as STRNO,'' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('AROTHR')} A
-				where CUSCOD like '%".$CUSCOD1."%' and CONTNO like '%".$CONTNO1."%') AS A LEFT OUTER JOIN {$this->MAuth->getdb('REGTAB')} B ON A.STRNO=B.STRNO  
-				Where (B.REGNO like '%' or (B.REGNO is null) ) and A.STRNO like '%".$STRNO1."%' 
+				select A. * from (
+					select CONTNO,CUSCOD,'ขายผ่อน' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARMAST')} where DELDT is null and CUSCOD like '".$CUSCOD1."%' and 
+					CONTNO like '".$CONTNO1."%' and STRNO like '".$STRNO1."%'
+					union
+					select CONTNO,CUSCOD,'ขายผ่อน' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARMAST')} where DELDT is null and CUSCOD like '".$CUSCOD1."%' and 
+					CONTNO like '".$CONTNO1."%' and STRNO like '".$STRNO1."%'
+					union 
+					select CONTNO,CUSCOD,'ขายสด' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARCRED')} where DELDT is null and CUSCOD like '".$CUSCOD1."%' and 
+					CONTNO like '".$CONTNO1."%' and STRNO like '".$STRNO1."%'
+					union 
+					select CONTNO,CUSCOD,'ขายสด' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARCRED')} where DELDT is null and CUSCOD like '".$CUSCOD1."%' and 
+					CONTNO like '".$CONTNO1."%' and STRNO like '".$STRNO1."%'
+					union 
+					select CONTNO,CUSCOD,'ขายไปแนนซ์' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARFINC')} where DELDT is null and CUSCOD like '".$CUSCOD1."%' and 
+					CONTNO like '".$CONTNO1."%' and STRNO like '".$STRNO1."%'
+					union 
+					select CONTNO,CUSCOD,'ขายไปแนนซ์' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARFINC')} where DELDT is null and CUSCOD like '".$CUSCOD1."%' and 
+					CONTNO like '".$CONTNO1."%' and STRNO like '".$STRNO1."%'
+					union 
+					select A.CONTNO,A.CUSCOD,'ขายส่งเอเยนต์' as TYPESALE,A.LOCAT,A.SDATE,A.TOTPRC,A.SMPAY,(A.TOTPRC-A.SMPAY)
+					as BALANCE,A.SMCHQ,0 as TKANG,B.STRNO,'' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('AR_INVOI')} A,{$this->MAuth->getdb('INVTRAN')} B
+					where A.DELDT is null and A.CONTNO = B.CONTNO and A.CUSCOD like '".$CUSCOD1."%' and A.CONTNO like '".$CONTNO1."%' and B.STRNO like '".$STRNO1."%'
+					union
+					select A.CONTNO,A.CUSCOD,'ขายส่งเอเยนต์' as TYPESALE,A.LOCAT,A.SDATE,A.TOTPRC,A.SMPAY,(A.TOTPRC-A.SMPAY)
+					as BALANCE,A.SMCHQ,0 as TKANG,B.STRNO,'*' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('HAR_INVO')} A,{$this->MAuth->getdb('HINVTRAN')} B
+					where A.DELDT is null and A.CONTNO = B.CONTNO and A.CUSCOD like '".$CUSCOD1."%' and A.CONTNO like '".$CONTNO1."%' and B.STRNO like '".$STRNO1."%'
+					union 	
+					select A.ARCONT as CONTNO,A.CUSCOD,'ลูกหนี้อื่น' as TYPESALE,A.LOCAT,A.ARDATE as SDATE,A.PAYAMT
+					as TOTPRC,A.SMPAY,(A.PAYAMT-A.SMPAY) as BALANCE,A.SMCHQ,0 as TKANG,'' as STRNO,'' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('AROTHR')} A
+					where CUSCOD like '".$CUSCOD1."%' and CONTNO like '".$CONTNO1."%'
+				) AS A 
+				left join {$this->MAuth->getdb('REGTAB')} B ON A.STRNO = B.STRNO  
+				where (B.REGNO like '%' or (B.REGNO is null) ) and A.STRNO like '".$STRNO1."%' 
 			)RPFN
 		";
 		//echo $sql; exit;
-		$query = $this->db->query($sql);
+		$this->db->query($sql);
+		
 		if($tab11C[0] == "true"){
-			$sql = "select * from ##RPFN";
+			$sql = "select * from #RPFN";
 		}else{
-			$sql = "select * from ##RPFN where FL != '*'";
+			$sql = "select * from #RPFN where FL != '*'";
 		}
 		$query = $this->db->query($sql);
-		
-		$cusbuy = "";
-		$i = 0;
-		$TSALE = "";
+		$cusbuy = ""; $i = 0; $TSALE = "";
 		if($query->row()){
 			foreach($query->result() as $row){$i++;
-				//print_r($row->DESC1);
 				$css = "color:black";
 				$css2 = "color:blue";
 				if($row->FL == "*"){
@@ -2032,18 +2092,19 @@ class ReportFinance extends MY_Controller {
 		}
 		$response['TSALE'] = $TSALE;
 		
+		$response["cusbuy"] = $cusbuy;
+		$response["numrow"] = $i;
+		/*
+		$stylesheet = "
+			<style>
+				tr.highlighted td{background:#cce8ff;}
+			</style>
+		";
+		$cusbuy = $cusbuy.$stylesheet;
+		*/
+		/*
 		if($i < 1){
-			if($CUSCOD1 !== ""){
-				$sql = "
-					select SNAM,NAME1,NAME2 from {$this->MAuth->getdb('CUSTMAST')} 
-					where CUSCOD = '".$CUSCOD1."'
-				";
-				$queryname = $this->db->query($sql);
-				$rown = $queryname->row();
-				$response['SNAM']		 = $rown->SNAM;
-				$response['NAME1']		 = $rown->NAME1;
-				$response['NAME2']		 = $rown->NAME2;
-			}
+			//การซื้อ
 			$sql12 = "
 				IF OBJECT_ID('tempdb..#ISR') IS NOT NULL DROP TABLE #ISR
 				select CONTNO,CUSCOD,NAME1,NAME2,STRNO,convert(varchar(8),SDATE,112) as SDATE, BALANCE
@@ -2085,6 +2146,7 @@ class ReportFinance extends MY_Controller {
 			}else{
 				$insurance .= "<tr class='trow'><td colspan='9' style='color:red;'>ไม่มีข้อมูล</td></tr>";
 			}
+			
 			$response["insurance"] = $insurance;
 			$sql14 = "
 				select count(CONTNO) as countCUSCOD,sum(BALANCE) as sumBALANCE from #ISR
@@ -2098,28 +2160,26 @@ class ReportFinance extends MY_Controller {
 			}
 			$response["MSGMEMO"] = "none";
 		}
+		*/
 		if($i > 0){
-			$response["numrow"] = $i;
-			$stylesheet = "
-				<style>
-					tr.highlighted td{background:#cce8ff;}
-				</style>
+			//KeySearchFirst --> sql top 1
+			$sql = "
+				select top 1 CONTNO,CUSCOD,STRNO,LOCAT from #RPFN order by CONTNO DESC
 			";
-			$cusbuy = $cusbuy.$stylesheet;
-			$response["cusbuy"] = $cusbuy;
-			
-			$cond = "
-				select top 1 * from ##RPFN order by CONTNO DESC
-			";
-			$querycond = $this->db->query($cond);
-			$rows = $querycond->row();
-			$contno = str_replace(chr(0),'',$rows->CONTNO);
-			$cuscod = str_replace(chr(0),'',$rows->CUSCOD);
-			$strno  = str_replace(chr(0),'',$rows->STRNO);
-			$locat  = str_replace(chr(0),'',$rows->LOCAT);	
+			$query = $this->db->query($sql);
+			$contno = ""; $cuscod = ""; $strno = ""; $locat = "";
+			if($query->row()){
+				foreach($query->result() as $row){
+					$contno = str_replace(chr(0),'',$row->CONTNO);
+					$cuscod = str_replace(chr(0),'',$row->CUSCOD);
+					$strno  = str_replace(chr(0),'',$row->STRNO);
+					$locat  = str_replace(chr(0),'',$row->LOCAT);	
+				}
+			}			
 			//echo $locat; exit;
 			$sql = "
-				select SNAM,NAME1,NAME2 from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD = '".$cuscod."'
+				select SNAM,NAME1,NAME2 from {$this->MAuth->getdb('CUSTMAST')} 
+				where CUSCOD = '".$cuscod."'
 			";
 			$query = $this->db->query($sql);
 			if($query->row()){
@@ -2129,21 +2189,15 @@ class ReportFinance extends MY_Controller {
 					$response['NAME2']		 = $row->NAME2;
 				}
 			}
-			/*$queryname = $this->db->query($sql);
-			$rown = $queryname->row();
-			$response['SNAM']		 = $rown->SNAM;
-			$response['NAME1']		 = $rown->NAME1;
-			$response['NAME2']		 = $rown->NAME2;
-			*/
 			if($tab11C[0] == "true"){
 				$sql11 = "
 					select COUNT(CONTNO) as countCONTNO,SUM(TOTPRC) as sumTOTPRC,SUM(SMPAY) as sumSMPAY
-					,SUM(BALANCE) as sumBALANCE from ##RPFN
+					,SUM(BALANCE) as sumBALANCE from #RPFN
 				";
 			}else{
 				$sql11 = "
 					select COUNT(CONTNO) as countCONTNO,SUM(TOTPRC) as sumTOTPRC,SUM(SMPAY) as sumSMPAY
-					,SUM(BALANCE) as sumBALANCE from ##RPFN where FL != '*'
+					,SUM(BALANCE) as sumBALANCE from #RPFN where FL != '*'
 				";
 			}
 			$query11 = $this->db->query($sql11);
@@ -2174,7 +2228,7 @@ class ReportFinance extends MY_Controller {
 				)ISR
 			";
 			//echo $sql12; exit;
-			$query12 = $this->db->query($sql12);
+			$this->db->query($sql12);
 			$sql13 = "
 				select * from #ISR
 			";
@@ -2208,7 +2262,7 @@ class ReportFinance extends MY_Controller {
 					$response['SUMBALANCE_ISR']		= number_format($row->sumBALANCE,2);
 				}
 			}
-			//ข้อความแจ้งเตือน
+/*---------------------------//ข้อความแจ้งเตือน-----------------------------------------*/
 			$sql15 = "
 				select CONTNO, LOCAT, convert(nvarchar,STARTDT,112) as STARTDT, convert(nvarchar,ENDDT,112) as ENDDT, MEMO1, USERID
 				from {$this->MAuth->getdb('ALERTMSG')} 
@@ -2228,9 +2282,10 @@ class ReportFinance extends MY_Controller {
 			}else{
 				$response["MSGMEMO"] = "none";
 			}
+/*---------------------------//ข้อความแจ้งเตือน-----------------------------------------*/
 			//tab2
 			$sql21 = "
-				select CONTNO,LOCAT from ##RPFN where CONTNO = '".$contno."'
+				select CONTNO,LOCAT from #RPFN where CONTNO = '".$contno."'
 			";
 			$query21 = $this->db->query($sql21);
 			if($query21->row()){
@@ -2261,9 +2316,12 @@ class ReportFinance extends MY_Controller {
 				)CDT
 			";
 			//echo $sql22; exit;
-			$query22 = $this->db->query($sql22);
+			$this->db->query($sql22);
 			
-			$sql23 = "select * from #CDT";	
+			$sql23 = "
+				select CONTNO,RVLOCAT,STRNO,ENGNO,NADDCOST,TYPE,MODEL
+				,BAAB,COLOR,CC,STAT,MANUYR,YSTAT,RECVNO,GCODE from #CDT
+			";	
 			$query23 = $this->db->query($sql23);
 			$recvno = ""; $gcode  = ""; $stat = ""; $ystat = "";
 			if($query23->row()){
@@ -2339,9 +2397,10 @@ class ReportFinance extends MY_Controller {
 				select OPTCODE,OPTNAME,UPRICE,QTY,TOTPRC,PRCPU
 				into #ACCESSORY
 				from (
-					select A.OPTCODE,B.OPTNAME,A.UPRICE,A.QTY,A.TOTPRC,(A.TOTPRC/A.QTY) as PRCPU from {$this->MAuth->getdb('ARINOPT')} A
+					select A.OPTCODE,B.OPTNAME,A.UPRICE,A.QTY,A.TOTPRC,(A.TOTPRC/A.QTY) as PRCPU 
+					from {$this->MAuth->getdb('ARINOPT')} A
 					left join {$this->MAuth->getdb('OPTMAST')} B on A.OPTCODE = B.OPTCODE 
-					where A.CONTNO like '%".$contno."%' and B.LOCAT like '%".$locat."%'
+					where A.CONTNO like '".$contno."%' and B.LOCAT like '".$locat."%'
 				)ACCESSORY
 			";
 			//echo $sql3; exit;
@@ -2382,7 +2441,8 @@ class ReportFinance extends MY_Controller {
 				select STRNO,NPRICE,VATPRC,TOTPRC
 				into #LISTCAR
 				FROM(
-					select STRNO,NPRICE,VATPRC,TOTPRC from {$this->MAuth->getdb('AR_TRANS')} where CONTNO = '".$contno."' and LOCAT = '".$locat."'
+					select STRNO,NPRICE,VATPRC,TOTPRC from {$this->MAuth->getdb('AR_TRANS')} 
+					where CONTNO = '".$contno."' and LOCAT = '".$locat."'
 				)LISTCAR
 			";
 			//echo $sql3; exit;
@@ -2469,7 +2529,7 @@ class ReportFinance extends MY_Controller {
 				)CONTRAC
 			";
 			//echo $sql31; exit;
-			$query31 = $this->db->query($sql31);
+			$this->db->query($sql31);
 			
 			$sql32 = "
 				select '['+PAYCODE+']'+PAYDESC as PAY,* from #CONTRAC A 
@@ -2505,9 +2565,10 @@ class ReportFinance extends MY_Controller {
 				}
 			}
 			$sql33 = "
-				select SUM(PAYAMT-SMPAY) as OTHR from AROTHR
+				select SUM(PAYAMT-SMPAY) as OTHR from {$this->MAuth->getdb('AROTHR')} 
 				where CONTNO = '".$contno."' and LOCAT ='".$locat."'
 			";
+			//echo $sql33; exit;
 			$query33 = $this->db->query($sql33);
 			if($query33->row()){
 				foreach($query33->result() as $row){
@@ -2531,8 +2592,9 @@ class ReportFinance extends MY_Controller {
 				}
 			}
 			$sql35 = "
-				select (select RTRIM(name) + '[' + RTRIM(code) + ']' from OFFICER B where B.CODE = A.BILLCOLL) as BILLCOLL 
-				from #CONTRAC A left join OFFICER B on A.BILLCOLL = B.CODE
+				select (select RTRIM(name) + '[' + RTRIM(code) + ']' 
+				from {$this->MAuth->getdb('OFFICER')} B where B.CODE = A.BILLCOLL) as BILLCOLL 
+				from #CONTRAC A left join {$this->MAuth->getdb('OFFICER')} B on A.BILLCOLL = B.CODE
 			";
 			$query35 = $this->db->query($sql35);
 			if($query35->row()){
@@ -2541,8 +2603,8 @@ class ReportFinance extends MY_Controller {
 				}
 			}
 			$sql36 = "
-				select (select RTRIM(name) + '[' + RTRIM(code) + ']' from OFFICER B where B.CODE = A.CHECKER) as CHECKER 
-				from #CONTRAC A left join OFFICER B on A.CHECKER = B.CODE
+				select (select RTRIM(name) + '[' + RTRIM(code) + ']' from {$this->MAuth->getdb('OFFICER')} B where B.CODE = A.CHECKER) as CHECKER 
+				from #CONTRAC A left join {$this->MAuth->getdb('OFFICER')} B on A.CHECKER = B.CODE
 			";
 			$query36 = $this->db->query($sql36);
 			if($query36->row()){
@@ -2551,7 +2613,8 @@ class ReportFinance extends MY_Controller {
 				}
 			}
 			$sql37 = "
-				select MEMO1 from {$this->MAuth->getdb('ARMAST')} where CONTNO = '".$contno."' and LOCAT ='".$locat."'
+				select MEMO1 from {$this->MAuth->getdb('ARMAST')} 
+				where CONTNO = '".$contno."' and LOCAT ='".$locat."'
 			";
 			$query37 = $this->db->query($sql37);
 			if($query37->row()){
@@ -2585,11 +2648,12 @@ class ReportFinance extends MY_Controller {
 				)PAYMENT
 			";	
 			//echo $sql41; exit;
-			$query41 = $this->db->query($sql41);
+			$this->db->query($sql41);
 			
 			$sql42 = "
 				select LOCATRECV,TMBILL,TMBILDT,PAYTYP,PAYFOR,PAYAMT,CUSCOD,DISCT,PAYINT,DSCINT
-				,NETPAY,PAYDT,FLAG,CONTNO,CHQNO,BILLNO,BILLDT,F_PAY,L_PAY,INPDT from #PAYMENT  order by TMBILDT desc
+				,NETPAY,PAYDT,FLAG,CONTNO,CHQNO,BILLNO,BILLDT,F_PAY,L_PAY,INPDT from #PAYMENT 
+				order by TMBILDT desc
 			";
 			$query42 = $this->db->query($sql42);
 			$payment = "";
@@ -2734,7 +2798,7 @@ class ReportFinance extends MY_Controller {
 				)SUPPORTER
 			";
 			//echo $sql20; exit;
-			$query61 = $this->db->query($sql61);
+			$this->db->query($sql61);
 			
 			$sql62 = "select * from #SUPPORTER";
 			$query62 = $this->db->query($sql62);
@@ -2825,8 +2889,8 @@ class ReportFinance extends MY_Controller {
 			//tab7
 			$sql71 = "
 				select CONVERT(varchar(8),A.CHGDATE,112) as CHGDATE,A.STATFRM,A.STATTO
-				,(select RTRIM(name) + '[' + RTRIM(code) + ']' from OFFICER C where C.CODE = A.FRMBILL) as BILLFRM
-				,(select RTRIM(name) + '[' + RTRIM(code) + ']' from OFFICER C where C.CODE = A.TOBILL) as BILLTO
+				,(select RTRIM(name) + '[' + RTRIM(code) + ']' from {$this->MAuth->getdb('OFFICER')} C where C.CODE = A.FRMBILL) as BILLFRM
+				,(select RTRIM(name) + '[' + RTRIM(code) + ']' from {$this->MAuth->getdb('OFFICER')} C where C.CODE = A.TOBILL) as BILLTO
 				,A.MEMO1 ,RTRIM(B.USERNAME) + '[' + RTRIM(B.CUSCOD) +']' as USERNAME from {$this->MAuth->getdb('STATTRAN')} A
 				,{$this->MAuth->getdb('PASSWRD')} B where A.AUTHCOD = B.USERID and A.CONTNO = '".$contno."' 
 				and A.LOCAT = '".$locat."' order by A.CHGDATE
@@ -2856,11 +2920,12 @@ class ReportFinance extends MY_Controller {
 				into #DEBTORS
 				FROM(
 					select A.CONTNO,A.ARCONT,A.LOCAT,A.PAYAMT AS TOTPRC,A.SMPAY,(A.PAYAMT - A.SMPAY) AS BALANC
-					,A.SMCHQ,(A.PAYAMT - (A.SMPAY + A.SMCHQ)) AS TKANG, A.TSALE,A.CUSCOD,A.PAYFOR  from  {$this->MAuth->getdb('AROTHR')} A 
+					,A.SMCHQ,(A.PAYAMT - (A.SMPAY + A.SMCHQ)) AS TKANG, A.TSALE,A.CUSCOD,A.PAYFOR  
+					from  {$this->MAuth->getdb('AROTHR')} A 
 					WHERE A.CONTNO = '".$contno."' 
 				)DEBTORS
 			";
-			$query81 = $this->db->query($sql81);
+			$this->db->query($sql81);
 			
 			$sql82 = "select * from #DEBTORS order by CONTNO";
 			$query82 = $this->db->query($sql82);
@@ -2898,8 +2963,11 @@ class ReportFinance extends MY_Controller {
 					$response['SUMTKANG_8']   = number_format($row->SUMTKANG,2);
 				}
 			}
+		}else{
+			$insurance = "";
+			$insurance .= "<tr class='trow'><td colspan='9' style='color:red;'>ไม่มีข้อมูล</td></tr>";
 		}
-		$response["cusbuy"] = $cusbuy;
+		$response["insurance"] = $insurance;
 		echo json_encode ($response);
 	}
 	function changedata(){
@@ -2910,50 +2978,53 @@ class ReportFinance extends MY_Controller {
 		$TSALES  = $_REQUEST['TSALES'];
 		$response = array();
 		$sql = "
-			IF OBJECT_ID('tempdb..##RPFN1') IS NOT NULL DROP TABLE ##RPFN1
+			IF OBJECT_ID('tempdb..#RPFN1') IS NOT NULL DROP TABLE #RPFN1
 			select CONTNO,CUSCOD,TYPESALE,LOCAT,convert(varchar(8),SDATE,112) as SDATE,TOTPRC,SMPAY,BALANCE,SMCHQ,TKANG,STRNO,RESVNO,TSALE,FL
-			into ##RPFN1
+			into #RPFN1
 			FROM(
-				select a. * from (select CONTNO,CUSCOD,'ขายผ่อน' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARMAST')} where DELDT is null and CUSCOD like '%".$CUSCODS."%' and 
-				CONTNO like '%".$CONTNOS."%' and STRNO like '%".$STRNOS."%'
-				union
-				select CONTNO,CUSCOD,'ขายผ่อน' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARMAST')} where DELDT is null and CUSCOD like '%".$CUSCODS."%' and 
-				CONTNO like '%".$CONTNOS."%' and STRNO like '%".$STRNOS."%'
-				union 
-				select CONTNO,CUSCOD,'ขายสด' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARCRED')} where DELDT is null and CUSCOD like '%".$CUSCODS."%' and 
-				CONTNO like '%".$CONTNOS."%' and STRNO like '%".$STRNOS."%'
-				union 
-				select CONTNO,CUSCOD,'ขายสด' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARCRED')} where DELDT is null and CUSCOD like '%".$CUSCODS."%' and 
-				CONTNO like '%".$CONTNOS."%' and STRNO like '%".$STRNOS."%'
-				union 
-				select CONTNO,CUSCOD,'ขายไปแนนซ์' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARFINC')} where DELDT is null and CUSCOD like '%".$CUSCODS."%' and 
-				CONTNO like '%".$CONTNOS."%' and STRNO like '%".$STRNOS."%'
-				union 
-				select CONTNO,CUSCOD,'ขายไปแนนซ์' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
-				,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARFINC')} where DELDT is null and CUSCOD like '%".$CUSCODS."%' and 
-				CONTNO like '%".$CONTNOS."%' and STRNO like '%".$STRNOS."%'
-				union 
-				select A.CONTNO,A.CUSCOD,'ขายส่งเอเยนต์' as TYPESALE,A.LOCAT,A.SDATE,A.TOTPRC,A.SMPAY,(A.TOTPRC-A.SMPAY)
-				as BALANCE,A.SMCHQ,0 as TKANG,B.STRNO,'' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('AR_INVOI')} A,{$this->MAuth->getdb('INVTRAN')} B
-				where A.DELDT is null and A.CONTNO = B.CONTNO and A.CUSCOD like '%".$CUSCODS."%' and A.CONTNO like '%".$CONTNOS."%' and B.STRNO like '%".$STRNOS."%'
-				union
-				select A.CONTNO,A.CUSCOD,'ขายส่งเอเยนต์' as TYPESALE,A.LOCAT,A.SDATE,A.TOTPRC,A.SMPAY,(A.TOTPRC-A.SMPAY)
-				as BALANCE,A.SMCHQ,0 as TKANG,B.STRNO,'*' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('HAR_INVO')} A,{$this->MAuth->getdb('HINVTRAN')} B
-				where A.DELDT is null and A.CONTNO = B.CONTNO and A.CUSCOD like '%".$CUSCODS."%' and A.CONTNO like '%".$CONTNOS."%' and B.STRNO like '%".$STRNOS."%'
-				union 	
-				select A.ARCONT as CONTNO,A.CUSCOD,'ลูกหนี้อื่น' as TYPESALE,A.LOCAT,A.ARDATE as SDATE,A.PAYAMT
-				as TOTPRC,A.SMPAY,(A.PAYAMT-A.SMPAY) as BALANCE,A.SMCHQ,0 as TKANG,'' as STRNO,'' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('AROTHR')} A
-				where CUSCOD like '%".$CUSCODS."%' and CONTNO like '%".$CONTNOS."%') AS A LEFT OUTER JOIN {$this->MAuth->getdb('REGTAB')} B ON A.STRNO=B.STRNO  
-				Where (B.REGNO like '%' or (B.REGNO is null) ) and A.STRNO like '%".$STRNOS."%' 
+				select A. * from (
+					select CONTNO,CUSCOD,'ขายผ่อน' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARMAST')} where DELDT is null and CUSCOD like '".$CUSCODS."%' and 
+					CONTNO like '".$CONTNOS."%' and STRNO like '".$STRNOS."%'
+					union
+					select CONTNO,CUSCOD,'ขายผ่อน' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARMAST')} where DELDT is null and CUSCOD like '".$CUSCODS."%' and 
+					CONTNO like '".$CONTNOS."%' and STRNO like '".$STRNOS."%'
+					union 
+					select CONTNO,CUSCOD,'ขายสด' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARCRED')} where DELDT is null and CUSCOD like '".$CUSCODS."%' and 
+					CONTNO like '".$CONTNOS."%' and STRNO like '".$STRNOS."%'
+					union 
+					select CONTNO,CUSCOD,'ขายสด' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARCRED')} where DELDT is null and CUSCOD like '".$CUSCODS."%' and 
+					CONTNO like '".$CONTNOS."%' and STRNO like '".$STRNOS."%'
+					union 
+					select CONTNO,CUSCOD,'ขายไปแนนซ์' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'' as FL from {$this->MAuth->getdb('ARFINC')} where DELDT is null and CUSCOD like '".$CUSCODS."%' and 
+					CONTNO like '".$CONTNOS."%' and STRNO like '".$STRNOS."%'
+					union 
+					select CONTNO,CUSCOD,'ขายไปแนนซ์' as TYPESALE,LOCAT,SDATE,TOTPRC,SMPAY,(TOTPRC-SMPAY) as BALANCE
+					,SMCHQ,TKANG,STRNO,RESVNO,TSALE,'*' as FL from {$this->MAuth->getdb('HARFINC')} where DELDT is null and CUSCOD like '".$CUSCODS."%' and 
+					CONTNO like '".$CONTNOS."%' and STRNO like '".$STRNOS."%'
+					union 
+					select A.CONTNO,A.CUSCOD,'ขายส่งเอเยนต์' as TYPESALE,A.LOCAT,A.SDATE,A.TOTPRC,A.SMPAY,(A.TOTPRC-A.SMPAY)
+					as BALANCE,A.SMCHQ,0 as TKANG,B.STRNO,'' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('AR_INVOI')} A,{$this->MAuth->getdb('INVTRAN')} B
+					where A.DELDT is null and A.CONTNO = B.CONTNO and A.CUSCOD like '".$CUSCODS."%' and A.CONTNO like '".$CONTNOS."%' and B.STRNO like '".$STRNOS."%'
+					union
+					select A.CONTNO,A.CUSCOD,'ขายส่งเอเยนต์' as TYPESALE,A.LOCAT,A.SDATE,A.TOTPRC,A.SMPAY,(A.TOTPRC-A.SMPAY)
+					as BALANCE,A.SMCHQ,0 as TKANG,B.STRNO,'*' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('HAR_INVO')} A,{$this->MAuth->getdb('HINVTRAN')} B
+					where A.DELDT is null and A.CONTNO = B.CONTNO and A.CUSCOD like '".$CUSCODS."%' and A.CONTNO like '".$CONTNOS."%' and B.STRNO like '".$STRNOS."%'
+					union 	
+					select A.ARCONT as CONTNO,A.CUSCOD,'ลูกหนี้อื่น' as TYPESALE,A.LOCAT,A.ARDATE as SDATE,A.PAYAMT
+					as TOTPRC,A.SMPAY,(A.PAYAMT-A.SMPAY) as BALANCE,A.SMCHQ,0 as TKANG,'' as STRNO,'' as RESVNO,A.TSALE,'' as FL from {$this->MAuth->getdb('AROTHR')} A
+					where CUSCOD like '".$CUSCODS."%' and CONTNO like '".$CONTNOS."%'
+				) AS A 
+				left join {$this->MAuth->getdb('REGTAB')} B ON A.STRNO=B.STRNO  
+				Where (B.REGNO like '%' or (B.REGNO is null) ) and A.STRNO like '".$STRNOS."%' 
 			)RPFN1
 		";
 		//echo $sql; exit;
-		$query = $this->db->query($sql);
+		$this->db->query($sql);
 		
 		$response['CONTNO_2']   = $CONTNOS;
 		$response['LOCAT_2']  	= $LOCATS;
@@ -3013,7 +3084,7 @@ class ReportFinance extends MY_Controller {
 			)CDT
 		";
 		//echo $sql2; exit;
-		$query2 = $this->db->query($sql2);
+		$this->db->query($sql2);
 		
 		$sql2_1 = "select * from #CDT";
 		$recvno = ""; $gcode  = ""; $stat = ""; $ystat = "";
@@ -3092,11 +3163,11 @@ class ReportFinance extends MY_Controller {
 			from (
 				select A.OPTCODE,B.OPTNAME,A.UPRICE,A.QTY,A.TOTPRC,(A.TOTPRC/A.QTY) as PRCPU from {$this->MAuth->getdb('ARINOPT')} A
 				left join {$this->MAuth->getdb('OPTMAST')} B on A.OPTCODE = B.OPTCODE 
-				where A.CONTNO like '%".$CONTNOS."%' and B.LOCAT like '%".$LOCATS."%'
+				where A.CONTNO like '".$CONTNOS."%' and B.LOCAT like '".$LOCATS."%'
 			)ACCESSORY
 		";
 		//echo $sql3; exit;
-		$query3 = $this->db->query($sql2_5);
+		$this->db->query($sql2_5);
 		
 		$sql2_6 = "
 			select OPTCODE,OPTNAME,UPRICE,QTY,TOTPRC from #ACCESSORY
@@ -3174,7 +3245,7 @@ class ReportFinance extends MY_Controller {
 			)CONTRAC
 		";
 		//echo $sql3_1; exit;
-		$query3_1 = $this->db->query($sql3_1);
+		$this->db->query($sql3_1);
 		
 		$sql3_2 = "
 			select '['+PAYCODE+']'+PAYDESC as PAY,* from #CONTRAC A 
@@ -3209,7 +3280,7 @@ class ReportFinance extends MY_Controller {
 			}
 		}
 		$sql3_3 = "
-			select SUM(PAYAMT-SMPAY) as OTHR from AROTHR
+			select SUM(PAYAMT-SMPAY) as OTHR from {$this->MAuth->getdb('AROTHR')}
 			where CONTNO = '".$CONTNOS."' and LOCAT ='".$LOCATS."'
 		";
 		$query3_3 = $this->db->query($sql3_3);
@@ -3266,13 +3337,15 @@ class ReportFinance extends MY_Controller {
 			}
 		}
 		//สถานะรถ
-		$sttcar = "
+		$sql3_7 = "
 			select YSTAT from #CONTRAC
 		";
-		$querysttcar = $this->db->query($sttcar);
-		$rows = $querysttcar->row();
-		$response['YSTAT'] = $rows->YSTAT;
-		
+		$query3_7 = $this->db->query($sql3_7);
+		if($query3_7->row()){
+			foreach($query3_7->result() as $row){
+				$response['YSTAT'] = $row->YSTAT;
+			}
+		}
 		//tab4
 		$sql4_1 = "
 			IF OBJECT_ID('tempdb..#PAYMENT') IS NOT NULL DROP TABLE #PAYMENT
@@ -3287,14 +3360,12 @@ class ReportFinance extends MY_Controller {
 				AND A.LOCATRECV = B.LOCATRECV AND (B.CONTNO = '".$CONTNOS."' OR B.CONTNO = '".$CONTNOS."') AND  B.LOCATPAY ='".$LOCATS."'
 			)PAYMENT
 		";
-		
-		$query4_1 = $this->db->query($sql4_1);
+		$this->db->query($sql4_1);
 		
 		$sql4_2 = "
 			select LOCATRECV,TMBILL,TMBILDT,PAYTYP,PAYFOR,PAYAMT,CUSCOD,DISCT,PAYINT,DSCINT
 			,NETPAY,PAYDT,FLAG,CONTNO,CHQNO,BILLNO,BILLDT,F_PAY,L_PAY,INPDT from #PAYMENT  order by TMBILDT desc
 		";
-		
 		$query4_2 = $this->db->query($sql4_2);
 		$payment = "";
 		if($query4_2->row()){
@@ -3322,7 +3393,6 @@ class ReportFinance extends MY_Controller {
 						<td>".$row->CUSCOD."</td>
 						<td>".$row->CONTNO."</td>
 					</tr>
-					
 				";	
 			}
 		}
@@ -3437,7 +3507,7 @@ class ReportFinance extends MY_Controller {
 			)SUPPORTER
 		";
 		//echo $sql6_1; exit;
-		$query6_1 = $this->db->query($sql6_1);
+		$this->db->query($sql6_1);
 		
 		$sql6_2 = "select * from #SUPPORTER";
 		$query6_2 = $this->db->query($sql6_2);
@@ -3526,8 +3596,8 @@ class ReportFinance extends MY_Controller {
 		//tab7
 		$sql7_1 = "
 			select CONVERT(varchar(8),A.CHGDATE,112) as CHGDATE,A.STATFRM,A.STATTO
-			,(select RTRIM(name) + '[' + RTRIM(code) + ']' from OFFICER C where C.CODE = A.FRMBILL) as BILLFRM
-			,(select RTRIM(name) + '[' + RTRIM(code) + ']' from OFFICER C where C.CODE = A.TOBILL) as BILLTO
+			,(select RTRIM(name) + '[' + RTRIM(code) + ']' from {$this->MAuth->getdb('OFFICER')} C where C.CODE = A.FRMBILL) as BILLFRM
+			,(select RTRIM(name) + '[' + RTRIM(code) + ']' from {$this->MAuth->getdb('OFFICER')} C where C.CODE = A.TOBILL) as BILLTO
 			,A.MEMO1 ,RTRIM(B.USERNAME) + '[' + RTRIM(B.CUSCOD) +']' as USERNAME from {$this->MAuth->getdb('STATTRAN')} A
 			,{$this->MAuth->getdb('PASSWRD')} B where A.AUTHCOD = B.USERID and A.CONTNO = '".$CONTNOS."' 
 			and A.LOCAT = '".$LOCATS."' order by A.CHGDATE
@@ -3561,9 +3631,12 @@ class ReportFinance extends MY_Controller {
 				from  {$this->MAuth->getdb('AROTHR')} A WHERE A.CONTNO = '".$CONTNOS."' 
 			)DEBTORS
 		";
-		$query8_1 = $this->db->query($sql8_1);
+		$this->db->query($sql8_1);
 		
-		$sql8_2 = "select * from #DEBTORS order by CONTNO";
+		$sql8_2 = "
+			select CONTNO,ARCONT,LOCAT,TOTPRC,SMPAY
+			,BALANC,SMCHQ,TKANG,TSALE,CUSCOD,PAYFOR from #DEBTORS order by CONTNO
+		";
 		$query8_2 = $this->db->query($sql8_2);
 		$debtors = "";
 		if($query8_2->row()){
@@ -3616,7 +3689,7 @@ class ReportFinance extends MY_Controller {
 				,RECVNO,GCODE from {$this->MAuth->getdb('HINVTRAN')} where STRNO = '".$STRNOS."'
 			)CDT
 		";
-		$query2 = $this->db->query($sql2);
+		$this->db->query($sql2);
 		
 		$sql2_1 = "select * from #CDT";
 		$recvno = ""; $gcode  = ""; $stat = ""; $ystat = "";
@@ -3847,6 +3920,7 @@ class ReportFinance extends MY_Controller {
 		]);
 		
 		$tx = explode("||",$_REQUEST['cond']);
+		if($tx[1] == 'undefined'){ $tx[1] = $this->today('today'); }
 		$CONTNO = $tx[0];
 		$DATESEARCH = $this->Convertdate(1,$tx[1]);
 		
@@ -3865,7 +3939,7 @@ class ReportFinance extends MY_Controller {
 		}
 		$data = array();
 		
-		$sql = "select COMP_NM from CONDPAY ";
+		$sql = "select COMP_NM from {$this->MAuth->getdb('CONDPAY')}";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		$row = $query->row();
@@ -3874,7 +3948,8 @@ class ReportFinance extends MY_Controller {
 		$sql = "
 			select isnull(M.SNAM,'-') + isnull(M.NAME1,'-') +' '+ isnull(M.NAME2,'-') as CUSNAME,M.OFFIC, 
 			isnull(A.ADDR1,'-')+' ถ.'+isnull(A.ADDR2,'-')+' ต.'+isnull(A.TUMB,'-')+' อ.'+isnull(SA.AUMPDES,'-')+' จ.'+isnull(SP.PROVDES,'-') 
-			as CUSADD from {$this->MAuth->getdb('CUSTMAST')} M left join {$this->MAuth->getdb('CUSTADDR')} A on A.CUSCOD = M.CUSCOD and A.ADDRNO = M.ADDRNO 
+			as CUSADD from {$this->MAuth->getdb('CUSTMAST')} M 
+			left join {$this->MAuth->getdb('CUSTADDR')} A on A.CUSCOD = M.CUSCOD and A.ADDRNO = M.ADDRNO 
 			left join {$this->MAuth->getdb('SETAUMP')} SA on SA.AUMPCOD = A.AUMPCOD
 			left join {$this->MAuth->getdb('SETPROV')} SP on SP.PROVCOD = A.PROVCOD where M.CUSCOD = '".$CUSCOD."'
 		";
@@ -3894,9 +3969,11 @@ class ReportFinance extends MY_Controller {
 		$sql = "
 			select isnull(M.SNAM,'-') + isnull(M.NAME1,'-') +' '+ isnull(M.NAME2,'-') as CUSNAME,M.OFFIC, 
 			isnull(A.ADDR1,'-')+' ถ.'+isnull(A.ADDR2,'-')+' ต.'+isnull(A.TUMB,'-')+' อ.'+isnull(SA.AUMPDES,'-')+' จ.'+isnull(SP.PROVDES,'-') 
-			as CUSADD from {$this->MAuth->getdb('ARMGAR')} G left join {$this->MAuth->getdb('CUSTMAST')} M on M.CUSCOD = G.CUSCOD 
+			as CUSADD from {$this->MAuth->getdb('ARMGAR')} G 
+			left join {$this->MAuth->getdb('CUSTMAST')} M on M.CUSCOD = G.CUSCOD 
 			left join {$this->MAuth->getdb('CUSTADDR')} A on A.CUSCOD = M.CUSCOD and A.ADDRNO = M.ADDRNO
-			left join {$this->MAuth->getdb('SETAUMP')} SA on SA.AUMPCOD = A.AUMPCOD left join {$this->MAuth->getdb('SETPROV')} SP on SP.PROVCOD = A.PROVCOD 
+			left join {$this->MAuth->getdb('SETAUMP')} SA on SA.AUMPCOD = A.AUMPCOD 
+			left join {$this->MAuth->getdb('SETPROV')} SP on SP.PROVCOD = A.PROVCOD 
 			where G.CONTNO = '".$CONTNO."' and G.LOCAT = '".$LOCAT."' and GARNO = '1'
 		";
 		//echo $sql; exit;
@@ -3915,9 +3992,11 @@ class ReportFinance extends MY_Controller {
 		$sql = "
 			select isnull(M.SNAM,'-') + isnull(M.NAME1,'-') +' '+ isnull(M.NAME2,'-') as CUSNAME,M.OFFIC, 
 			isnull(A.ADDR1,'-')+' ถ.'+isnull(A.ADDR2,'-')+' ต.'+isnull(A.TUMB,'-')+' อ.'+isnull(SA.AUMPDES,'-')+' จ.'+isnull(SP.PROVDES,'-') 
-			as CUSADD from {$this->MAuth->getdb('ARMGAR')} G left join {$this->MAuth->getdb('CUSTMAST')} M on M.CUSCOD = G.CUSCOD 
+			as CUSADD from {$this->MAuth->getdb('ARMGAR')} G 
+			left join {$this->MAuth->getdb('CUSTMAST')} M on M.CUSCOD = G.CUSCOD 
 			left join {$this->MAuth->getdb('CUSTADDR')} A on A.CUSCOD = M.CUSCOD and A.ADDRNO = M.ADDRNO
-			left join {$this->MAuth->getdb('SETAUMP')} SA on SA.AUMPCOD = A.AUMPCOD left join {$this->MAuth->getdb('SETPROV')} SP on SP.PROVCOD = A.PROVCOD 
+			left join {$this->MAuth->getdb('SETAUMP')} SA on SA.AUMPCOD = A.AUMPCOD 
+			left join {$this->MAuth->getdb('SETPROV')} SP on SP.PROVCOD = A.PROVCOD 
 			where G.CONTNO = '".$CONTNO."' and G.LOCAT = '".$LOCAT."' and GARNO = '2'
 		";
 		$query = $this->db->query($sql);
@@ -3952,8 +4031,10 @@ class ReportFinance extends MY_Controller {
 		$sql = "
 			declare @INTAMT decimal(8,2) = (select isnull(sum(INTAMT),0) from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and DDATE <= '".$DATESEARCH."') 
 			declare @DAMT decimal(8,2) = (select isnull(sum(DAMT-PAYMENT),0) from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and DDATE <= '".$DATESEARCH."') 
-			declare @PAID decimal(8,2) = (select isnull(sum(PAYINT),0) from {$this->MAuth->getdb('CHQTRAN')} where CONTNO = '".$CONTNO."' and LOCATPAY = '".$LOCAT."' 
-			and (PAYFOR='006' OR PAYFOR='007') and FLAG !='C' and (PAYDT <= '".$DATESEARCH."') ) 
+			declare @PAID decimal(8,2) = (
+				select isnull(sum(PAYINT),0) from {$this->MAuth->getdb('CHQTRAN')} where CONTNO = '".$CONTNO."' and LOCATPAY = '".$LOCAT."' 
+				and (PAYFOR='006' OR PAYFOR='007') and FLAG !='C' and (PAYDT <= '".$DATESEARCH."') 
+			) 
 			select CONTNO, LOCAT, convert(nvarchar,FDATE,112) as FDATE, convert(nvarchar,LDATE,112) as LDATE, VATPRC, NPRICE, 
 			TOTPRC, TOTDWN, TOTDWN-PAYDWN as PAYDWN, SMPAY, TOTPRC-SMPAY as BALANC, convert(nvarchar,EXP_FRM)+'-'+convert(nvarchar,EXP_TO) as EXP_FT, 
 			EXP_PRD, @DAMT as EXP_AMT, convert(nvarchar,LPAYD,112) as LPAYD, LPAYA, @INTAMT-@PAID as TOTINTAMT, @DAMT+(TOTDWN-PAYDWN)+(@INTAMT-@PAID) as TOTAR,
@@ -4217,13 +4298,11 @@ class ReportFinance extends MY_Controller {
 			'margin_header' => 9, 	//default = 9
 			'margin_footer' => 9, 	//default = 9
 		]);
-		$tx = explode("||",$_REQUEST['cond']);
-		$CONTNO = $tx[0];
-		$DATEBILL =  $tx[1];
-		$DATESEARCH = $this->Convertdate(1,$tx[1]);
 		
 		$tx = explode("||",$_REQUEST['cond']);
+		if($tx[1] == 'undefined'){ $tx[1] = $this->today('today'); }
 		$CONTNO = $tx[0];
+		$DATEBILL =  $tx[1];		
 		$DATESEARCH = $this->Convertdate(1,$tx[1]);
 		
 		$sql = "
@@ -4270,29 +4349,131 @@ class ReportFinance extends MY_Controller {
 			}
 		}
 		$sql = "
-			declare @NOPAYED int = (select COUNT(NOPAY) as NOPAY from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and PAYMENT > 0)
-			declare @DISPAY decimal(8,2) = (select isnull(MIN(NOPAY),0) as DISPAY from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and DDATE >= '".$DATESEARCH."')
-			declare @NPROF decimal(8,2)	= ( select sum(NPROF) as NPROF
-			from(
-				select case when PAYMENT > 0 then (NPROF/DAMT)*PAYMENT else NPROF end as  NPROF  
-				from {$this->MAuth->getdb('ARPAY')}  
-				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and PAYMENT < DAMT and DDATE >= '".$DATESEARCH."'
-			)A)
-			declare @AROTH decimal(8,2)= (select isnull(SUM(PAYAMT-(SMPAY+SMCHQ)),0) as AROTH  from {$this->MAuth->getdb('AROTHR')}  where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' )
-			declare @INTAMT decimal(8,2) = (select sum(INTAMT) from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."')
-			declare @PAID decimal(8,2) = ( select isnull(SUM(PAYINT),0) from {$this->MAuth->getdb('CHQTRAN')} where CONTNO = '".$CONTNO."' and LOCATPAY = '".$LOCAT."' and 
-			(PAYFOR='006' OR PAYFOR='007') and FLAG !='C' and (PAYDT IS NOT NULL) )
-			declare @NPROF2 decimal(8,2)	= (select top 1 NPROF from {$this->MAuth->getdb('ARPAY')}  where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' order by NOPAY desc)
-
-			select T_NOPAY, @NOPAYED as NOPAYED, @DISPAY as DISPAY, case when @DISPAY > 0 then 30 else 0 end as PERCDIS,
-			case when @DISPAY > 0 then @NPROF*0.3 else 0 end as PERC30, NPRICE, VATPRC, TOTPRC, NCSHPRC, VCSHPRC, TCSHPRC, TOTDWN, INTRT, NPAYRES, VATPRES, SMPAY, 
-			NPRICE-NPAYRES as ARBALANC, VATPRC-VATPRES as VATBALANC, TOTPRC-SMPAY-SMCHQ as TOTAR,  case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3) 
-			else TOTPRC-SMPAY-SMCHQ end as TOTPAY, @INTAMT-@PAID as INTAMT, @AROTH as AROTH, case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3)+(@INTAMT-@PAID)+@AROTH 
-			else TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH  end as NETPAY, convert(nvarchar,SDATE,112) as SDATE,
-			case when isnull(@NPROF,0) = 0 then @NPROF2 else @NPROF end as NPROF, case when isnull(@NPROF,0) = 0 then @NPROF2*0.5 else @NPROF*0.5 end as PERC50
+			--จำนวนงวด
+			declare @T_NOPAY int =(
+				select T_NOPAY from {$this->MAuth->getdb('ARMAST')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			);
+			declare @num_PERD varchar(max) = (
+				select
+				case
+					when @T_NOPAY <= 10 then '10'
+					when @T_NOPAY <= 12 then '12'
+					when @T_NOPAY <= 18 then '18'
+					when @T_NOPAY <= 24 then '24'
+					when @T_NOPAY <= 30 then '30'
+					when @T_NOPAY <= 36 then '36'
+					when @T_NOPAY <= 42 then '42'
+					when @T_NOPAY <= 48 then '48'
+					when @T_NOPAY <= 54 then '54'
+					when @T_NOPAY <= 60 then '60'
+					else '60' 
+				end
+			);
+			
+			--ตาราง setup
+			declare @CALDSC varchar(max) = (
+				select CALDSC from {$this->MAuth->getdb('ARMAST')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			);
+			select @num_PERD as N_PERD,@CALDSC as CALDSC
+		";
+		//echo $sql;
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$num_perd = $row->N_PERD;
+		$caldsc3   = $row->CALDSC;
+		$caldsc   = "TABLE".($row->CALDSC == 3 ? 1:$row->CALDSC);
+		
+		$sql = "
+			declare @NOPAYED int = (
+				select COUNT(NOPAY) as NOPAY 
+				from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."' 
+				and LOCAT = '".$LOCAT."' and PAYMENT > 0
+			)
+			declare @DISPAY decimal(8,2) = (
+				select isnull(MIN(NOPAY),0) as DISPAY 
+				from {$this->MAuth->getdb('ARPAY')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and DDATE >= '".$DATESEARCH."'
+			)
+			/*
+			declare @NPROF decimal(8,2)	= ( 
+				select sum(NPROF) as NPROF
+				from(
+					select case when PAYMENT > 0 then (NPROF/DAMT)*PAYMENT else NPROF end as  NPROF  
+					from {$this->MAuth->getdb('ARPAY')}  
+					where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' 
+					and PAYMENT < DAMT and DDATE > '".$DATESEARCH."'
+				)a
+			)
+			*/
+			declare @NPROF decimal(8,2)	= (
+				select sum(NPROF) as NPROF from(
+					select NPROF from {$this->MAuth->getdb('ARPAY')} 
+					where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' 
+					and DDATE > '".$DATESEARCH."'
+				)A
+			)
+			
+			declare @AROTH decimal(8,2)= (
+				select isnull(SUM(PAYAMT-(SMPAY+SMCHQ)),0) as AROTH  
+				from {$this->MAuth->getdb('AROTHR')}  
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			)
+			declare @INTAMT decimal(8,2) = (
+				select sum(INTAMT) from {$this->MAuth->getdb('ARPAY')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			)
+			
+			declare @PAID decimal(8,2) = ( 
+				select isnull(SUM(PAYINT),0) from {$this->MAuth->getdb('CHQTRAN')} 
+				where CONTNO = '".$CONTNO."' and LOCATPAY = '".$LOCAT."' and 
+				(PAYFOR='006' OR PAYFOR='007') and FLAG !='C' and (PAYDT IS NOT NULL) 
+			)
+			declare @NPROF2 decimal(8,2) = (
+				select top 1 NPROF from {$this->MAuth->getdb('ARPAY')}  
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' order by NOPAY desc
+			)
+			declare @PERD decimal(18,1) = (
+				select case when ".$caldsc3." = 3 then 0 else PERD".$num_perd." / 100 end 
+				from ".$this->MAuth->getdb($caldsc)." 
+				where NOPAY = ISNULL(@DISPAY,0)		
+			);
+			
+			--มูลค่าชำระแล้ว
+			declare @NPAYRES decimal(8,2) = ( 
+				select SUM(PAYAMT) from {$this->MAuth->getdb('CHQTRAN')} 
+				where CONTNO = '".$CONTNO."' and PAYFOR in ('002','006','007') 
+				and FLAG <> 'C' and LOCATPAY = '".$LOCAT."' 
+			)
+			--ภาษีชำระแล้ว 
+			declare @VATPRES decimal(8,2) = ( 
+				select SUM(PAYAMT_V) from {$this->MAuth->getdb('CHQTRAN')} 
+				where CONTNO = '".$CONTNO."' and PAYFOR in ('002','006','007') 
+				and FLAG <> 'C' and LOCATPAY = '".$LOCAT."' 
+			)
+			
+			select T_NOPAY,@NOPAYED as NOPAYED,@DISPAY as DISPAY
+				,case when @DISPAY > 0 then @PERD * 100 else 0 end as PERCDIS,
+				case when @DISPAY > 0 then @NPROF * @PERD else 0 end as PERC30
+				,NPRICE,VATPRC,TOTPRC,NCSHPRC,VCSHPRC,TCSHPRC,TOTDWN,INTRT
+				,@NPAYRES - @VATPRES as NPAYRES,@VATPRES as VATPRES,SMPAY
+				,NPRICE - (@NPAYRES - @VATPRES) as ARBALANC
+				,VATPRC - @VATPRES as VATBALANC
+				,TOTPRC-SMPAY-SMCHQ as TOTAR
+				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF * @PERD) 
+				else TOTPRC-SMPAY-SMCHQ end as TOTPAY, @INTAMT-@PAID as INTAMT
+				,@AROTH as AROTH
+				
+				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF * @PERD)+(@INTAMT-@PAID)+@AROTH 
+				else TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH end as NETPAY
+				,convert(nvarchar,SDATE,112) as SDATE
+				,case when isnull(@NPROF,0) = 0 then @NPROF2 else @NPROF end as NPROF
+				,case when isnull(@NPROF,0) = 0 then @NPROF2 * 0.5 else @NPROF * 0.5 end as PERC50
 			from {$this->MAuth->getdb('ARMAST')}
 			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
-		";//echo $sql; exit;
+		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		if($query->row()){
 			foreach($query->result() as $row){
@@ -4312,11 +4493,11 @@ class ReportFinance extends MY_Controller {
 				$data[21] = number_format($row->TCSHPRC,2);
 				$data[22] = number_format($row->TOTDWN,2);
 				$data[23] = number_format($row->INTRT,2);
-				$data[24] = number_format($row->NPAYRES,2);
-				$data[25] = number_format($row->VATPRES,2);
+				$data[24] = number_format($row->NPAYRES,2); 
+				$data[25] = number_format($row->VATPRES,2); 
 				$data[26] = number_format($row->SMPAY,2);
-				$data[27] = number_format($row->ARBALANC,2);
-				$data[28] = number_format($row->VATBALANC,2);
+				$data[27] = number_format($row->ARBALANC,2); 
+				$data[28] = number_format($row->VATBALANC,2); 
 				$data[29] = number_format($row->TOTAR,2);
 				$data[30] = number_format($row->TOTPAY,2);
 				$data[31] = number_format($row->INTAMT,2);
@@ -4447,7 +4628,7 @@ class ReportFinance extends MY_Controller {
 							<td class='wf pd'>ดอกผลคงเหลือ</td>
 							<td class='wf pd tr'>{$data[12]} บาท</td>
 							<td class='wf pd'>ส่วนลด</td>
-							<td class='wf pd tr'>50%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+							<td class='wf pd tr'>50.00%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 							<td class='wf pd'>เงินส่วนลด</td>
 							<td class='wf pd tr'>{$data[13]} บาท</td>
 						</tr>
@@ -4584,7 +4765,9 @@ class ReportFinance extends MY_Controller {
 			'margin_header' => 9, 	//default = 9
 			'margin_footer' => 9, 	//default = 9
 		]);
+		
 		$tx = explode("||",$_REQUEST['cond']);
+		if($tx[1] == 'undefined'){ $tx[1] = $this->today('today'); }
 		$CONTNO = $tx[0];
 		$DATEBILL =  $tx[1];
 		$DATESEARCH = $this->Convertdate(1,$tx[1]);
@@ -4636,26 +4819,84 @@ class ReportFinance extends MY_Controller {
 			}
 		}
 		$sql = "
+			--จำนวนงวด
+			declare @T_NOPAY int =(
+				select T_NOPAY from {$this->MAuth->getdb('ARMAST')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			);
+			declare @num_PERD varchar(max) = (
+				select
+				case
+					when @T_NOPAY <= 10 then '10'
+					when @T_NOPAY <= 12 then '12'
+					when @T_NOPAY <= 18 then '18'
+					when @T_NOPAY <= 24 then '24'
+					when @T_NOPAY <= 30 then '30'
+					when @T_NOPAY <= 36 then '36'
+					when @T_NOPAY <= 42 then '42'
+					when @T_NOPAY <= 48 then '48'
+					when @T_NOPAY <= 54 then '54'
+					when @T_NOPAY <= 60 then '60'
+					else '60' 
+				end
+			);
+			--ตาราง setup
+			declare @CALDSC varchar(max) = (
+				select CALDSC from {$this->MAuth->getdb('ARMAST')} 
+				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
+			);
+			select @num_PERD as N_PERD,@CALDSC as CALDSC
+		";
+		//echo $sql;
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$num_perd = $row->N_PERD;
+		
+		$caldsc3  = $row->CALDSC;
+		$caldsc   = "TABLE".($row->CALDSC == 3 ? 1:$row->CALDSC);
+		
+		$sql = "
 			declare @NOPAYED int = (select COUNT(NOPAY) as NOPAY from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and PAYMENT > 0)
 			declare @DISPAY decimal(8,2) = (select isnull(MIN(NOPAY),0) as DISPAY from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and DDATE >= '".$DATESEARCH."')
-			declare @NPROF decimal(8,2)	= ( select sum(NPROF) as NPROF
-			from(
-				select case when PAYMENT > 0 then (NPROF/DAMT)*PAYMENT else NPROF end as  NPROF  
-				from {$this->MAuth->getdb('ARPAY')}  
-				where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' and PAYMENT < DAMT and DDATE >= '".$DATESEARCH."'
-			)A)
+			/*
+			declare @NPROF decimal(8,2)	= ( 
+				select sum(NPROF) as NPROF from(
+					select case when PAYMENT > 0 then (NPROF/DAMT)*PAYMENT else NPROF end as  NPROF  
+					from {$this->MAuth->getdb('ARPAY')}  
+					where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' 
+					and PAYMENT < DAMT and DDATE > '".$DATESEARCH."'
+				)A
+			)
+			*/
+			declare @NPROF decimal(8,2)	= (
+				select sum(NPROF) as NPROF from(
+					select NPROF from {$this->MAuth->getdb('ARPAY')} 
+					where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' 
+					and DDATE > '".$DATESEARCH."'
+				)A
+			)
 			declare @AROTH decimal(8,2)= (select isnull(SUM(PAYAMT-(SMPAY+SMCHQ)),0) as AROTH  from {$this->MAuth->getdb('AROTHR')}  where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."' )
 			declare @INTAMT decimal(8,2) = (select sum(INTAMT) from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."')
 			declare @PAID decimal(8,2) = ( select isnull(SUM(PAYINT),0) from {$this->MAuth->getdb('CHQTRAN')} where CONTNO = '".$CONTNO."' and LOCATPAY = '".$LOCAT."' and 
 			(PAYFOR='006' OR PAYFOR='007') and FLAG !='C' and (PAYDT IS NOT NULL) )
+			
+			declare @PERD decimal(18,1) = (
+				select case when ".$caldsc3." = 3 then 0 else PERD".$num_perd." / 100 end 
+				from ".$this->MAuth->getdb($caldsc)." 
+				where NOPAY = ISNULL(@DISPAY,0)		
+			);
 		
-			select T_NOPAY, @NOPAYED as NOPAYED, @DISPAY as DISPAY, TCSHPRC, TOTPRC, SMPAY, TOTPRC-SMPAY-SMCHQ as TOTAR, @INTAMT-@PAID as INTAMT,
-			@AROTH as AROTH, TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH as TOTPAY, case when @DISPAY > 0 then @NPROF*0.3 else 0 end as PERC30, 
-			case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF*0.3)+(@INTAMT-@PAID)+@AROTH else TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH end
+			select T_NOPAY,@NOPAYED as NOPAYED,@DISPAY as DISPAY,TCSHPRC,TOTPRC,SMPAY
+				,TOTPRC-SMPAY-SMCHQ as TOTAR, @INTAMT-@PAID as INTAMT,@AROTH as AROTH
+				,TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH as TOTPAY
+				,case when @DISPAY > 0 then @NPROF * @PERD else 0 end as PERC30
+				,case when @DISPAY > 0 then (TOTPRC-SMPAY-SMCHQ)-(@NPROF * @PERD)+(@INTAMT-@PAID)+@AROTH 
+				else TOTPRC-SMPAY-SMCHQ+(@INTAMT-@PAID)+@AROTH end
 			as NETPAY, convert(nvarchar,SDATE,112) as SDATE
 			from {$this->MAuth->getdb('ARMAST')} 
 			where CONTNO = '".$CONTNO."' and LOCAT = '".$LOCAT."'
-		";//echo $sql; exit;
+		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		if($query->row()){
 			foreach($query->result() as $row){

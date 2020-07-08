@@ -85,7 +85,7 @@ $('#btnt1search').click(function(){
 		beforeSend: function(){
 			if(jd_btnt1search !== null){ jd_btnt1search.abort(); }
 		},
-		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		//error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -337,7 +337,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#loadding').fadeIn(200);
 		
 		jd_add_cuscod = $.ajax({
-			url:'../Cselect2/getfromCUSTOMER',
+			url:'../Cselect2/getformCUSTOMER',
 			type: 'POST',
 			dataType: 'json',
 			success: function(data){
@@ -351,6 +351,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					content: data.html,
 					draggable: false,
 					closeOnEsc: true,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($thisCUS){
 						var jd_cus_search = null;
 						$('#cus_fname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
@@ -403,6 +404,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					},
 					beforeClose : function(){
 						$('#add_save').attr('disabled',false);
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
 					}
 				});
 				
@@ -667,6 +669,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					content: data,
 					draggable: true,
 					closeOnEsc: true,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($this){
 						//$this.destroy();		
 						$('#op_code').select2({ 
@@ -811,6 +814,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					},
 					beforeClose : function(){
 						$('#add_inopt').attr('disabled',false);
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
 					}
 				});
 			},
@@ -851,7 +855,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#loadding').fadeIn(200);
 		
 		$.ajax({
-			url:'../Cselect2/getfromCUSTOMER',
+			url:'../Cselect2/getformCUSTOMER',
 			type: 'POST',
 			dataType: 'json',
 			success: function(data){
@@ -866,6 +870,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					content: data.html,
 					draggable: false,
 					closeOnEsc: true,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($thisCUS){
 						var jd_cus_search = null;
 						$('#cus_fname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
@@ -915,6 +920,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						$('#add_cuscod').attr('disabled',false);
 						$('#add_recomcod').attr('disabled',false);
 						$('#add_save').attr('disabled',false);
+						
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
 					}
 				});
 				
@@ -1117,7 +1124,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	});
 	
 	$('#add_save').attr('disabled',(_insert == 'T' ? false:true));
-	$('#add_delete').attr('disabled',true);
+	$('#add_delete').attr('disabled',(_delete == 'T' ? false:true));
 	
 	if($param == 'old'){
 		//เอาข้อมูลที่โหลดมาแสดง

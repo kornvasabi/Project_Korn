@@ -198,7 +198,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#loadding').fadeIn(200);
 		
 		$.ajax({
-			url:'../Cselect2/getfromCUSTOMER',
+			url:'../Cselect2/getformCUSTOMER',
 			type: 'POST',
 			dataType: 'json',
 			success: function(data){
@@ -436,7 +436,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#loadding').fadeIn(200);
 		
 		$.ajax({
-			url:'../Cselect2/getfromCUSTOMER',
+			url:'../Cselect2/getformCUSTOMER',
 			type: 'POST',
 			dataType: 'json',
 			success: function(data){

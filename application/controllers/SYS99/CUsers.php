@@ -175,7 +175,7 @@ class CUsers extends MY_Controller {
 				,a.DEPCODE,b.groupCode as DEPCODEYTK,a.LEVEL_1,a.LOCAT,a.PASSWD 
 				,RAND() * 10000 as OTP
 				,case when b.IDNo is not null and c.IDNo is null then 'OUT' else 'IN' end __Status
-			from YTKManagement.dbo.PASSWRD a
+			from {$arrs['dblocat']}.dbo.PASSWRD a
 			left join YTKManagement.dbo.hp_mapusers b on a.USERID=b.USERID collate Thai_CI_AS and b.dblocat='{$arrs['dblocat']}'
 			left join YTKManagement.dbo.hp_vusers c on b.IDNo=c.IDNo and b.employeeCode=c.employeeCode
 			where 1=1 ".$cond."

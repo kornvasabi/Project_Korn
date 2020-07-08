@@ -34,26 +34,26 @@ class CLogin extends MY_Controller {
 	function index(){
 		$this->load->view('lobiLogin');
 	}
-	
+		
 	function loginVertify(){
 		$this->load->model('MLogin');
 		$arrs = array();
 		
-		if($_REQUEST['user'] !== ""){
+		if(isset($_REQUEST['user'])){
 			$arrs["user"] = $_REQUEST['user'];
 		}else{
 			$response = array("status"=>false,"msg"=>"กรุณาระบุชื่อผู้ใช้ด้วยครับ");
 			echo json_encode($response); exit;
 		}
 		
-		if($_REQUEST['pass'] !== ""){
+		if(isset($_REQUEST['pass'])){
 			$arrs["pass"] = $_REQUEST['pass'];
 		}else{
 			$response = array("status"=>false,"msg"=>"กรุณาระบุรหัสผ่านด้วยครับ");
 			echo json_encode($response); exit;
 		}
 		
-		if($_REQUEST['db']!== ""){
+		if(isset($_REQUEST['db'])){
 			$arrs["db"] = ($_REQUEST['db'] == "YTKMANAGEMENT" ? "YTKManagement" : $_REQUEST['db']);
 		}else{
 			$response = array("status"=>false,"msg"=>"กรุณาฐานข้อมูลด้วยครับ");
@@ -90,6 +90,7 @@ class CLogin extends MY_Controller {
 						'branch' => $row->LOCATCD,
 						'lock' => 'no',
 						'is_mobile' => ($this->agent->is_mobile() == 1 ? "yes":"no"),
+						'groupusers' => $row->groupCode,
                         'db' =>$row->dblocat
 					);
 					$this->session->set_userdata('cbjsess001', $sess_array);
@@ -115,7 +116,8 @@ class CLogin extends MY_Controller {
 						'branch' => $row->LOCATCD,
 						'lock' => 'no',
 						'is_mobile' => ($this->agent->is_mobile() == 1 ? "yes":"no"),
-                        'db' =>$row->dblocat
+                        'groupusers' => $row->groupCode,
+						'db' =>$row->dblocat
 					);
 					$this->session->set_userdata('cbjsess001', $sess_array);
 					

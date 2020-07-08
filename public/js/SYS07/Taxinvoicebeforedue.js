@@ -77,8 +77,68 @@ $(function(){
 	});
 });
 
-//กดแสดงข้อมูล
+CHANGE = null
 $('#btnt1search').click(function(){
-	alert('ยังไม่เปิดใช้งานเมนูนี้ค่ะ');
-	//search();
+	dataToPost = new Object();
+	dataToPost.LOCAT1 	= (typeof $('#LOCAT1').find(":selected").val() === 'undefined' ? '' : $('#LOCAT1').find(":selected").val());
+	dataToPost.FRMDATE 	= $('#FRMDATE').val();
+	dataToPost.TODATE 	= $('#TODATE').val();
+		
+	CHANGE = $.ajax({
+		url : '../SYS07/Taxinvoicebeforedue/searchLASTTAXNO',
+		data : dataToPost,
+		type : "POST",
+		dataType : "json",
+		success: function(data){
+			$('#LRUNDT').val(data.Lrundt);
+			$('#LTAXNO').val(data.Ltaxno);
+			CHANGE = null;
+		},
+		beforeSend: function(){
+			if(CHANGE !== null){
+				CHANGE.abort();
+			}
+		}
+	});
 });
+
+$('#btnprint').click(function(){
+	printInvoine();
+});
+
+function printInvoine(){
+	var vat = "";
+	if($("#normal").is(":checked")){ 
+		vat = "normal";
+	}else if($("#more").is(":checked")){
+		vat = "more";
+	}
+
+	dataToPost = new Object();
+	dataToPost.LOCAT1 		= (typeof $('#LOCAT1').find(":selected").val() === 'undefined' ? '' : $('#LOCAT1').find(":selected").val());
+	dataToPost.CONTNO1 		= (typeof $('#CONTNO1').find(":selected").val() === 'undefined' ? '' : $('#CONTNO1').find(":selected").val());
+	dataToPost.VATDATE 		= $('#VATDATE').val();
+	dataToPost.FRMDATE 		= $('#FRMDATE').val();
+	dataToPost.TODATE 		= $('#TODATE').val();
+	dataToPost.vat 			= vat;
+	
+	$.ajax({
+		url: '../SYS07/Taxinvoicebeforedue/conditiontopdf',
+		data: dataToPost,
+		type:'POST',
+		dataType: 'json',
+		success: function(data){
+			//alert(data[0]);
+			var baseUrl = $('body').attr('baseUrl');
+			var url = baseUrl+'SYS07/Taxinvoicebeforedue/pdf?condpdf='+data[0];
+			var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
+			Lobibox.window({
+				title: 'พิมพ์รายงาน',
+				content: content,
+				closeOnEsc: false,
+				height: $(window).height(),
+				width: $(window).width()
+			});
+		}
+	});
+}

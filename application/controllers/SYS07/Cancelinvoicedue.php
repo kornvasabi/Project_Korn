@@ -21,12 +21,12 @@ class Cancelinvoicedue extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 
 		$html = "
-			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:#f6fefa;'>
+			<div class='b_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
 				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
-					<div class='row' style='height:90%;'>
+					<div class='row' style='height:80%;'>
 						<br><br>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2 text-primary'><b>ยกเลิกใบกำกับค่างวด</b></div>
-						<div class='col-sm-8 col-xs-8 col-sm-offset-2' style='border:0.5px dotted #afe4cf;' >
+						<div class='col-sm-8 col-xs-8 col-sm-offset-2' style='border:0.5px dotted #afe4cf;background-color:#f6fefa;' >
 							<div class='col-sm-12 col-xs-12' style='height:40px;padding:10px;' align='right'>
 								<div id='INVSTATUS' class='bg-danger text-white' style='width:100px;text-align:center;font-size;9pt;display:none;'>
 									<b>ยกเลิก </b>
@@ -96,10 +96,13 @@ class Cancelinvoicedue extends MY_Controller {
 						</div>
 					</div>
 					<div class='row' style='height:10%;'>
+						<div class='col-sm-12 col-xs-12' style='text-align:center;font-size:8pt;color:#999;'>
+							** User ที่จะใช้งานหัวข้อนี้ได้ ต้องมีสิทธิ์ในการแก้ไขข้อมูล **
+						</div>
+					</div>
+					<div class='row' style='height:10%;'>
 						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>
-							<div class='col-sm-12 col-xs-12'>	
-								<button id='btncancel' class='btn btn-danger btn-sm' style='width:100%;font-size:10.5pt;'><span class='glyphicon glyphicon-remove-circle'><b> ยกเลิกใบกำกับ</b></span></button>
-							</div>
+							<button id='btncancel' class='btn btn-danger btn-sm' style='width:100%;font-size:10.5pt;'><span class='glyphicon glyphicon-ban-circle'><b> ยกเลิกใบกำกับ</b></span></button>
 						</div>
 					</div>
 				</div>
@@ -136,6 +139,61 @@ class Cancelinvoicedue extends MY_Controller {
 				$response["DESCP"] 		= str_replace(chr(0),'',$row->DESCP);
 				$response["FLAG"] 		= str_replace(chr(0),'',$row->FLAG);
 			}
+		}
+		
+		echo json_encode($response);
+	}
+	
+	function Cancel_invoince(){
+		$INVNO1 	= $_REQUEST["INVNO1"];
+		$USERID		= $this->sess["USERID"];
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#Cancelinvoice') is not null drop table #Cancelinvoice;
+			create table #Cancelinvoice (id varchar(20),contno varchar(20),msg varchar(max));
+			
+			begin tran Cancelinvoice
+			begin try
+					
+					declare @taxno varchar(20)		= '".$INVNO1 ."';
+					declare @contno varchar(20) 	= (select CONTNO from {$this->MAuth->getdb('TAXTRAN')} where TAXNO = @taxno collate thai_cs_as);
+
+					update {$this->MAuth->getdb('TAXTRAN')}  
+					set FLAG = 'C', CANDT = GETDATE(), FLCANCL = '".$USERID."'
+					where TAXNO = @taxno
+
+					update {$this->MAuth->getdb('ARPAY')}  
+					set TAXINV = '', TAXDT = NULL, TAXAMT = 0, TAXPAY = 0
+					where CONTNO = @contno and TAXINV = @taxno
+					
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+					values ('".$this->sess["IDNo"]."','SYS07::ยกเลิกใบกำกับภาษีค่างวด (แก้ไข)',' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+					
+					insert into #Cancelinvoice select 'S',@taxno,'บันทึกยกเลิกใบกำกับค่างวดเลขที่ '+@taxno+' เรียบร้อย';
+
+				commit tran Cancelinvoice;
+			end try
+			begin catch
+				rollback tran Cancelinvoice;
+				insert into #Cancelinvoice select 'E','',ERROR_MESSAGE();
+			end catch
+		";
+		//echo $sql; exit;
+		
+		$this->db->query($sql);
+		$sql = "select * from #Cancelinvoice";
+		$query = $this->db->query($sql);
+	  
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["status"] = $row->id;
+				$response["contno"] = $row->contno;
+				$response["msg"] = $row->msg;
+			}
+		}else{
+			$response["status"] = false;
+			$response["contno"] = '';
+			$response["msg"] = 'ผิดพลาดไม่สามารถยกเลิกใบกำกับค่างวดได้ โปรดติดต่อฝ่ายไอที';
 		}
 		
 		echo json_encode($response);

@@ -29,82 +29,101 @@ class Report extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
-				<div>
-					<div class='row'>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								สาขา
-								<select id='locat' class='form-control input-sm chosen-select' data-placeholder='สาขา'>
-									<option value='{$this->sess['branch']}'>{$this->sess['branch']}</option>
-								</select>
+			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
+				<div class='col-sm-12 col-xs-12' style='height:100%;overflow:auto;font-size:10.5pt;'>					
+					<div class='row' style='height:90%;'>
+						<div class='col-sm-12 col-xs-12 bg-info' style='border:5px solid white;height:75px;text-align:center;font-size:12pt;color:white;font-weight:bold;'>	
+							<br>รายงานสินค้าและวัตถุดิบ (รถ)<br>
+						</div>
+						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>
+							<br>
+							<div class='col-sm-4 col-xs-4'>	
+								<div class='form-group'>
+									สาขา
+									<select id='locat' class='form-control input-sm chosen-select' data-placeholder='สาขา'>
+										<option value='{$this->sess['branch']}'>{$this->sess['branch']}</option>
+									</select>
+								</div>
+							</div>
+							<div class='col-sm-4 col-xs-4'>	
+								<div class='form-group'>
+									วันที่รับ จาก
+									<input type='text' id='SDATE' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonthB1')."'>
+								</div>
+							</div>
+							<div class='col-sm-4 col-xs-4'>	
+								<div class='form-group'>
+									วันที่รับ ถึง
+									<input type='text' id='EDATE' class='form-control input-sm' placeholder='ถึง' data-provide='datepicker' data-date-language='th-th' value='".$this->today('endofmonthB1')."'>
+								</div>
+							</div>
+							<div class='col-sm-4 col-xs-4'>	
+								<div class='form-group'>
+									ยี่ห้อ
+									<select id='TYPE' class='form-control input-sm chosen-select' data-placeholder='ยี่ห้อ'></select>
+								</div>
+							</div>
+							<div class='col-sm-4 col-xs-4'>	
+								<div class='form-group'>
+									รุ่น
+									<select id='MODEL' class='form-control input-sm chosen-select' data-placeholder='รุ่น'></select>
+								</div>
+							</div>
+							<div class='col-sm-4 col-xs-4'>	
+								<div class='form-group'>
+									สถานะรถ
+									<select id='STAT' class='form-control input-sm chosen-select' data-placeholder='สถานะรถ'>
+										<option value='A'>ทั้งหมด</option>
+										<option value='N'>รถใหม่</option>
+										<option value='O'>รถเก่า</option>
+									</select>
+								</div>
 							</div>
 						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								วันที่รับ จาก
-								<input type='text' id='SDATE' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonthB1')."'>
+						<div class='col-sm-8 col-xs-8 col-sm-offset-2'>
+							<br>
+							<div class='col-sm-6 col-xs-6'>	
+								<div class='form-group'>
+									รายงาน
+									<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #d6d6d6;'>	
+										<div class='col-sm-12 col-xs-12'>
+											<div class='form-group'>
+												<div class='radio'><label><input type='radio' class='sort' name='REPORT' value='1' checked=''>วันที่รับ</label></div>
+												<br>
+												<div class='radio'><label><input type='radio' class='sort' name='REPORT' value='2'>วันที่ใบกำกับภาษี</label></div>
+											</div>
+										</div>
+									</div>
+								</div>
 							</div>
-						</div>	
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								วันที่รับ ถึง
-								<input type='text' id='EDATE' class='form-control input-sm' placeholder='ถึง' data-provide='datepicker' data-date-language='th-th' value='".$this->today('endofmonthB1')."'>
-							</div>
-						</div>	
-						
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								ยี่ห้อ
-								<select id='TYPE' class='form-control input-sm chosen-select' data-placeholder='ยี่ห้อ'></select>
+							<div class='col-sm-6 col-xs-6'>	
+								<div class='form-group'>
+									สินค้าและวัตถุดิบ
+									<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #d6d6d6;'>	
+										<div class='col-sm-12 col-xs-12'>
+											<div class='form-group'>
+												<div class='radio'><label><input type='radio' class='sort' name='turnover' value='Y' checked=''>มีการเคลื่อนไหว</label></div>
+												<br>
+												<div class='radio'><label><input type='radio' class='sort' name='turnover' value='N'>ทั้งหมด</label></div>
+											</div>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
-						
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								รุ่น
-								<select id='MODEL' class='form-control input-sm chosen-select' data-placeholder='รุ่น'></select>
-							</div>
-						</div>
-						
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								สถานะรถ
-								<select id='STAT' class='form-control input-sm chosen-select' data-placeholder='สถานะรถ'>
-									<option value='A'>ทั้งหมด</option>
-									<option value='N'>รถใหม่</option>
-									<option value='O'>รถเก่า</option>
-								</select>
-							</div>
-						</div>						
 					</div>
-					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-4'>
-							<b>รายงาน</b>
-							<div class='radio'><label><input type='radio' class='sort' name='REPORT' value='1' checked=''>วันที่รับ</label></div>
-							<div class='radio'><label><input type='radio' class='sort' name='REPORT' value='2'>วันที่ใบกำกับภาษี</label></div>
-						</div>
-						
-						<div class='col-sm-2'>
-							<b>สินค้าและวัตถุดิบ</b>
-							<div class='radio'><label><input type='radio' class='sort' name='turnover' value='Y' checked=''>มีการเคลื่อนไหว</label></div>
-							<div class='radio'><label><input type='radio' class='sort' name='turnover' value='N'>ทั้งหมด</label></div>
-						</div>
-					</div>
-					<div class='row'>
+					<div class='row' style='height:10%;'>
 						<!--div class='col-sm-6'>
-							<div class='form-group'>
-								<button id='btnt1search' class='btn btn-primary btn-block'>
-									<span class='glyphicon glyphicon-search'> แสดง</span>
-								</button>
-							</div>
+							<br>
+							<button id='btnt1search' class='btn btn-primary btn-block'>
+								<span class='glyphicon glyphicon-search'> แสดง</span>
+							</button>
 						</div -->
 						<div class='col-sm-12'>
-							<div class='form-group'>
-								<button id='btnt1PDF' class='btn btn-danger btn-block'>
-									<span class='glyphicon glyphicon-download'> Donwload PDF</span>
-								</button>
-							</div>
+							<br>
+							<button id='btnt1PDF' class='btn btn-info btn-block'>
+								<span class='glyphicon glyphicon-download'> DONWLOAD PDF</span>
+							</button>
 						</div>
 					</div>
 				</div>
@@ -562,7 +581,7 @@ class Report extends MY_Controller {
 					,strno,baab,color,qtyin,qtyout,total
 				from {$this->MAuth->getdb('stockcard')}(@fmdt,@todt,@locat,@type,@model,@stat,@turnover)
 			) as data
-		";
+		";//echo $sql; exit;
 		$this->db->query($sql);
 		
 		// LOG FILE

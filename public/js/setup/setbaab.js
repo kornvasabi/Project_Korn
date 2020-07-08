@@ -179,7 +179,7 @@ function afterSelect(){
 			url: '../Cselect2/getMODEL',
 			data: function (params) {
 				dataToPost = new Object();
-				dataToPost.q 		= '';
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.now 		= (typeof $('#t2MODEL').find(':selected').val() === "undefined" ? "":$('#t2MODEL').find(':selected').val());
 				dataToPost.TYPECOD 	= (typeof $('#t2TYPECOD').find(':selected').val() === "undefined" ? "":$('#t2TYPECOD').find(':selected').val());
 				

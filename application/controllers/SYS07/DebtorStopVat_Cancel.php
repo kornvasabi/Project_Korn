@@ -33,8 +33,9 @@ class DebtorStopVat_Cancel extends MY_Controller {
 							<div class='col-sm-4'>	
 								<div class='form-group'>
 									สาขาของสัญญา
-									<select id='LOCAT' class='form-control input-sm' disabled>
-										<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>
+									<select id='LOCAT' class='form-control input-sm' >
+										<!-- option value='".$this->sess['branch']."'>".$this->sess['branch']."</option -->
+										".$this->MMAIN->Option_get_locat($this->sess["branch"])."
 									</select>
 								</div>
 							</div>
@@ -144,6 +145,7 @@ class DebtorStopVat_Cancel extends MY_Controller {
 				</div>
 			</div>
 		";
+		$html .="<link rel='stylesheet' href='".base_url('public/css/test_korn.css')."'>";
 		$html .="<script src='".base_url('public/js/SYS07/DebtorStopVat_Cancel.js')."'></script>";
 		echo $html;
 	}

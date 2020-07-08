@@ -8,6 +8,7 @@
                          /___ /
 ********************************************************/
 "use strict";
+var _groupType  = $('.tab1[name="home"]').attr('groupType');
 var _locat  = $('.tab1[name="home"]').attr('locat');
 var _insert = $('.tab1[name="home"]').attr('cin');
 var _update = $('.tab1[name="home"]').attr('cup');
@@ -42,6 +43,14 @@ $(function(){
 		//theme: 'classic',
 		width: '100%'
 	});
+	
+	if(_groupType != "OFF"){
+		$("#LOCAT").val(_locat);
+		$("#LOCAT").attr('disabled',true);
+	}else{
+		$("#LOCAT").val(_locat);
+		$("#LOCAT").attr('disabled',false);
+	}
 });
 
 var jd_btnt1search = null;
@@ -54,7 +63,7 @@ $('#btnt1search').click(function(){
 	dataToPost.strno 	= $('#STRNO').val();
 	dataToPost.cuscod 	= (typeof $('#CUSCOD').find(':selected').val() === 'undefined' ? '' : $('#CUSCOD').find(':selected').val());
 	
-	$('#loadding').show();
+	$('#loadding').fadeIn(200);
 	jd_btnt1search = $.ajax({
 		url:'../SYS04/Leasing/search',
 		data: dataToPost,
@@ -73,7 +82,7 @@ $('#btnt1search').click(function(){
 				});
 			}
 			
-			$('#loadding').hide();
+			$('#loadding').fadeOut(200);
 			jd_btnt1search = null;
 		},
 		beforeSend: function(){
@@ -89,7 +98,7 @@ function leasingDetails($contno,$event){
 	var dataToPost = new Object();
 	dataToPost.contno = $contno;
 	
-	$('#loadding').show();
+	$('#loadding').fadeIn(200);
 	$.ajax({
 		url:'../SYS04/Leasing/loadLeasing',
 		data: dataToPost,
@@ -99,20 +108,20 @@ function leasingDetails($contno,$event){
 			//load form leasing
 			loadLeasing(data);
 			
-			$('#loadding').hide();
+			$('#loadding').fadeOut(200);
 		},
 		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
 function loadLeasing($param){
-	$('#loadding').show();
+	$('#loadding').fadeIn(200);
 	$.ajax({
 		url:'../SYS04/Leasing/getfromLeasing',
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
-			$('#loadding').hide();
+			$('#loadding').fadeOut(200);
 			Lobibox.window({
 				title: 'บันทึกรายการเช่าซื้อ',
 				width: $(window).width(),
@@ -135,13 +144,13 @@ function loadLeasing($param){
 	
 $('#btnt1leasing').click(function(){
 	$('#btnt1leasing').attr('disabled',true);
-	$('#loadding').show();
+	$('#loadding').fadeIn(200);
 	$.ajax({
 		url:'../SYS04/Leasing/getfromLeasing',
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
-			$('#loadding').hide();
+			$('#loadding').fadeOut(200);
 			Lobibox.window({
 				title: 'บันทึกรายการเช่าซื้อ',
 				width: $(window).width(),
@@ -317,48 +326,60 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		var dataToPost = new Object();
 		dataToPost.ANID = $(this).find(':selected').val();
 		
-		$('#loadding').show();
+		$('#loadding').fadeIn(200);
 		jd_add_approve = $.ajax({
 			url:'../SYS04/Leasing/getDataANALYZE',
 			data:dataToPost,
 			type:'POST',
 			dataType:'json',
 			success: function(data){
-				/*tab 1*/
-				var newOption = new Option(data.RESVNO, data.RESVNO, true, true);
-				$('#add_resvno').attr('disabled',true);
-				$('#add_resvno').empty().append(newOption).trigger('change');	
-				
-				var newOption = new Option(data.CUSNAME, data.CUSCOD, true, true);
-				$('#add_cuscod').attr('disabled',true);
-				$('#add_cuscod').empty().append(newOption).trigger('change');	
-				
-				var newOption = new Option(data.ADDRNODetails, data.ADDRDOCNO, true, true);
-				$('#add_addrno').empty().append(newOption).trigger('change');	
-				
-				var newOption = new Option(data.STRNO, data.STRNO, true, true);
-				$('#add_strno').attr('disabled',true);
-				$('#add_strno').empty().append(newOption).trigger('change');
-				
-				var newOption = new Option(data.ACTIDES, data.ACTICOD, true, true);
-				$('#add_acticod').attr('disabled',true);
-				$('#add_acticod').empty().append(newOption).trigger('change');
-				
-				/*tab 2*/
-				$('#add_inprc').val(addCommas(data.PRICE_TOTAL));
-				$('#add_indwn').val(addCommas(data.DWN));
-				$('#add_nopay').val(data.NOPAY);
-				$('#add_upay').val(data.NOPAYPerMonth);
-				
-				if(data.OPTCODE != "NOTUSE"){
-					var ref_size = Object.keys(data.REF).length; // นับว่ามีคนค้ำกี่คน
-					$('#dataTables-inopt tbody').empty(); // เคลียข้อมูลคนค้ำ
-					for(var i = 1;i<=ref_size;i++){
-						var rank 	 = data.REF[i]['rank']; //ลำดับ
-						var cuscod 	 = data.REF[i]['cuscod']; //รหัสลูกค้า
-						var refname  = data.REF[i]['refname']; //ชื่อลูกค้า
-						var relation = data.REF[i]['relation']; //ความสัมพันธ์
-						
+				if(data.CUS_GRADE == "F" || data.CUS_GRADE == "FF"){
+					Lobibox.notify('error', {
+						title: 'ผิดพลาด',
+						size: 'mini',
+						closeOnClick: false,
+						delay: 15000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						msg: "รหัสลูกค้า "+data.CUSCOD+" <br>เกรดลูกหนี้เป็น "+data.CUS_GRADE+" <br>ไม่สามารถปล่อยสินเชื่อได้ครับ"
+					});
+				}else{
+					/*tab 1*/
+					var newOption = new Option(data.RESVNO, data.RESVNO, true, true);
+					$('#add_resvno').attr('disabled',true);
+					$('#add_resvno').empty().append(newOption).trigger('change');	
+					
+					$('#add_approve').attr('model',data.MODEL);
+					$('#add_approve').attr('baab',data.BAAB);
+					$('#add_approve').attr('color',data.COLOR);
+					$('#add_approve').attr('stat',data.STAT);
+					
+					var newOption = new Option(data.CUSNAME, data.CUSCOD, true, true);
+					$('#add_cuscod').attr('disabled',true);
+					$('#add_cuscod').empty().append(newOption).trigger('change');	
+					
+					var newOption = new Option(data.ADDRNODetails, data.ADDRDOCNO, true, true);
+					$('#add_addrno').empty().append(newOption).trigger('change');	
+					
+					var newOption = new Option(data.STRNO, data.STRNO, true, true);
+					//$('#add_strno').attr('disabled',true);
+					$('#add_strno').empty().append(newOption).trigger('change');
+					
+					var newOption = new Option(data.ACTIDES, data.ACTICOD, true, true);
+					$('#add_acticod').attr('disabled',true);
+					$('#add_acticod').empty().append(newOption).trigger('change');
+					
+					/*tab 2*/
+					$('#add_inprc').val(addCommas(data.PRICE_TOTAL));
+					$('#add_indwn').val(addCommas(data.DWN));
+					$('#add_nopay').val(data.NOPAY);
+					$('#add_upay').val(data.NOPAYPerMonth);
+					
+					if(data.OPTCODE != "NOTUSE"){
+						var ref_size = (typeof data.OPTCODE === 'undefined' ? 0 : Object.keys(data.OPTCODE).length); // นับว่ามีคนค้ำกี่คน
+						$('#dataTables-inopt tbody').empty(); // เคลียข้อมูลอุปกรณ์เสริม
 						var row = '<tr seq="new">';							
 						row += "<td align='center'> ";
 						row += "	<i class='inoptTab2 btn btn-xs btn-danger glyphicon glyphicon-minus' ";
@@ -382,48 +403,53 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						$('#add2_optcost').val('0.00');
 						$('#add2_optsell').val('0.00');
 					}
+					
+					/*tab 3*/
+					$('#add_payfirst').val(addCommas(data.PERMONTH_TOTAL));
+					$('#add_paynext').val(addCommas(data.PERMONTH_TOTAL));
+					$('#add_paylast').val(addCommas(data.PERMONTH_TOTAL));
+					$('#add_sell').val(addCommas(data.TOTAL_CAROPT));
+					$('#add_totalSell').val(addCommas(data.TOTAL_CAROPT));
+					$('#add_interest').val(addCommas(data.HP_TOTAL));
+					
+					$('#add_intRate').val(data.INT_RATE);
+					$('#add_delay').val(data.DELAY_DAY);
+					$('#add_interestRate').val(data.INTERAST_RATE).attr('disabled',true);
+					$('#add_interestRateReal').val(data.INTERAST_RATE_REAL).attr('disabled',true);
+					
+					/*tab 4*/
+					$('#add_payother').val(addCommas(data.PAYOTHER));
+					$('#add_comments').val(data.STD_OPT_TOTAL_DESC);
+					
+					/*tab 5*/
+					var ref_size = (typeof data.REF === 'undefined' ? 0 : Object.keys(data.REF).length); // นับว่ามีคนค้ำกี่คน
+					$('#dataTable_ARMGAR tbody').empty(); // เคลียข้อมูลคนค้ำ
+					for(var i = 1;i<=ref_size;i++){
+						var rank 	 = data.REF[i]['rank']; //ลำดับ
+						var cuscod 	 = data.REF[i]['cuscod']; //รหัสลูกค้า
+						var refname  = data.REF[i]['refname']; //ชื่อลูกค้า
+						var relation = data.REF[i]['relation']; //ความสัมพันธ์
+						
+						var row = '<tr seq="new">';							
+						row += "<td align='center'> ";
+						row += "	<i class='mgarTab5 btn btn-xs btn-danger glyphicon glyphicon-minus' ";
+						row += "		position='"+(rank)+"' cuscod='"+cuscod+"' cusval='"+refname+"' relation='"+relation+"' ";
+						row += "		style='cursor:pointer;'> ลบ   ";
+						row += "	</i> ";
+						row += "</td> ";
+						row += "<td>"+($('.mgarTab5').length + 1)+"</td>";
+						row += "<td>"+refname+"</td>";
+						row += "<td>"+relation+"</td>";
+						row += '</tr>';
+						
+						$('#dataTable_ARMGAR tbody').append(row);
+					}
+					
+					dateChanged(); //update วันที่ทำสัญญา ดิวเดต lastดิว วันที่ปล่อยรถ
 				}
 				
-				/*tab 3*/
-				$('#add_payfirst').val(addCommas(data.PERMONTH_TOTAL));
-				$('#add_paynext').val(addCommas(data.PERMONTH_TOTAL));
-				$('#add_paylast').val(addCommas(data.PERMONTH_TOTAL));
-				$('#add_sell').val(addCommas(data.TOTAL_CAROPT));
-				$('#add_totalSell').val(addCommas(data.TOTAL_CAROPT));
-				$('#add_interest').val(addCommas(data.HP_TOTAL));
-				
-				$('#add_intRate').val(data.INT_RATE);
-				$('#add_delay').val(data.DELAY_DAY);
-				$('#add_interestRate').val(data.INTERAST_RATE).attr('disabled',true);
-				$('#add_interestRateReal').val(data.INTERAST_RATE_REAL).attr('disabled',true);
-				
-				/*tab 5*/
-				var ref_size = Object.keys(data.REF).length; // นับว่ามีคนค้ำกี่คน
-				$('#dataTable_ARMGAR tbody').empty(); // เคลียข้อมูลคนค้ำ
-				for(var i = 1;i<=ref_size;i++){
-					var rank 	 = data.REF[i]['rank']; //ลำดับ
-					var cuscod 	 = data.REF[i]['cuscod']; //รหัสลูกค้า
-					var refname  = data.REF[i]['refname']; //ชื่อลูกค้า
-					var relation = data.REF[i]['relation']; //ความสัมพันธ์
-					
-					var row = '<tr seq="new">';							
-					row += "<td align='center'> ";
-					row += "	<i class='mgarTab5 btn btn-xs btn-danger glyphicon glyphicon-minus' ";
-					row += "		position='"+(rank)+"' cuscod='"+cuscod+"' cusval='"+refname+"' relation='"+relation+"' ";
-					row += "		style='cursor:pointer;'> ลบ   ";
-					row += "	</i> ";
-					row += "</td> ";
-					row += "<td>"+($('.mgarTab5').length + 1)+"</td>";
-					row += "<td>"+refname+"</td>";
-					row += "<td>"+relation+"</td>";
-					row += '</tr>';
-					
-					$('#dataTable_ARMGAR tbody').append(row);
-				}
-				
-				dateChanged(); //update วันที่ทำสัญญา ดิวเดต lastดิว วันที่ปล่อยรถ
 				jd_add_approve = null;
-				$('#loadding').hide();
+				$('#loadding').fadeOut(200);
 			},
 			beforeSend: function(){
 				if(jd_add_approve !== null){ jd_add_approve.abort(); }
@@ -433,6 +459,11 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	});	
 	
 	$('#add_approve').on("select2:unselect",function(){
+		$('#add_approve').attr('model','');
+		$('#add_approve').attr('baab','');
+		$('#add_approve').attr('color','');
+		$('#add_approve').attr('stat','');
+		
 		/*tab 1*/
 		$('#add_resvno').attr('disabled',false);	
 		$('#add_resvno').empty().trigger('change');	
@@ -511,6 +542,11 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.locat = $('#add_locat').find(':selected').val();
 				
+				dataToPost.MODEL = $('#add_approve').attr('model');
+				dataToPost.BAAB  = $('#add_approve').attr('baab');
+				dataToPost.COLOR = $('#add_approve').attr('color');
+				dataToPost.STAT  = $('#add_approve').attr('stat');
+				
 				return dataToPost;				
 			},
 			dataType: 'json',
@@ -528,6 +564,136 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		//disabled: true,
 		//theme: 'classic',
 		width: '100%'
+	});
+	
+	var jdadd_strno = null;
+	$('#add_strno').on("select2:select",function(){
+		var dataToPost = new Object();
+		dataToPost.ANID  = (typeof $('#add_approve').find(':selected').val() === 'undefined' ?'': $('#add_approve').find(':selected').val());
+		dataToPost.STRNO = (typeof $('#add_strno').find(':selected').val() === 'undefined' ?'': $('#add_strno').find(':selected').val());
+		
+		$('#loadding').fadeIn(200);
+		jdadd_strno = $.ajax({
+			url: '../SYS04/Leasing/getSTDSpecial',
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				var data = data.html;
+				if(data.error){
+					Lobibox.notify('error', {
+						title: 'ผิดพลาด',
+						size: 'mini',
+						closeOnClick: false,
+						delay: 15000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						msg: "ผิดพลาด ไม่พบข้อมูลใบอนุมัติ / ข้อมูลสแตนดาร์ด"
+					});
+				}else if(data.analyze){
+					/*tab 1*/
+					var newOption = new Option(data.RESVNO, data.RESVNO, true, true);
+					$('#add_resvno').attr('disabled',true);
+					$('#add_resvno').empty().append(newOption).trigger('change');	
+					
+					$('#add_approve').attr('model',data.MODEL);
+					$('#add_approve').attr('baab',data.BAAB);
+					$('#add_approve').attr('color',data.COLOR);
+					$('#add_approve').attr('stat',data.STAT);
+					
+					var newOption = new Option(data.CUSNAME, data.CUSCOD, true, true);
+					$('#add_cuscod').attr('disabled',true);
+					$('#add_cuscod').empty().append(newOption).trigger('change');	
+					
+					var newOption = new Option(data.ADDRNODetails, data.ADDRDOCNO, true, true);
+					$('#add_addrno').empty().append(newOption).trigger('change');	
+					
+					var newOption = new Option(data.STRNO, data.STRNO, true, true);
+					//$('#add_strno').attr('disabled',true);
+					$('#add_strno').empty().append(newOption).trigger('change');
+					
+					var newOption = new Option(data.ACTIDES, data.ACTICOD, true, true);
+					$('#add_acticod').attr('disabled',true);
+					$('#add_acticod').empty().append(newOption).trigger('change');
+					
+					/*tab 2*/
+					$('#add_inprc').val(addCommas(data.PRICE_TOTAL));
+					$('#add_indwn').val(addCommas(data.DWN));
+					$('#add_nopay').val(data.NOPAY);
+					$('#add_upay').val(data.NOPAYPerMonth);
+					
+					if(data.OPTCODE != "NOTUSE"){
+						var row = '<tr seq="new">';							
+						row += "<td align='center'> ";
+						row += "	<i class='inoptTab2 btn btn-xs btn-danger glyphicon glyphicon-minus' ";
+						row += "		opcode='"+data.OPTCODE+"' total1='0.00' total2='0.00' price1='0.00' price2='0.00' vat1='0.00' vat2='0.00' qty='1' uprice='0' ";
+						row += "		style='cursor:pointer;'> ลบ   ";
+						row += "	</i> ";
+						row += "</td> ";
+						row += '<td>'+data.OPTNAME+'</td>';
+						row += '<td class="text-right">0</td>';
+						row += '<td class="text-right">1</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '<td class="text-right">0.00</td>';
+						row += '</tr>';
+						$('#dataTables-inopt tbody').empty().append(row);
+						
+						$('#add2_optcost').val('0.00');
+						$('#add2_optsell').val('0.00');
+						
+						inopt_remove();
+					}
+					
+					/*tab 3*/
+					$('#add_payfirst').val(addCommas(data.PERMONTH_TOTAL));
+					$('#add_paynext').val(addCommas(data.PERMONTH_TOTAL));
+					$('#add_paylast').val(addCommas(data.PERMONTH_TOTAL));
+					$('#add_sell').val(addCommas(data.TOTAL_CAROPT));
+					$('#add_totalSell').val(addCommas(data.TOTAL_CAROPT));
+					$('#add_interest').val(addCommas(data.HP_TOTAL));
+					
+					$('#add_intRate').val(data.INT_RATE);
+					$('#add_delay').val(data.DELAY_DAY);
+					$('#add_interestRate').val(data.INTERAST_RATE).attr('disabled',true);
+					$('#add_interestRateReal').val(data.INTERAST_RATE_REAL).attr('disabled',true);
+					
+					/*tab 5*/
+					var ref_size = (typeof data.REF === 'undefined' ? 0 : Object.keys(data.REF).length); // นับว่ามีคนค้ำกี่คน
+					$('#dataTable_ARMGAR tbody').empty(); // เคลียข้อมูลคนค้ำ
+					for(var i = 1;i<=ref_size;i++){
+						var rank 	 = data.REF[i]['rank']; //ลำดับ
+						var cuscod 	 = data.REF[i]['cuscod']; //รหัสลูกค้า
+						var refname  = data.REF[i]['refname']; //ชื่อลูกค้า
+						var relation = data.REF[i]['relation']; //ความสัมพันธ์
+						
+						var row = '<tr seq="new">';							
+						row += "<td align='center'> ";
+						row += "	<i class='mgarTab5 btn btn-xs btn-danger glyphicon glyphicon-minus' ";
+						row += "		position='"+(rank)+"' cuscod='"+cuscod+"' cusval='"+refname+"' relation='"+relation+"' ";
+						row += "		style='cursor:pointer;'> ลบ   ";
+						row += "	</i> ";
+						row += "</td> ";
+						row += "<td>"+($('.mgarTab5').length + 1)+"</td>";
+						row += "<td>"+refname+"</td>";
+						row += "<td>"+relation+"</td>";
+						row += '</tr>';
+						
+						$('#dataTable_ARMGAR tbody').append(row);
+					}
+					
+					dateChanged(); //update วันที่ทำสัญญา ดิวเดต lastดิว วันที่ปล่อยรถ
+				}
+				
+				jdadd_strno = null;
+				$('#loadding').fadeOut(200);
+			}
+		});
 	});
 	
 	$('#add_paydue').select2({ 
@@ -582,7 +748,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						continueDelayOnInactiveTab: false,
 						icon: true,
 						messageHeight: '90vh',
-						msg: "รหัสลูกค้า "+dataToPost.cuscod+" เกรดลูกหนี้เป็น "+data.GRADE+" ไม่สามารถปล่อยสินเชื่อได้ครับ"
+						msg: "รหัสลูกค้า "+dataToPost.cuscod+" <br>เกรดลูกหนี้เป็น "+data.GRADE+" <br>ไม่สามารถปล่อยสินเชื่อได้ครับ"
 					});
 					$('#add_cuscod').empty().trigger('change');
 					$('#add_addrno').empty().trigger('change');
@@ -697,14 +863,14 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	$('#add_inopt').click(function(){
 		$('#add_inopt').attr('disabled',true);
 		
-		$('#loadding').show();
+		$('#loadding').fadeIn(200);
 		
 		$.ajax({
 			url: '../SYS04/Leasing/getFormInopt',
 			type: 'POST',
 			dataType: 'json',
 			success: function(data){
-				$('#loadding').hide();
+				$('#loadding').fadeOut(200);
 				Lobibox.window({
 					title: 'เพิ่มอุปกรณ์เสริม',
 					//width: $(window).width(),
@@ -712,6 +878,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					content: data,
 					draggable: true,
 					closeOnEsc: true,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($this){
 						//$this.destroy();		
 						$('#op_code').select2({ 
@@ -855,6 +1022,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					},
 					beforeClose : function(){
 						$('#add_inopt').attr('disabled',false);
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
 					}
 				});
 			},
@@ -1024,14 +1192,14 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	
 	$('#add_mgar').click(function(){
 		$('#add_mgar').attr('disabled',true);
-		$('#loadding').show();
+		$('#loadding').fadeIn(200);
 		
 		$.ajax({
 			url: '../SYS04/Leasing/getFormMGAR',
 			type: 'POST',
 			dataType: 'json',
 			success: function(data){
-				$('#loadding').hide();
+				$('#loadding').fadeOut(200);
 				Lobibox.window({
 					title: 'เพิ่มผู้ค้ำประกัน',
 					//width: $(window).width(),
@@ -1039,6 +1207,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					content: data,
 					draggable: true,
 					closeOnEsc: true,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($this){
 						$('#mgar_cuscod').select2({
 							placeholder: 'เลือก',
@@ -1167,6 +1336,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					},
 					beforeClose : function(){
 						$('#add_mgar').attr('disabled',false);
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
 					}
 				});
 			},
@@ -1176,14 +1346,14 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	
 	$('#add_othmgar').click(function(){
 		$('#add_othmgar').attr('disabled',true);
-		$('#loadding').show();
+		$('#loadding').fadeIn(200);
 		
 		$.ajax({
 			url: '../SYS04/Leasing/getFormOTHMGAR',
 			type: 'POST',
 			dataType: 'json',
 			success: function(data){
-				$('#loadding').hide();
+				$('#loadding').fadeOut(200);
 				Lobibox.window({
 					title: 'เพิ่มผู้ค้ำประกัน',
 					//width: $(window).width(),
@@ -1191,6 +1361,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					content: data,
 					draggable: true,
 					closeOnEsc: true,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($this){
 						$('#othmgar_garcod').select2({
 							placeholder: 'เลือก',
@@ -1269,6 +1440,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					},
 					beforeClose : function(){
 						$('#add_othmgar').attr('disabled',false);
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
 					}
 				});
 			},
@@ -1312,6 +1484,14 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						if(cuscodaddr 	== ''){ msg = "ไม่พบที่อยู่ในการพิมพ์สัญญา โปรดระบุที่อยู่ในการพิมพ์สัญญาก่อนครับ"; }
 						if(cuscod 		== ''){ msg = "ไม่พบรหัสลูกค้า โปรดระบุรหัสลูกค้าก่อนครับ"; }
 						if(sdate 		== ''){ msg = "ไม่พบวันที่ขาย โปรดระบุวันที่ขายก่อนครับ"; }
+						
+						if($('#add_contno').val() == "Auto Genarate"){
+							var FNANALYZE = (typeof $('#add_approve').attr('FNANALYZE') === 'undefined' ? '' : $('#add_approve').attr('FNANALYZE'));
+							var APPROVE   = (typeof $('#add_approve').find(':selected').val() === 'undefined' ? '' : $('#add_approve').find(':selected').val());
+							if(FNANALYZE == 'N' && APPROVE == ""){
+								msg = "ไม่พบเลขที่ใบอนุมัติ โปรดตรวจสอบข้อมูลอีกครั้ง"; 
+							}
+						}
 						
 						if(msg != ""){
 							Lobibox.notify('warning', {
@@ -1373,21 +1553,21 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		dataToPost.inclvat = (typeof $('#add_inclvat').find(':selected').val() === 'undefined' ? '' : $('#add_inclvat').find(':selected').val());
 		dataToPost.vatrt = $('#add_vatrt').val();
 		
-		$('#loadding').show();
+		$('#loadding').fadeIn(200);
 		$.ajax({
 			url:'../SYS04/Leasing/getFormCalNopay',
 			data: dataToPost,
 			type: 'POST',
 			dataType: 'json',
 			success: function(data) {
-				$('#loadding').hide();
+				$('#loadding').fadeOut(200);
 				if(data.status){
 					Lobibox.window({
 						title: 'คำนวนค่างวด',
 						width: $(window).width(),
 						height: $(window).height(),
 						content: data.msg,
-						draggable: true,
+						draggable: false,
 						closeOnEsc: true,
 						shown: function($thisFormCalNopay){
 							var incv = {
@@ -2000,14 +2180,14 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 								dataToPost.npricevOpt 			= $('#calc_npricevOpt').val();
 								dataToPost.npriceOpt  			= $('#calc_npriceOpt').val();
 								
-								$('#loadding').show();
+								$('#loadding').fadeIn(200);
 								$.ajax({
 									url:'../SYS04/Leasing/getReceivedCAL',
 									data: dataToPost,
 									type: 'POST',
 									dataType: 'json',
 									success: function(data) {
-										$('#loadding').hide();
+										$('#loadding').fadeOut(200);
 										$('#add_inprc').val(data.sell);
 										$('#add_indwn').val(data.down);
 										$('#add_nopay').val(data.nopay);
@@ -2069,14 +2249,14 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		dataToPost.atotalSell  	= $('#add_totalSell').val();
 		dataToPost.ainterest  	= $('#add_interest').val();
 		
-		$('#loadding').show();
+		$('#loadding').fadeIn(200);
 		$.ajax({
 			url:'../SYS04/Leasing/getDetailsCond',
 			data: dataToPost,
 			type: 'POST',
 			dataType: 'json',
 			success: function(data) {
-				$('#loadding').hide();
+				$('#loadding').fadeOut(200);
 				if(data.status){
 					Lobibox.window({
 						title: 'คำนวนค่างวด',
@@ -2085,11 +2265,13 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						content: data.html,
 						draggable: true,
 						closeOnEsc: true,
+						onShow: function(lobibox){ $('body').append(jbackdrop); },
 						shown: function($this){
 							$('#add_detailsCond').attr('disabled',true);
 						},
 						beforeClose: function($this){
 							$('#add_detailsCond').attr('disabled',false);
+							$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
 						}
 					});
 				}else{
@@ -2129,6 +2311,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					closeOnClick: true
 				},
 			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				if (type === 'ok'){
 					var dataToPost = new Object();
@@ -2233,14 +2416,14 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					dataToPost.othmgar = othmgar;
 					dataToPost.cal = (typeof $('#add_save').attr('cal') === 'undefined' ? 'n' : $('#add_save').attr('cal'));
 					
-					$('#loadding').show();
+					$('#loadding').fadeIn(200);
 					$.ajax({
 						url:'../SYS04/Leasing/save',
 						data: dataToPost,
 						type: 'POST',
 						dataType: 'json',
 						success: function(data) {
-							$('#loadding').hide();
+							$('#loadding').fadeOut(200);
 							
 							if(data.status == 'S'){
 								$thisWindowLeasing.destroy();
@@ -2281,20 +2464,21 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 									msg: data.msg
 								});
 							}
+							
+							$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 						},
 						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
+					
+				}else{
+					$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 				}
 			}
 		});
 	});
 	
-	if(_insert == 'T'){
-		$('#add_save').attr('disabled',false);
-	}else{
-		$('#add_save').attr('disabled',true);
-	}	
-	$('#add_delete').attr('disabled',true);
+	$('#add_save').attr('disabled',(_insert == 'T' ? false:true));
+	$('#add_delete').attr('disabled',(_delete == 'T' ? false:true));
 	
 	if($param == 'old'){
 		//เอาข้อมูลที่โหลดมาแสดง
@@ -2416,7 +2600,7 @@ function fn_calbilldas(){
 	});	
 	
 	if(saleno.length > 0){
-		$('#loadding').show();
+		$('#loadding').fadeIn(200);
 		$.ajax({
 			url:'../SYS04/Leasing/calbilldas',
 			data: {saleno:saleno,locat:(typeof $("#add_locat").find(':selected').val() === 'undefined' ? '' : $("#add_locat").find(':selected').val())},
@@ -2430,7 +2614,7 @@ function fn_calbilldas(){
 				$('#add_comments').val(data.Details+"\n"+(typeof comment[1] === 'undefined' ? '' : comment[1]));
 				*/
 				$('#add_comments_free').val(data.Details);
-				$('#loadding').hide();
+				$('#loadding').fadeOut(200);
 			},
 			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		})
@@ -2666,6 +2850,7 @@ function permission($dataLoad,$thisWindowLeasing){
 		$('#add_save').attr('disabled',true);
 	}
 	
+	$('#add_delete').attr('disabled',(_delete == 'T' ? false:true));
 	if(_locat != $('#add_locat').find(':selected').val() && _level != 1){ 
 		$('#add_inopt').attr('disabled',true);
 		$('.inoptTab2').attr('disabled',true);
@@ -2692,11 +2877,8 @@ function permission($dataLoad,$thisWindowLeasing){
 		$('.othmgarTab5').attr('disabled',true); 
 		
 		$('#add_save').attr('disabled',true);
+		$('#add_delete').attr('disabled',true);
 	}
-	
-	
-	
-	$('#add_delete').attr('disabled',(_delete == 'T' ? false:true));
 	
 	$('#btnArpay').attr('disabled',false);
 	$('#btnSend').attr('disabled',false);
@@ -2717,14 +2899,14 @@ function btnOther($thisWindowLeasing){
 		
 		$('#btnArpay').attr('disabled',true);
 		
-		$('#loadding').show();
+		$('#loadding').fadeIn(200);
 		JDbtnOther = $.ajax({
 			url:'../SYS04/Leasing/loadARPAY',
 			data: dataToPost,
 			type: 'POST',
 			dataType: 'json',
 			success: function(data) {
-				$('#loadding').hide();
+				$('#loadding').fadeOut(200);
 				
 				Lobibox.window({
 					title: 'ตารางสัญญา',
@@ -2770,6 +2952,7 @@ function btnOther($thisWindowLeasing){
 					closeOnClick: true
 				},
 			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				if (type === 'ok'){
 					var dataToPost = new Object();
@@ -2812,20 +2995,57 @@ function btnOther($thisWindowLeasing){
 							
 							$('#loadding').fadeOut(200);
 							JDadd_delete = null;
+							
+							$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 						},
 						beforeSend: function(){ if(JDadd_delete !== null){ JDadd_delete.abort(); } },
 						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
+				}else{
+					$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 				}
 			}
 		});
 	});
 	
 	$('#btnApproveSell').click(function(){
-		$('#btnApproveSell').attr('disabled',true);		
+		var dataToPost = new Object();
+		dataToPost.CONTNO = $("#add_contno").val();
+		$.ajax({
+			url:'../SYS04/Leasing/Decode',
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
+			//beforeSend: function(){ if(OBJadd_btnFORMSETAlert !== null){ OBJadd_btnFORMSETAlert.abort(); }},
+			success: function(data){
+				
+				$('#btnApproveSell').attr('disabled',true);	
+				var baseUrl = $('body').attr('baseUrl');
+				var url = baseUrl+'SYS04/Leasing/approvepdf?contno='+data.CONTNO;
+				var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
+				
+				Lobibox.window({
+					title: 'ใบอนุมัติขาย',
+					width: $(window).width(),
+					height: $(window).height(),
+					content: content,
+					draggable: false,
+					closeOnEsc: true,			
+					beforeClose : function(){
+						$('#btnApproveSell').attr('disabled',false);
+					}
+				});
+			}
+		});
+		
+	});
+	
+	$('#btnEFF').click(function(){
+		/*
+		$('#btnEFF').attr('disabled',true);		
 		
 		var baseUrl = $('body').attr('baseUrl');
-		var url = baseUrl+'SYS04/Leasing/approvepdf?contno='+$("#add_contno").val();
+		var url = baseUrl+'SYS04/Leasing/effpdf?contno='+$("#add_contno").val();
 		var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 		
 		Lobibox.window({
@@ -2836,8 +3056,22 @@ function btnOther($thisWindowLeasing){
 			draggable: false,
 			closeOnEsc: true,			
 			beforeClose : function(){
-				$('#btnApproveSell').attr('disabled',false);
+				$('#btnEFF').attr('disabled',false);
 			}
+		});
+		*/
+		
+		
+		Lobibox.notify('info', {
+			title: 'info',
+			size: 'mini',
+			closeOnClick: false,
+			delay: 3000,
+			pauseDelayOnHover: true,
+			continueDelayOnInactiveTab: false,
+			icon: true,
+			messageHeight: '90vh',
+			msg: 'feature นี้ยังไม่สามารถใช้งานได้ครับ'
 		});
 	});
 	

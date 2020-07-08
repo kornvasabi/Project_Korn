@@ -59,7 +59,7 @@ $('#bth1add').click(function(){
 				draggable: true,
 				closeOnEsc: false,
 				shown: function($this){
-					Add_HoldtoOldcar($this);
+					Add_AlertMessage($this);
 				}
 	
 			});			
@@ -67,7 +67,7 @@ $('#bth1add').click(function(){
 	});
 });
 
-function Add_HoldtoOldcar($thisWindowChange){
+function Add_AlertMessage($thisWindowChange){
 	
 	$('#btndelete_alertmsg').attr('disabled',true);
 	

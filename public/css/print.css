@@ -1,0 +1,6 @@
+@media print {
+	body {-webkit-print-color-adjust: exact;} // กำหนดให้สีในหน้าเว็บสามารถพิมพ์ได้อย่างถูกต้อง
+	.hideWhenPrint { // เนื้อหาในคลาส hideWhenPrint จะถูกปิดตาทิ้งไปเมื่อพิมพ์บนกระดาษ
+	  display: none;
+	}
+}

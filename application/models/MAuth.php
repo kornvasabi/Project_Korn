@@ -17,15 +17,19 @@ class MAuth extends CI_Model {
 				where TABLE_NAME='".$table."'
 				
 				union all 
-				--function ต่างๆ
+				--function ต่างๆ / store proceduer
 				SELECT COUNT(*) as r FROM {$sess['db']}.sys.sql_modules m 
 				INNER JOIN {$sess['db']}.sys.objects o ON m.object_id=o.object_id
-				WHERE type_desc like '%function%' and name ='".$table."'
+				WHERE (type_desc like '%FUNCTION%' or type_desc like '%PROCEDURE%') and name ='".$table."'
 			) as data
-			
 		";
-		//echo $sql; exit;
 		$query = $this->db->query($sql);
-		if($query->row()){ foreach($query->result() as $row){ return $row->db.'.dbo.'.$table; } }else{ return 'NODatabase'; }
+		if($query->row()){ 
+			foreach($query->result() as $row){
+				return $row->db.'.dbo.'.$table; 
+			} 
+		}else{ 
+			return 'NODatabase'; 
+		}
 	}
 }

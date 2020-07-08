@@ -59,7 +59,6 @@ class Welcome extends MY_Controller {
 		$data = array();
 		$data["menu"] = $this->MLogin->getmenuclaim();
 		$data["branch"] = $this->sess["branch"];
-		$data["codejob"] = $this->sess['employeeCode'];
 		$data["name"] = $this->sess["employeeCode"].'<br>'.$this->sess["name"];
 		$data["db"] = $this->sess["db"];
 		$data["baseUrl"] = base_url();
@@ -510,8 +509,14 @@ class Welcome extends MY_Controller {
 			</script>
 		";
 		*/
-		
 		$html = "
+			<!-- div class='col-md-12' align='center'>
+				<img src='../public/images/background_home.jpg' style='max-width: 100%;height: 100%;border-radius: 0%;opacity: 0.8;'/>
+			</div -->
+			<!-- div class='col-md-12' style='height:50vh;' align='center'>
+				<img src='../public/images/background_home.jpg' style='width:auto;height:calc(50vh);border-radius: 30%;opacity: 0.8;'/>
+			</div -->
+			
 			<div class='col-md-12' style='height:20vh;'>&emsp;</div>
 			<div class='col-md-12' style='font-size:50pt;' align='center'>
 				<div style='font-size:100pt;transform: rotate(0deg);width:100%;'>

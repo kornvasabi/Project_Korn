@@ -5,6 +5,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	
 	<title>YTKMini</title>
 	<link rel="shortcut icon" href="../public/images/ytkicon.png" />
 	
@@ -71,15 +72,15 @@
 			<ul class="nav navbar-nav navbar-right user-actions">
 				<li class="dropdown">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">
-						<img class="user-avatar" src="../public/lobiadmin-master/version/1.0/ajax/img/users/<?php echo $codejob ?>.jpg" alt="User"/>
-						
+						<!--img class="user-avatar" src="../public/lobiadmin-master/version/1.0/ajax/img/users/me-160.jpg" alt="..."/-->
 						<div class='glyphicon glyphicon-user'></div>
 						<b class="caret"></b>
 					</a>
 					<ul class="dropdown-menu">
 						<!-- li><a href="#profile"><span class="glyphicon glyphicon-user"></span> &nbsp;&nbsp;ข้อมูลส่วนตัว</a></li>
 						<li class="divider"></li -->
-						<li><a href="../clogout/lock"><span class="glyphicon glyphicon-lock"></span> &nbsp;&nbsp;Lock screen</a></li>
+						<!-- สาขาเผลอไปกด แล้วไม่เข้าใจ เลยปิดในส่วนของ LockScreen -->
+						<!-- li><a href="../clogout/lock"><span class="glyphicon glyphicon-lock"></span> &nbsp;&nbsp;Lock screen</a></li -->
 						<li><a href="../clogout"><span class="glyphicon glyphicon-off"></span> &nbsp;&nbsp; ออกจากระบบ</a></li>
 						<li class="divider"></li>
 					</ul>
@@ -88,8 +89,8 @@
 			
 			<ul class="nav navbar-nav navbar-right user-actions">
 				<li class="dropdown">
-					<a href="#" class="dropdown-toggle" data-toggle="dropdown">						
-						<div id='LOCATCHANGE' style='font-size:8pt;'><?php echo $branch; ?></div>						
+					<a id='LOCATCHANGE' class="dropdown-toggle" data-toggle="dropdown">						
+						<div style='font-size:8pt;'><?php echo $branch; ?></div>						
 					</a>
 					<!--ul class="dropdown-menu">
 						<li><a href="#">Fบน</a></li>
@@ -104,11 +105,95 @@
 					</a>
 				</li>
 			</ul>
+			
+			<!-- แจ้งเตือน -->
+			<ul class="nav navbar-nav navbar-right user-actions">
+				<li class="dropdown">
+					<!-- a href="#" class="dropdown-toggle" data-toggle="dropdown">
+						<span class="glyphicon glyphicon-globe"></span>
+						<span id="notify_cnt" class="badge badge-danger badge-xs">0</span>
+					</a -->
+					
+					<!-- div class="dropdown-menu dropdown-notifications notification-news border-1 animated-fast flipInX">
+						<div class="notifications-heading border-bottom-1 bg-white">
+							Notifications
+						</div>
+						<ul class="notifications-body max-h-300">
+							<li class="read">
+								<div class="notification">
+									TEST<br>TEST<br>TEST<br>TEST<br>
+									<p class="body-text"><i class="fa fa-clock-o"></i> 5 นาทีที่แล้ว</p>
+									<a href="http://localhost:92/YTKMini/Welcome/#SYS04/Analyze" class="link-action">ตรวจสอบ</a>
+								</div>
+							</li>
+							<li class="unread">
+								<div class="notification friend-request">
+									<img class="notification-image" src="img/users/4.jpg" alt="">
+									<div class="notification-msg">
+										<h4 class="notification-heading"><a href="#">John Doe</a></h4>
+										<h5 class="notification-sub-heading text-nowrap">Friend request 
+											<a href="#" class="btn btn-info btn-xs btn-response">Accept</a>
+											<a href="#" class="btn btn-danger btn-xs btn-response">Decline</a>
+										</h5>
+										<p class="body-text"><i class="fa fa-user"></i> 12 hr. ago</p>
+									</div>
+								</div>
+							</li>
+							<li class="unread">
+								<div class="notification">
+									<img class="notification-image" src="img/users/2.jpg" alt="">
+									<div class="notification-msg">
+										<h5 class="notification-sub-heading"><a href="#">George Darso</a> invited you to join the conference</h5>
+										<p class="body-text"><i class="fa fa-clock-o"></i> yesterday</p>
+									</div>
+									<a href="#" class="link-action">View invitation</a>
+								</div>
+							</li>
+							<li>
+								<div class="notification">
+									<img class="notification-image" src="img/users/1.jpg" alt="">
+									<div class="notification-msg">
+										<h5 class="notification-sub-heading">
+											<a href="#">Guga Grigo</a> likes your photo 
+										</h5>
+										<p class="body-text"><i class="fa fa-thumbs-up"></i> Tuesday</p>
+									</div>
+									<a href="#"><img src="img/users/me-160.jpg" alt="" class="liked-photo"></a>
+								</div>
+							</li>
+							<li>
+								<div class="notification">
+									<div class="notification-icon"><i class="glyphicon glyphicon-user"></i></div>
+									<div class="notification-msg">
+										<h5 class="notification-sub-heading"><a href="#">Poll Hunely</a> has accepted your invitation.</h5>
+										<p class="body-text"><i class="fa fa-check"></i> yesterday</p>
+									</div>
+									<a href="#" class="link-action"><i class="fa fa-calendar"></i> Add to calendar</a>
+								</div>
+							</li>
+							<li>
+								<div class="notification">
+									<div class="notification-icon"><i class="fa fa-users"></i></div>
+									<div class="notification-msg">
+										<h5 class="notification-sub-heading"><a href="#" data-toggle="tooltip" data-html="true" data-title="Mari Abdu<br>Guga Grigo<br>David Sula" data-original-title="" title="">3 new users</a> has just signed up</h5>
+										<p class="body-text"><i class="fa fa-user"></i> Sunday</p>
+									</div>
+								</div>
+							</li>
+						</ul>
+						<div class="notifications-footer border-top-1 bg-white text-center">
+							<input type='checkbox'><a href="#">เฉพาะที่อ่านแล้ว</a>&emsp;
+							<a href="#">ยังไม่อ่าน</a>&emsp;
+							<a href="#">ทั้งหมด</a>
+						</div>
+					</div -->
+				</li>
+			</ul>
 		</div>
 		
 		
 		
-		<div class="clearfix-xxs"></div>
+		<!-- div class="clearfix-xxs"></div>
 		<div class="navbar-items-2">
 			<ul class="nav navbar-nav navbar-actions">
 				<li class="visible-lg">
@@ -118,7 +203,7 @@
 				</li>
 			</ul>
 		</div>
-		<div class="clearfix"></div>
+		<div class="clearfix"></div -->
 	</nav>
 	
 		
@@ -289,6 +374,7 @@
 	<script type='text/javascript' src='../public/upload/jquery.uploadfile.min.js'></script>
 </body>
 <script>
+	var jbackdrop = '<div class="jbackdrop" style="position:fixed;z-index:4001;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,.5)"></div>';
 	setInterval(function(){
 		__decss();
 	},250);
@@ -349,11 +435,12 @@
 		var delay = 5000;
 		var notify = 'error';
         if (jqXHR.status === 0) {
-			delay = false;
-            msg = 'Not connect.\n Verify Network.';
+			delay = 3000;
+			notify = 'warning';
+            msg = 'Not connect.\n Verify Network.<br>โปรดตรวจสอบระบบ Internet ว่าเชื่อมต่อสมบูรณ์หรือไม่';
         } else if (jqXHR.status == 404) {
             delay = false;
-			msg = 'Requested page not found. [404]';
+			msg = 'Requested page not found. [404]<br>ผิดพลาด ไม่พบหน้าที่คุณร้องขอ';
         } else if (jqXHR.status == 500) {
             delay = false;
 			msg = 'Internal Server Error [500].';

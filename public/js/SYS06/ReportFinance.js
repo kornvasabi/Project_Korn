@@ -310,7 +310,7 @@ function search(){
 	dataToPost.CONTNO1 	  = (typeof $('#CONTNO1').find(':selected').val() === 'undefined' ? '':$('#CONTNO1').find(':selected').val());
 	dataToPost.STRNO1 	  = (typeof $('#STRNO1').find(':selected').val() === 'undefined' ? '':$('#STRNO1').find(':selected').val());
 	dataToPost.tab11C     = [$('#tab11C').is(':checked'),$('#tab11C').val()];
-	$('#loadding').show();
+	$('#loadding').fadeIn(300);
 	if(dataToPost.CUSCOD1 == '' && dataToPost.CONTNO1 == '' && dataToPost.STRNO1 == ''){
 		Lobibox.notify('warning', {
 			title: 'แจ้งเตือน',
@@ -325,9 +325,11 @@ function search(){
 			messageHeight: '90vh',
 			msg: 'กรุณาระบุเงื่อนไขเพื่อสอบถามก่อนครับ'
 		});
-		$('#loadding').hide();
+		$('#loadding').fadeOut(300);
+		cleardata();
+		//$('#dataTables-cusbuy tbody').empty();
+		//$('#dataTables-insurance tbody').empty();
 	}else{
-		
 		$('#dataTables-cusbuy tbody').html('');
 		$('#dataTables-cusbuy tbody').html("<table width='100%' height='100%'><tr><td colspan='8'><img src='../public/images/loading-icon2.gif' style='width:50px;height:15px;'></td></tr></table>");
 		
@@ -342,14 +344,7 @@ function search(){
 			success:function(data){
 				
 				var TSALE = data.TSALE;
-				/*if(TSALE != 'H'){ 
-					$('#btncostcar').attr('disabled',true);
-					$('#btndiscount').attr('disabled',true);
-				}else{
-					$('#btncostcar').attr('disabled',false);
-					$('#btndiscount').attr('disabled',false);
-				}
-				*/
+				/*
 				$('#dataTables-cusbuy tr').click(function(e) {
 					$('#dataTables-cusbuy tr').removeClass('highlighted');
 					$(this).addClass('highlighted');
@@ -359,10 +354,10 @@ function search(){
 					$('#dataTables-insurance tr').removeClass('highlighted');
 					$(this).addClass('highlighted');
 				});
-				
+				*/
 				loaddata(data,TSALE);
 				
-				$('#loadding').hide();
+				$('#loadding').fadeOut(500);
 				$('.getit').click(function(){
 					var	CUSCODS = $(this).attr('CUSCOD');
 					var	CONTNOS = $(this).attr('CONTNO');
@@ -1113,14 +1108,14 @@ function changedata($CUSCODS,$CONTNOS,$STRNOS,$LOCATS,$TSALES){
 	dataToPost.STRNOS	= $STRNOS;
 	dataToPost.LOCATS	= $LOCATS;
 	dataToPost.TSALES   = $TSALES;
-	$('#loadding').show();
+	$('#loadding').fadeIn(300);
 	$.ajax({
 		url:'../SYS06/ReportFinance/changedata',
 		data:dataToPost,
 		type:'POST',
 		dataType:'json',
 		success:function(data){
-			$('#loadding').hide();
+			$('#loadding').fadeOut(300);
 			/*
 			if(data.TSALES != 'H'){
 				$('#btncostcar').attr('disabled',true);

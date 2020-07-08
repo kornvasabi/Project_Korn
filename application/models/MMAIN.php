@@ -151,7 +151,7 @@ class MMAIN extends CI_Model {
 	public function Option_get_locat($selected){	
 		//กิจกรรมการขาย select
 		$sql = "
-			select LOCATCD,LOCATNM from {$this->MAuth->getdb('INVLOCAT')} 
+			select LOCATCD,'('+LOCATCD+') '+LOCATNM as LOCATNM from {$this->MAuth->getdb('INVLOCAT')} 
 			where LOCATCD<>'TRANS'
 			order by LOCATCD
 		";
@@ -164,8 +164,8 @@ class MMAIN extends CI_Model {
 				$locatnm = str_replace(chr(0),"",$row->LOCATNM);
 				
 				$opt .= "
-					<option value='{$locatcd}' title='{$locatnm}' ".(in_array($locatcd,$selected) ? "selected":"").">
-						{$locatcd}
+					<option value='{$locatcd}' title='{$locatnm}' ".($locatcd == $selected ? "selected":"").">
+						{$locatnm}
 					</option>
 				";
 			}
@@ -201,6 +201,60 @@ class MMAIN extends CI_Model {
 		return $opt;
 	}
 	
+	public function Option_get_paytyp($selected){
+		$opt = "";
+		if(isset($selected)){
+			$sql = "
+				select PAYCODE,'('+PAYCODE+') '+PAYDESC PAYDESC from {$this->MAuth->getdb('PAYTYP')}
+				order by PAYCODE
+			";
+			//echo $sql; exit;
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$PAYCODE = str_replace(chr(0),"",$row->PAYCODE);
+					$PAYDESC = str_replace(chr(0),"",$row->PAYDESC);
+					
+					$opt .= "
+						<option value='{$PAYCODE}' ".($PAYCODE == $selected ? "selected":"").">
+							{$PAYDESC}
+						</option>
+					";
+				}
+			}
+		}
+		
+		return $opt;
+	}
+	
+	public function Option_get_bkmast($selected){
+		$opt = "<option value='nouse' selected>เลือก</option>";
+		if(isset($selected)){
+			$sql = "
+				select BKCODE,'('+BKCODE+') '+BKNAME BKNAME from {$this->MAuth->getdb('BKMAST')}
+				order by BKCODE
+			";
+			//echo $sql; exit;
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$BKCODE = str_replace(chr(0),"",$row->BKCODE);
+					$BKNAME = str_replace(chr(0),"",$row->BKNAME);
+					
+					$opt .= "
+						<option value='{$BKCODE}' ".($BKCODE == $selected ? "selected":"").">
+							{$BKNAME}
+						</option>
+					";
+				}
+			}
+		}
+		
+		return $opt;
+	}
+	
 	public function locat_claim($locat){
 		$response = array();
 		
@@ -219,6 +273,24 @@ class MMAIN extends CI_Model {
 			$response["error"]  = true;
 			$response["FLSALE"] = "E";
 			$response["msg"]    = "ไม่พบข้อมูลสาขา ".$locat;
+		}
+		
+		return $response;
+	}
+	
+	public function Allow_payment_discount_intamt($IDNo){
+		$response = " readonly "; // ไม่อนุญาติ
+		
+		$sql = "
+			select count(*) r from {$this->MAuth->getdb('JALLLOW_KEY_DSCINT')}
+			where IDNo='".$IDNo."' and GETDATE() between ALLOWFDT and ISNULL(ALLOWTDT,GETDATE())
+		";
+		
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				if($row->r > 0){ $response = ""; }
+			}
 		}
 		
 		return $response;

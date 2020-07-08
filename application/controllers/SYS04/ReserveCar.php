@@ -313,12 +313,14 @@ class ReserveCar extends MY_Controller {
 				</div>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						<span class='text-red'>*</span>
 						วันที่จอง
 						<input type='text' id='fRESVDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value='{$arrs["fRESVDT"]}' maxlength=10>
 					</div>
 				</div>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						<span class='text-red'>*</span>
 						สาขา
 						<select id='fLOCAT' class='form-control input-sm'>
 							{$arrs["fLOCAT"]}
@@ -327,8 +329,8 @@ class ReserveCar extends MY_Controller {
 				</div>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						<span class='text-red'>*</span>
 						ชื่อสกุล-ลูกค้า
-						<!-- select id='fCUSCOD' class='form-control input-sm'>{$arrs["fCUSCOD"]}</select -->
 						<div class='input-group'>
 						   <input type='text' id='fCUSCOD' CUSCOD='{$arrs["CUSCOD"]}' class='form-control input-sm' placeholder='ลูกค้า'  value='{$arrs["CUSNAME"]}'>
 						   <span class='input-group-btn'>
@@ -339,7 +341,8 @@ class ReserveCar extends MY_Controller {
 					</div>
 				</div>
 				<div class='col-sm-3'>	
-					<div class='form-group'>
+					<div class='form-group'>	
+						<span class='text-red'>*</span>
 						รหัสผู้รับจอง
 						<select id='fRECVCD' class='form-control input-sm'>
 							{$arrs["fRECVCD"]}
@@ -348,6 +351,7 @@ class ReserveCar extends MY_Controller {
 				</div>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						<span class='text-red'>*</span>
 						รหัสพนักงานขาย
 						<select id='fSALCOD' class='form-control input-sm'>
 							{$arrs["fSALCOD"]}
@@ -379,15 +383,27 @@ class ReserveCar extends MY_Controller {
 			<div id='datepkposition' class='row col-sm-12' style='border:1px dotted #aaa;'>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						<span class='text-red'>*</span>
 						กิจกรรมการขาย
 						<select id='fACTICOD' class='form-control input-sm'>
 							{$arrs["fACTICOD"]}
 						</select>
 					</div>
 				</div>
+				
 				<div class='col-sm-3'>	
 					<div class='form-group'>
-						ประเภทสินค้า
+						<span class='text-red'>*</span>
+						สถานะรถ
+						<select id='fSTAT' class='form-control input-sm'>
+							{$arrs["fSTAT"]}
+						</select>
+					</div>
+				</div>				
+				<div class='col-sm-3'>	
+					<div class='form-group'>
+						<span class='text-red'>*</span>
+						กลุ่มรถ
 						<select id='fGRPCOD' class='form-control input-sm'>
 							{$arrs["fGRPCOD"]}
 						</select>
@@ -395,14 +411,19 @@ class ReserveCar extends MY_Controller {
 				</div>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						<span class='text-red'>*</span>
 						ยี่ห้อ
 						<select id='fTYPE' class='form-control input-sm'>
 							{$arrs["fTYPE"]}
 						</select>
 					</div>
 				</div>
+				
+				
+				
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						<span class='text-red'>*</span>
 						รุ่น
 						<select id='fMODEL' class='form-control input-sm'>
 							{$arrs["fMODEL"]}
@@ -411,6 +432,7 @@ class ReserveCar extends MY_Controller {
 				</div>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						<span class='text-red'>*</span>
 						แบบ
 						<select id='fBAAB' class='form-control input-sm'>
 							{$arrs["fBAAB"]}
@@ -418,7 +440,8 @@ class ReserveCar extends MY_Controller {
 					</div>
 				</div>
 				<div class='col-sm-3'>	
-					<div class='form-group'>
+					<div class='form-group'>	
+						<span class='text-red'>*</span>
 						สี
 						<select id='fCOLOR' class='form-control input-sm'>
 							{$arrs["fCOLOR"]}
@@ -427,29 +450,24 @@ class ReserveCar extends MY_Controller {
 				</div>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						<span class='text-red'>*</span>
 						ขนาด
 						<select id='fCC' class='form-control input-sm'>
 							{$arrs["fCC"]}
 						</select>
 					</div>
 				</div>
+				
 				<div class='col-sm-3'>	
 					<div class='form-group'>
-						สถานะ
-						<select id='fSTAT' class='form-control input-sm'>
-							{$arrs["fSTAT"]}
-						</select>
-					</div>
-				</div>
-				<div class='col-sm-3'>	
-					<div class='form-group'>
+						<span class='text-red'>*</span>
 						ราคาขายรวมภาษี
-						<input type='text' id='fPRICE' class='form-control input-sm jzAllowNumber' value='{$arrs["fPRICE"]}'
-							stdid='".$arrs["fSTDID"]."' stdplrank='".$arrs["fSUBID"]."'>
+						<input type='text' id='fPRICE' class='form-control input-sm jzAllowNumber' value='{$arrs["fPRICE"]}' disabled>
 					</div>
 				</div>
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						<span class='text-red'>*</span>
 						เงินจองรวมภาษี
 						<input type='text' id='fRESPAY' class='form-control input-sm jzAllowNumber' value='{$arrs["fRESPAY"]}'>
 					</div>
@@ -460,19 +478,30 @@ class ReserveCar extends MY_Controller {
 						<input type='text' id='fBALANCE' class='form-control input-sm jzAllowNumber' value='{$arrs["fBALANCE"]}' disabled>
 					</div>
 				</div>
+				
 				<div class='col-sm-3'>	
 					<div class='form-group'>
+						&emsp;
+						<button id='btnGetSTD' class='btn btn-sm btn-info btn-block' stdid='".$arrs["fSTDID"]."' subid='".$arrs["fSUBID"]."'>
+							<span class='glyphicon glyphicon-refresh'> ดึงสแตนดาร์ด</span>
+						</button>
+					</div>
+				</div>
+				
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						<span class='text-red'>*</span>
 						วันนัดรับรถ
 						<input type='text' id='fRECVDUE' class='form-control input-sm' value='{$arrs["fRECVDUE"]}' data-provide='datepicker' data-date-language='th-th' value='' maxlength=10>
 					</div>
 				</div>
-				<div class='col-sm-3'>	
+				<div class='col-sm-2'>	
 					<div class='form-group'>
 						วันที่รับรถจริง
 						<input type='text' id='fRECVDT' class='form-control input-sm' value='{$arrs["fRECVDT"]}' data-provide='datepicker' data-date-language='th-th' value='' maxlength=10 disabled>
 					</div>
 				</div>
-				<div class='col-sm-3'>	
+				<div class='col-sm-2'>	
 					<div class='form-group'>
 						ชำระเงินจองแล้ว
 						<input type='text' id='fSMPAY' class='form-control input-sm jzAllowNumber' value='{$arrs["fSMPAY"]}' disabled>
@@ -542,109 +571,63 @@ class ReserveCar extends MY_Controller {
 		$arrs["STAT"]	 = (isset($_POST["STAT"]) ? $_POST["STAT"] : "");
 		$arrs["LOCAT"]	 = $_POST["LOCAT"];
 		$arrs["GCODE"]	 = $_POST["GCODE"];
+		$arrs["STRNO"]	 = $_POST["STRNO"];
 		
+		$sql = "
+			select count(*) r from {$this->MAuth->getdb('INVTRAN')}
+			where STRNO='{$arrs["STRNO"]}' 
+				and MODEL='{$arrs["MODEL"]}'
+				and BAAB='{$arrs["BAAB"]}'
+				and COLOR='{$arrs["COLOR"]}'
+				and STAT='{$arrs["STAT"]}'
+				and GCODE='{$arrs["GCODE"]}'
+		";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$HASSTR = $row->r;
 		
 		if($arrs["RESVDT"] == ""){
-			$response["error"] = false;
+			$response["error"] = true;
 			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุวันที่จองรถ";
 			echo json_encode($response); exit;
 		}
 		
 		if($arrs["ACTICOD"] == ""){
-			$response["error"] = false;
+			$response["error"] = true;
 			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุกิจกรรมการขาย";
 			echo json_encode($response); exit;
 		}
 		
+		if($arrs["STAT"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุสถานะรถ";
+			echo json_encode($response); exit;
+		}
+		
+		if($arrs["STAT"] == "O" && $arrs["GCODE"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "ผิดพลาด รถเก่าคุณจำเป็นต้องระบุกลุ่มรถด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		
 		if($arrs["MODEL"] == ""){
-			$response["error"] = false;
+			$response["error"] = true;
 			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุรุ่น";
 			echo json_encode($response); exit;
 		}
 		
 		if($arrs["BAAB"] == ""){
-			$response["error"] = false;
+			$response["error"] = true;
 			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุแบบ";
 			echo json_encode($response); exit;
 		}
 		
 		if($arrs["COLOR"] == ""){
-			$response["error"] = false;
+			$response["error"] = true;
 			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุสี";
 			echo json_encode($response); exit;
 		}
 		
-		if($arrs["STAT"] == ""){
-			$response["error"] = false;
-			$response["msg"] = "ผิดพลาด คุณยังไม่ได้ระบุสถานะรถ";
-			echo json_encode($response); exit;
-		}
-		
-		
-		/*
-		$sql = "
-			if exists(
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='{$arrs["BAAB"]}' and a.color='{$arrs["COLOR"]}' and b.ACTICOD='{$arrs["ACTICOD"]}'
-			)
-			begin 
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='{$arrs["BAAB"]}' and a.color='{$arrs["COLOR"]}' and b.ACTICOD='{$arrs["ACTICOD"]}'
-			end 
-			else if exists(
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='{$arrs["BAAB"]}' and a.color='{$arrs["COLOR"]}' and b.ACTICOD='ALL'
-			)
-			begin 
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='{$arrs["BAAB"]}' and a.color='{$arrs["COLOR"]}' and b.ACTICOD='ALL'
-			end 
-			else if exists(
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='{$arrs["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$arrs["ACTICOD"]}'
-			)
-			begin 
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='{$arrs["BAAB"]}' and a.color='ALL' and b.ACTICOD='{$arrs["ACTICOD"]}'
-			end 
-			else if exists(
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='{$arrs["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
-			)
-			begin 
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='{$arrs["BAAB"]}' and a.color='ALL' and b.ACTICOD='ALL'
-			end 
-			else if exists(
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$arrs["ACTICOD"]}'
-			)
-			begin 
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='{$arrs["ACTICOD"]}'
-			end
-			else if exists(
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
-			)
-			begin 
-				select * from {$this->MAuth->getdb('std_vehicles')} a
-				left join {$this->MAuth->getdb('std_pricelist')} b on a.id=b.id and '".$arrs["RESVDT"]."' between event_s and isnull(event_e,GETDATE())
-				where a.model='{$arrs["MODEL"]}' and a.baab='ALL' and a.color='ALL' and b.ACTICOD='ALL'
-			end
-		";
-		*/
 		$sql = "
 			select * from {$this->MAuth->getdb('fn_STDVehicles')}('{$arrs["MODEL"]}','{$arrs["BAAB"]}','{$arrs["COLOR"]}','{$arrs["STAT"]}','{$arrs["ACTICOD"]}','{$arrs["LOCAT"]}','{$arrs["RESVDT"]}')
 		";
@@ -689,6 +672,7 @@ class ReserveCar extends MY_Controller {
 						รุ่น :: ".$arrs["MODEL"]."<br>
 						แบบ :: ".$arrs["BAAB"]."<br>
 						สี :: ".$arrs["COLOR"]."<br>
+						สถานะรถ :: ".($arrs["STAT"] == "N" ? "รถใหม่":"รถเก่า")."<br>
 						กิจกรรมการขาย :: ".$arrs["ACTIDES"]."
 					";
 				}
@@ -705,10 +689,12 @@ class ReserveCar extends MY_Controller {
 				รุ่น :: ".$arrs["MODEL"]."<br>
 				แบบ :: ".$arrs["BAAB"]."<br>
 				สี :: ".$arrs["COLOR"]."<br>
+				สถานะรถ :: ".($arrs["STAT"] == "N" ? "รถใหม่":"รถเก่า")."<br>
 				กิจกรรมการขาย :: ".$arrs["ACTIDES"]."
 			";
 		}
 		
+		$response["HASSTR"] = $HASSTR;
 		echo json_encode($response);
 	}
 	
@@ -947,7 +933,7 @@ class ReserveCar extends MY_Controller {
 						select * from {$this->MAuth->getdb('ARANALYZE')}
 						where RESVNO='".$arrs["RESVNO"]."' and ANSTAT != 'C'
 					) or exists (
-						select * from {$this->MAuth->getdb('ARRESV')}
+						select * from {$this->MAuth->getdb('INVTRAN')}
 						where RESVNO='".$arrs["RESVNO"]."' and isnull(CONTNO,'') != ''
 					)
 					begin
@@ -984,11 +970,40 @@ class ReserveCar extends MY_Controller {
 						where STRNO = '".$arrs["STRNO"]."'
 					end
 					
+					if exists (
+						select * from {$this->MAuth->getdb('ARRESVOTH')}
+						where RESVNO='".$arrs["RESVNO"]."'
+					)
+					begin 
+						update {$this->MAuth->getdb('ARRESVOTH')}
+						set ACTICOD='".$arrs["ACTICOD"]."'
+							,STDID='".$arrs["STDID"]."'
+							,SUBID='".$arrs["SUBID"]."'
+							,REF='".strtoupper($this->sess["db"])."'
+						where RESVNO='".$arrs["RESVNO"]."'
+					end 
+					else 
+					begin
+						insert into {$this->MAuth->getdb('ARRESVOTH')} ( 
+							RESVNO ,ACTICOD ,STDID ,SUBID ,REF ,INSBY ,INSDT 
+						) values (
+							'".$arrs["RESVNO"]."','".$arrs["ACTICOD"]."','".$arrs["STDID"]."','".$arrs["SUBID"]."','".strtoupper($this->sess["db"])."','".$this->sess["IDNo"]."',getdate()
+						)
+					end 
+					
 					update {$this->MAuth->getdb('ARRESV')}
 					set STRNO	 = '".$arrs["STRNO"]."'
 						,RECVDUE = ".($arrs["RECVDUE"] == "" ? "NULL" : "'".$arrs["RECVDUE"]."'")."
+						,TYPE	 = '".$arrs["TYPE"]."'
+						,MODEL   = '".$arrs["MODEL"]."'
+						,BAAB	 = '".$arrs["BAAB"]."'
+						,COLOR	 = '".$arrs["COLOR"]."'
 						,CC		 = '".$arrs["CC"]."'
+						,STAT	 = '".$arrs["STAT"]."'
+						,GRPCOD	 = '".$arrs["GCODE"]."'
 						,MEMO1 	 = '".$arrs["MEMO1"]."'
+						,PRICE	 = '".$arrs["PRICE"]."'
+						,BALANCE = '".$arrs["BALANCE"]."'						
 					where RESVNO='".$arrs["RESVNO"]."'
 					
 					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)

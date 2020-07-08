@@ -541,10 +541,12 @@ class CReport extends MY_Controller {
 			left join YTKManagement.dbo.std_locatStock b on a.LOCATCD=b.LOCAT collate thai_cs_as
 			left join (
 				select * from (
-					select CRLOCAT,STAT,STRNO from HIINCOME.dbo.INVTRAN
-					where FLAG='D' and ISNULL(TSALE,'') = ''
-						and ISNULL(RESVNO,'') = '' and RESVDT is null 
-						and ISNULL(CONTNO,'') = '' and SDATE is null
+					select CRLOCAT,STAT,STRNO from HIINCOME.dbo.INVTRAN a
+					left join HIINCOME.dbo.INVINVO b on a.RECVNO=b.RECVNO
+					where a.FLAG='D' and ISNULL(a.TSALE,'') = ''
+						and ISNULL(a.RESVNO,'') = '' and a.RESVDT is null 
+						and ISNULL(a.CONTNO,'') = '' and a.SDATE is null
+						and b.RECVNO is not null
 				) as data
 				pivot (
 					count(STRNO) for STAT in ([N],[O])
@@ -563,11 +565,13 @@ class CReport extends MY_Controller {
 			) as d on a.LOCATCD=d.TRANSTO collate thai_cs_as
 			left join (
 				select * from (
-					select CRLOCAT,STAT,STRNO from HIINCOME.dbo.INVTRAN
-					where FLAG='D' and ISNULL(TSALE,'') = ''
-						and ISNULL(RESVNO,'') = '' and RESVDT is null 
-						and ISNULL(CONTNO,'') = '' and SDATE is null
-						and MODEL='".$arrs["MODEL"]."' and BAAB='".$arrs["BAAB"]."' and COLOR='".$arrs["COLOR"]."'
+					select CRLOCAT,STAT,STRNO from HIINCOME.dbo.INVTRAN a
+					left join HIINCOME.dbo.INVINVO b on a.RECVNO=b.RECVNO
+					where a.FLAG='D' and ISNULL(a.TSALE,'') = ''
+						and ISNULL(a.RESVNO,'') = '' and a.RESVDT is null 
+						and ISNULL(a.CONTNO,'') = '' and a.SDATE is null
+						and a.MODEL='".$arrs["MODEL"]."' and a.BAAB='".$arrs["BAAB"]."' and a.COLOR='".$arrs["COLOR"]."'
+						and b.RECVNO is not null
 				) as data
 				pivot (
 					count(STRNO) for STAT in ([N],[O])

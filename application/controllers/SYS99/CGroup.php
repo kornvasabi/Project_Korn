@@ -387,7 +387,7 @@ class CGroup extends MY_Controller {
 		$arrs = array();
 		$arrs["dblocat"]    = $_REQUEST["dblocat"];
 		$arrs["groupCode"]  = $_REQUEST["groupCode"];
-		$arrs["data"]  		= $_REQUEST["data"];
+		$arrs["data"]  		= json_decode($_REQUEST["data"], true);
 		
 		$size = sizeof($arrs["data"]);
 		$q 	  = "";

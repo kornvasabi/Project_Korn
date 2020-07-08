@@ -362,14 +362,18 @@ function searchcm(){
 			//$('#loadding').fadeOut(300);
 			$('#setgroupResult').find('.spinner, .spinner-backdrop').remove();
 			$('#setgroupResult').html(data.html);
-		
+			
+			$('#data-table-example2').on('draw.dt',function(){ redraw(); });
 			fn_datatables('data-table-example2',1,360,'NO');
 			
+			function redraw(){
+				$('.btnDetail').unbind("click");
+				$('.btnDetail').click(function(){
+					fn_load_formeditcm($(this),'edit');
+				});
+			}
 			afterSearchcm();
 			
-			$('.btnDetail').click(function(){
-				fn_load_formeditcm($(this),'edit');
-			});
 			CT_Search = null;
 			$('#loadding').fadeOut(200);
 		},
@@ -380,6 +384,7 @@ function searchcm(){
 		}
 	});
 }
+
 function afterSearchcm(){
 	$('.getit').hover(function(){
 		$(this).css({'background-color':'#c7c7ff'});

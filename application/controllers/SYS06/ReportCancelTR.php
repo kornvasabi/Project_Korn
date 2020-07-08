@@ -151,7 +151,8 @@ class ReportCancelTR extends MY_Controller {
 		$cancel    = $tx[5];
 		
 		$sql = "
-			select LOCATCD,LOCATNM from INVLOCAT where LOCATCD = '".$LOCATRECV."'
+			select LOCATCD,LOCATNM from {$this->MAuth->getdb('INVLOCAT')} 
+			where LOCATCD = '".$LOCATRECV."'
 		";
 		$query = $this->db->query($sql);
 		$locatnm = "";

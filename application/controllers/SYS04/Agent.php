@@ -1089,7 +1089,7 @@ class Agent extends MY_Controller {
 				)
 				begin
 					rollback tran agentTran;
-					insert into #agentTemp select 'E' as id,'','ผิดพลาด มีการรับชำระแล้วครับ' as msg;
+					insert into #agentTemp select 'E' as id,'','ผิดพลาด มีการรับชำระแล้ว ไม่สามารถลบข้อมูลได้ครับ' as msg;
 					return;
 				end
 				

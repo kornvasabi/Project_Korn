@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 /********************************************************
-             ______@23/02/2020______
+             ______@23/03/2020______
 			 Pasakorn Boonded
 
 ********************************************************/
@@ -41,7 +41,7 @@ class DebtorStopVat_Save extends MY_Controller {
 							<div class='col-sm-4'>	
 								<div class='form-group'>
 									วันที่หยุด Vat
-									<input type='text' id='STOPDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value='".$this->today('today')."' styl='font-size:10.5pt;'>
+									<input type='text' id='STOPDT' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value='".$this->today('today')."' style='font-size:10.5pt;'>
 								</div>
 							</div>
 							<div class='col-sm-4'>	

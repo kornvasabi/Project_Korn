@@ -103,37 +103,8 @@ $("#btnt1import").click(function(){
 							$("#loadding").fadeIn(200);
 						},
 						onSuccess:function(files,data,xhr,pd){
-							obj = JSON.parse(data);
-							
-							if(obj["error"]){
-								Lobibox.notify('warning', {
-									title: 'แจ้งเตือน',
-									size: 'mini',
-									closeOnClick: false,
-									delay: 5000,
-									pauseDelayOnHover: true,
-									continueDelayOnInactiveTab: false,
-									icon: true,
-									messageHeight: '90vh',
-									msg: obj["errorMsg"]
-								});
-							}else{
-								Lobibox.window({
-									title: 'นำเข้าสแตนดาร์ดรถมือสอง',
-									width: $(window).width(),
-									height: $(window).height(),
-									content: obj["errorMsg"],
-									draggable: false,
-									closeOnEsc: false,
-									shown: function($this){
-										fn_import($this);
-									}
-								});
-
-								$this.destroy();
-							}
-
 							$("#loadding").fadeOut(200);							
+							fn_after_upload_stdshc(data,"new",$this);
 						}
 					});
 					
@@ -151,8 +122,149 @@ $("#btnt1import").click(function(){
 	});
 });
 
+function fn_after_upload_stdshc(data,events,thisWindow){
+	var objDivReload=null;
+	if(data.error){
+		Lobibox.notify('warning', {
+			title: 'แจ้งเตือน',
+			size: 'mini',
+			closeOnClick: false,
+			delay: 5000,
+			pauseDelayOnHover: true,
+			continueDelayOnInactiveTab: false,
+			icon: true,
+			messageHeight: '90vh',
+			msg: data.errorMsg
+		});
+	}else{
+		var size = Object.keys(data.data).length;
+		
+		var $html = "";
+		for(var i=1;i<=size;i++){
+			$html += "<tr class='mp_stdshc'>";
+			$html += "<td>"+data.data[i]["keyid"]+"</td>";
+			$html += "<td>"+data.data[i]["typecod"]+"</td>";
+			$html += "<td style='"+(data.data[i]["setmodel"] == "NOT" ? "background-color:pink;color:red;":"")+"'>"+data.data[i]["model"]+"</td>";
+			$html += "<td style='"+(data.data[i]["setbaab"] == "NOT" ? "background-color:pink;color:red;":"")+"'>"+data.data[i]["baab"]+"</td>";
+			$html += "<td style='"+(data.data[i]["setgroup"] == "NOT" ? "background-color:pink;color:red;":"")+"'>"+data.data[i]["gcode"]+"</td>";
+			$html += "<td align='right'>"+data.data[i]["nprice"]+"</td>";
+			$html += "<td align='right'>"+data.data[i]["oprice"]+"</td>";
+			
+			// สี
+			var size_color = Object.keys(data.data[i]["color"]).length;
+			$html += "<td>";
+			for(var ii=1;ii<=size_color;ii++){
+				var style = (data.data[i]["color"][ii]["indb"] == "NOT" ? "style='color:red;'":"");
+				$html += (ii != 1 ? "<br>" : "");
+				$html += "<span "+style+">"+data.data[i]["color"][ii]["color"]+"</span>";
+			}
+			$html += "</td>";
+			
+			// สาขา
+			var size_locat = Object.keys(data.data[i]["locat"]).length;
+			var locat_background = "";
+			for(var ii=1;ii<=size_locat;ii++){
+				if(data.data[i]["locat"][ii]["indb"] == "NOT"){
+					locat_background = "background-color:pink;";
+				}
+			}
+			$html += "<td><div style='max-height:150px;overflow:auto;"+locat_background+"'>";
+			for(var ii=1;ii<=size_locat;ii++){
+				var style = (data.data[i]["locat"][ii]["indb"] == "NOT" ? "style='color:red;'":"");
+				$html += (ii != 1 ? "<br>" : "");
+				$html += "<span "+style+">"+data.data[i]["locat"][ii]["locat"]+"</span>";
+			}
+			$html += "</div></td>";
+			
+			$html += "</tr>";
+		}
+		
+		if(events == "new"){
+			var $html2 = "<div id='DivReload' style='width:100%;height:calc(100vh - 100px);overflow:auto;'>";
+			$html2+= "<table id='table_confirm_upstdshc' class='table' style='width:100%;'>";
+			$html2+= "  <thead class='thead-dark'><tr><th>#</th><th>ยี่ห้อ</th><th>รุ่น</th><th>แบบ</th><th>กิจกรรมการขาย</th><th>ราคารถใหม่</th><th>ราคามือสอง</th><th>สี</th><th>สาขา</th></tr></thead>";
+			$html2+= "  <tbody>"+$html+"</tbody></table></div>";
+			$html2+= "<div class='col-sm-12' align='right'><button id='mp_save' class='btn btn-xs btn-primary'><span class='glyphicon glyphicon-upload'> นำเข้า</span></button></div>";
+			Lobibox.window({
+				title: 'นำเข้าสแตนดาร์ดรถมือสอง',
+				width: $(window).width(),
+				height: $(window).height(),
+				content: $html2,
+				draggable: false,
+				closeOnEsc: false,
+				shown: function($this){
+					$('#DivReload').unbind("scroll");
+					$('#DivReload').on("scroll",function(){
+						if(this.scrollHeight - this.scrollTop === this.clientHeight){
+							if(data.load == data.to){
+								var dataToPost  = new Object();
+								dataToPost.from = data.from;
+								dataToPost.to   = data.to;
+								
+								$('#loadding').fadeIn(200);
+								objDivReload = $.ajax({
+									url:'../SYS04/StandardSHC/loadSTDSHC',
+									data: dataToPost,
+									type: 'POST',
+									dataType: 'json',
+									beforeSend: function(){ if(objDivReload !== null){objDivReload.abort();} },
+									success: function(data){
+										fn_after_upload_stdshc(data,"reload",$this);
+										objDivReload = null;
+									}
+								});
+							}
+						}
+					});
+					
+					
+					fn_import($this);
+				}
+			});
+		}else{
+			$('#table_confirm_upstdshc').append($html);
+			
+			$('#DivReload').unbind("scroll");
+			$('#DivReload').on("scroll",function(){
+				if(this.scrollHeight - this.scrollTop === this.clientHeight){
+					if(data.load == data.to){
+						var dataToPost  = new Object();
+						dataToPost.from = data.from;
+						dataToPost.to   = data.to;
+						
+						$('#loadding').fadeIn(200);
+						objDivReload = $.ajax({
+							url:'../SYS04/StandardSHC/loadSTDSHC',
+							data: dataToPost,
+							type: 'POST',
+							dataType: 'json',
+							beforeSend: function(){ if(objDivReload !== null){objDivReload.abort();} },
+							success: function(data){
+								fn_after_upload_stdshc(data,"reload",thisWindow);
+								objDivReload = null;
+							}
+						});
+					}
+				}
+			});
+			
+			fn_import(thisWindow);
+		}
+		
+		if(data.load == data.to){
+			$('#mp_save').attr('disabled',true);
+		}else{
+			$('#mp_save').attr('disabled',false);
+		}
+		
+		$('#loadding').fadeOut(200);
+		//thisWindow.destroy();
+	}
+}
+
 function fn_import($thisForm){
 	var JDmp_save = null;
+	$("#mp_save").unbind('click');
 	$("#mp_save").click(function(){
 		$data = new Array();
 		$('.mp_stdshc').each(function(){

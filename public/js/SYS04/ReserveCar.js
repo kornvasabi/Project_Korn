@@ -90,7 +90,7 @@ $('#btnt1search').click(function(){
 			
 			$('#loadding').fadeOut(100);
 		},
-		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		// error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 });
 
@@ -125,7 +125,7 @@ function fn_load_formResv($this,$event){
 				}
 			});
 		},
-		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		// error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 
@@ -170,7 +170,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 		$('#loadding').fadeIn(200);
 		
 		$.ajax({
-			url:'../Cselect2/getfromCUSTOMER',
+			url:'../Cselect2/getformCUSTOMER',
 			type: 'POST',
 			dataType: 'json',
 			success: function(data){
@@ -184,6 +184,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					content: data.html,
 					draggable: false,
 					closeOnEsc: true,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($thisCUS){
 						var jd_cus_search = null;
 						$('#cus_fname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
@@ -228,7 +229,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 								beforeSend: function(){
 									if(jd_cus_search !== null){ jd_cus_search.abort(); }
 								},
-								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+								// error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 							});
 						}
 						
@@ -236,12 +237,14 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					beforeClose : function(){
 						$('#fCUSCOD').attr('disabled',false);
 						$('#btnSave').attr('disabled',false);
+						
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
 					}
 				});
 				
 				$('#loadding').fadeOut(200);
 			},
-			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+			// error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -374,7 +377,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					JDfSTRNO_select.abort();
 				}
 			},
-			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+			// error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
 	
@@ -411,20 +414,12 @@ function fn_loadPropoties($thisWindow,$EVENT){
 		width: '100%'
 	});
 	
-	$('#fACTICOD ,#fGRPCOD ,#fTYPE ,#fMODEL ,#fBAAB ,#fCOLOR').on("select2:select",function(){ restd(); });
-	
-	
-	function restd(){
-		$('#fSTAT').trigger('select2:select');
-		setTimeout(function(){ fn_balance(); },250);
-	}
-	
-	$('#fACTICOD').on("select2:unselect",function(){
-		$('#fPRICE').attr('stdid','');
-		$('#fPRICE').attr('stdplrank','');
+	$('#fACTICOD ,#fSTAT ,#fGRPCOD ,#fTYPE ,#fMODEL ,#fBAAB ,#fCOLOR').change(function(){ 
 		$('#fPRICE').val('');
+		$('#btnGetSTD').attr('stdid','');
+		$('#btnGetSTD').attr('subid','');
 		
-		setTimeout(function(){ fn_balance(); },250);
+		fn_balance();
 	});
 		
 	$('#fGRPCOD').select2({
@@ -486,16 +481,13 @@ function fn_loadPropoties($thisWindow,$EVENT){
 	$('#fMODEL').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2/getMODEL',
+			url: '../Cselect2/getMODEL_Analyze',
 			data: function (params) {
 				dataToPost = new Object();
 				dataToPost.now 	 = (typeof $('#fMODEL').find(':selected').val() === 'undefined' ? '' : $('#fMODEL').find(':selected').val());
 				dataToPost.q 	 = (typeof params.term === 'undefined' ? '' : params.term);
-				dataToPost.TYPECOD = (typeof $('#fTYPE').find(':selected').val() === 'undefined' ? '' : $('#fTYPE').find(':selected').val());
-			
-				if($('#fTYPE').find(':selected').val() === 'undefined'){
-					alert('undefined');
-				}
+				dataToPost.TYPECOD 	= (typeof $('#fTYPE').find(':selected').val() === 'undefined' ? '' : $('#fTYPE').find(':selected').val());
+				dataToPost.STAT 	= (typeof $('#fSTAT').find(':selected').val() === 'undefined' ? 'N':$('#fSTAT').find(':selected').val());
 			
 				return dataToPost;				
 			},
@@ -616,10 +608,10 @@ function fn_loadPropoties($thisWindow,$EVENT){
 	});
 	
 	var JDfSTAT_select = null;
-	$('#fSTAT').on("select2:select",function(){
-		$valued = $(this).find(':selected').val();
-		
-		
+	//$('#fSTAT').on("select2:select",function(){
+	$('#btnGetSTD').click(function(){
+			$valued = $('#fSTAT').find(':selected').val();
+			
 			dataToPost = new Object();
 			dataToPost.RESVDT   = $('#fRESVDT').val();
 			dataToPost.ACTICOD  = (typeof $('#fACTICOD').find(':selected').val() === "undefined" ? "":$('#fACTICOD').find(':selected').val());
@@ -630,7 +622,9 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			dataToPost.LOCAT 	= (typeof $('#fLOCAT').find(':selected').val() === "undefined" ? "":$('#fLOCAT').find(':selected').val());
 			dataToPost.GCODE 	= (typeof $('#fGRPCOD').find(':selected').val() === "undefined" ? "":$('#fGRPCOD').find(':selected').val());
 			dataToPost.STAT 	= $valued;
+			dataToPost.STRNO 	= (typeof $('#fSTRNO').find(':selected').val() === "undefined" ? "":$('#fSTRNO').find(':selected').val());
 			
+			$('#loadding').fadeIn('200');
 			JDfSTAT_select = $.ajax({
 				url:'../SYS04/ReserveCar/getStandard',
 				data: dataToPost,
@@ -640,10 +634,11 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					
 					if(data.error){
 						$('#fPRICE').val('');
-						$('#fPRICE').attr('stdid','');
-						$('#fPRICE').attr('subid','');
-						$('#fPRICE').attr('disabled',false);
+						$('#fPRICE').attr('disabled',true);
 						$('#fBALANCE').val('');
+						
+						$('#btnGetSTD').attr('stdid','');
+						$('#btnGetSTD').attr('subid','');
 						
 						Lobibox.notify('warning', {
 							title: 'แจ้งเตือน',
@@ -658,9 +653,15 @@ function fn_loadPropoties($thisWindow,$EVENT){
 						});
 					}else{
 						$('#fPRICE').val(data.PRICE);
-						$('#fPRICE').attr('stdid',data.STDID);
-						$('#fPRICE').attr('subid',data.SUBID);
+						$('#btnGetSTD').attr('stdid',data.STDID);
+						$('#btnGetSTD').attr('subid',data.SUBID);
 						
+						if(data.HASSTR == 0){
+							$('#fSTRNO').empty().trigger('change');
+						}
+						
+						fn_balance();
+						/*
 						if($('#fRESPAY').val() == ''){
 							$('#fRESPAY').val();
 							$('#fRESPAY').focus();
@@ -669,29 +670,24 @@ function fn_loadPropoties($thisWindow,$EVENT){
 							var bl = data.price - ($('#fRESPAY').val()).replace(',','');
 							$('#fBALANCE').val(bl);
 						}						
+						*/
 					}
 					
 					$('#fPRICE').attr('disabled',true);
 					JDfSTAT_select = null;
+					
+					$('#loadding').fadeOut('200');
 				},
 				beforeSend: function(){
 					if(JDfSTAT_select !== null){
 						JDfSTAT_select.abort();
 					}
 				},
-				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+				// error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 			});
 	});
 	
-	$('#fSTAT').on("select2:unselect",function(){
-		$('#fPRICE').val('');
-		$('#fPRICE').attr('disabled',false);
-		$('#fPRICE').focus();
-	});
-	
-	$('#fPRICE').focusout(function(){ fn_balance(); });
-	$('#fRESPAY').focusout(function(){ fn_balance(); });
-	
+	$('#fRESPAY').focusout(function(){ fn_balance(); });	
 	var jd_fn_balance = null;
 	function fn_balance(){
 		dataToPost = new Object();
@@ -717,7 +713,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					jd_fn_balance.abort();
 				}
 			},
-			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+			// error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	}
 	
@@ -740,9 +736,12 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					closeOnClick: true
 				},
 			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				if (type === 'ok'){
 					fn_save($thisWindow,lobibox);
+				}else{
+					$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 				}
 			}
 		});
@@ -751,11 +750,13 @@ function fn_loadPropoties($thisWindow,$EVENT){
 	if($EVENT == 'add'){
 		$('#fCC').val(null).trigger('change');
 		$('#fSTAT').val(null).trigger('change');
+		$('#fPRICE').attr('disabled',true);
 		$('#btnDelete').hide(0);
 		$('#btnClear').show(0);
 	}else{
 		$('#btnClear').hide(0);
-		if(_level == 1){
+		
+		//if(_level == 1){
 			$('#fRESVDT').attr('disabled',false);
 			$('#fCUSCOD').attr('disabled',false);
 			$('#fCUSCOD_removed').attr('disabled',false);
@@ -767,8 +768,9 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			$('#fCOLOR').attr('disabled',false);
 			$('#fCC').attr('disabled',false);
 			$('#fSTAT').attr('disabled',false);
-			$('#fPRICE').attr('disabled',false);
+			//$('#fPRICE').attr('disabled',false);
 			$('#fRESPAY').attr('disabled',false);
+		/*
 		}else{
 			$('#fRESVDT').attr('disabled',true);
 			$('#fCUSCOD').attr('disabled',true);
@@ -783,7 +785,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			$('#fSTAT').attr('disabled',true);
 			$('#fPRICE').attr('disabled',true);
 			$('#fRESPAY').attr('disabled',true);
-		}
+		//}
+		*/
 		
 		$('#btnSave').attr('disabled',(_update == 'T' ? false:true));
 		$('#btnDelete').show(0);
@@ -828,6 +831,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 					closeOnClick: true
 				},
 			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				if (type === 'ok'){
 					dataToPost = new Object();
@@ -855,10 +859,10 @@ function fn_loadPropoties($thisWindow,$EVENT){
 							});
 							
 							lobibox.destroy(); 
-							if(!data.error){ 
-								$thisWindow.destroy(); 
-							} 
+							if(!data.error){ $thisWindow.destroy(); } 
+							
 							jd_btnDelete = null;
+							$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 						},
 						beforeSend: function(){
 							if(jd_btnDelete !== null){
@@ -866,6 +870,8 @@ function fn_loadPropoties($thisWindow,$EVENT){
 							}
 						}
 					});
+				}else{
+					$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 				}
 			}
 		});
@@ -894,8 +900,8 @@ function fn_save($thisWindow,lobibox){
 	dataToPost.CC 		= (typeof $('#fCC').find(':selected').val() === 'undefined' ? '':$('#fCC').find(':selected').val());
 	dataToPost.STAT 	= (typeof $('#fSTAT').find(':selected').val() === 'undefined' ? '':$('#fSTAT').find(':selected').val());
 	dataToPost.PRICE 	= $('#fPRICE').val();
-	dataToPost.STDID 	= (typeof $('#fPRICE').attr('stdid') === 'undefined' ? '':$('#fPRICE').attr('stdid'));
-	dataToPost.SUBID	= (typeof $('#fPRICE').attr('subid') === 'undefined' ? '':$('#fPRICE').attr('subid'));
+	dataToPost.STDID 	= (typeof $('#btnGetSTD').attr('stdid') === 'undefined' ? '':$('#btnGetSTD').attr('stdid'));
+	dataToPost.SUBID	= (typeof $('#btnGetSTD').attr('subid') === 'undefined' ? '':$('#btnGetSTD').attr('subid'));
 	dataToPost.RESPAY 	= $('#fRESPAY').val();
 	dataToPost.BALANCE 	= $('#fBALANCE').val();
 	dataToPost.RECVDUE 	= $('#fRECVDUE').val();
@@ -904,7 +910,8 @@ function fn_save($thisWindow,lobibox){
 	dataToPost.SMCHQ 	= $('#fSMOWE').val();
 	dataToPost.MEMO1 	= $('#fMEMO1').val();
 	
-	$('#loadding').fadeIn(500);
+	
+	$('#loadding').fadeIn(200);
 	JD_fn_save = $.ajax({
 		url:'../SYS04/ReserveCar/SaveRESV',
 		data: dataToPost,
@@ -940,14 +947,12 @@ function fn_save($thisWindow,lobibox){
 			}
 			JD_fn_save = null;
 			lobibox.destroy();
-			$('#loadding').fadeOut(100);
+			$('#loadding').fadeOut(200);
+			
+			$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 		},
-		beforeSend: function(){
-			if(JD_fn_save !== null){
-				JD_fn_save.abort();
-			}
-		},
-		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		beforeSend: function(){ if(JD_fn_save !== null){ JD_fn_save.abort(); } },
+		// error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 

@@ -236,7 +236,8 @@ class ReportCardDT extends MY_Controller {
 						,0 as PAYAMTB,0 as PAYDUE,0 as CRE,0 as PAYVAT,0 as PAYNET,0 as RCPROF,2 as FLAG 
 					from {$this->MAuth->getdb('ARPAY')} X where X.PAYMENT = 0 and X.CONTNO = '".$CONTNO."'
 				)as T
-				,ARMAST M,INVTRAN I,CUSTMAST C where T.CONTNO = M.CONTNO and T.LOCAT = M.LOCAT and M.CUSCOD = C.CUSCOD and M.STRNO = I.STRNO  
+				,{$this->MAuth->getdb('ARMAST')} M,{$this->MAuth->getdb('INVTRAN')} I,{$this->MAuth->getdb('CUSTMAST')} C 
+				where T.CONTNO = M.CONTNO and T.LOCAT = M.LOCAT and M.CUSCOD = C.CUSCOD and M.STRNO = I.STRNO  
 				--ORDER BY T.CONTNO,T.LOCAT,T.NOPAY,T.FLAG,T.TMBILDT,T.TMBILL
 			)RCDT
 		";
@@ -358,7 +359,7 @@ class ReportCardDT extends MY_Controller {
 				}
 				$arrs = array();
 				$sql1 = "
-					select NKANG,VKANG,TKANG from ARMAST where CONTNO = '".$CONTNO."'
+					select NKANG,VKANG,TKANG from {$this->MAuth->getdb('ARMAST')} where CONTNO = '".$CONTNO."'
 				";
 				$query1 = $this->db->query($sql1);
 				if($query1->row()){

@@ -79,15 +79,17 @@ class CUSTOMERS extends MY_Controller {
 		if($arrs['address'] != ''){
 			$cond .= " and ADDR like '%".$arrs['address']."%'";
 		}
+		/*
 		$top = "";
 		if($arrs['cuscod'] != '' || $arrs['surname'] != '' || $arrs['address'] != ''){
 			$top = "top 100";
 		}else if($cond == ''){
 			$top = "top 100";
 		}
+		*/
 		//".($cond == "" ? "top 100":"")."
 		$sql = "
-			select ".$top." * from (
+			select ".($cond == "" ? "top 100":"top 1000")." * from (
 				select replace(STUFF(
 					(
 						select '๛' 
@@ -178,8 +180,8 @@ class CUSTOMERS extends MY_Controller {
 		$arrs['CUSCOD'] = $_POST['CUSCOD'];
 		
 		$sql ="
-            select A.CUSCOD,A.ADDRNO,A.ADDR1,(select house from HIC2SHORTL.dbo.FN_JD_REPLACEADDR(ADDR1)) as HOUSE
-			,(select swine from HIC2SHORTL.dbo.FN_JD_REPLACEADDR(ADDR1)) as SWIN,A.ADDR2,A.TUMB
+            select A.CUSCOD,A.ADDRNO,A.ADDR1,(select house from ".$this->sess["db"].".dbo.FN_JD_REPLACEADDR(ADDR1)) as HOUSE
+			,(select swine from ".$this->sess["db"].".dbo.FN_JD_REPLACEADDR(ADDR1)) as SWIN,A.ADDR2,A.TUMB
 			,A.AUMPCOD,A.PROVCOD,A.ZIP,A.TELP,A.MEMO1,A.ACPDT
 			,A.USERID,A.PICT1,A.MOOBAN,A.SOI,B.PROVCOD,B.AUMPCOD,B.AUMPDES
 			,C.PROVCOD,C.PROVDES from {$this->MAuth->getdb('CUSTADDR')} A
@@ -308,6 +310,7 @@ class CUSTOMERS extends MY_Controller {
 				$arrs['MEMOADD']    = $row->MEMO1;
 			}
 		}
+		//echo $arrs['ADDRNO1']; exit;
 		//print_r($arrs); exit;
 		//select2 กลุ่มลูกค้า
 		$sqlA = "
@@ -343,8 +346,8 @@ class CUSTOMERS extends MY_Controller {
 		}
 		*/
 		$sqlD = "
-			select A.CUSCOD,A.ADDRNO,A.ADDR1,(select house from HIC2SHORTL.dbo.FN_JD_REPLACEADDR(ADDR1)) as HOUSE
-			,(select swine from HIC2SHORTL.dbo.FN_JD_REPLACEADDR(ADDR1)) as SWIN,A.ADDR2,A.TUMB
+			select A.CUSCOD,A.ADDRNO,A.ADDR1,(select house from ".$this->sess["db"].".dbo.FN_JD_REPLACEADDR(ADDR1)) as HOUSE
+			,(select swine from ".$this->sess["db"].".dbo.FN_JD_REPLACEADDR(ADDR1)) as SWIN,A.ADDR2,A.TUMB
 			,A.AUMPCOD,A.PROVCOD,A.ZIP,A.TELP,A.MEMO1,A.ACPDT
 			,A.USERID,A.PICT1,A.MOOBAN,A.SOI,B.PROVCOD,B.AUMPCOD,B.AUMPDES
 			,C.PROVCOD,C.PROVDES from {$this->MAuth->getdb('CUSTADDR')} A
@@ -399,11 +402,12 @@ class CUSTOMERS extends MY_Controller {
 						</td>
 					</tr>
 				";
-				$addrno1 .= "<option value='".str_replace(chr(0),'',$row->ADDRNO)."'>".str_replace(chr(0),'',$row->ADDRNO)."</option>";
-				$addrno2 .= "<option value='".str_replace(chr(0),'',$row->ADDRNO)."'>".str_replace(chr(0),'',$row->ADDRNO)."</option>";
-				$addrno3 .= "<option value='".str_replace(chr(0),'',$row->ADDRNO)."'>".str_replace(chr(0),'',$row->ADDRNO)."</option>";
+				$addrno1 .= "<option ".($row->ADDRNO == $arrs['ADDRNO1'] ? "selected":"")." value='".str_replace(chr(0),'',$row->ADDRNO)."'>".str_replace(chr(0),'',$row->ADDRNO)."</option>";
+				$addrno2 .= "<option ".($row->ADDRNO == $arrs['ADDRNO2'] ? "selected":"")." value='".str_replace(chr(0),'',$row->ADDRNO)."'>".str_replace(chr(0),'',$row->ADDRNO)."</option>";
+				$addrno3 .= "<option ".($row->ADDRNO == $arrs['ADDRNO3'] ? "selected":"")." value='".str_replace(chr(0),'',$row->ADDRNO)."'>".str_replace(chr(0),'',$row->ADDRNO)."</option>";
 			}
 		}
+		//".($arrs['IDCARD'] == 'บัตรประชาชน' ? "selected":"")."
 		$html ="
 			<div class='col-sm-10 col-sm-offset-1'>
 				<div class='row'>
@@ -585,18 +589,21 @@ class CUSTOMERS extends MY_Controller {
 					<div class='col-sm-4'>
 						ที่อยู่ตามทะเบียนบ้าน
 						<select type='text' class='form-control' id='addrno1'>
+							
 							".$addrno1."
 						</select>
 					</div>
 					<div class='col-sm-4'>
 						ที่อยู่ปัจจุบัน
 						<select type='text' class='form-control' id='addrno2'>
+							
 							".$addrno2."
 						</select>
 					</div>
 					<div class='col-sm-4'>
 						ที่อยู่ที่อยู่ที่ส่งจดหมาย
 						<select type='text' class='form-control' id='addrno3'>
+							
 							".$addrno3."
 						</select>
 					</div>
@@ -1164,15 +1171,15 @@ class CUSTOMERS extends MY_Controller {
 		$sql_addr = "";		//บันทึกที่อยู่ของลูกค้าเข้าฐานข้อมูล
         $sizeArr = count($ADDR);
         for($P=0; $P < $sizeArr; $P++){
-		$sql_addr .="
-			insert into {$this->MAuth->getdb('CUSTADDR')}(
-				[CUSCOD],[ADDRNO],[ADDR1],[ADDR2],[TUMB],[AUMPCOD],[PROVCOD]
-				,[ZIP],[TELP],[MEMO1],[ACPDT],[USERID],[PICT1],[MOOBAN],[SOI]
-			)values(
-				@CONTNO,'".$ADDR[$P][0]."','".$ADDR[$P][1]." ".$SWIN."".$ADDR[$P][11]."','".$ADDR[$P][3]."'
-				,'".$ADDR[$P][5]."','".$ADDR[$P][6]."','".$ADDR[$P][7]."','".$ADDR[$P][8]."'
-				,'".$ADDR[$P][9]."','".$ADDR[$P][10]."',null,null,null,'".$ADDR[$P][4]."'
-				,'".$ADDR[$P][2]."'
+			$sql_addr .="
+				insert into {$this->MAuth->getdb('CUSTADDR')}(
+					[CUSCOD],[ADDRNO],[ADDR1],[ADDR2],[TUMB],[AUMPCOD],[PROVCOD]
+					,[ZIP],[TELP],[MEMO1],[ACPDT],[USERID],[PICT1],[MOOBAN],[SOI]
+				)values(
+					@CONTNO,'".$ADDR[$P][0]."','".$ADDR[$P][1]." ".$SWIN."".$ADDR[$P][11]."','".$ADDR[$P][3]."'
+					,'".$ADDR[$P][5]."','".$ADDR[$P][6]."','".$ADDR[$P][7]."','".$ADDR[$P][8]."'
+					,'".$ADDR[$P][9]."','".$ADDR[$P][10]."',null,null,null,'".$ADDR[$P][4]."'
+					,'".$ADDR[$P][2]."'
 				)
 			";
         }
@@ -1271,41 +1278,42 @@ class CUSTOMERS extends MY_Controller {
 		$sql_addr = "";		//บันทึกที่อยู่ของลูกค้าเข้าฐานข้อมูล
         $sizeArr = count($ADDR);
         for($P=0; $P < $sizeArr; $P++){
-		$sql_addr .="
-			if exists (
-				select * from {$this->MAuth->getdb('CUSTADDR')} 
-				where CUSCOD='".$arrs['CUSCOD']."' and ADDRNO='".$ADDR[$P][0]."'
-			)
-			begin
-			update {$this->MAuth->getdb('CUSTADDR')}
-			set
-				[CUSCOD]='".$arrs['CUSCOD']."',[ADDRNO]='".$ADDR[$P][0]."'
-				,[ADDR1]='".$ADDR[$P][1]." ".$SWIN."".$ADDR[$P][11]."',[ADDR2]='".$ADDR[$P][3]."'
-				,[TUMB]='".$ADDR[$P][5]."',[AUMPCOD]='".$ADDR[$P][6]."'
-				,[PROVCOD]='".$ADDR[$P][7]."',[ZIP]='".$ADDR[$P][8]."'
-				,[TELP]='".$ADDR[$P][9]."',[MEMO1]='".$ADDR[$P][10]."'
-				,[MOOBAN]='".$ADDR[$P][4]."',[SOI]='".$ADDR[$P][2]."'
-				WHERE [CUSCOD]='".$arrs['CUSCOD']."' and [ADDRNO]='".$ADDR[$P][0]."'
-			end
-			else	
-			begin
-			insert into {$this->MAuth->getdb('CUSTADDR')}(
-				[CUSCOD],[ADDRNO],[ADDR1],[ADDR2],[TUMB],[AUMPCOD],[PROVCOD]
-				,[ZIP],[TELP],[MEMO1],[ACPDT],[USERID],[PICT1],[MOOBAN],[SOI]
-			)values(
-				'".$arrs['CUSCOD']."','".$ADDR[$P][0]."','".$ADDR[$P][1]." ".$SWIN."".$ADDR[$P][11]."','".$ADDR[$P][3]."'
-				,'".$ADDR[$P][5]."','".$ADDR[$P][6]."','".$ADDR[$P][7]."','".$ADDR[$P][8]."'
-				,'".$ADDR[$P][9]."','".$ADDR[$P][10]."',null,null,null,'".$ADDR[$P][4]."'
-				,'".$ADDR[$P][2]."'
+			$sql_addr .="
+				if exists (
+					select * from {$this->MAuth->getdb('CUSTADDR')} 
+					where CUSCOD='".$arrs['CUSCOD']."' and ADDRNO='".$ADDR[$P][0]."'
 				)
-			end	
+				begin
+					update {$this->MAuth->getdb('CUSTADDR')}
+					set
+						[CUSCOD]='".$arrs['CUSCOD']."',[ADDRNO]='".$ADDR[$P][0]."'
+						,[ADDR1]='".$ADDR[$P][1]." ".$SWIN."".$ADDR[$P][11]."',[ADDR2]='".$ADDR[$P][3]."'
+						,[TUMB]='".$ADDR[$P][5]."',[AUMPCOD]='".$ADDR[$P][6]."'
+						,[PROVCOD]='".$ADDR[$P][7]."',[ZIP]='".$ADDR[$P][8]."'
+						,[TELP]='".$ADDR[$P][9]."',[MEMO1]='".$ADDR[$P][10]."'
+						,[MOOBAN]='".$ADDR[$P][4]."',[SOI]='".$ADDR[$P][2]."'
+						WHERE [CUSCOD]='".$arrs['CUSCOD']."' and [ADDRNO]='".$ADDR[$P][0]."'
+					end
+				else	
+					begin
+					insert into {$this->MAuth->getdb('CUSTADDR')}(
+						[CUSCOD],[ADDRNO],[ADDR1],[ADDR2],[TUMB],[AUMPCOD],[PROVCOD]
+						,[ZIP],[TELP],[MEMO1],[ACPDT],[USERID],[PICT1],[MOOBAN],[SOI]
+					)values(
+						'".$arrs['CUSCOD']."','".$ADDR[$P][0]."','".$ADDR[$P][1]." ".$SWIN."".$ADDR[$P][11]."','".$ADDR[$P][3]."'
+						,'".$ADDR[$P][5]."','".$ADDR[$P][6]."','".$ADDR[$P][7]."','".$ADDR[$P][8]."'
+						,'".$ADDR[$P][9]."','".$ADDR[$P][10]."',null,null,null,'".$ADDR[$P][4]."'
+						,'".$ADDR[$P][2]."'
+						)
+					end	
 			";
         }
 		$sql ="
 			if OBJECT_ID('tempdb..#custmastTemp') is not null drop table #custmastTemp;
 			create table #custmastTemp (id varchar(1),msg varchar(max));
 			
-			declare @sircod varchar(2) = (select SIRCOD from SIRNAM where SIRNAM = '".$arrs['SNAM']."');
+			declare @sircod varchar(2) = (select SIRCOD from {$this->MAuth->getdb('SIRNAM')} 
+			where SIRNAM = '".$arrs['SNAM']."');
 			
 			begin tran custmastTran
 			begin try

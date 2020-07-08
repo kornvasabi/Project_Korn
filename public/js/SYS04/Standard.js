@@ -7,6 +7,7 @@
                           _ _/ /
                          /___ /
 ********************************************************/
+var _groupType  = $('.tab1[name="home"]').attr('groupType');
 var _locat  = $('.tab1[name="home"]').attr('locat');
 var _insert = $('.tab1[name="home"]').attr('cin');
 var _update = $('.tab1[name="home"]').attr('cup');
@@ -18,18 +19,25 @@ $(function(){
 	
 	//alert(_insert);
 	if(_insert == "T"){ // สิทธิ์เพิ่มข้อมูล
-		$("#btnt1createStd").attr("disabled",false);
+		$("#btnt1createStd ,#btnt1import").attr("disabled",false);
 	}else{
-		$("#btnt1createStd").attr("disabled",true);
+		$("#btnt1createStd ,#btnt1import").attr("disabled",true);
 	}
 	
 	$("#SACTICOD").selectpicker();
 	$("#Search_LOCAT").selectpicker();
+	if(_groupType != "OFF"){
+		$("#Search_LOCAT").empty().append('<option value="'+_locat+'" selected>'+_locat+'</option>');
+		$("#Search_LOCAT").attr('disabled',true).selectpicker('refresh');;
+	}else{
+		$("#Search_LOCAT").empty();
+		$("#Search_LOCAT").attr('disabled',false).selectpicker('refresh');;
+	}
 });
 
 var JDbtnt1search = null;
 $("#btnt1search").click(function(){
-	dataToPost = new Object();
+	var dataToPost = new Object();
 	dataToPost.name 	= $("#SNAME").val();
 	dataToPost.model 	= $("#SMODEL").val();
 	dataToPost.baab 	= $("#SBAAB").val();
@@ -40,6 +48,9 @@ $("#btnt1search").click(function(){
 	dataToPost.locat 	= $("#Search_LOCAT").val();
 	dataToPost.stat 	= $("input[name='s_std_stat']:checked").val();
 	
+	dataToPost.STDID 	= $("#SSTDID").val();
+	dataToPost.SUBID 	= $("#SSUBID").val();
+	
 	$('#loadding').show();
 	JDbtnt1search = $.ajax({
 		url:'../SYS04/Standard/search',
@@ -47,56 +58,72 @@ $("#btnt1search").click(function(){
 		type: 'POST',
 		dataType: 'json',
 		success: function(data){
-			$('#loadding').hide(200);
-			
-			Lobibox.window({
-				title: 'รายการ Standard',
-				width: $(window).width(),
-				height: $(window).height(),
-				content: data.html,
-				draggable: false,
-				closeOnEsc: false,
-				shown: function($this){
-					$("#table-fixed-std-detail").hide();
-					
-					
-					$(".JDtooltip").attr({
-						'data-toggle':'tooltip',
-						'data-placement':'right',
-						'data-html':'false',
-						'data-original-title':'tooltip',
-					});
-					$('[data-toggle="tooltip"]').tooltip();
-					
-					redraw();
-					function redraw(){
-						var JDstddetail = null;
-						$(".editstd").unbind('click');
-						$(".editstd").click(function(){
-							dataToPost = new Object();
-							dataToPost.stdid 	= ($(this).attr('stdid'));
-							dataToPost.subid 	= ($(this).attr('subid'));
-							dataToPost.event	= "edit";
-							
-							form_operation(dataToPost);
-							$this.destroy();
+			if(data.error){
+				Lobibox.notify('warning', {
+					title: 'แจ้งเตือน',
+					size: 'mini',
+					closeOnClick: false,
+					delay: 5000,
+					pauseDelayOnHover: true,
+					continueDelayOnInactiveTab: false,
+					icon: true,
+					messageHeight: '90vh',
+					msg: data.html
+				});
+			}else{
+				Lobibox.window({
+					title: 'รายการ Standard',
+					width: $(window).width(),
+					height: $(window).height(),
+					content: data.html,
+					draggable: false,
+					closeOnEsc: false,
+					shown: function($this){
+						$("#table-fixed-std-detail").hide();
+						
+						$(".JDtooltip").attr({
+							'data-toggle':'tooltip',
+							'data-placement':'right',
+							'data-html':'true',
+							'data-original-title':'tooltip',
 						});
+						$('[data-toggle="tooltip"]').tooltip();
+						
+						//ตรวจสอบสิทธิ์แก้ไข
+						$(".editstd").attr('disabled',(_update == "T" ? false:true));
+						
+						redraw();
+						function redraw(){
+							var JDstddetail = null;
+							$(".editstd").unbind('click');
+							$(".editstd").click(function(){
+								var dataToPost = new Object();
+								dataToPost.stdid 	= ($(this).attr('stdid'));
+								dataToPost.subid 	= ($(this).attr('subid'));
+								dataToPost.event	= "edit";
+								
+								form_operation(dataToPost);
+								$this.destroy();
+							});
+						}
+						
+						
+						$("#excelstd").click(function(){	
+							var d = new Date();
+							tableToExcel_Export(data.excel,"ข้อมูล std","Standard_"+(d.getTime())); 
+							//tableToExcel_Export(data.html,"ข้อมูล std","Standard_"+(d.getTime())); 
+						});
+						
+						
+						JDbtnt1search = null;
+					},
+					beforeClose : function(){
+						$('#btnt1search').attr('disabled',false);
 					}
-					
-					
-					$("#excelstd").click(function(){	
-						var d = new Date();
-						tableToExcel_Export(data.excel,"ข้อมูล std","Standard_"+(d.getTime())); 
-						//tableToExcel_Export(data.html,"ข้อมูล std","Standard_"+(d.getTime())); 
-					});
-					
-					
-					JDbtnt1search = null;
-				},
-				beforeClose : function(){
-					$('#btnt1search').attr('disabled',false);
-				}
-			});
+				});
+			}
+			
+			$('#loadding').fadeOut(200);
 		},
 		beforeSend: function(){
 			if(JDbtnt1search !== null){
@@ -131,7 +158,7 @@ function edit($btn){
 		callback: function(lobibox, type){
 			if (type === 'ok'){
 				//lobibox.destroy();
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.stdid 		= $btn.attr("stdid");
 				dataToPost.plrank 		= $btn.attr("plrank");
 				dataToPost.evente 		= $("#FEVENTE").val();
@@ -207,7 +234,7 @@ function edit($btn){
 
 var JDbtnt1createStd = null;
 $("#btnt1createStd").click(function(){
-	data = new Object();
+	var data = new Object();
 	data.event = "add";
 	form_operation(data);
 });
@@ -270,6 +297,12 @@ function form_operation(dataToPost){
 							$('.deleteFree').attr('disabled',true);
 							
 							$('#btnSave').attr('disabled',true);
+						}
+						
+						if(_delete == "T"){	 
+							$('#add_delete').attr('disabled',false);
+						}else{
+							$('#add_delete').attr('disabled',true);
 						}
 					}
 					
@@ -451,7 +484,7 @@ function fnload($thisForm){
         ajax: {
 			url: '../Cselect2/getMODEL',
 			data: function (params) {
-				dataToPost = new Object();
+				var dataToPost = new Object();
 				dataToPost.now = (typeof $('#FMODEL').find(':selected').val() === 'undefined' ? "" : $('#FMODEL').find(':selected').val());
 				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 				dataToPost.TYPECOD = "HONDA";
@@ -500,14 +533,14 @@ function fnload($thisForm){
 	
 	var jdbtnAddPSTD=null;
 	$('#btnAddPSTD').click(function(){
-		dataToPost = new Object();
+		var dataToPost = new Object();
 		dataToPost.FSTAT  = (typeof $('#FSTAT').find(':selected').val() === "undefined" ? "":$('#FSTAT').find(':selected').val());
 		dataToPost.FPRICE = $('#F_OLD_PRICE').val();
 		dataToPost.TPRICE = $('#F_OLD_PRICE2').val();
 		
 		NPRICE = new Array();
 		$('.btn_car_old_delete').each(function(){
-			data = new Object();
+			var data = new Object();
 			data.FPRICE = $(this).attr('FPRICE');
 			data.TPRICE = $(this).attr('TPRICE');
 			
@@ -553,7 +586,7 @@ function fnload($thisForm){
 	});
 	
 	$('#FMODEL').on('select2:select',function(){
-		dataToPost = new Object();
+		var dataToPost = new Object();
 		dataToPost.now 		= "";
 		dataToPost.q 		= "";
 		dataToPost.TYPECOD 	= "HONDA";
@@ -606,7 +639,7 @@ function fnload($thisForm){
 	});
 	
 	FBAAB.change(function(){
-		dataToPost = new Object();
+		var dataToPost = new Object();
 		dataToPost.now 		= "";
 		dataToPost.q 		= "";
 		dataToPost.TYPECOD 	= "HONDA";
@@ -621,8 +654,8 @@ function fnload($thisForm){
 			dataType: 'json',
 			success: function(data){
 				let size = data.length;
+				FCOLOR.empty();
 				for(let i=0;i<size;i++){
-					if(i==0){ FCOLOR.empty(); }
 					FCOLOR.append('<option value="'+data[i].id+'">'+data[i].text+'</option>');
 				}				
 				FCOLOR.bootstrapDualListbox('refresh', true);
@@ -630,24 +663,6 @@ function fnload($thisForm){
 			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 		});
 	});
-	
-	
-	//$('#table-stdfa').on('draw.dt',function(){ redraw(); });
-	//fn_datatables('table-stdfa',2,"300px","YES");	
-	//$('#table-stdfa').DataTable({ "ajax": "../SYS04/Standard/datatablesArr" });
-	//fn_datatables('table-stdfree',2,"300px","YES");
-
-	/*
-	document.getElementById("table-fixed-stdfa").addEventListener("scroll", function(){
-		var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
-		this.querySelector("thead").style.transform = translate;						
-	});	
-	
-	document.getElementById("table-fixed-stdfree").addEventListener("scroll", function(){
-		var translate = "translate(0,"+(this.scrollTop - 1)+"px)";
-		this.querySelector("thead").style.transform = translate;						
-	});
-	*/	
 	
 	$("#btnAddDwn").click(function(){
 		loadAddDwn(null); 	// เพิ่มข้อมูล  Standard การดาวน์รถ  ใหม่
@@ -699,7 +714,7 @@ function fnload($thisForm){
 					
 					$price = [];
 					$(".btn_car_old_delete").each(function(){
-						row = new Object();
+						var row = new Object();
 						row.fprice		= $(this).attr('fprice');
 						row.tprice 		= $(this).attr('tprice');
 						
@@ -711,13 +726,14 @@ function fnload($thisForm){
 					
 					$Dwn = [];
 					$(".editDwn").each(function(){
-						row = new Object();
+						var row = new Object();
 						row.formpriceFP		= $(this).attr('formpriceFP');
 						row.formpriceTP		= $(this).attr('formpriceTP');
 						row.formdwns		= $(this).attr('formdwns');
 						row.formdwne 		= $(this).attr('formdwne');
 						row.forminterest 	= $(this).attr('forminterest');
 						row.forminterest2 	= $(this).attr('forminterest2');
+						row.forminsurancepay 	= $(this).attr('forminsurancepay');
 						row.forminsurance 	= $(this).attr('forminsurance');
 						row.formtrans 		= $(this).attr('formtrans');
 						row.formregist 		= $(this).attr('formregist');
@@ -727,11 +743,11 @@ function fnload($thisForm){
 						
 						$Dwn.push(row);
 					});
-					dataToPost.STDDWN 	 = ($Dwn.length == 0 ? "":$Dwn);
+					dataToPost.STDDWN 	 = ($Dwn.length == 0 ? "":JSON.stringify($Dwn));
 					
 					$Free = [];
 					$(".editFree").each(function(){
-						row = new Object();
+						var row = new Object();
 						row.formpriceFP	= $(this).attr('formpriceFP');
 						row.formpriceTP	= $(this).attr('formpriceTP');
 						row.formdwns	= $(this).attr('formdwns');
@@ -744,7 +760,7 @@ function fnload($thisForm){
 						
 						$Free.push(row);
 					});
-					dataToPost.STDFREE 	= ($Free.length == 0 ? "":$Free);
+					dataToPost.STDFREE 	= ($Free.length == 0 ? "":JSON.stringify($Free));
 					dataToPost.event 	= $('#btnSave').attr('event');
 					
 					$('#loadding').show(0);
@@ -825,7 +841,7 @@ function fnload($thisForm){
 			},
 			shown: function($this){},
 			callback: function(lobibox, type){
-				if (type === 'ok'){
+				if (type == 'ok'){
 					var dataToPost = new Object();
 					dataToPost.STDID = $("#STDID").val();
 					dataToPost.SUBID = $("#SUBID").val();
@@ -893,12 +909,12 @@ function fnload($thisForm){
 			dataType: 'json',
 			success: function(data){
 				Lobibox.window({
-					title: 'FORM CUSTOMER',
-					//width: $(window).width(),
-					height: 125,
+					title: 'ดึงสแตนดาร์ดเดิม มากำหนดสแตนดาร์ดใหม่',
+					width: $(window).width(),
+					height: $(window).height(),
 					content: data.html,
 					draggable: false,
-					closeOnEsc: true,
+					closeOnEsc: false,
 					shown: function($thisFile){
 						initupload($thisFile);
 					},
@@ -921,6 +937,213 @@ function fnload($thisForm){
 	});	
 }
 
+function initupload($thisFile){
+	$('#imp_model').select2({
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2/getMODEL',
+			data: function (params) {
+				var dataToPost = new Object();
+				dataToPost.now = (typeof $('#imp_model').find(':selected').val() === 'undefined' ? "" : $('#imp_model').find(':selected').val());
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				dataToPost.TYPECOD = "HONDA";
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: true,
+		multiple: false,
+		dropdownParent: $('#imp_model').parent().parent(),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
+	$('#imp_baab').select2({
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2/getBAAB',
+			data: function (params) {
+				var dataToPost = new Object();
+				dataToPost.now 		= (typeof $('#imp_baab').find(':selected').val() === 'undefined' ? "" : $('#imp_baab').find(':selected').val());
+				dataToPost.q 		= (typeof params.term === 'undefined' ? '' : params.term);
+				dataToPost.TYPECOD 	= "HONDA";
+				dataToPost.MODEL 	= (typeof $('#imp_model').find(':selected').val() === 'undefined' ? "" : $('#imp_model').find(':selected').val());
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: true,
+		multiple: false,
+		dropdownParent: $('#imp_model').parent().parent(),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
+	$('#imp_color').select2({
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2/getJDCOLOR',
+			data: function (params) {
+				var dataToPost = new Object();
+				dataToPost.now 		= (typeof $('#imp_color').find(':selected').val() === 'undefined' ? "" : $('#imp_color').find(':selected').val());
+				dataToPost.q 		= (typeof params.term === 'undefined' ? '' : params.term);
+				dataToPost.TYPECOD  = "HONDA";
+				dataToPost.MODEL 	= (typeof $('#imp_model').find(':selected').val() === 'undefined' ? "" : $('#imp_model').find(':selected').val());
+				dataToPost.BAAB 	= (typeof $('#imp_baab').find(':selected').val() === 'undefined' ? "" : $('#imp_baab').find(':selected').val());
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: true,
+		multiple: false,
+		dropdownParent: $('#imp_color').parent().parent(),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
+	
+	$('#imp_stat').select2({
+		placeholder: 'เลือก',
+		dropdownParent: $('#imp_stat').parent().parent(), 
+		minimumResultsForSearch: -1,
+		width: '100%'
+	});
+	
+	var jdimp_search=null;
+	$('#imp_search').click(function(){
+		var dataToPost = new Object();
+		dataToPost.model = (typeof $('#imp_model').find(':selected').val() === 'undefined' ? '':$('#imp_model').find(':selected').val());
+		dataToPost.baab  = (typeof $('#imp_baab').find(':selected').val() === 'undefined' ? '':$('#imp_baab').find(':selected').val());
+		dataToPost.color = (typeof $('#imp_color').find(':selected').val() === 'undefined' ? '':$('#imp_color').find(':selected').val());
+		dataToPost.stat  = (typeof $('#imp_stat').find(':selected').val() === 'undefined' ? '':$('#imp_stat').find(':selected').val());
+		dataToPost.events  = $('#imp_events').val();
+		dataToPost.evente  = $('#imp_evente').val();
+		$('#imp_result').html('');
+		$('#loadding').fadeIn(200);
+		jdimp_search = $.ajax({
+			url:'../SYS04/Standard/impSearch',
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				if(data.error){
+					Lobibox.notify('warning', {
+						title: 'แจ้งเตือน',
+						size: 'mini',
+						closeOnClick: false,
+						delay: 5000,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						msg: data.html
+					});
+				}else{
+					$('#imp_result').html(data.html);				
+					
+					var jdimpstd = null;
+					$('.imp_std').click(function(){
+						var dataToPost = new Object();
+						dataToPost.stdid = $(this).attr('stdid');
+						dataToPost.subid = $(this).attr('subid');
+						
+						$('#loadding').fadeIn(200);
+						jdimpstd = $.ajax({
+							url:'../SYS04/Standard/impSelected',
+							data: dataToPost,
+							type: 'POST',
+							dataType: 'json',
+							success: function(data){
+								
+								$('#FEVENTNAME').val(data['detail']['STDNAME']);
+								$('#FDETAIL').val(data['detail']['STDDESC']);
+								
+								var acti = data["acti"];
+								for(var i=0;i<acti.length;i++){
+									$('#FACTI option[value="'+acti[i]+'"]').attr('selected','selected');
+								}
+								$('#FACTI').bootstrapDualListbox('refresh', true).trigger('change');
+								
+								var newOption = new Option(data['detail']["MODEL"], data['detail']["MODEL"], true, true);
+								$('#FMODEL').empty().append(newOption).trigger('change');
+								$('#FMODEL').trigger('select2:select');
+								$('#FSTAT').val(data['detail']['STAT']).trigger('change');
+								
+								setTimeout(function(){
+									var baab = data["baab"];
+									for(var i=0;i<baab.length;i++){
+										$('#FBAAB option[value="'+baab[i]+'"]').attr('selected','selected');
+									}
+									$('#FBAAB').bootstrapDualListbox('refresh', true).trigger('change');
+									
+									setTimeout(function(){
+										var color = data["color"];
+										for(var i=0;i<color.length;i++){
+											$('#FCOLOR option[value="'+color[i]+'"]').attr('selected','selected');
+										}
+										$('#FCOLOR').bootstrapDualListbox('refresh', true).trigger('change');
+									},2000);
+								},2000);
+								
+								
+								var locat = data["locat"];
+								$('#FLOCAT').bootstrapDualListbox('removeSelectedLabel', true);
+								for(var i=0;i<locat.length;i++){
+									$('#FLOCAT option[value="'+locat[i]+'"]').attr('selected','selected');
+								}
+								$('#FLOCAT').bootstrapDualListbox('refresh', true).trigger('change');
+								
+								$('#tb_car_old tbody').empty().append(data["price"]);
+								$('#table-stdfa tbody').empty().append(data["down"]);
+								$('#table-stdfree tbody').empty().append(data["free"]);
+								
+								fn_delete_price();
+								activeDatatables();
+								activeDatatablesFree();
+								
+								jdimpstd = null;
+								$('#loadding').fadeOut(200);
+							},
+							beforeSend: function(){ if(jdimpstd !== null){ jdimpstd.abort(); } }
+						});
+					});
+				}
+				
+				jdimp_search=null;
+				$('#loadding').fadeOut(200);
+			},
+			beforeSend: function(){ if(jdimp_search !== null){ jdimp_search.abort(); } }
+		});
+	});
+}
+
+/* 
 function initupload($thisFile){
 	$("#fileupload").uploadFile({		
 		url:'../SYS04/Standard/getDataINFile',
@@ -971,7 +1194,7 @@ function initupload($thisFile){
 					$('#FCOLOR').bootstrapDualListbox('refresh', true);
 				}
 				
-				//var newOption = new Option(obj["stat"], obj["stat"], true, true);
+				// var newOption = new Option(obj["stat"], obj["stat"], true, true);
 				$('#FSTAT').val(obj["stat"]).trigger('change');
 				
 				var acti = obj["acti"];
@@ -1009,7 +1232,7 @@ function initupload($thisFile){
 			$("#loadding").fadeOut(200);
 		}
 	});
-}
+} */
 
 // นับขนาดของ object
 Object.size = function(obj) {
@@ -1041,7 +1264,7 @@ $("#Search_LOCAT").parent().find("[aria-label=Search]").keyup(function(){
 });
 
 function FN_JD_BSSELECT($id,$thisSelected,$func){
-	dataToPost = new Object();
+	var dataToPost = new Object();
 	dataToPost.filter = $thisSelected.val();
 	dataToPost.now	  = (typeof $("#"+$id).selectpicker('val') == null ? "":$("#"+$id).selectpicker('val'));
 	
@@ -1309,13 +1532,14 @@ function activeDatatablesFree($stdfree){ // หลังจากเพิ่ม
 
 var JDbtnAddDwn = null;	
 function loadAddDwn($edit){	
-	dataToPost = new Object();
+	var dataToPost = new Object();
 	dataToPost.formpriceFP 	 = ($edit === null ? "":$edit.attr('formpriceFP'));
 	dataToPost.formpriceTP 	 = ($edit === null ? "":$edit.attr('formpriceTP'));
 	dataToPost.formdwns 	 = ($edit === null ? "0":$edit.attr('formdwns'));
 	dataToPost.formdwne 	 = ($edit === null ? "5000":$edit.attr('formdwne'));
 	dataToPost.forminterest  = ($edit === null ? "1.6":$edit.attr('forminterest'));
 	dataToPost.forminterest2 = ($edit === null ? "1.5":$edit.attr('forminterest2'));
+	dataToPost.forminsurancepay = ($edit === null ? "1900":$edit.attr('forminsurancepay'));
 	dataToPost.forminsurance = ($edit === null ? "2300":$edit.attr('forminsurance'));
 	dataToPost.formtrans 	 = ($edit === null ? "750":$edit.attr('formtrans'));
 	dataToPost.formregist  	 = ($edit === null ? "550":$edit.attr('formregist'));
@@ -1327,13 +1551,14 @@ function loadAddDwn($edit){
 	
 	editDwn = new Array();
 	$('.editDwn').each(function(){
-		data = new Object();
+		var data = new Object();
 		data.formpriceFP 	= $(this).attr('formpriceFP');
 		data.formpriceTP 	= $(this).attr('formpriceTP');
 		data.formdwns 		= $(this).attr('formdwns');
 		data.formdwne 		= $(this).attr('formdwne');
 		data.forminterest 	= $(this).attr('forminterest');
 		data.forminterest2 	= $(this).attr('forminterest2');
+		data.forminsurancepay 	= $(this).attr('forminsurancepay');
 		data.forminsurance 	= $(this).attr('forminsurance');
 		data.formtrans 		= $(this).attr('formtrans');
 		data.formregist 	= $(this).attr('formregist');
@@ -1381,7 +1606,7 @@ function loadAddDwn($edit){
 					var jdbtnSWNADD = null;
 					$("#btnSWNADD").unbind('click');
 					$("#btnSWNADD").click(function(){
-						dataToPost = new Object();
+						var dataToPost = new Object();
 						dataToPost.formprice 		= $("#formprice").find(':selected').text();
 						dataToPost.formpriceFP 		= $("#formprice").find('option:selected').attr("FPRICE");
 						dataToPost.formpriceTP 		= $("#formprice").find('option:selected').attr("TPRICE");
@@ -1389,6 +1614,7 @@ function loadAddDwn($edit){
 						dataToPost.formdwne 		= $("#formdwne").val();
 						dataToPost.forminterest 	= $("#forminterest").val();
 						dataToPost.forminterest2 	= $("#forminterest2").val();
+						dataToPost.forminsurancepay = $("#forminsurancepay").val();
 						dataToPost.forminsurance 	= $("#forminsurance").val();
 						dataToPost.formtrans 		= $("#formtrans").val();
 						dataToPost.formregist 		= $("#formregist").val();
@@ -1399,13 +1625,14 @@ function loadAddDwn($edit){
 						
 						editDwn = new Array();
 						$('.editDwn').each(function(){
-							data = new Object();
+							var data = new Object();
 							data.formpriceFP 	= $(this).attr('formpriceFP');
 							data.formpriceTP 	= $(this).attr('formpriceTP');
 							data.formdwns 		= $(this).attr('formdwns');
 							data.formdwne 		= $(this).attr('formdwne');
 							data.forminterest 	= $(this).attr('forminterest');
 							data.forminterest2 	= $(this).attr('forminterest2');
+							data.forminsurancepay 	= $(this).attr('forminsurancepay');
 							data.forminsurance 	= $(this).attr('forminsurance');
 							data.formtrans 		= $(this).attr('formtrans');
 							data.formregist 	= $(this).attr('formregist');
@@ -1517,7 +1744,7 @@ function loadAddDwn($edit){
 }
 
 function loadAddFree($edit){
-	dataToPost = new Object();
+	var dataToPost = new Object();
 	dataToPost.formpriceFP 	= ($edit === null ? "":$edit.attr('formpriceFP'));
 	dataToPost.formpriceTP 	= ($edit === null ? "":$edit.attr('formpriceTP'));
 	dataToPost.formdwns 	= ($edit === null ? "":$edit.attr('formdwns'));
@@ -1542,7 +1769,7 @@ function loadAddFree($edit){
 	
 	editDwn = new Array();
 	$('.editDwn').each(function(){
-		data = new Object();
+		var data = new Object();
 		data.formpriceFP 	= $(this).attr('formpriceFP');
 		data.formpriceTP 	= $(this).attr('formpriceTP');
 		data.formdwns 		= $(this).attr('formdwns');
@@ -1554,7 +1781,7 @@ function loadAddFree($edit){
 	
 	editFree = new Array();
 	$('.editFree').each(function(){
-		data = new Object();
+		var data = new Object();
 		data.formpriceFP 	= $(this).attr('formpriceFP');
 		data.formpriceTP 	= $(this).attr('formpriceTP');
 		data.formdwns 		= $(this).attr('formdwns');
@@ -1627,7 +1854,7 @@ function loadAddFree($edit){
 					var jdbtnSWNADD = null;
 					$("#btnSWNADD").unbind('click');
 					$("#btnSWNADD").click(function(){
-						dataToPost = new Object();
+						var dataToPost = new Object();
 						dataToPost.formprice 	= $("#formprice").find(':selected').text();
 						dataToPost.formpriceFP 	= $("#formprice").find('option:selected').attr("fprice");
 						dataToPost.formpriceTP 	= $("#formprice").find('option:selected').attr("tprice");
@@ -1642,7 +1869,7 @@ function loadAddFree($edit){
 						
 						editFree = new Array();
 						$('.editFree').each(function(){
-							data = new Object();
+							var data = new Object();
 							data.formpriceFP 	= $(this).attr('formpriceFP');
 							data.formpriceTP 	= $(this).attr('formpriceTP');
 							data.formdwns 		= $(this).attr('formdwns');
@@ -1853,7 +2080,7 @@ function fn_afterimport(){
 			},
 			callback: function(lobibox, type){
 				if (type === 'ok'){
-					dataToPost = new Object();
+					var dataToPost = new Object();
 					dataToPost.dt = '';
 					
 					$('#loadding').fadeIn(200);

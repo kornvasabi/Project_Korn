@@ -5,8 +5,30 @@ require_once './vendor/autoload.php';
 date_default_timezone_set('Asia/Bangkok');
 
 class MY_Controller extends CI_Controller {
+	//public $sess = array(); 
+	public $connect_db = "";
+	public $config_db = array(); 
+	
 	public $username = "";
 	public $thaiLongMonthArray = array(1=>'มกราคม',2=>'กุมภาพันธ์',3=>'มีนาคม',4=>'เมษายน',5=>'พฤษภาคม',6=>'มิถุนายน',7=>'กรกฎาคม',8=>'สิงหาคม',9=>'กันยายน',10=>'ตุลาคม',11=>'พฤศจิกายน',12=>'ธันวาคม');
+	
+	function __construct(){
+		parent::__construct();
+		
+		$this->config_db['hostname'] = '192.168.0.10';
+		$this->config_db['username'] = 'YTKMini';
+		$this->config_db['password'] = 'senior';
+		//$this->config_db['database'] = $this->sess["db"];
+		$this->config_db['dbdriver'] = 'sqlsrv';
+		$this->config_db['dbprefix'] = 'wb_';
+		$this->config_db['pconnect'] = FALSE;
+		$this->config_db['db_debug'] = FALSE;
+		$this->config_db['cache_on'] = FALSE;
+		$this->config_db['char_set'] = 'UTF-8';
+		$this->config_db['autoinit'] = TRUE;
+		$this->config_db['stricton'] = FALSE;
+		//$this->connect_db = $this->load->database($config_db,true);
+	}
 	
 	public function input($type,$id,$class,$attr,$value){
 		if($type != ""){
