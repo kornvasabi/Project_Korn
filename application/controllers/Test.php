@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 /********************************************************
              _______________________
-            korn
+            Pasakorn
 ********************************************************/
 class Test extends MY_Controller {
 	private $sess = array();
