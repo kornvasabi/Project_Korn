@@ -49,18 +49,30 @@ class Accessory extends MY_Controller {
 						</div>
 					</div>						
 					<div class=' col-sm-6'>	
+						<!--div class='form-group'>
+							<button style='width:100%;' id='btnaddform' class='btn btn-success btn-x1 btn-3d glyphicon glyphicon-folder-open'>
+								 ทำรายการขายอุปกรณ์
+							</button>
+						</div-->
 						<div class='form-group'>
-							<button id='btnaddform' class='btn btn-cyan btn-block'><span class='glyphicon glyphicon-pencil'> ทำรายการขายอุปกรณ์</span></button>
+							<button id='btnaddform' class='btn btn-cyan btn-block'><span class='glyphicon glyphicon-pencil '> ทำรายการขายอุปกรณ์</span></button>
 						</div>
 					</div>
-					<div class=' col-sm-6'>	
+					<div class='col-sm-6'>	
+						<!--div class='form-group'>
+							<button style='width:100%;' id='btnsearchlist' class='btn btn-primary btn-x1 btn-3d glyphicon glyphicon-search'>
+								ค้นหา
+							</button>
+						</div-->
 						<div class='form-group'>
 							<button id='btnsearchlist' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
 						</div>
 					</div>
 				</div>
 				<div class='col-sm-12'>
-					<div id='result'></div>
+					<div class='col-sm-12'>
+						<div id='result'></div>
+					</div>
 				</div>
 			</div>
 		";
@@ -74,12 +86,14 @@ class Accessory extends MY_Controller {
 		$LOCAT = $_REQUEST['LOCAT'];
 		$html = "";
 		
-		$cond = "";
+		$cond = ""; $condtext = "";
 		if($CONTNO !== ""){
 			$cond .="and A.CONTNO like '".$CONTNO."%'";
+			$condtext .="เลขที่สัญญา : ".$CONTNO;
 		}
 		if($SDATEFRM !== "" and $SDATETO !== ""){
 			$cond .= "and A.SDATE between '".$SDATEFRM."' and '".$SDATETO."'";
+			$condtext .="วันที่ทำสัญญา : ".$this->Convertdate(2,$SDATEFRM)." - ".$this->Convertdate(2,$SDATETO);
 		}else if($SDATEFRM !== "" and $SDATETO = ""){
 			$cond .="and A.SDATE = '".$SDATEFRM."'";
 		}else if($SDATEFRM = "" and $SDATETO !== ""){
@@ -87,6 +101,7 @@ class Accessory extends MY_Controller {
 		}
 		if($LOCAT !== ""){
 			$cond .= "and A.LOCAT = '".$LOCAT."'";
+			$condtext .="สาขา : ".$LOCAT;
 		}
 		
 		$sql = "	
@@ -117,11 +132,11 @@ class Accessory extends MY_Controller {
 			}
 		}
 		$html = "
-			<table id='table-accessory' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='99%' border=1 style='font-size:8pt;'>
+			<table id='table-accessory' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='99.99%' border=1 style='font-size:8pt;'>
 				<thead style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 					<tr style='line-height:20px;'>
 						<td style='vertical-align:middle;text-align:center;font-size:8pt;' colspan='8'>
-							เงื่อนไข :: 
+							เงื่อนไข :: {$condtext}
 						</td>
 					</tr>
 					<tr>
@@ -205,7 +220,7 @@ class Accessory extends MY_Controller {
 						</td>
 						<td class='text-right'>".$row->OPTCODE."</td>
 						<td class='text-right'>".$row->UPRICE."</td>
-						<td class='text-right'>".$row->QTY."</td>
+						<td class='text-right'>".number_format($row->QTY,0)."</td>
 						<td class='text-right'>".$row->NPRICE."</td>
 						<td class='text-right'>".$row->TOTVAT."</td>
 						<td class='text-right'>".$row->TOTPRC."</td>
@@ -282,7 +297,8 @@ class Accessory extends MY_Controller {
 							<span class='sr-only'>Toggle Dropdown</span>
 						</button>
 						<ul class='dropdown-menu'>
-							<span id='btnDOSend' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>1.ใบกำกับภาษีอย่างย่อ</span>
+							<span id='btnDOTax' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>1.ใบกำกับภาษีอย่างย่อ</span>
+							<span id='btnDOTaxFull' style='text-align:left;' class='btn btn-info btn-xs btn-block text-left'>2.ใบกำกับภาษีเต็ม</span>
 						</ul>
 					</div>
 				</div>
@@ -511,11 +527,11 @@ class Accessory extends MY_Controller {
 				</div>
 				<div class='col-sm-5'>
 					ราคาขาย/หน่วย
-					<input type='text' class='form-control input-sm' id='fm_optptot' style='text-align:right;' value=''>
+					<input type='text' class='form-control input-sm jzAllowNumber' id='fm_optptot' style='text-align:right;' value=''>
 				</div>
 				<div class='col-sm-2'>
 					จำนวน
-					<input type='text' class='form-control input-sm' id='fm_count' style='text-align:right;' value='1'>
+					<input type='text' class='form-control input-sm jzAllowNumber' id='fm_count' style='text-align:right;' value='1'>
 				</div>
 				<div class='col-sm-5'>
 					มูลค่าสินค้า
@@ -532,7 +548,7 @@ class Accessory extends MY_Controller {
 				<div style='height:200px;'></div>
 				<div class='col-sm-6'>
 					มูลค่าทุน
-					<input type='text' class='form-control input-sm' id='fm_optcst' style='text-align:right;' value=''>
+					<input type='text' class='form-control input-sm jzAllowNumber' id='fm_optcst' style='text-align:right;' value=''>
 				</div>
 				<div class='col-sm-6'>
 					ภาษีทุน
@@ -1098,5 +1114,155 @@ class Accessory extends MY_Controller {
 			$response["msg"]   = "บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที";
 		}
 		echo json_encode($response);
+	}
+	function conditiontopdf(){
+		$data = array();
+		$data[] = urlencode($_REQUEST['contno'].'||'.$_REQUEST['locat']);
+		echo json_encode($this->generateData($data,"encode"));
+	}
+	function pdftax(){
+		$data = array();
+		$data[] = $_REQUEST['condpdf'];
+		$arrs = $this->generateData($data,"decode");
+		$arrs[0] = urldecode($arrs[0]);
+		
+		$tx = explode('||',$arrs[0]);
+		$contno = $tx[0];
+		$locat  = $tx[1];
+		
+		$sql = "
+			select COMP_NM,COMP_ADR1+' '+COMP_ADR2 as ADR 
+			from {$this->MAuth->getdb('CONDPAY')}
+		";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		$comp_nm = $row->COMP_NM;
+		$adr = $row->ADR;
+		//echo $comp_nm; exit;
+		$sql = "
+			select A.OPTCODE,A.QTY,A.UPRICE,A.TOTPRC,B.OPTNAME from {$this->MAuth->getdb('ARINOPT')} A
+			left join {$this->MAuth->getdb('OPTMAST')} B on A.OPTCODE = B.OPTCODE
+			where A.LOCAT = B.LOCAT and A.CONTNO = '".$contno."' and A.TSALE = 'O' 
+			and A.LOCAT = '".$locat."' 
+		";
+		$query = $this->db->query($sql);
+		$listacs = ""; $i = 0;
+		if($query->row()){
+			foreach($query->result() as $row){$i++;
+				$listacs .="
+					<tr>
+						<td style='width:10%;text-align:left;'>".$i."</td>
+						<td style='width:10%;text-align:left;'>".$row->OPTCODE."</td>
+						<td style='width:40%;text-align:left;'>".$row->OPTNAME."</td>
+						<td style='width:10%;text-align:right;'>".$row->QTY."</td>
+						<td style='width:15%;text-align:right;'>".number_format($row->UPRICE,2)."</td>
+						<td style='width:15%;text-align:right;'>".number_format($row->TOTPRC,2)."</td>
+					</tr>
+				";
+			}
+		}
+		$sql = "
+			select TAXNO,convert(varchar(8),TAXDT,112) as TAXDT
+			,VATRT,TOTAMT,VATAMT,NETAMT from {$this->MAuth->getdb('TAXTRAN')} 
+			where CONTNO = '".$contno."' and LOCAT = '".$locat."'
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data[0] = $row->TAXNO;
+				$data[1] = $this->Convertdate(2,$row->TAXDT);
+				$data[2] = number_format($row->VATRT,2);
+				$data[3] = number_format($row->TOTAMT,2);
+				$data[4] = number_format($row->VATAMT,2);
+				$data[5] = number_format($row->NETAMT,2);
+			}
+		}
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8', 
+			'format' => 'A4',
+			'margin_top' => 0, 	//default = 16
+			'margin_left' => 15, 	//default = 15
+			'margin_right' => 15, 	//default = 15
+			'margin_bottom' => 16, 	//default = 16
+			'margin_header' => 9, 	//default = 9
+			'margin_footer' => 9, 	//default = 9
+		]);
+		
+		$content = "
+			<div class='wf pf' style='top:45;left:290;font-size:12pt;'><b><u>ใบกำกับภาษีอย่างย่อ</u></b></div>
+			
+			<div class='wf pf' style='top:115;left:0;font-size:10pt;'>เลขที่ใบกำกับ</div>
+			<div class='wf pf data' style='top:115;left:80;width:350px;'>{$data[0]}</div>
+			<div class='wf pf' style='top:115;left:450;font-size:10pt;'>วันที่</div>
+			<div class='wf pf data' style='top:115;left:500;width:80px;'>{$data[1]}</div>
+			
+			<div class='wf pf' style='top:145;left:0;font-size:10pt;'>".$comp_nm."</div>
+			<div class='wf pf data' style='top:145;left:65;width:320px;'></div>
+			<div class='wf pf' style='top:145;left:450;font-size:10pt;'>เลขประจำตัวผู้เสียภาษี</div>
+			<div class='wf pf data' style='top:145;left:610;width:80px;'></div>
+			
+			<div class='wf pf' style='top:175;left:0;font-size:10pt;'>".$adr."</div>
+			<div class='wf pf data' style='top:175;left:75;width:310px;'></div>
+			<div class='wf pf' style='top:175;left:450;font-size:10pt;'>อัตราภาษีมูลค่าเพิ่ม</div>
+			<div class='wf pf data' style='top:175;left:610;width:80px;'>{$data[2]}</div>
+			
+			<div class='wf pf' style='top:200;left:0;font-size:10pt;height:1px;border-top:0.1px;background-color:#000000;'></div>
+			<div class='wf pf' style='top:210;left:0;font-size:10pt;'>
+				<table class='wf pf'>
+					<tbody>
+						<tr>
+							<td style='width:10%;text-align:left;'>ลำดับ</td>
+							<td style='width:10%;text-align:left;'>รหัส</td>
+							<td style='width:40%;text-align:center;'>รายการ</td>
+							<td style='width:10%;text-align:right;'>จำนวน</td>
+							<td style='width:15%;text-align:right;'>ราคา/หน่วย</td>
+							<td style='width:15%;text-align:right;'>รวมราคา</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div class='wf pf' style='top:240;left:0;font-size:10pt;height:1px;border-top:0.1px;background-color:#000000;'></div>
+			
+			<div class='wf pf' style='top:250;left:0;font-size:10pt;'>
+				<table class='wf pf'>
+					<tbody>
+						".$listacs."
+					</tbody>
+				</table>
+			</div>
+			<div class='wf pf' style='top:400;left:0;font-size:10pt;height:1px;border-top:0.1px;background-color:#000000;'></div>
+			
+			<div class='wf pf' style='top:405;left:50;font-size:10pt;'>".$this->ConvertText($data[3])."</div>
+			<div class='wf pf' style='top:405;left:400;font-size:10pt;'>ราคารวมภาษี</div>
+			<div class='wf pf data' style='top:405;left:500;width:140px;text-align:right;'>{$data[3]}</div>
+			
+			<div class='wf pf' style='top:430;left:400;font-size:10pt;'>จำนวนภาษี</div>
+			<div class='wf pf data' style='top:430;left:500;width:140px;text-align:right;'>{$data[4]}</div>
+			
+			<div class='wf pf' style='top:455;left:150;font-size:10pt;'></div>
+			<div class='wf pf' style='top:475;left:150;width:140px;height:1px;border-top:0.1px;background-color:#000000;'></div>
+			<div class='wf pf' style='top:455;left:400;font-size:10pt;'>ราคาสินค้าสุทธิ</div>
+			<div class='wf pf data' style='top:455;left:500;width:140px;text-align:right;'>{$data[5]}</div>
+			
+			<div class='wf pf' style='top:490;left:200;font-size:10pt;'>ผู้รับเงิน</div>
+		";
+		$other = "";
+		$stylesheet = "
+			<style>
+				body { font-family: garuda;font-size:10pt; }
+				.wf { width:100%; }
+				.h10 { height:10px; }
+				.tc { text-align:center; }
+				.pf { position:fixed; }
+				.bor { border:0.1px solid black; }
+				.bor2 { border:0.1px dotted black; }
+				.data { background-color:#fff;font-size:9pt; }
+			</style>
+		";
+		
+		$mpdf->WriteHTML($content.$other.$stylesheet);
+		$mpdf->SetHTMLFooter("<div class='wf pf' style='top:1060;left:0;font-size:6pt;width:720px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
+		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
+		$mpdf->Output();
 	}
 }

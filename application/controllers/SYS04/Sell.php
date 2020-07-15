@@ -1619,7 +1619,15 @@ class Sell extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function Encode(){
+		$data = $this->generateData(array($_POST["CONTNO"]),"encode");
+		$response = array("CONTNO"=>$data[0]);
+		echo json_encode($response);
+	}
+	
 	function approvepdf(){
+		$data = $this->generateData(array($_GET["contno"]),"decode");
+		$_GET['contno'] = $data[0];
 		//echo 'อยู่ระหว่างการพัฒนาโปรแกรม'; exit;
 		$mpdf = new \Mpdf\Mpdf([
 			'mode' => 'utf-8', 

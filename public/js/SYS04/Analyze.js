@@ -557,15 +557,23 @@ function fn_search(JDbtnt1search){
 					var dataToPost = new Object();
 					dataToPost.anid = $(this).attr('ANID');
 					
-					Lobibox.window({
-						title: 'รายการขออนุมัติสินเชื่อบุคคลเช่าซื้อ',
-						width: $(window).width(),
-						height: $(window).height(),
-						content: '<iframe id="anpdfFrame" src="#" style="width:100%;height:100%;"></iframe>',
-						draggable: false,
-						closeOnEsc: false,
-						shown: function($this){
-							$('#anpdfFrame').attr('src','../SYS04/Analyze/AnalyzePDF?ANID='+dataToPost.anid);
+					$.ajax({
+						url:'../SYS04/Analyze/Encode',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',	
+						success: function(data){
+							Lobibox.window({
+								title: 'รายการขออนุมัติสินเชื่อบุคคลเช่าซื้อ',
+								width: $(window).width(),
+								height: $(window).height(),
+								content: '<iframe id="anpdfFrame" src="#" style="width:100%;height:100%;"></iframe>',
+								draggable: false,
+								closeOnEsc: false,
+								shown: function($this){
+									$('#anpdfFrame').attr('src','../SYS04/Analyze/AnalyzePDF?ANID='+data.anid);
+								}
+							});
 						}
 					});
 				});
@@ -597,6 +605,7 @@ function fn_loadFormAnalyze($_data){
 				draggable: false,
 				closeOnEsc: false,
 				shown: function($this){
+					
 					var set_stat = [{id:1,text:'โสด'},{id:2,text:'สมรส'},{id:3,text:'หม้าย'},{id:4,text:'หย่า'},{id:5,text:'แยกกันอยู่'}];
 					$('#idnoStat').select2({ data:set_stat,placeholder: 'เลือก',dropdownParent: $('#idnoStat').parent().parent(),minimumResultsForSearch: -1,width: '100%' });
 					$('#idnoStat').val(null).trigger('change');
@@ -731,6 +740,7 @@ function fn_loadFormAnalyze($_data){
 						var newOption = new Option($_data["MNGNAME"], $_data["MNG"], true, true);
 						$('#mngIDNo').empty().append(newOption).trigger('change');						
 						$('#mngTel').val($_data["MNGTEL"]);
+						$('#branch_comment').val($_data["COMMENT"]);
 						
 						var widpic = ($('#analyze_picture').width());						
 						var picture_msg = $_data['EVIDENCE'];

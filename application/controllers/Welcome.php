@@ -513,11 +513,11 @@ class Welcome extends MY_Controller {
 			<!-- div class='col-md-12' align='center'>
 				<img src='../public/images/background_home.jpg' style='max-width: 100%;height: 100%;border-radius: 0%;opacity: 0.8;'/>
 			</div -->
-			<!-- div class='col-md-12' style='height:50vh;' align='center'>
-				<img src='../public/images/background_home.jpg' style='width:auto;height:calc(50vh);border-radius: 30%;opacity: 0.8;'/>
-			</div -->
+			<div class='col-md-12' style='height:calc(100vh - 200px);background-image: url(\"../public/images/KOI FISHx.gif\"); background-position: center;' align='center'>
+				<img class='img-responsive' src='../public/images/Untitled.png' style='width:80%;height:auto;border-radius: 0%;opacity: 0.8;'/>
+			</div>
 			
-			<div class='col-md-12' style='height:20vh;'>&emsp;</div>
+			<!-- div class='col-md-12' style='height:20vh;'>&emsp;</div>
 			<div class='col-md-12' style='font-size:50pt;' align='center'>
 				<div style='font-size:100pt;transform: rotate(0deg);width:100%;'>
 					".
@@ -530,7 +530,7 @@ class Welcome extends MY_Controller {
 					chr(240).chr(159).chr(133).chr(148)
 					."
 				</div>
-			</div>
+			</div -->
 		";
 		
 		// $html = "

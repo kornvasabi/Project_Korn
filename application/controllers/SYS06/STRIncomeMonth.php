@@ -221,7 +221,7 @@ class STRIncomeMonth extends MY_Controller {
 			and BILLCOLL like '".$OFFICER."%'  
 			order by A.CONTNO,A.LOCAT
 		";
-		//echo $sql;
+		echo $sql;
 		$query = $this->db->query($sql);
 		if($query->row()){
 			foreach($query->result() as $row){$i++;
@@ -248,7 +248,7 @@ class STRIncomeMonth extends MY_Controller {
 					from {$this->MAuth->getdb('CHQTRAN')} A where A.LOCATPAY = '".$row->LOCAT."' 
 					and A.CONTNO = '".$row->CONTNO."' and A.FLAG <> 'C' 
 				";
-				//echo $sql1; exit;
+				echo $sql1;
 				$query1 = $this->db->query($sql1);
 				if($query1->row()){
 					foreach($query1->result() as $row1){
@@ -264,6 +264,7 @@ class STRIncomeMonth extends MY_Controller {
 								where LOCAT = '".$row->LOCAT."' and CONTNO = '".$row->CONTNO."'
 							)pay
 						";
+						echo $sql2;
 						$this->db->query($sql2);
 						$sql3 = "
 							declare @tonopay varchar(max) = (
@@ -277,6 +278,7 @@ class STRIncomeMonth extends MY_Controller {
 							);
 							select @tonopay as TONOPAY,@tostrprof as TOSTRPROF
 						";
+						echo $sql3; exit;
 						$query3 = $this->db->query($sql3);
 						if($query3->row()){
 							foreach($query3->result() as $row3){

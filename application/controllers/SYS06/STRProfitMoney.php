@@ -215,14 +215,8 @@ class STRProfitMoney extends MY_Controller {
 		$arrs = array();
 		if($query->row()){
 			foreach($query->result() as $row){$i++;
-				$fp = "";
-				if($row->F_PAR == "*"){
-					$fp = ">";
-				}else{
-					$fp = ">=";
-				}	
 				$lp = "";
-				if($row->L_PAR == "*"){
+				if($row->F_PAR == "*" or $row->L_PAR == "*"){
 					$lp = "<";
 				}else{
 					$lp = "<=";
@@ -260,8 +254,9 @@ class STRProfitMoney extends MY_Controller {
 					); 
 					declare @bl_strprof decimal(18,2) = (
 						select isnull(SUM(STRPROF),0) from #pay
-						where DATE1 < '".$row->TMBILDT."'	
+						where DATE1 < '".$row->PAYDT."'
 					);
+					--ดอกผลคงเหลือ
 					declare @bf_strprof decimal(18,2) = (
 						select 
 							ISNULL(STRPROF * (((@payf % N_DAMT) * 100 / N_DAMT) / 100) + @bl_strprof,0) as bf_strprof
@@ -280,12 +275,19 @@ class STRProfitMoney extends MY_Controller {
 						and (A.F_PAY <= '".$row->F_PAY."' and A.L_PAY <= '".$row->F_PAY."') 
 						and (a.paydt is not null) and (A.LOCATPAY = '".$row->LOCAT."') 
 					);
+					declare @topay decimal(18,2) = (
+						select 
+							isnull(case when ".$row->TOT_UPAY." > ".$row->PAYAMT." then 0 else SUM(STRPROF) end ,0) 
+						from #pay where NOPAY >= '".$row->F_PAY."' and NOPAY ".$lp." '".$row->L_PAY."'
+					)
 					--ดอกผลงวดนี้
-					declare @strprof_nofull decimal(18,2) = (
-						select STRPROF * (((".$row->PAYAMT_N." % N_DAMT) * 100 / N_DAMT) / 100)
+					declare @strprof_topay decimal(18,2) = (
+						select STRPROF * (((".$row->PAYAMT." % N_DAMT) * 100 / N_DAMT) / 100) + @topay
 						from #pay 
 						where CONTNO = '".$row->CONTNO."' and NOPAY = '".$row->L_PAY."'
 					);
+					
+					/*
 					declare @strprof_topay decimal(18,2) = (
 						select SUM(strprof_topay) from (
 							select ISNULL(SUM(STRPROF) + @strprof_nofull,0) as strprof_topay 
@@ -294,9 +296,9 @@ class STRProfitMoney extends MY_Controller {
 							and NOPAY ".$lp." '".$row->L_PAY."'
 						)a
 					);
+					*/
 					select @bf_strprof as BF_STRPROF,@sumdisct as SUMDISCT
-					,@strprof_nofull as STRPROF_NOFULL
-					,case when @strprof_topay = 0 then @strprof_nofull else @strprof_topay end as STRPROF_TOPAY
+					,@strprof_topay as STRPROF_TOPAY
 				";
 				//echo $sql2; exit;
 				$query1 = $this->db->query($sql2);
@@ -312,7 +314,7 @@ class STRProfitMoney extends MY_Controller {
 								<td style='width:2%;text-align:left;'>".$i."</td>
 								<td style='width:5%;text-align:left;'>".$row->LOCATRECV."</td>
 								<td style='width:7%;text-align:left;'>".$row->TMBILDT."</td>
-								<td style='width:8%;text-align:left;'>".$row->TMBILL."</td>
+								<td style='width:8%;text-align:left;'>".$row->BILLNO."</td>
 								<td style='width:8%;text-align:left;'>".$row->CONTNO."</td>
 								<td style='width:14%;text-align:left;'>".$row->CUSNAME."</td>
 								<td style='width:5%;text-align:right;'>".$row->PAYTYP."</td>

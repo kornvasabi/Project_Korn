@@ -515,7 +515,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	});
 	
 	var jd_add_strno = null;
-	$('#add_resvno').on('select2:select',function(){ fn_checkStd(); });
+	//$('#add_resvno').on('select2:select',function(){ fn_checkStd(); });
 	$('#add_strno').on('select2:select',function(){ fn_checkStd(); });
 	$('#add_acticod').on('select2:select',function(){ fn_checkStd(); });
 	function fn_checkStd(){
@@ -629,6 +629,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 					$('#add_std').attr('subid',data.SUBID);
 					$('#add_std').attr('shcid',data.SHCID);
 					
+					fn_checkStd();					
 				}
 			},
 			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
@@ -1489,7 +1490,7 @@ function btnOther($thisWindowLeasing){
 	}
 	
 	
-	$('#btnApproveSell').click(function(){
+	$('#btnApproveSell_old').click(function(){
 		$('#btnApproveSell').attr('disabled',true);		
 		
 		var baseUrl = $('body').attr('baseUrl');
@@ -1505,6 +1506,37 @@ function btnOther($thisWindowLeasing){
 			closeOnEsc: true,			
 			beforeClose : function(){
 				$('#btnApproveSell').attr('disabled',false);
+			}
+		});
+	});
+		
+	$('#btnApproveSell').click(function(){	
+		var dataToPost = new Object();
+		dataToPost.CONTNO = $("#add_contno").val();
+		$.ajax({
+			url:'../SYS04/Sell/Encode',
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
+			//beforeSend: function(){ if(OBJadd_btnFORMSETAlert !== null){ OBJadd_btnFORMSETAlert.abort(); }},
+			success: function(data){
+				
+				$('#btnApproveSell').attr('disabled',true);	
+				var baseUrl = $('body').attr('baseUrl');
+				var url = baseUrl+'SYS04/Sell/approvepdf?contno='+data.CONTNO;
+				var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
+				
+				Lobibox.window({
+					title: 'ใบอนุมัติขาย',
+					width: $(window).width(),
+					height: $(window).height(),
+					content: content,
+					draggable: false,
+					closeOnEsc: true,			
+					beforeClose : function(){
+						$('#btnApproveSell').attr('disabled',false);
+					}
+				});
 			}
 		});
 	});

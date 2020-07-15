@@ -75,6 +75,7 @@ function FN_JD_BSSELECT($id,$thisSelected,$func){
 
 
 $('#btnt1search').click(function(){ 
+	$('#loadding').fadeIn(200);
 	var dataToPost = new Object();
 	dataToPost.TMBILL = $('#sch_tmbill').val();
 	dataToPost.BILLNO = $('#sch_billno').val();
@@ -83,7 +84,7 @@ $('#btnt1search').click(function(){
 	dataToPost.STMBILDT = $('#sch_stmbildt').val();
 	dataToPost.ETMBILDT = $('#sch_etmbildt').val();
 	
-	fnSearch(dataToPost); 
+	//fnSearch(dataToPost); 
 });
 
 function fnSearch(data){
@@ -667,7 +668,9 @@ function fnFormPaymentsCONTNO($thisWindow){
 											dtp.total   = $(this).attr('total');
 											dtp.error   = $(this).attr('error');
 											dtp.payfor  = $('#cont_payfor').attr('PAYFOR')
+											dtp.tmbildt = $('#add_TMBILDT').val();
 											
+											$('#loadding').fadeIn(200);											
 											$.ajax({
 												url:'../SYS06/RevPayment/getREBUILDING',
 												data: dtp,
@@ -1149,7 +1152,125 @@ function fnFormPaymentsAction($window){
 		//$window.destroy();
 	});
 	
+	var OBJadd_btnCanC = null;
 	$('#add_btnCanC').click(function(){
+		var $this67 = false;
+		$('.del_payment').each(function(){
+			var $this = $(this);
+			if($this.attr('opt_payfor') == "006" || $this.attr('opt_payfor') == "007"){ $this67 = true; }
+		});
+		
+		if($this67){
+			var dataToPost = new Object();
+			dataToPost.tmbill = $('#add_TMBILL').val();
+			
+			$('#loadding').fadeIn(200);
+			OBJadd_btnCanC = $.ajax({
+				url:'../SYS06/RevPayment/getFormNOPAYCancel',
+				data: dataToPost,
+				type: 'POST',
+				dataType: 'json',
+				beforeSend: function(){ if(OBJadd_btnCanC !== null){ OBJadd_btnCanC.abort(); }},
+				success: function(data){
+					if(data.error){
+						console.log(data.errorMessage);
+					}else{
+						var _formData = "<div class='col-sm-2 form-group'>เลขที่สัญญา<input type='text' readonly class='form-control' value='"+data.CONTNO+"'></div>";
+						_formData += "<div class='col-sm-2 form-group'>รหัสลูกค้า<input type='text' readonly class='form-control' value='"+data.CUSCOD+"'></div>";
+						_formData += "<div class='col-sm-3 form-group'>ชื่อลูกค้า<input type='text' readonly class='form-control' value='"+data.CUSNAME+"'></div>";
+						_formData += "<div class='col-sm-2 form-group'>สาขาสัญญา<input type='text' readonly class='form-control' value='"+data.LOCAT+"'></div>";
+						_formData += "<div class='col-sm-3 form-group'>เลขตัวถัง<input type='text' readonly class='form-control' value='"+data.STRNO+"'></div>";
+						
+						var _formNopayH = "<tr><th></th><th>เลขที่บิล</th><th>วันที่รับชำระ</th><th>ชำระค่า</th><th>สถานะ</th><th>วันที่ยกเลิก</th><th>ยอดตัดลูกหนี้</th><th>ส่วนลด</th><th>เบี้ยปรับ</th><th>ส่วนลดเบี้ยปรับ</th><th>ยอดสุทธิ</th><th>ชำระโดย</th><th>TAXNO</th><th>F_PAR</th><th>F_PAY</th><th>L_PAR</th><th>L_PAY</th></tr>";
+						var _formNopay = "";
+						for(var i=0;i<data["BILL"].length;i++){
+							_formNopay += "<tr class='"+(data["BILL"][i]["FLAG"]=="C"?"text-red":"")+"'>";
+							_formNopay += "<td><input type='radio' class='cc_bill' name='nopay' TMBILL='"+data["BILL"][i]["TMBILL"]+"' "+(data["BILL"][i]["TMBILL"] == data["thisTMBILL"] ? "checked":"")+"></td>";
+							_formNopay += "<td>"+data["BILL"][i]["TMBILL"]+"</td>";
+							_formNopay += "<td>"+data["BILL"][i]["TMBILDT"]+"</td>";
+							_formNopay += "<td>"+data["BILL"][i]["PAYFOR"]+"</td>";
+							_formNopay += "<td>"+data["BILL"][i]["TSALE"]+"</td>";
+							_formNopay += "<td>"+data["BILL"][i]["CANDT"]+"</td>";
+							_formNopay += "<td class='text-right'>"+data["BILL"][i]["PAYAMT"]+"</td>";
+							_formNopay += "<td class='text-right'>"+data["BILL"][i]["DISCT"]+"</td>";
+							_formNopay += "<td class='text-right'>"+data["BILL"][i]["PAYINT"]+"</td>";
+							_formNopay += "<td class='text-right'>"+data["BILL"][i]["DSCINT"]+"</td>";
+							_formNopay += "<td class='text-right'>"+data["BILL"][i]["NETPAY"]+"</td>";
+							_formNopay += "<td>"+data["BILL"][i]["PAYTYP"]+"</td>";
+							_formNopay += "<td>"+data["BILL"][i]["TAXNO"]+"</td>";
+							_formNopay += "<td>"+data["BILL"][i]["F_PAR"]+"</td>";
+							_formNopay += "<td class='text-right'>"+data["BILL"][i]["F_PAY"]+"</td>";
+							_formNopay += "<td>"+data["BILL"][i]["L_PAR"]+"</td>";
+							_formNopay += "<td class='text-right'>"+data["BILL"][i]["L_PAY"]+"</td>";
+							_formNopay += "</tr>";							
+						}
+						
+						var _formAction = "<div class='col-sm-2 col-sm-offset-8'><button id='' class='btn-block btn-sm btn-primary'>ตาราง</button></div>";
+						_formAction += "<div class='col-sm-2'><button id='add_btnCanCNopay' class='btn-block btn-sm btn-danger'>ยกเลิกการรับชำระ</button></div>";
+						var _form = "<div class='col-sm-10 col-sm-offset-1'>"+_formData+"</div>";
+						_form += "<div class='col-sm-12' style='height:calc(100vh - 200px);overflow:scroll;'><table class='table table-bordered'>"+_formNopayH+_formNopay+"</table></div>";
+						_form += "<div class='col-sm-12'>"+_formAction+"</div>";
+						
+						Lobibox.window({
+							title: 'ยกเลิกการรับชำระค่างวด/ตัดสด',
+							width: $(window).width(),
+							height: $(window).height(),
+							content: _form,
+							draggable: false,
+							closeOnEsc: false,
+							onShow: function(lobibox){ $('body').append(jbackdrop); },
+							shown: function($this){
+								$('#add_btnCanCNopay').click(function(){
+									var dataToPost = new Object();
+									dataToPost.TMBILL = $('input[name=nopay]:checked').attr('TMBILL');
+									dataToPost.action = 'nopay';
+									fn_confirm_cancel_payments(dataToPost);
+								});
+							},
+							beforeClose : function(){ $('.jbackdrop')[($('.jbackdrop').length)-1].remove(); }
+						});
+					}
+					
+					OBJadd_btnCanC = null; 
+					$('#loadding').fadeOut(200);
+				}
+			});
+		}else{
+			var dataToPost = new Object();
+			dataToPost.TMBILL 	 = $('#add_TMBILL').val();
+			dataToPost.TMBILDT 	 = $('#add_TMBILDT').val();
+			dataToPost.LOCATRECV = $('#add_LOCATRECV').val();
+			dataToPost.PAYTYP	 = $('#add_PAYTYP').val();
+			dataToPost.CUSCOD	 = $('#add_CUSCOD').attr('CUSCOD');
+			dataToPost.REFNO	 = $('#add_REFNO').val();
+			dataToPost.CHQNO	 = $('#add_CHQNO').val();
+			dataToPost.CHQDT	 = $('#add_CHQDT').val();
+			dataToPost.CHQAMT	 = $('#add_CHQAMT').val();
+			dataToPost.CHQBK	 = $('#add_CHQBK').val();
+			dataToPost.CHQBR	 = $('#add_CHQBR').val();
+			dataToPost.BILLNO	 = $('#add_BILLNO').val();
+			dataToPost.BILLDT	 = $('#add_BILLDT').val();
+			dataToPost.action 	 = '';
+			
+			var data_payment = new Array();
+			$('.del_payment').each(function(){
+				var data_paymentByOne = new Object();
+				data_paymentByOne.opt_payfor = ($(this).attr('opt_payfor'));
+				data_paymentByOne.opt_contno = ($(this).attr('opt_contno'));
+				data_paymentByOne.opt_payamt = ($(this).attr('opt_payamt'));
+				data_paymentByOne.opt_disct  = ($(this).attr('opt_disct'));
+				data_paymentByOne.opt_payint = ($(this).attr('opt_payint'));
+				data_paymentByOne.opt_dscint = ($(this).attr('opt_dscint'));
+				data_paymentByOne.opt_netpay = ($(this).attr('opt_netpay'));
+				data_payment.push(data_paymentByOne);
+			});
+			
+			dataToPost.data_payment = (data_payment.length == 0 ? new Array():JSON.stringify(data_payment));	
+			fn_confirm_cancel_payments(dataToPost);
+		}
+	});
+	
+	function fn_confirm_cancel_payments($dataToPost){
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
 			draggable: true,
@@ -1173,40 +1294,10 @@ function fnFormPaymentsAction($window){
 			//shown: function($this){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				if (type === 'ok'){
-					var dataToPost = new Object();
-					dataToPost.TMBILL 	 = $('#add_TMBILL').val();
-					dataToPost.TMBILDT 	 = $('#add_TMBILDT').val();
-					dataToPost.LOCATRECV = $('#add_LOCATRECV').val();
-					dataToPost.PAYTYP	 = $('#add_PAYTYP').val();
-					dataToPost.CUSCOD	 = $('#add_CUSCOD').attr('CUSCOD');
-					dataToPost.REFNO	 = $('#add_REFNO').val();
-					dataToPost.CHQNO	 = $('#add_CHQNO').val();
-					dataToPost.CHQDT	 = $('#add_CHQDT').val();
-					dataToPost.CHQAMT	 = $('#add_CHQAMT').val();
-					dataToPost.CHQBK	 = $('#add_CHQBK').val();
-					dataToPost.CHQBR	 = $('#add_CHQBR').val();
-					dataToPost.BILLNO	 = $('#add_BILLNO').val();
-					dataToPost.BILLDT	 = $('#add_BILLDT').val();
-					
-					var data_payment = new Array();
-					$('.del_payment').each(function(){
-						var data_paymentByOne = new Object();
-						data_paymentByOne.opt_payfor = ($(this).attr('opt_payfor'));
-						data_paymentByOne.opt_contno = ($(this).attr('opt_contno'));
-						data_paymentByOne.opt_payamt = ($(this).attr('opt_payamt'));
-						data_paymentByOne.opt_disct  = ($(this).attr('opt_disct'));
-						data_paymentByOne.opt_payint = ($(this).attr('opt_payint'));
-						data_paymentByOne.opt_dscint = ($(this).attr('opt_dscint'));
-						data_paymentByOne.opt_netpay = ($(this).attr('opt_netpay'));
-						data_payment.push(data_paymentByOne);
-					});
-					
-					dataToPost.data_payment = (data_payment.length == 0 ? new Array():JSON.stringify(data_payment));
-					
 					$('#loadding').fadeIn(200);
 					OBJadd_btnCanC = $.ajax({
 						url:'../SYS06/RevPayment/CanCPayments',
-						data: dataToPost,
+						data: $dataToPost,
 						type: 'POST',
 						dataType: 'json',
 						beforeSend: function(){ if(OBJadd_btnCanC !== null){ OBJadd_btnCanC.abort(); }},
@@ -1234,7 +1325,7 @@ function fnFormPaymentsAction($window){
 				}
 			}
 		});
-	});
+	}
 	
 	$('#add_btnPrint').click(function(){
 		var dataToPost = new Object();
@@ -1544,6 +1635,7 @@ function AlertMessage($CONTNO,$SHOW){
 			}
 			
 			OBJadd_btnAlert = null;
+			$('#loadding').fadeOut(200);
 		}
 	});
 }

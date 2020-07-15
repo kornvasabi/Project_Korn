@@ -501,6 +501,12 @@ class Analyze extends MY_Controller {
 		echo json_encode($html);
 	}
 	
+	function Encode(){
+		$data = $this->generateData(array($_POST["anid"]),"encode");
+		$response = array("anid"=>$data[0]);
+		echo json_encode($response);
+	}
+	
 	function AnalyzePDF(){
 		$mpdf = new \Mpdf\Mpdf([
 			'mode' => 'utf-8', 
@@ -513,8 +519,9 @@ class Analyze extends MY_Controller {
 			'margin_footer' => 9, 	//default = 9
 		]);
 		
-		$anid = $_GET["ANID"];
-		
+		$data = $this->generateData(array($_GET["ANID"]),"decode");
+		$anid = $data[0];
+		//echo $anid; exit;
 		
 		$sql = "
 			select a.CUSTYPE,a.CUSCOD
@@ -550,6 +557,7 @@ class Analyze extends MY_Controller {
 			where a.ID='".$anid."'
 			order by a.CUSTYPE
 		";
+		//echo $sql; exit;
 		$query = $this->connect_db->query($sql);
 		
 		$data = array();
@@ -918,7 +926,6 @@ class Analyze extends MY_Controller {
 				,b.BRCOMMENT
 				,a.INTEREST_RT
 				,a.ACTICOD
-				
 			from {$this->MAuth->getdb('ARANALYZE')} a
 			left join {$this->MAuth->getdb('ARANALYZEDATA')} b on a.ID=b.ID
 			left join {$this->MAuth->getdb('ARANALYZEAPPR')} c on a.ID=c.ID collate thai_cs_as
@@ -1125,14 +1132,14 @@ class Analyze extends MY_Controller {
 						<!-- tr style='background-color:#1fecff;' -->
 						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
-								<div class='col-sm-4'><b>เงินดาวน์ ป.1 :: </b>".($arrs["INSURANCE_TYP"] == 3 ? "<span class='text-red'>ไม่ทำประกัน</span>":$arrs["DWN_INSURANCE"])."</div>
+								<div class='col-sm-4'><b>เงินดาวน์ ป.1 :: </b>".($arrs["INSURANCE_TYP"] == 3 ? "<span class='text-red'>ไม่ทำประกัน</span>": ($arrs["INSURANCE_TYP"] == 1 ? "[ผ่อน] ":"[สด] ").$arrs["DWN_INSURANCE"])."</div>
 								<div class='col-sm-4'><b>จำนวนงวด :: </b> ".$arrs["NOPAY"]." ".($arrs["APPRV_NOPAY"] == "" ? "":"[".$arrs["APPRV_NOPAY"]."]")."</div>
 								<div class='col-sm-4'><b>วันที่ยึด :: </b> ".$arrs["YDATE"]."</div>
 							</td>
 						</tr>
 						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
-								<div class='col-sm-4'><b>บิล std :: </b>".$arrs["STDID"]."</div>
+								<div class='col-sm-4'><b>บิล std :: </b>".$arrs["STDID"]."/".$arrs["SUBID"]."</div>
 								<div class='col-sm-4'><b>อัตราดอกเบี้ย :: </b>".$arrs["INTEREST_RT"]." ".($arrs["APPRV_INTEREST_RT"] == 0 ? "":"[".number_format($arrs["APPRV_INTEREST_RT"],2)."]")."</div>
 								<div class='col-sm-4'><b>เลขที่สัญญา :: </b>".$arrs["CONTNO"]."</div>
 							</td>
@@ -3335,8 +3342,20 @@ class Analyze extends MY_Controller {
 	}
 	*/
 	
+	function ConvertToUTF8($text){
+		$encoding = mb_detect_encoding($text, mb_detect_order(), false);
+		if($encoding == "UTF-8")
+		{
+			$text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');    
+		}
+		
+		$out = iconv(mb_detect_encoding($text, mb_detect_order(), false), "UTF-8//IGNORE", $text);
+		return $out;
+	}
+	
 	function save_picture($picture){
 		//print_r($picture); exit;
+		//$LOCAT = @$_POST["locat"];
 		foreach($picture as $key => $arrs){
 			if($arrs["name"] != ""){
 				if(isset($arrs["anid"])){
@@ -3348,10 +3367,12 @@ class Analyze extends MY_Controller {
 						$arrs["target"] = "APPROVE_IMG";
 						$picture_name = $arrs["anid"]."_2.".$ex[sizeof($ex)-1];
 					}
+					
+					$picture_name = $this->ConvertToUTF8($_POST["locat"].substr($picture_name,1,strlen($picture_name)));
 				}else{
-					$picture_name = $arrs["name"];
+					$picture_name = $arrs["name"];					
 				}
-				
+				//echo $picture_name ; exit;
 				$sql = "
 					select ftpserver, ftpuser, ftppass, ftpfolder, filePath
 					from {$this->MAuth->getdb('config_fileupload')}
@@ -3679,19 +3700,27 @@ class Analyze extends MY_Controller {
 					end
 					
 					update {$this->MAuth->getdb('CUSTMAST')}
+					set AGE=".$arrs["idnoAge"]."
+						,MOBILENO=".$arrs["phoneNumber"]."
+					/*
 					set MOBILENO=".$arrs["phoneNumber"]."
 						,OCCUP=".$arrs["career"]."
 						,OFFIC=".$arrs["careerOffice"]."
 						,AGE=".$arrs["idnoAge"]."
 						,MREVENU=".$arrs["income"]."
+					*/
 					where CUSCOD=".$arrs["cuscod"]."
 					
 					update {$this->MAuth->getdb('CUSTMAST')}
+					set AGE=".$arrs["is1_idnoAge"]."
+						,MOBILENO=".$arrs["is1_phoneNumber"]."
+					/*
 					set MOBILENO=".$arrs["is1_phoneNumber"]."
 						,OCCUP=".$arrs["is1_career"]."
 						,OFFIC=".$arrs["is1_careerOffice"]."
 						,AGE=".$arrs["is1_idnoAge"]."
 						,MREVENU=".$arrs["is1_income"]."
+					*/
 					where CUSCOD=".$arrs["is1_cuscod"]."
 					
 					if(".$arrs["is2_cuscod"]." <> '')
@@ -3707,11 +3736,15 @@ class Analyze extends MY_Controller {
 							,".$arrs["is2_reference"].",".$arrs["is2_referencetel"].",".$arrs["is2_cusRelation"].";
 							
 						update {$this->MAuth->getdb('CUSTMAST')}
+						set AGE=".$arrs["is2_idnoAge"]."
+							,MOBILENO=".$arrs["is2_phoneNumber"]."
+						/*
 						set MOBILENO=".$arrs["is2_phoneNumber"]."
 							,OCCUP=".$arrs["is2_career"]."
 							,OFFIC=".$arrs["is2_careerOffice"]."
 							,AGE=".$arrs["is2_idnoAge"]."
 							,MREVENU=".$arrs["is2_income"]."
+						*/	
 						where CUSCOD=".$arrs["is2_cuscod"]."
 					end	
 
@@ -3728,11 +3761,15 @@ class Analyze extends MY_Controller {
 							,".$arrs["is3_reference"].",".$arrs["is3_referencetel"].",".$arrs["is3_cusRelation"].";
 							
 						update {$this->MAuth->getdb('CUSTMAST')}
+						set AGE=".$arrs["is3_idnoAge"]."
+							,MOBILENO=".$arrs["is3_phoneNumber"]."
+						/*
 						set MOBILENO=".$arrs["is3_phoneNumber"]."
 							,OCCUP=".$arrs["is3_career"]."
 							,OFFIC=".$arrs["is3_careerOffice"]."
 							,AGE=".$arrs["is3_idnoAge"]."
 							,MREVENU=".$arrs["is3_income"]."
+						*/
 						where CUSCOD=".$arrs["is3_cuscod"]."
 					end		
 					
@@ -3829,11 +3866,14 @@ class Analyze extends MY_Controller {
 						where ID=@ANID and CUSTYPE=0
 						
 						update {$this->MAuth->getdb('CUSTMAST')}
+						set AGE=".$arrs["idnoAge"]."
+						/*
 						set MOBILENO=".$arrs["phoneNumber"]."
 							,OCCUP=".$arrs["career"]."
 							,OFFIC=".$arrs["careerOffice"]."
 							,AGE=".$arrs["idnoAge"]."
 							,MREVENU=".$arrs["income"]."
+						*/	
 						where CUSCOD=".$arrs["cuscod"]."
 					end
 					
@@ -3860,11 +3900,14 @@ class Analyze extends MY_Controller {
 						where ID=@ANID and CUSTYPE=1
 						
 						update {$this->MAuth->getdb('CUSTMAST')}
+						set AGE=".$arrs["is1_idnoAge"]."
+						/*
 						set MOBILENO=".$arrs["is1_phoneNumber"]."
 							,OCCUP=".$arrs["is1_career"]."
 							,OFFIC=".$arrs["is1_careerOffice"]."
 							,AGE=".$arrs["is1_idnoAge"]."
 							,MREVENU=".$arrs["is1_income"]."
+						*/	
 						where CUSCOD=".$arrs["is1_cuscod"]."
 					end
 					else if(".$arrs["is1_cuscod"]." <> '')
@@ -3880,11 +3923,14 @@ class Analyze extends MY_Controller {
 							,".$arrs["is1_reference"].",".$arrs["is1_referencetel"].",".$arrs["is1_cusRelation"].";
 							
 						update {$this->MAuth->getdb('CUSTMAST')}
+						set AGE=".$arrs["is1_idnoAge"]."
+						/*
 						set MOBILENO=".$arrs["is1_phoneNumber"]."
 							,OCCUP=".$arrs["is1_career"]."
 							,OFFIC=".$arrs["is1_careerOffice"]."
 							,AGE=".$arrs["is1_idnoAge"]."
 							,MREVENU=".$arrs["is1_income"]."
+						*/	
 						where CUSCOD=".$arrs["is1_cuscod"]."
 					end	
 					
@@ -3911,11 +3957,14 @@ class Analyze extends MY_Controller {
 						where ID=@ANID and CUSTYPE=2
 						
 						update {$this->MAuth->getdb('CUSTMAST')}
+						set AGE=".$arrs["is2_idnoAge"]."
+						/*
 						set MOBILENO=".$arrs["is2_phoneNumber"]."
 							,OCCUP=".$arrs["is2_career"]."
 							,OFFIC=".$arrs["is2_careerOffice"]."
 							,AGE=".$arrs["is2_idnoAge"]."
 							,MREVENU=".$arrs["is2_income"]."
+						*/	
 						where CUSCOD=".$arrs["is2_cuscod"]."
 					end
 					else if(".$arrs["is2_cuscod"]." <> '')
@@ -3931,11 +3980,14 @@ class Analyze extends MY_Controller {
 							,".$arrs["is2_reference"].",".$arrs["is2_referencetel"].",".$arrs["is2_cusRelation"].";
 							
 						update {$this->MAuth->getdb('CUSTMAST')}
+						set AGE=".$arrs["is2_idnoAge"]."
+						/*
 						set MOBILENO=".$arrs["is2_phoneNumber"]."
 							,OCCUP=".$arrs["is2_career"]."
 							,OFFIC=".$arrs["is2_careerOffice"]."
 							,AGE=".$arrs["is2_idnoAge"]."
 							,MREVENU=".$arrs["is2_income"]."
+						*/	
 						where CUSCOD=".$arrs["is2_cuscod"]."
 					end	
 					
@@ -3962,11 +4014,14 @@ class Analyze extends MY_Controller {
 						where ID=@ANID and CUSTYPE=3
 						
 						update {$this->MAuth->getdb('CUSTMAST')}
+						set AGE=".$arrs["is3_idnoAge"]."
+						/*
 						set MOBILENO=".$arrs["is3_phoneNumber"]."
 							,OCCUP=".$arrs["is3_career"]."
 							,OFFIC=".$arrs["is3_careerOffice"]."
 							,AGE=".$arrs["is3_idnoAge"]."
 							,MREVENU=".$arrs["is3_income"]."
+						*/	
 						where CUSCOD=".$arrs["is3_cuscod"]."
 					end
 					else if(".$arrs["is3_cuscod"]." <> '')
@@ -3982,11 +4037,14 @@ class Analyze extends MY_Controller {
 							,".$arrs["is3_reference"].",".$arrs["is3_referencetel"].",".$arrs["is3_cusRelation"].";
 							
 						update {$this->MAuth->getdb('CUSTMAST')}
+						set AGE=".$arrs["is3_idnoAge"]."
+						/*
 						set MOBILENO=".$arrs["is3_phoneNumber"]."
 							,OCCUP=".$arrs["is3_career"]."
 							,OFFIC=".$arrs["is3_careerOffice"]."
 							,AGE=".$arrs["is3_idnoAge"]."
 							,MREVENU=".$arrs["is3_income"]."
+						*/	
 						where CUSCOD=".$arrs["is3_cuscod"]."
 					end		
 					
@@ -4667,7 +4725,7 @@ class Analyze extends MY_Controller {
 				,c.APPRTEL as APPROVETEL
 				,isnull(@filePath+b.EVIDENCE,'(none)') as EVIDENCE
 				,isnull(@filePath+b.APPROVE_IMG,'(none)') as APPROVE_IMG
-				,c.COMMENTS as COMMENT
+				,b.BRCOMMENT as COMMENT
 			from {$this->MAuth->getdb('ARANALYZE')} a
 			left join {$this->MAuth->getdb('ARANALYZEDATA')} b on a.ID=b.ID
 			left join {$this->MAuth->getdb('ARANALYZEAPPR')} c on a.ID=c.ID collate thai_cs_as
@@ -4968,17 +5026,17 @@ class Analyze extends MY_Controller {
 					เปลี่ยนแปลงอัตราดอกผลเช่าซื้อ
 					<input type='text' id='APPInRT' class='input-xs form-control' value='{$arrs["INTEREST_RT2"]}'>
 				</div>
-				<div class='form-group col-sm-12'>
-					ประกัน
-					<select id='APPOPTMAST' class='form-control input-sm select2' ".($arrs["INSURANCE_TYP"] == 3 ? "disabled":"").">{$arrs["optmast"]}</select>	
-				</div>
 				<div class='form-group col-sm-6'>
 					ค่าประกัน
-					<input type='text' id='' class='input-xs form-control' value='".($arrs["INSURANCE_TYP"] == 3 ? "":$arrs["INSURANCE"])."' disabled>
+					<input type='text' id='' class='input-xs form-control' value='".($arrs["INSURANCE_TYP"] != 1 ? "":$arrs["INSURANCE"])."' disabled>
 				</div>	
 				<div class='form-group col-sm-6'>
 					เปลี่ยนแปลงค่าประกัน
-					<input type='text' id='APPINSURANCE' class='input-xs form-control' value='{$arrs["INSURANCE2"]}' ".($arrs["INSURANCE_TYP"] == 3 ? "disabled":"").">
+					<input type='text' id='APPINSURANCE' class='input-xs form-control' value='{$arrs["INSURANCE2"]}' ".($arrs["INSURANCE_TYP"] != 1 ? "disabled":"").">
+				</div>
+				<div class='form-group col-sm-12'>
+					ประกัน
+					<select id='APPOPTMAST' class='form-control input-sm select2' ".($arrs["INSURANCE_TYP"] == 3 ? "disabled":"").">{$arrs["optmast"]}</select>	
 				</div>
 			</div>
 		";						

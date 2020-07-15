@@ -2015,7 +2015,7 @@ $("#btnt1import").click(function(){
 									title: 'แจ้งเตือน',
 									size: 'mini',
 									closeOnClick: false,
-									delay: 5000,
+									delay: false,
 									pauseDelayOnHover: true,
 									continueDelayOnInactiveTab: false,
 									icon: true,
@@ -2032,11 +2032,11 @@ $("#btnt1import").click(function(){
 									closeOnEsc: false,
 									shown: function($this){
 										//fn_import();
+										fn_afterimport($this);
 									}
 								});
 
 								$this.destroy();
-								fn_afterimport();
 							}
 							
 							$("#loadding").fadeOut(200);
@@ -2057,7 +2057,7 @@ $("#btnt1import").click(function(){
 	});
 });
 
-function fn_afterimport(){
+function fn_afterimport($thisWindows){
 	var JDstd_import = null;
 	$('#std_import').click(function(){
 		Lobibox.confirm({
@@ -2078,6 +2078,7 @@ function fn_afterimport(){
 					closeOnClick: true
 				},
 			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				if (type === 'ok'){
 					var dataToPost = new Object();
@@ -2090,17 +2091,21 @@ function fn_afterimport(){
 						type: 'POST',
 						dataType: 'json',
 						success: function(data){
-							Lobibox.notify('warning', {
+							Lobibox.notify((data.error?'warning':'success'), {
 								title: 'แจ้งเตือน',
 								size: 'mini',
 								closeOnClick: false,
-								delay: 5000,
+								delay: (data.error ? false:5000),
 								pauseDelayOnHover: true,
 								continueDelayOnInactiveTab: false,
 								icon: true,
 								messageHeight: '90vh',
 								msg: data.errorMsg
 							});
+							
+							if(!data.error){
+								$thisWindows.destroy();
+							}
 							
 							JDstd_import = null;
 							lobibox.destroy();
@@ -2110,6 +2115,8 @@ function fn_afterimport(){
 						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 					});
 				}
+				
+				$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 			}
 		});
 	});

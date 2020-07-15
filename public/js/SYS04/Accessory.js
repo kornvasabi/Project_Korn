@@ -114,6 +114,13 @@ function loadACS($param){
 				closeOnEsc: false,
 				shown: function($this){
 					wizard('edit',$param,$this);
+					$('#btnDOTax').click(function(){printReport('ใบกำกับภาษีอย่างย่อ');});
+					$('#btnDOTaxFull').click(function(){printReport('ใบกำกับภาษีเต็ม');});
+					if(_delete == 'T'){
+						$('.accslist').attr('disabled',false);
+					}else{
+						$('.accslist').attr('disabled',true);
+					}
 				}
 			});
 			kb_loadformASC = null;
@@ -122,6 +129,36 @@ function loadACS($param){
 		//,error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 } 
+var kb_taxReport = null;
+function printReport($type){
+	if($type == "ใบกำกับภาษีอย่างย่อ"){
+		dataToPost = new Object();
+		dataToPost.contno  = $('#add_contno').val();
+		dataToPost.locat  	 = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '':$('#add_locat').find(':selected').val());
+		kb_taxReport = $.ajax({
+			url:'../SYS04/Accessory/conditiontopdf',
+			data:dataToPost,
+			type:'POST',
+			dataType:'json',
+			success:function(data){
+				var baseUrl = $('body').attr('baseUrl');
+				var url = baseUrl+'/SYS04/Accessory/pdftax?condpdf='+data[0];
+				var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
+				Lobibox.window({
+					title:$type,
+					content:content,
+					closeOnEsc:false,
+					height:$(window).height(),
+					width:$(window).width()
+				});
+				kb_taxReport = null;
+			},
+			beforeSend:function(){
+				if(kb_taxReport !== null){kb_taxReport.abort();}
+			}
+		});	
+	}
+}
 
 function wizard($param,$dataLoad,$thisWindowAcs){
 	LobiAdmin.loadScript([
@@ -145,11 +182,32 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 					beforeChanged = beforeChanged + 1;
 				});
 				
-				var contno 	 = 'x';
+				var cuscod = $('#add_cuscod').val();
 				
 				switch(index){
 					case 0: //tab1
-						nextTab(ind2); 
+						var msg = "";
+						
+						if(cuscod == ''){
+							msg = "ไม่พบรหัสลูกค้า กรุณาเลือกรหัสลูกค้าก่อนครับ";
+						}
+						if(msg != ""){
+							Lobibox.notify('warning', {
+								title: 'แจ้งเตือน',
+								size: 'mini',
+								closeOnClick: false,
+								delay: 9000,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: msg
+							});
+							
+							return false;
+						}else{
+							nextTab(ind2); 
+						}
 						break;
 					case 1: //tab2						
 						nextTab(ind2); 
@@ -224,6 +282,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 			dataType: 'json',
 			success: function(data){
 				$('#loadding').fadeOut(200);
+				$('#btn_save').attr('disabled',true);
 				Lobibox.window({
 					title: 'FORM SEARCH',
 					//width: $(window).width(),
@@ -275,7 +334,11 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 						}
 					},
 					beforeClose : function(){
-						
+						if(_insert == "T"){
+							$('#btn_save').attr('disabled',false);
+						}else{
+							$('#btn_save').attr('disabled',true);
+						}
 					}
 				});
 			}
@@ -319,7 +382,8 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 	var acs_add_optcod = null;
 	$('#add_optcod').click(function(){
 		$('#add_optcod').attr('disabled',true);
-		$('#add_optcod').attr('disabled',true);
+		$('#btn_save').attr('disabled',true);
+		$('.accslist').attr('disabled',true);
 		dataToPost = new Object();
 		dataToPost.inclvat = $('#add_inclvat').val();
 		dataToPost.vatrt   = $('#add_vatrt').val();
@@ -341,6 +405,8 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 					},
 					beforeClose: function(){
 						$('#add_optcod').attr('disabled',false);
+						$('#btn_save').attr('disabled',false);
+						$('.accslist').attr('disabled',false);
 					}
 				});
 				acs_add_optcod = null;
@@ -394,16 +460,23 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 		}
 		if(_delete == 'T'){
 			$('#btn_delete').attr('disabled',false);
+			$('.accslist').attr('disabled',false);
 		}else{
 			$('#btn_delete').attr('disabled',true);
+			$('.accslist').attr('disabled',true);
 		}
 		Load_Data($dataLoad,$thisWindowAcs);
+		$('#btnDOTaxFull').attr('disabled',true);
 		$('#btnDOSend').click(function(){
 			fn_printreport();
 		});
 	}else if($param == 'new'){
+		$('#btnDocument').attr('disabled',true);
+		$('#btnDocumentOption').attr('disabled',true);
+		
 		$('#btn_delete').attr('disabled',true);
 		$('#btnDOSend').attr('disabled',true);
+		
 		if(_insert == 'T'){
 			$('#btn_save').attr('disabled',false);
 			$('#add_optcod').attr('disabled',false);
@@ -412,6 +485,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 			$('#add_optcod').attr('disabled',true);
 		}
 	}
+	
 	if($param == 'edit'){
 		$('#btn_delete').click(function(){
 			var cont = $('#add_contno').val();
@@ -421,7 +495,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 				title: 'ยืนยันการทำรายการ',
 				iconClass: false,
 				//closeButton: false,
-				msg: 'คุณต้องการลบรายการขายอุปกรณ์เสริมเลขที่ '+cont+'หรือไม่',
+				msg: 'คุณต้องการลบรายการขายอุปกรณ์เสริมเลขที่ <span style="color:red;font-size:18pt;">'+cont+'</span>หรือไม่',
 				buttons: {
 					ok : {
 						'class': 'btn btn-primary glyphicon glyphicon-ok',
@@ -451,6 +525,20 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 	}
 }
 function Load_Data($dataLoad,$thisWindowAcs){
+	$('#add_sdate').attr('disabled',true);
+	$('#add_cuscod').attr('disabled',true);
+	
+	$('#btnaddcuscod').attr('disabled',true);
+	$('#add_cuscod_removed').attr('disabled',true);
+	$('#add_inclvat').attr('disabled',true);
+	
+	$('#add_vatrt').attr('disabled',true);
+	$('#add_credtm').attr('disabled',true);
+	$('#add_duedt').attr('disabled',true);
+	
+	$('#add_salecod').attr('disabled',true);
+	$('#add_comitn').attr('disabled',true);
+	
 	var newOption = new Option($dataLoad.LOCAT, $dataLoad.LOCAT, true, true);
 	$('#add_locat').empty().append(newOption).trigger('change');
 	$('#add_contno').val($dataLoad.CONTNO);
@@ -476,8 +564,8 @@ function Load_Data($dataLoad,$thisWindowAcs){
 	
 	$('.accslist').unbind('click');
 	$('.accslist').click(function(){
-		$(this).parent().parent().remove();
-		removeacslist();
+		var del = $(this);
+		removeacslist(del);
 	});
 }
 
@@ -636,8 +724,8 @@ function AddListTable($this){
 			
 			$('.accslist').unbind('click');
 			$('.accslist').click(function(){
-				$(this).parent().parent().remove();
-				removeacslist();
+				var del = $(this);
+				removeacslist(del);
 			});
 		}
 		var tt_optptot = 0;
@@ -659,14 +747,14 @@ function AddListTable($this){
 	},1000);
 }
 
-function removeacslist(){	
+function removeacslist($del){
+	$del.parent().parent().remove();
 	var tt_optptot = 0;
 	var tt_optprc  = 0;
 	var tt_vatrt   = 0;	
 
 	$('.accslist').each(function(){
 		var accslist = $(this);
-		
 		tt_optptot += parseFloat(accslist.attr('t_optptot')); //fn_parseFloat แปลงข้อความให้เป็นตัวเลข int
 		tt_optprc  += parseFloat(accslist.attr('optprc'));
 		tt_vatrt   += parseFloat(accslist.attr('vatrt'));
@@ -674,6 +762,49 @@ function removeacslist(){
 	$('#sum_optptot').val(tt_optptot.toFixed(2)); //fn_toFixed ทศนิยม
 	$('#sum_optprc').val(tt_optprc.toFixed(2));
 	$('#sum_vatrt').val(tt_vatrt.toFixed(2));
+	/*
+	Lobibox.confirm({
+		title: 'ยืนยันการทำรายการ',
+		iconClass: false,
+		//closeButton: false,
+		msg: 'คุณต้องการลบรายการอุปกรณ์เสริมหรือไม่',
+		buttons: {
+			ok : {
+				'class': 'btn btn-primary glyphicon glyphicon-ok',
+				text: ' ยืนยัน',
+				closeOnClick: true,
+			},
+			cancel : {
+				'class': 'btn btn-danger glyphicon glyphicon-cancel',
+				text: ' ยกเลิก',
+				closeOnClick: true
+			},
+		},
+		callback: function(lobibox, type){
+			if (type === 'ok'){ 
+				$del.parent().parent().remove();
+				//removeacslist(); 
+				var tt_optptot = 0;
+				var tt_optprc  = 0;
+				var tt_vatrt   = 0;	
+
+				$('.accslist').each(function(){
+					var accslist = $(this);
+					
+					tt_optptot += parseFloat(accslist.attr('t_optptot')); //fn_parseFloat แปลงข้อความให้เป็นตัวเลข int
+					tt_optprc  += parseFloat(accslist.attr('optprc'));
+					tt_vatrt   += parseFloat(accslist.attr('vatrt'));
+				});	
+				$('#sum_optptot').val(tt_optptot.toFixed(2)); //fn_toFixed ทศนิยม
+				$('#sum_optprc').val(tt_optprc.toFixed(2));
+				$('#sum_vatrt').val(tt_vatrt.toFixed(2));
+			}
+		},
+		beforeClose: function(){
+			
+		}
+	});	
+	*/
 }
 var kb_fnSave = null;
 function fnSave($thisWindowAcs){

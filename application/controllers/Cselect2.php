@@ -1266,7 +1266,7 @@ class Cselect2 extends MY_Controller {
 				<div class='col-sm-{$leyout}'>
 					<div class='form-group'>
 						{$titilCONTNO}
-						<input type='text' id='cont_no' class='form-control'  maxlength='13' value='๑HP-17010001'>
+						<input type='text' id='cont_no' class='form-control'  maxlength='13' value=''>
 					</div>
 				</div>
 				

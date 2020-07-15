@@ -175,7 +175,7 @@ function printReport(){
 		dataType:'json',
 		success:function(data){
 			var baseUrl = $('body').attr('baseUrl');
-			var url = baseUrl+'/SYS06/STRProfitPay/pdf?condpdf='+data[0];
+			var url = baseUrl+'/SYS06/STRProfitPay/pdftax?condpdf='+data.contno;
 			var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
 			Lobibox.window({
 				title:'พิมพ์รายงาน',

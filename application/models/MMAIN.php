@@ -255,6 +255,128 @@ class MMAIN extends CI_Model {
 		return $opt;
 	}
 	
+	public function getCALDSC($CONTNO){
+		$sql = "
+			if exists(select * from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and CALDSC=1) 
+			begin 
+				if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 1 and 10)
+				begin
+					select cast(PERD10/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE1')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 11 and 12)
+				begin
+					select cast(PERD12/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE1')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 13 and 18)
+				begin
+					select cast(PERD18/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE1')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 19 and 24)
+				begin
+					select cast(PERD24/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE1')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 25 and 30)
+				begin
+					select cast(PERD30/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE1')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 31 and 36)
+				begin
+					select cast(PERD36/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE1')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 37 and 42)
+				begin
+					select cast(PERD42/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE1')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 43 and 48)
+				begin
+					select cast(PERD48/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE1')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 49 and 54)
+				begin
+					select cast(PERD54/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE1')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 55 and 60)
+				begin
+					select cast(PERD60/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE1')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+			end 
+			else if exists(select * from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and CALDSC=2) 
+			begin 
+				if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 1 and 10)
+				begin
+					select cast(PERD10/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE2')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 11 and 12)
+				begin
+					select cast(PERD12/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE2')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 13 and 18)
+				begin
+					select cast(PERD18/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE2')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 19 and 24)
+				begin
+					select cast(PERD24/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE2')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 25 and 30)
+				begin
+					select cast(PERD30/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE2')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 31 and 36)
+				begin
+					select cast(PERD36/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE2')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 37 and 42)
+				begin
+					select cast(PERD42/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE2')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 43 and 48)
+				begin
+					select cast(PERD48/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE2')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 49 and 54)
+				begin
+					select cast(PERD54/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE2')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+				else if exists(select T_NOPAY from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$CONTNO}' and T_NOPAY between 55 and 60)
+				begin
+					select cast(PERD60/100.0 as decimal(18,2)) as PERD from {$this->MAuth->getdb('TABLE2')}
+					where NOPAY = (select min(NOPAY) from {$this->MAuth->getdb('ARPAY')} where CONTNO='{$CONTNO}' and PAYMENT != DAMT)
+				end
+			end 
+			else 
+			begin 
+				select 0 as PERD
+			end
+		";
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				return str_replace(",","",number_format($row->PERD,2));
+			}
+		}
+	}
+	
 	public function locat_claim($locat){
 		$response = array();
 		

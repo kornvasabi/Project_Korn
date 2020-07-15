@@ -32,3 +32,6 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 *.sublime-project
 /tests/tests/
 /tests/results/
+
+public/images/KOI FISH.gif
+public/images/KOI FISH1.gif

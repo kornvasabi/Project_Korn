@@ -638,7 +638,8 @@ class ReserveCar extends MY_Controller {
 			foreach($query->result() as $row){
 				if($row->STAT == "N"){
 					$sql = "
-						select STDID,SUBID,PRICE from {$this->MAuth->getdb('STDVehiclesPRICE')}
+						select STDID,SUBID,case when '{$arrs["ACTICOD"]}' in (37,38) then PRICES else PRICE end PRICE
+						from {$this->MAuth->getdb('STDVehiclesPRICE')}
 						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
 					";
 				}else{

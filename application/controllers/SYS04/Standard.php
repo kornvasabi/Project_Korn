@@ -5127,7 +5127,7 @@ class Standard extends MY_Controller {
 				$column = $objPHPExcel->getActiveSheet()->getCell($cell)->getColumn();
 				$row = $objPHPExcel->getActiveSheet()->getCell($cell)->getRow();
 				$data_value = $objPHPExcel->getActiveSheet()->getCell($cell)->getCalculatedValue();				
-				//echo $data_value; 
+				echo $data_value; exit;
 				if($arrs["old"] == 1){
 					$arrs["now"] = 1;
 				}else if($arrs["old"] == $row){
@@ -5192,6 +5192,7 @@ class Standard extends MY_Controller {
 		$stdkey = "";
 		$stdid 	= 1;
 		$multi_model_size = 0;
+		$this->db->trans_begin();
 		for($i=1;$i<=$size_data;$i++){
 			if($i==1){ 
 				$stdkey = $arr_data[$i]["A"]; 
@@ -5251,15 +5252,33 @@ class Standard extends MY_Controller {
 				$db["insby"]	= $this->sess["IDNo"];
 				$db["insdt"]	= $dt;
 				
-				$sql = "";
-				foreach($db as $key => $val){
-					$sql .= ($sql == "" ? "":",");
-					$sql .= ($val == "null" ? $val:"'".$val."'");
+				if($db["keyid"] != "null"){
+					$sql = "";
+					foreach($db as $key => $val){
+						$sql .= ($sql == "" ? "":",");
+						$sql .= ($val == "null" ? $val:"'".$val."'");
+					}
+					$sql = "insert into {$this->MAuth->getdb('STDVehiclesTemp')} select ".$sql;
+					//echo $sql; exit;
+					if(!$this->db->query($sql)){
+						$error = $this->db->error();
+						$this->db->trans_rollback();
+						
+						$response = array();
+						$response["error"] 	  = true;
+						$response["errorMsg"] = $error["code"]."<br>".str_replace("[Microsoft][ODBC Driver 13 for SQL Server][SQL Server]","",$error["message"]);
+						$response["errorMsg"].= "<br>";
+						$response["errorMsg"].= "ลำดับที่ ".$db["keyid"]."_".$i;
+						echo json_encode($response); exit;
+					}
 				}
-				$sql = "insert into {$this->MAuth->getdb('STDVehiclesTemp')} select ".$sql;
-				//echo $sql; exit;
-				$this->db->query($sql);
 			}
+		}
+		
+		if($this->db->trans_status() === FALSE){
+			$this->db->trans_rollback();
+		}else{
+			$this->db->trans_commit();
 		}
 		
 		$sql = "
@@ -5651,19 +5670,27 @@ class Standard extends MY_Controller {
 		$response["errorMsg"] = "";
 		echo json_encode($response); 
 	}
-	
-	function import_save_old(){
-		try{			
+		
+	function import_save(){
+		try{
 			$sql = "
 				if object_id('tempdb..#tempResult') is not null drop table #tempResult;
 				create table #tempResult (error varchar(1),msg varchar(max));
-					
+				
+				SET NOCOUNT ON;
 				begin tran import_transaction
 				begin try
 					declare @keyid int;
 					declare @insby varchar(20) = '{$this->sess["IDNo"]}';
 					declare @insdt varchar(20) = getdate();
-					declare csimport cursor for (select * from (select distinct keyid from {$this->MAuth->getdb('STDVehiclesTemp')} where insby=@insby) as data);
+					
+					declare csimport cursor for 
+					select * from (
+						select distinct keyid from {$this->MAuth->getdb('STDVehiclesTemp')}
+						where insby=@insby
+					) as data
+					order by keyid					
+					
 					
 					open csimport;
 					fetch next from csimport into @keyid
@@ -5672,11 +5699,11 @@ class Standard extends MY_Controller {
 						declare @STDID varchar(30) = isnull(cast((
 							select distinct a.STDID from {$this->MAuth->getdb('STDVehicles')} a
 							inner join {$this->MAuth->getdb('STDVehiclesTemp')} b on a.TYPECOD=b.typecod collate thai_cs_as and a.MODEL=b.model collate thai_cs_as
-							where b.keyid=@keyid and b.insby=@insby
+							where b.keyid=@keyid and b.insby=@insby	
 						) as varchar),'Auto Genarate');
 						
 						declare @SUBID varchar(30)	 = 'Auto Genarate';		
-						declare @TYPECOD varchar(20)	 = (select distinct typecod from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
+						declare @TYPECOD varchar(20) = (select distinct typecod from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
 						declare @MODEL varchar(20)	 = (select distinct model   from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
 						declare @NAME varchar(250)	 = (select distinct stdname from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
 						declare @DETAIL varchar(250) = (select distinct stddesc from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
@@ -5687,7 +5714,7 @@ class Standard extends MY_Controller {
 						declare @tbPRICE table (FPRICE decimal(18,2),TPRICE decimal(18,2));
 						insert into @tbPRICE
 						select distinct sprice,case when eprice = -1 then null else eprice end as eprice from {$this->MAuth->getdb('STDVehiclesTemp')}
-						where keyid=@keyid and insby=@insby
+						where keyid=@keyid and insby=@insby 
 						order by sprice
 						
 						declare @tbDwn table (
@@ -5735,7 +5762,7 @@ class Standard extends MY_Controller {
 						
 						declare @tempimport table (id bigint,topic varchar(20),result varchar(max));
 						insert into @tempimport
-						select * from {$this->sess["db"]}.dbo.FN_JD_STDVehicles_IMPORT(@insby) where id=@keyid
+						select * from {$this->MAuth->getdb('FN_JD_STDVehicles_IMPORT')}(@insby) where id=@keyid
 						
 						if (@STDID = 'Auto Genarate')
 						begin
@@ -5861,7 +5888,6 @@ class Standard extends MY_Controller {
 						end
 						close cs_subid;
 						deallocate cs_subid;
-
 						begin
 							if exists(
 								select * from {$this->MAuth->getdb('STDVehiclesDetail')}
@@ -5931,327 +5957,6 @@ class Standard extends MY_Controller {
 					end
 					close csimport;
 					deallocate csimport;
-					
-					insert into #tempResult
-					select 'n','บันทึกข้อมูลเรียบร้อยแล้ว'
-					
-					commit tran import_transaction
-				end try
-				begin catch
-					rollback tran import_transaction
-					insert into #tempResult
-					select 'y',cast(ERROR_LINE() as varchar)+'::'+ERROR_MESSAGE()
-				end catch
-			";
-			//echo $sql; exit;
-			$this->db->query($sql);
-			$sql = "select * from #tempResult";
-			$query = $this->db->query($sql);
-			
-			$response = array();
-			if($query->row()){
-				foreach($query->result() as $row){
-					$response["error"] = ($row->error == "y" ? true:false);
-					$response["errorMsg"] = $row->msg;
-				}
-			}else{
-				$response["error"] 	  = true;
-				$response["errorMsg"] = "ผิดพลาด ไม่พบข้อมูลตามเงื่อนไข";
-			}
-		} catch (Exception $e){
-			$response["error"] 	  = true;
-			$response["errorMsg"] = 'Caught exception: '.$e->getMessage()."\n";
-		}
-		
-		echo json_encode($response);
-	}
-	
-	function import_save(){
-		try{			
-			$sql = "
-				if object_id('tempdb..#tempResult') is not null drop table #tempResult;
-				create table #tempResult (error varchar(1),msg varchar(max));
-					
-				SET NOCOUNT ON;
-				begin tran import_transaction
-				begin try
-					declare @keyid int;
-					declare @insby varchar(20) = '{$this->sess["IDNo"]}';
-					declare @insdt varchar(20) = getdate();
-					
-					if OBJECT_ID('tempdb..#tempKeyID') is not null drop table #tempKeyID;
-					create table #tempKeyID (keyid int);
-					
-					insert into #tempKeyID
-					select distinct keyid from HIC2SHORTL.dbo.STDVehiclesTemp 
-					where insby=@insby
-					
-					while (select COUNT(*) from #tempKeyID) > 0
-					begin
-						set @keyid = (select MIN(keyid) from #tempKeyID)
-						
-						declare @STDID varchar(30) = isnull(cast((
-							select distinct a.STDID from {$this->MAuth->getdb('STDVehicles')} a
-							inner join {$this->MAuth->getdb('STDVehiclesTemp')} b on a.TYPECOD=b.typecod collate thai_cs_as and a.MODEL=b.model collate thai_cs_as
-							where b.keyid=@keyid and b.insby=@insby
-						) as varchar),'Auto Genarate');
-						
-						declare @SUBID varchar(30)	 = 'Auto Genarate';		
-						declare @TYPECOD varchar(20) = (select distinct typecod from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
-						declare @MODEL varchar(20)	 = (select distinct model   from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
-						declare @NAME varchar(250)	 = (select distinct stdname from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
-						declare @DETAIL varchar(250) = (select distinct stddesc from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
-						declare @STAT varchar(1)	 = (select distinct stat	from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
-						declare @ES datetime		 = (select distinct sevent  from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
-						declare @EE datetime		 = (select distinct eevent  from {$this->MAuth->getdb('STDVehiclesTemp')} where keyid=@keyid and insby=@insby);
-						
-						declare @tbPRICE table (FPRICE decimal(18,2),TPRICE decimal(18,2));
-						insert into @tbPRICE
-						select distinct sprice,case when eprice = -1 then null else eprice end as eprice from {$this->MAuth->getdb('STDVehiclesTemp')}
-						where keyid=@keyid and insby=@insby
-						order by sprice
-						
-						declare @tbDwn table (
-							FPRICE decimal(18,2),
-							TPRICE decimal(18,2),
-							DOWNS  decimal(18,2),
-							DOWNE  decimal(18,2),
-							INTERESTRT decimal(5,2) not null,
-							INTERESTRT_GVM decimal(5,2) null,
-							INSURANCEPAY decimal(7,2) null,
-							INSURANCE decimal(7,2) null,
-							TRANSFERS decimal(7,2) null,
-							REGIST decimal(7,2) null,
-							ACT decimal(7,2) null,
-							COUPON decimal(7,2) null,
-							APPROVE varchar(3)
-						);
-						insert into @tbDwn
-						select distinct sprice,case when eprice = -1 then null else eprice end as eprice
-							,sdown,case when edown = -1 then null else edown end as edown
-							,isnull(interest,0),isnull(interest2,0)
-							,insurancepay,insurance,trans,regist,act,coupon,approve 
-						from {$this->MAuth->getdb('STDVehiclesTemp')}
-						where keyid=@keyid and insby=@insby
-						order by sprice
-						
-						declare @tbFre table (
-							FPRICE decimal(18,2),
-							TPRICE decimal(18,2),
-							DOWNS decimal(18,2),
-							DOWNE decimal(18,2),
-							FORCUS varchar(5) not null,
-							NOPAYS int not null,
-							NOPAYE int null,
-							RATE decimal(7,2) not null,
-							MEMO1 varchar(max) null
-						);
-						insert into @tbFre
-						select distinct sprice,case when eprice = -1 then null else eprice end as eprice
-							,sdown,case when edown = -1 then null else edown end as edown
-							,free,snopay,enopay,freeamt,memo1
-						from {$this->MAuth->getdb('STDVehiclesTemp')}
-						where keyid=@keyid and insby=@insby
-						order by sprice
-						
-						declare @tempimport table (id bigint,topic varchar(20),result varchar(max));
-						insert into @tempimport
-						select * from {$this->sess["db"]}.dbo.FN_JD_STDVehicles_IMPORT(@insby) where id=@keyid
-						
-						if (@STDID = 'Auto Genarate')
-						begin
-							set @STDID = isnull((select MAX(STDID)+1 from {$this->MAuth->getdb('STDVehicles')}),1);
-							
-							if exists(select * from {$this->MAuth->getdb('SETMODEL')} where MODELCOD=@MODEL collate thai_cs_as)
-							begin
-								insert into {$this->MAuth->getdb('STDVehicles')}
-								select @STDID,@TYPECOD,@MODEL,@insby,@insdt
-							end 
-							else 
-							begin
-								rollback tran import_transaction;
-								
-								insert into #tempResult 
-								select 'y','ผิดพลาด ไม่พบข้อมูลรุ่น '+@MODEL+' <br>โปรดตรวจสอบข้อมูลรุ่น ในเมนูตั้งค่ารุ่นรถก่อนครับ';
-								return;
-							end
-						end		
-						
-						if (@SUBID = 'Auto Genarate')
-						begin
-							set @SUBID = isnull((select MAX(SUBID)+1 from {$this->MAuth->getdb('STDVehiclesDetail')} where STDID=@STDID),1);
-						end
-						
-						if exists (
-							select * from @tempimport a
-							left join {$this->MAuth->getdb('SETBAAB')} b on a.result=b.BAABCOD collate thai_cs_as
-							where a.id=@keyid and a.topic='baab' and b.BAABCOD is null
-						)
-						begin
-							rollback tran import_transaction;
-							
-							insert into #tempResult 
-							select 'y','ผิดพลาด ลำดับที่ '+cast(@keyid as varchar)+' <br>ไม่พบข้อมูลแบบรถของรุ่น '+@MODEL+' ในระบบ<br>โปรดตรวจสอบใหม่อีกครั้ง';
-							return;
-						end
-						
-						if not exists (select * from @tempimport where id=@keyid and topic='acticod')
-						begin
-							rollback tran import_transaction;
-							
-							insert into #tempResult 
-							select 'y','ผิดพลาด คุณยังไม่ได้ระบุกิจกรรมการขาย';
-							return;
-						end
-						
-						-----------------------------------------------
-						declare @dcs_subid bigint;
-						if OBJECT_ID('tempdb..#tempSubID') is not null drop table #tempSubID;
-						create table #tempSubID (subid int);
-						
-						insert into #tempSubID
-						select SUBID from {$this->MAuth->getdb('STDVehiclesDetail')} where STDID=@STDID
-						
-						while (select COUNT(*) from #tempSubID) > 0
-						begin
-							set @dcs_subid = (select MIN(subid) from #tempSubID);
-							
-							declare @hasACTI varchar(3) = isnull((
-								select top 1 'YES' from {$this->MAuth->getdb('STDVehicles')} a
-								left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
-								left join {$this->MAuth->getdb('STDVehiclesACTI')} c on b.STDID=c.STDID and b.SUBID=c.SUBID
-								where a.STDID=@STDID and (
-									EVENTStart between @ES and isnull(@EE,EVENTStart)
-									or 
-									EVENTEnd between @ES and isnull(@EE,EVENTEnd)
-								) and c.ACTICOD collate thai_cs_as in (select result from @tempimport where id=@keyid and topic='acticod')
-								and b.STAT=@stat and b.SUBID = @dcs_subid
-							),'NO');
-							
-							declare @hasBAAB varchar(3) = isnull((
-								select top 1 'YES' from {$this->MAuth->getdb('STDVehicles')} a
-								left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
-								left join {$this->MAuth->getdb('STDVehiclesBAAB')} c on b.STDID=c.STDID and b.SUBID=c.SUBID
-								where a.STDID=@STDID and (
-									EVENTStart between @ES and isnull(@EE,EVENTStart)
-									or 
-									EVENTEnd between @ES and isnull(@EE,EVENTEnd)
-								) and c.BAAB collate thai_cs_as in (select result from @tempimport where id=@keyid and topic='baab')
-								and b.STAT=@STAT and b.SUBID = @dcs_subid
-							),'NO');
-							
-							declare @hasCOLOR varchar(3) = isnull((
-								select top 1 'YES' from {$this->MAuth->getdb('STDVehicles')} a
-								left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
-								left join {$this->MAuth->getdb('STDVehiclesCOLOR')} c on b.STDID=c.STDID and b.SUBID=c.SUBID
-								where a.STDID=@STDID and (
-									EVENTStart between @ES and isnull(@EE,EVENTStart)
-									or 
-									EVENTEnd between @ES and isnull(@EE,EVENTEnd)
-								) and c.COLOR collate thai_cs_as in (select result from @tempimport where id=@keyid and topic='color')
-								and b.STAT=@STAT and b.SUBID = @dcs_subid
-							),'NO');
-							
-							declare @hasLOCAT varchar(3) = isnull((
-								select top 1 'YES' from {$this->MAuth->getdb('STDVehicles')} a
-								left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
-								left join {$this->MAuth->getdb('STDVehiclesLOCAT')} c on b.STDID=c.STDID and b.SUBID=c.SUBID
-								where a.STDID=@STDID and (
-									EVENTStart between @ES and isnull(@EE,EVENTStart)
-									or 
-									EVENTEnd between @ES and isnull(@EE,EVENTEnd)
-								) and c.LOCAT collate thai_cs_as in (select result from @tempimport where id=@keyid and topic='locat')
-								and b.STAT=@STAT and b.SUBID = @dcs_subid
-							),'NO');
-							
-							if ((@hasACTI = 'YES') and (@hasBAAB = 'YES') and (@hasCOLOR = 'YES') and (@hasLOCAT = 'YES'))
-							begin
-								rollback tran import_transaction;
-								
-								insert into #tempResult 
-								select 'y','ผิดพลาด เนื่องจากกิจกรรมการขาย รุ่นรถ แบบ สี <br>สถานะภาพรถ และสาขาที่กำหนดใช้ std. <br><br>ลำดับที่ #'+cast(@keyid as varchar)+'<br>ในช่วงวันที่ '+convert(varchar(6),@ES,103)+cast(year(@ES)+543 as varchar(4))+' ถึง '+convert(varchar(6),@EE,103)+cast(year(@EE)+543 as varchar(4))+'<br>มีข้อมูลอยู่แล้ว';
-								return;
-							end	
-							else if (isdate(@ES) = 0 or isdate(isnull(@EE,getdate())) = 0)
-							begin
-								rollback tran import_transaction;
-								
-								insert into #tempResult 
-								select 'y','ผิดพลาด วันที่ไม่ถูกต้อง';
-								return;
-							end	
-							
-							delete #tempSubID where subid=@dcs_subid
-						end
-						
-
-						begin
-							if exists(
-								select * from {$this->MAuth->getdb('STDVehiclesDetail')}
-								where STDID=@STDID and SUBID=@SUBID
-							)
-							begin
-								rollback tran import_transaction;
-								
-								insert into #tempResult 
-								select 'y','ผิดพลาด มี standard อยู่แล้ว';
-								return;
-							end
-							else
-							begin
-								insert into {$this->MAuth->getdb('STDVehiclesDetail')} (STDID,SUBID,STDNAME,STDDESC,STAT,EVENTStart,EVENTEnd)
-								select @STDID,@SUBID,@NAME,@DETAIL,@STAT,@ES,@EE
-								
-								insert into {$this->MAuth->getdb('STDVehiclesACTI')} (STDID,SUBID,ACTICOD,ACTIVE,INSBY,INSDT)
-								select distinct @STDID,@SUBID,result,'yes',@insby,@insdt from @tempimport 
-								where id=@keyid and topic='acticod'
-								delete @tempimport where id=@keyid and topic='acticod'
-								
-								insert into {$this->MAuth->getdb('STDVehiclesBAAB')} (STDID,SUBID,BAAB,ACTIVE,INSBY,INSDT)
-								select distinct @STDID,@SUBID,result,'yes',@insby,@insdt from @tempimport 
-								where id=@keyid and topic='baab'
-								delete @tempimport where id=@keyid and topic='baab'
-								
-								insert into {$this->MAuth->getdb('STDVehiclesCOLOR')} (STDID,SUBID,COLOR,ACTIVE,INSBY,INSDT)
-								select distinct @STDID,@SUBID,result,'yes',@insby,@insdt from @tempimport
-								where id=@keyid and topic='color'
-								delete @tempimport where id=@keyid and topic='color'
-								
-								insert into {$this->MAuth->getdb('STDVehiclesPRICE')} (STDID,SUBID,PRICE,PRICES,ACTIVE,INSBY,INSDT)
-								select @STDID,@SUBID,FPRICE,TPRICE,'yes',@insby,@insdt from @tbPRICE
-								delete @tbPRICE
-								
-								insert into {$this->MAuth->getdb('STDVehiclesLOCAT')} (STDID,SUBID,LOCAT,ACTIVE,INSBY,INSDT)
-								select distinct @STDID,@SUBID,result,'yes',@insby,@insdt from @tempimport
-								where id=@keyid and topic='locat'
-								delete @tempimport where id=@keyid and topic='locat'
-								
-								insert into {$this->MAuth->getdb('STDVehiclesDOWN')} (
-									STDID,SUBID,PRICES,PRICEE,DOWNS,DOWNE
-									,INTERESTRT,INTERESTRT_GVM,INSURANCEPAY,INSURANCE,TRANSFERS
-									,REGIST,ACT,COUPON,APPROVE,ACTIVE,INSBY,INSDT
-								) 
-								select @STDID,@SUBID,FPRICE,TPRICE,DOWNS,DOWNE
-									,INTERESTRT,INTERESTRT_GVM,INSURANCEPAY,INSURANCE,TRANSFERS
-									,REGIST,ACT,COUPON
-									,(case when APPROVE='yes' collate thai_ci_as then 'Y' else 'N' end)
-									,'yes',@insby,@insdt
-								from @tbDwn
-								delete @tbDwn
-								
-								insert into {$this->MAuth->getdb('STDVehiclesPackages')} (
-									STDID,SUBID,PRICES,PRICEE,DOWNS,DOWNE,FORCUS,NOPAYS
-									,NOPAYE,RATE,MEMO1,ACTIVE,INSBY,INSDT
-								) 
-								select @STDID,@SUBID,FPRICE,TPRICE,DOWNS,DOWNE,FORCUS,NOPAYS
-									,NOPAYE,RATE,MEMO1,'yes',@insby,@insdt
-								from @tbFre
-								delete @tbFre
-							end
-						end
-						
-						delete #tempKeyID where keyid=@keyid
-					end
 					
 					insert into #tempResult
 					select 'n','บันทึกข้อมูลเรียบร้อยแล้ว'

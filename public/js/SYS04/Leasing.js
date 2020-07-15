@@ -3012,7 +3012,7 @@ function btnOther($thisWindowLeasing){
 		var dataToPost = new Object();
 		dataToPost.CONTNO = $("#add_contno").val();
 		$.ajax({
-			url:'../SYS04/Leasing/Decode',
+			url:'../SYS04/Leasing/Encode',
 			data: dataToPost,
 			type: 'POST',
 			dataType: 'json',

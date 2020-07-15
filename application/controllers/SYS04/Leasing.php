@@ -3820,7 +3820,7 @@ class Leasing extends MY_Controller {
 		$mpdf->Output();
 	}
 	
-	function Decode(){
+	function Encode(){
 		$data = $this->generateData(array($_POST["CONTNO"]),"encode");
 		$response = array("CONTNO"=>$data[0]);
 		echo json_encode($response);
@@ -4919,6 +4919,7 @@ class Leasing extends MY_Controller {
 					+isnull(g.coupon,0)) - isnull(a.DWN_INSURANCE,0) as STD_OPT_TOTAL
 					*/
 					
+					/*
 					,((case when a.INSURANCE_TYP = 1 then isnull(g.insurance,0) else 0 end)
 						+(case when a.CALTRANS = 'Y' then isnull(g.transfers,0) else 0 end)
 						+(case when a.CALREGIST = 'Y' then isnull(g.regist,0) else 0 end)
@@ -4926,7 +4927,30 @@ class Leasing extends MY_Controller {
 						+(case when a.CALCOUPON = 'Y' then isnull(g.coupon,0) else 0 end)				
 						-(case when a.INSURANCE_TYP=1 then isnull(a.DWN_INSURANCE,0) else 0 end) 
 					 ) as STD_OPT_TOTAL
+					*/
 					
+					--กรณีวิเคราะห์เปลี่ยนแปลงเงินดาวน์  จะใช้ std ในขั้นเงินดาวน์ที่สาขาคีย์มา   20200420 
+					--,((case when a.INSURANCE_TYP = 1 then isnull(g.insurance,0) else 0 end)
+					,((case when a.INSURANCE_TYP = 1 then (
+							case when isnull(h.INSURANCE,0) > 0 
+							then h.INSURANCE else g.INSURANCE end
+						) else 0 end)
+						+(case when a.CALTRANS = 'Y' then isnull(g.transfers,0) else 0 end)
+						+(case when a.CALREGIST = 'Y' then isnull(g.regist,0) else 0 end)
+						+(case when a.CALACT = 'Y' then isnull(g.act,0) else 0 end)
+						+(case when a.CALCOUPON = 'Y' then isnull(g.coupon,0) else 0 end)				
+						-(case when a.INSURANCE_TYP=1 then isnull(a.DWN_INSURANCE,0) else 0 end) 
+					 ) as STD_OPT_TOTAL
+					
+					--,((case when a.INSURANCE_TYP = 1 then ' ประกัน '+cast((isnull(g.insurance,0) - isnull(a.DWN_INSURANCE,0)) as varchar) else '' end)
+					,((case when a.INSURANCE_TYP = 1 then ' ประกัน '+cast((isnull(
+						case when isnull(h.INSURANCE,0) > 0 then h.INSURANCE else g.INSURANCE end
+						,0) - isnull(a.DWN_INSURANCE,0)) as varchar) else '' end)
+					+(case when a.CALTRANS = 'Y' then ' โอน '+cast(isnull(g.transfers,0) as varchar) else '' end)
+					+(case when a.CALREGIST = 'Y' then ' จด '+cast(isnull(g.regist,0) as varchar) else '' end)
+					+(case when a.CALACT = 'Y' then ' พรบ. '+cast(isnull(g.act,0) as varchar) else '' end)
+					+(case when a.CALCOUPON = 'Y' then ' คูปองชิงโชค '+cast(isnull(g.coupon,0) as varchar) else '' end)
+					) as STD_OPT_TOTAL_DESC
 					
 					
 					,isnull(a.DWN_INSURANCE,0) as DWN_INSURANCE

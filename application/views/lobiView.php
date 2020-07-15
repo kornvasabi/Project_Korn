@@ -7,7 +7,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	
 	<title>YTKMini</title>
-	<link rel="shortcut icon" href="../public/images/ytkicon.png" />
+	<link rel="shortcut icon" href="../public/images/icon-preview.png?v" />
 	
 	<link rel="stylesheet" href="../public/lobiadmin-master/documentation/css/bootstrap.min.css"/>
 	<link rel="stylesheet" href="../public/lobiadmin-master/version/1.0/ajax/css/font-awesome.min.css"/>
@@ -305,6 +305,7 @@
 	
 	
 	<div id="main">
+		<!-- style="background-image: url('../public/images/KOI FISH.gif'); background-position: center;" -->
 		<div id="ribbon" class="hidden-print">
 			<a href="#welcome/dashboard" class="btn-ribbon" data-container="#main" data-toggle="tooltip" data-title="Show dashboard"><i class="fa fa-home"></i></a>
 			<span class="vertical-devider">&nbsp;</span>
@@ -325,7 +326,13 @@
 		<div class="bounce3"></div>
 	</div -->
 	
-	<div id="loadding" hidden style="width:100vw;height:100vh;color:white;background-color:hsla(40, 14%, 21%, 0.59);position:fixed;top:0;left:0;z-index:10000;">
+	<div id="loadding" hidden style="
+		background-image: url('../public/images/KOI FISH.gif');
+		background-repeat: no-repeat;
+		background-attachment: fixed;
+		background-position: center; 
+		background-size: cover;
+		width:100vw;height:100vh;color:white;background-color:hsla(40, 14%, 21%, 0.59);position:fixed;top:0;left:0;z-index:10000;">
 		<div class="spinner spinner-horizontal">
 			<span class="spinner-text">Loading...</span>
 			<div class="bounce1"></div>
@@ -489,7 +496,7 @@
 		setheight = setheight - 50;
 	}
 	
-	$('#content').css({'background-color':'whiteSmoke'});
+	//$('#content').css({'background-color':'whiteSmoke'});
 	
 	$("#LOCATCHANGE").click(function(){
 		$.ajax({
