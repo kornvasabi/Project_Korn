@@ -13,8 +13,52 @@ var _update = $('.tab1[name="home"]').attr('cup');
 var _delete = $('.tab1[name="home"]').attr('cdel');
 var _level  = $('.tab1[name="home"]').attr('clev');
 
-var jd_btnt1finance = null;
+var kb_btnt1search = null;
+$('#btnt1search').click(function(){
+	dataToPost = new Object();
+	dataToPost.contno   = $('#CONTNO').val();
+	dataToPost.sdatefrm = $('#SDATEFRM').val();
+	dataToPost.sdateto  = $('#SDATETO').val();
+	dataToPost.locat    = $('#LOCAT').val();
+	dataToPost.strno    = $('#STRNO').val();
+	dataToPost.name     = $('#NAME').val();
+	$('#loadding').fadeIn(200);
+	kb_btnt1search = $.ajax({
+		url:'../SYS04/Finance/search',
+		data: dataToPost,
+		type: 'POST',
+		dataType: 'json',
+		success: function(data){
+			$('#loadding').fadeOut(200);
+			
+			$('#searchresult').html(data.html);
+			
+			$('#table-Finance').on('draw.dt',function(){ redraw(); });
+			fn_datatables('table-Finance',1,225);
+			
+			$('.dataTables_scrollBody').css({'height':'calc(-370px + 100vh)'});
+			
+			function redraw(){
+				$('[data-toggle="tooltip"]').tooltip();
+				$('.financeDetails').unbind('click');
+				$('.financeDetails').click(function(){
+					//loadDetails('edit','');
+				});
+			}
+			
+			kb_btnt1search = null;
+		},
+		beforeSend: function(){
+			if(kb_btnt1search !== null){ kb_btnt1search.abort(); }
+		},
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+	});
+});
 $('#btnt1finance').click(function(){
+	loadFormFinance('add','');
+});
+var jd_btnt1finance = null;
+function loadFormFinance($param,$dataLoad){
 	$('#btnt1finance').attr('disabled',true);
 	$('#loadding').show();
 	jd_btnt1finance = $.ajax({
@@ -31,7 +75,7 @@ $('#btnt1finance').click(function(){
 				draggable: false,
 				closeOnEsc: false,
 				shown: function($this){
-					wizard('new','',$this);
+					wizard($param,$dataLoad,$this);
 				},
 				beforeClose : function(){
 					$('#btnt1finance').attr('disabled',false);
@@ -45,9 +89,9 @@ $('#btnt1finance').click(function(){
 		},
 		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
-});
+}
 
-function wizard($param,$dataLoad,$thisWindowLeasing){
+function wizard($param,$dataLoad,$thisWindowFinance){
 	LobiAdmin.loadScript([
 		'../public/lobiadmin-master/version/1.0/ajax/js/plugin/bootstrap-wizard/jquery.bootstrap.wizard.js',
 		'../public/lobiadmin-master/version/1.0/ajax/js/plugin/jquery-validation/jquery.validate.min.js',
@@ -56,7 +100,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 	], initPage);
 	
 	function initPage(){
-		$('#wizard-leasing').bootstrapWizard({
+		$('#wizard-finance').bootstrapWizard({
 			onTabClick: function(li, ul, ind, ind2, xxx){
 				var beforeChanged = 0; 
 				var index = 0; //tab ก่อนเปลี่ยน 
@@ -133,6 +177,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		return true;					
 	}
 	
+	$('#btn_addBillDas').attr('disabled',true);
+	
 	$('#add_contno').val('Auto Genarate');
 	$('#add_contno').attr('readonly',true);
 	$('#add_locat').select2({
@@ -157,7 +203,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         },
 		allowClear: false,
 		multiple: false,
-		dropdownParent: (_level == 1 ? $("#wizard-leasing") : true),
+		dropdownParent: (_level == 1 ? $("#wizard-finance") : true),
 		disabled: (_level == 1 ? false : true),
 		//disabled: true,
 		//theme: 'classic',
@@ -187,13 +233,11 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         },
 		allowClear: true,
 		multiple: false,
-		dropdownParent: $("#wizard-leasing"),
+		dropdownParent: $("#wizard-finance"),
 		//disabled: true,
 		//theme: 'classic',
 		width: '100%'
 	});
-	
-	
 	$('#add_cuscod').click(function(){
 		$('#loadding').fadeIn(200);
 		
@@ -279,40 +323,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 		$('#add_cuscod').attr('CUSCOD','');
 		$('#add_cuscod').val('');
 	});
-	
-	
-	/*
-	$('#add_cuscod').select2({
-		placeholder: 'เลือก',
-        ajax: {
-			url: '../Cselect2/getCUSTOMERS',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = $('#add_cuscod').find(':selected').val();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-        },
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $("#wizard-leasing"),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	*/
-	
 	$('#add_inclvat').select2({ 
-		dropdownParent: $("#wizard-leasing"), 
+		dropdownParent: $("#wizard-finance"), 
 		minimumResultsForSearch: -1,
 		width: '100%'
 	});
@@ -341,7 +353,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         },
 		allowClear: false,
 		multiple: false,
-		dropdownParent: $("#wizard-leasing"),
+		dropdownParent: $("#wizard-finance"),
 		//disabled: true,
 		//theme: 'classic',
 		width: '100%'
@@ -370,12 +382,38 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         },
 		allowClear: false,
 		multiple: false,
-		dropdownParent: $("#wizard-leasing"),
+		dropdownParent: $("#wizard-finance"),
 		//disabled: true,
 		//theme: 'classic',
 		width: '100%'
 	});
-	
+	$('#add_fincode').select2({ 
+		placeholder: 'เลือก',
+        ajax: {
+			url: '../Cselect2K/getFINCODE',
+			data: function (params) {
+				dataToPost = new Object();
+				dataToPost.now = $('#add_fincode').find(':selected').val();
+				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+				
+				return dataToPost;				
+			},
+			dataType: 'json',
+			delay: 1000,
+			processResults: function (data) {
+				return {					
+					results: data
+				};
+			},
+			cache: true
+        },
+		allowClear: false,
+		multiple: false,
+		dropdownParent: $("#wizard-finance"),
+		//disabled: true,
+		//theme: 'classic',
+		width: '100%'
+	});
 	$('#add_salcod').select2({ 
 		placeholder: 'เลือก',
         ajax: {
@@ -398,7 +436,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         },
 		allowClear: false,
 		multiple: false,
-		dropdownParent: $("#wizard-leasing"),
+		dropdownParent: $("#wizard-finance"),
 		//disabled: true,
 		//theme: 'classic',
 		width: '100%'
@@ -426,7 +464,7 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
         },
 		allowClear: false,
 		multiple: false,
-		dropdownParent: $("#wizard-leasing"),
+		dropdownParent: $("#wizard-finance"),
 		//disabled: true,
 		//theme: 'classic',
 		width: '100%'
@@ -544,140 +582,244 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 			fn_billdasActive(rank);
 		}
 	});
-}
-
-
-function fn_billdasActive(rank){
-	$('.add_billdas[rank='+rank+']').select2({ 
-		placeholder: 'เลือก',
-		ajax: {
-			url: '../Cselect2/getBILLDAS',
-			data: function (params) {
-				dataToPost = new Object();
-				dataToPost.now = $(this).find(':selected').val();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);				
-				
-				dataToPost.locat = $('#add_locat').find(':selected').val();
-				dataToPost.sdate = $('#add_sdate').val();
-				
-				return dataToPost;				
-			},
-			dataType: 'json',
-			delay: 1000,
-			processResults: function (data) {
-				return {
-					results: data
-				};
-			},
-			cache: true
-		},
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $("#wizard-leasing"),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-	
-	$('.add_billdas[rank='+rank+']').on('select2:opening', function (e) {
-		$(this).attr('process','use');
-	});
-	
-	$('.add_billdas[rank='+rank+']').on('select2:select', function(e){
-		var thisData = $(this).find(':selected').val();
-		
-		if(typeof thisData !== 'undefined' && thisData != ''){
-			var status = false;
-			
-			$('.add_billdas').each(function(){
-				var process = $(this).attr('process');
-				var this2Data = $(this).find(':selected').val();
-				
-				if(process == ""){
-					if(this2Data == thisData){
-						status = true;
-					}
-				}
-			});
-			
-			if(status){					
-				Lobibox.notify('warning', {
-					title: 'แจ้งเตือน',
-					size: 'mini',
-					closeOnClick: false,
-					delay: 15000,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					soundPath: '../public/lobiadmin-master/version/1.0/ajax/sound/lobibox/',   // The folder path where sounds are located
-					soundExt: '.ogg',
-					icon: true,
-					messageHeight: '90vh',
-					msg: 'ไม่สามารถเลือกบิลซ้ำได้ครับ'
-				});					
-				$(this).val(null).trigger("change");
-			}
-		}
-		
-		$(this).attr('process','');
-	});
-	
-	$('.add_billdas[rank='+rank+']').on('select2:close', function(e){
-		if(typeof $(this).find(':selected').val() === 'undefined'){
-			//alert('undi');
-			var size = 0;
-			$('.add_billdas').each(function(){ 
-				if(typeof $(this).find(':selected').val() === 'undefined'){ 
-					size += 1; 
-				} 
-			});
-			
-			$('.add_billdas').each(function(){
-				if(size > 1){
-					if(typeof $(this).find(':selected').val() === 'undefined'){ 
-						$(this).select2('destroy');
-						$(this).remove();
-						size -= 1;
-					}
-				}
-			});
-		}
-		
-		fn_calbilldas();
-	});
-	
-	//$('.add_billdas[rank='+rank+']').on("select2:unselecting", function(e) { fn_calbilldas(); });
-}
-
-function fn_calbilldas(){
-	$saleno = new Array();
-	$('.add_billdas').each(function(){
-		if(typeof $(this).find(':selected').val() !== 'undefined'){
-			$saleno.push($(this).find(':selected').val());
-		}
-	});	
-	
-	if($saleno.length > 0){
-		$('#loadding').show();
+	//korn
+	$('#add_inopt').click(function(){
+		$('#loadding').fadeIn(200);
 		$.ajax({
-			url:'../SYS04/Leasing/calbilldas',
-			data: {saleno:$saleno,locat:(typeof $("#add_locat").find(':selected').val() === 'undefined' ? '' : $("#add_locat").find(':selected').val())},
+			url: '../SYS04/Finance/getFormInopt',
 			type: 'POST',
 			dataType: 'json',
-			success: function(data) {
-				$('#add_free').val(data.TotalAmt);
-				
-				var comment = $('#add_memo1').val().split("\n");
-				$('#add_memo1').val(data.Details+"\n"+(typeof comment[1] === 'undefined' ? '' : comment[1]));
-				$('#loadding').hide();
+			success: function(data){
+				$('#loadding').fadeOut(200);	
+				Lobibox.window({
+					title: 'เพิ่มอุปกรณ์เสริม',
+					//width: $(window).width(),
+					//height: $(window).height(),
+					content: data,
+					draggable: true,
+					closeOnEsc: true,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
+					shown: function($this){
+						$('#getvalue_inopt').hide();
+						
+						$('#op_code').select2({
+							placeholder: 'เลือก',
+							ajax: {
+								url: '../Cselect2K/getOPTCODE_ACS',
+								data: function (params){
+									dataToPost = new Object();
+									dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
+									dataToPost.add_locat = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? "":$('#add_locat').find(':selected').val());	
+									
+									return dataToPost;
+								},
+								dataType: 'json',
+								delay: 1000,
+								processResults: function (data){
+									return {
+										results: data
+									};
+								},
+								cache: true
+							},
+							allowClear: false,
+							multiple: false,
+							dropdownParent: $(".inoptform"),
+							//disabled: true,
+							//theme: 'classic',
+							width: '100%'
+						});
+						$('#op_code').change(function(){
+							$('#inopt_results').hide();
+							$('#getvalue_inopt').hide();
+						});
+						
+						$('#cal_inopt').click(function(){
+							dataToPost = new Object();
+							dataToPost.inclvat = (typeof $('#add_inclvat').find(':selected').val() === 'undefined' ? '' : $('#add_inclvat').find(':selected').val());
+							dataToPost.vatrt   = $('#add_vatrt').val();
+							dataToPost.opCode  = (typeof $('#op_code').find(':selected').val() === 'undefined' ? '' : $('#op_code').find(':selected').val());
+							dataToPost.opText  = (typeof $('#op_code').find(':selected').text() === 'undefined' ? '' : $('#op_code').find(':selected').text());
+							dataToPost.uprice  = $('#op_uprice').val();
+							dataToPost.cvt     = $('#op_cvt').val();
+							dataToPost.qty     = $('#op_qty').val();
+							$('#loadding').fadeIn(200);
+							$.ajax({
+								url: '../SYS04/Finance/calculate_inopt',
+								data: dataToPost,
+								type: 'POST',
+								dataType: 'json',
+								success: function(data){ 
+									$('#loadding').fadeOut(200);
+									if(data.status){
+										$('#inopt_results').show();
+										$('#inopt_results').html(data.html);
+										$('#getvalue_inopt').show();
+										
+										$('#getvalue_inopt').attr({
+											'opCode': $('#op_code').find(':selected').val()
+											,'opText': $('#op_code').find(':selected').text()
+											,'qty'   : data["qty"].replace(',','')
+											,'uprice': data["uprice"].replace(',','')
+											,'price1' : data["1price"].replace(',','')
+											,'vat1'  : data["1vat"].replace(',','')
+											,'total1': data["1total"].replace(',','')
+											,'price2': data["2price"].replace(',','')
+											,'vat2'  : data["2vat"].replace(',','')
+											,'total2': data["2total"].replace(',','')
+										});
+									}else{
+										$('#inopt_results').show();
+										$('#inopt_results').html(data.msg);
+									}
+								}							
+							});
+						});
+						
+						$('#getvalue_inopt').click(function(){
+							var opCode = $(this).attr('opCode');
+							var opText = $(this).attr('opText');
+							var qty	   = $(this).attr('qty');
+							var uprice = $(this).attr('uprice');
+							var price1 = $(this).attr('price1');
+							var vat1   = $(this).attr('vat1');
+							var total1 = $(this).attr('total1');
+							var price2 = $(this).attr('price2');
+							var vat2   = $(this).attr('vat2');
+							var total2 = $(this).attr('total2');
+							
+							var stat = true;
+							$('.inoptTab2').each(function(){
+								if(opCode == $(this).attr('opCode')){
+									stat = false;
+								}
+							});
+							
+							if(stat){
+								var row = '<tr seq="new">';							
+								row += "<td align='center'> ";
+								row += "	<i class='inoptTab2 btn btn-xs btn-danger glyphicon glyphicon-minus' ";
+								row += "		opCode='"+opCode+"' total1='"+total1+"' total2='"+total2+"' ";
+								row += "		price1='"+price1+"' price2='"+price2+"' vat1='"+vat1+"' ";
+								row += "		vat2='"+vat2+"' qty='"+qty+"' uprice='"+uprice+"' ";
+								row += "		style='cursor:pointer;'> ลบ   ";
+								row += "	</i> ";
+								row += "</td> ";
+								row += "<td>"+opText+"</td>";
+								row += "<td class='text-right'>"+uprice.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')+"</td>";
+								row += "<td class='text-right'>"+qty.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')+"</td>";
+								row += "<td class='text-right'>"+price1.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')+"</td>";
+								row += "<td class='text-right'>"+vat1.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')+"</td>";
+								row += "<td class='text-right'>"+total1.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')+"</td>";
+								row += "<td class='text-right'>"+price2.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')+"</td>";
+								row += "<td class='text-right'>"+vat2.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')+"</td>";
+								row += "<td class='text-right'>"+total2.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')+"</td>";
+								row += '</tr>';
+								
+								$('#dataTables-inopt tbody').append(row);
+								
+								var sumTotal1 = 0;
+								var sumTotal2 = 0;
+								$('.inoptTab2').each(function(){
+									sumTotal1 += parseFloat($(this).attr('total1'));
+									sumTotal2 += parseFloat($(this).attr('total2'));
+								});
+															
+								$('#add2_optsell').val((sumTotal1.toFixed(2).toString()).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+								$('#add2_optcost').val((sumTotal2.toFixed(2).toString()).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+								
+								inopt_remove();
+								$this.destroy();
+							}else{
+								Lobibox.notify('warning', {
+									title: 'ผิดพลาด',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: 'ผิดพลาดรหัสอุปกรณ์เสริม '+opCode+' มีอยู่แล้ว ไม่สามารถเพิ่มซ้ำได้ครับ'
+								});
+							}
+						});
+					},
+					beforeClose : function(){
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
+					}
+				});
+			}
+		});
+	});
+	
+	$('#add_save').click(function(){
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			iconClass: false,
+			msg: 'คุณต้องการบันทึกรายการขายส่งไฟแนนซ์หรือไม่ ?',
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ยืนยัน',
+					closeOnClick: true,
+				},
+				cancel : {
+					'class': 'btn btn-danger glyphicon glyphicon-cancel',
+					text: ' ยกเลิก',
+					closeOnClick: true
+				},
 			},
-			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
-		})
-	}else{
-		$('#add_free').val('0.00');
-		var comment = $('#add_memo1').val().split("\n");
-		$('#add_memo1').val((typeof comment[1] === 'undefined' ? '' : "\n"+comment[1]));
-	}
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
+			callback: function(lobibox, type){
+				if (type === 'ok'){ 
+					fnSave($thisWindowFinance); 
+				}
+			},
+			beforeClose: function(){
+				$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
+			}
+		});
+	});
 }
+function inopt_remove(){
+	$('.inoptTab2').unbind('click');
+	$('.inoptTab2').click(function(){
+		$(this).parents().closest('tr').remove(); 
+		
+		var sumTotal1 = 0;
+		var sumTotal2 = 0;
+		$('.inoptTab2').each(function(){
+			sumTotal1 += parseFloat($(this).attr('total1'));
+			sumTotal2 += parseFloat($(this).attr('total2'));
+		});
+		
+		$('#add2_optsell').val((sumTotal1.toFixed(2).toString()).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+		$('#add2_optcost').val((sumTotal2.toFixed(2).toString()).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,'));
+	});
+}
+function fnSave($thisWindow){
+	dataToPost = new Object();
+	dataToPost.CONTNO    = $('#add_contno').val();
+	dataToPost.LOCAT     = (typeof $('#add_locat').find(':selected').val() === 'undefined' ? '':$('#add_locat').find(':selected').val());
+	dataToPost.CONTNO    = $('#add_sdate').val();
+	dataToPost.RESVNO    = (typeof $('#add_resvno').find(':selected').val() === 'undefined' ? '':$('#add_resvno').find(':selected').val());
+	dataToPost.APPROVE   = $('#add_approve').val();
+	dataToPost.CUSCOD    = $('#add_cuscod').val();
+	dataToPost.INCLVAT   = (typeof $('#add_inclvat').find(':selected').val() === 'undefined' ? '':$('#add_inclvat').find(':selected').val());
+	dataToPost.VATRT     = $('#add_vatrt').val();
+	dataToPost.ADDRNO    = (typeof $('#add_addrno').find(':selected').val() === 'undefined' ? '':$('#add_addrno').find(':selected').val());
+	dataToPost.STRNO     = (typeof $('#add_strno').find(':selected').val() === 'undefined' ? '':$('#add_strno').find(':selected').val());
+	dataToPost.REGNO     = $('#add_reg').val();
+	dataToPost.ACTICOD   = (typeof $('#add_acticod').find(':selected').val() === 'undefined' ? '':$('#add_acticod').find(':selected').val());
+	var listopt = [];
+	$('.add_inopt').each(function(){
+		var list = [];
+		list.push($(this).attr(''));
+	});
+}
+
+
 
 
 

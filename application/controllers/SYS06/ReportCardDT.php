@@ -33,13 +33,20 @@ class ReportCardDT extends MY_Controller {
 							<div class='col-sm-5'>	
 								<div class='form-group'>
 									เลขที่สัญญา
-									<select id='CONTNO' class='form-control input-sm' data-placeholder='เลขที่สัญญา'></select>
+									<div class='input-group'>
+										<input type='text' id='CONTNO' class='form-control input-sm' placeholder='เลขที่สัญญา' >
+										<span class='input-group-btn'>
+											<button id='btnaddcont' class='btn btn-info btn-sm' type='button'>
+												<span class='glyphicon glyphicon-hand-up' aria-hidden='true'></span>
+											</button>
+										</span>
+									</div>
 								</div>
 							</div>
 							<div class='col-sm-2'>	
 								<div class='form-group' >
 									สาขา
-									<input type='text' id='LOCAT' class='form-control input-sm' readonly>
+									<input type='text' id='LOCAT' class='form-control input-sm'>
 								</div>
 							</div>
 							<div class='col-sm-5'>	
@@ -53,7 +60,7 @@ class ReportCardDT extends MY_Controller {
 							<div class='col-sm-6 col-xs-6'>	
 								<div class='form-group'>
 									<div class='col-sm-12 col-xs-12' style='border:0.1px dotted #aed6f1;'>	
-										<div class='col-sm-6'>
+										<div class='col-sm-4'>
 											<div class='form-group'>
 												<br>
 												<label>
@@ -61,11 +68,19 @@ class ReportCardDT extends MY_Controller {
 												</label>
 											</div>
 										</div>
-										<div class='col-sm-6'>
+										<div class='col-sm-4'>
 											<div class='form-group'>
 												<br>
 												<label>
 													<input type= 'radio' id='STR' name='show'> โชว์ดอกผล STR
+												</label>
+											</div>
+										</div>
+										<div class='col-sm-4'>
+											<div class='form-group'>
+												<br>
+												<label>
+													<input type= 'radio' id='EFF' name='show'> โชว์ดอกผล EFF
 												</label>
 											</div>
 										</div>
@@ -131,6 +146,7 @@ class ReportCardDT extends MY_Controller {
 		$data[] = urlencode($_REQUEST["CONTNO"].'||'.$_REQUEST["LOCAT"].'||'.$_REQUEST["show1"].'||'.$_REQUEST['show2']);
 		echo json_encode($this->generateData($data,"encode"));
 	}
+	/*
 	function pdf(){
 		$data = array();
 		$data[] = $_REQUEST["condpdf"];
@@ -145,8 +161,10 @@ class ReportCardDT extends MY_Controller {
 		$round = "";
 		if($show1 == 'SYD'){
 			$round = ",ROUND(ROUND(CAST(Z.N_DAMT as DEC(12, 2)) * CAST(Z.PAYDUE as DEC(12, 2)) / Z.DAMT, 2) * Z.NPROF / Z.N_DAMT, 2) as RCPROF--1";
-		}else{
+		}else if($show1 == 'STR'){
 			$round = ",ROUND(CAST(Z.N_DAMT as DEC(12, 2)) * CAST(Z.NPROFIT_1 as DEC(12, 2)) / Z.NKANG_1, 2) as RCPROF";
+		}else if($show1 == 'EFF'){
+			$round = ",ROUND(ROUND(CAST(Z.N_DAMT as DEC(12, 2)) * CAST(Z.PAYDUE as DEC(12, 2)) / Z.DAMT, 2) * Z.EFF / Z.N_DAMT, 2) as RCPROF";
 		}
 		$sql = "
 			IF OBJECT_ID('tempdb..#RCDT') IS NOT NULL DROP TABLE #RCDT
@@ -177,49 +195,50 @@ class ReportCardDT extends MY_Controller {
 							and Y.PAYAMTB > Y.BARAMT then 2 else case when Y.PAYAMTA < Y.AARAMT AND Y.PAYAMTB > Y.PAYAMT then 3 else 4 
 							end end end   as  CRE  
 						from(
-							select X.CONTNO,X.LOCAT,X.NOPAY,X.DDATE,X.DAMT,X.N_DAMT,X.V_DAMT,X.VATRT,X.NPROF,D.TMBILL,D.TMBILDT,E.BILLNO
-							,E.BILLDT,D.PAYAMT,D.PAYTYP,D.DISCT as DSCAMTA,(select  SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A 
-							where A.CONTNO = X.CONTNO 
-							and A.LOCAT = X.LOCAT) as ARAMT,(select  SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A where A.NOPAY <= X.NOPAY and A.CONTNO = X.CONTNO 
-							and A.LOCAT = X.LOCAT) as AARAMT,(select SUM(A.INTAMT) from {$this->MAuth->getdb('ARPAY')} A where A.CONTNO = X.CONTNO 
-							and A.LOCAT = X.LOCAT) as INTAMT
-							
-							,(case when (select SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A where A.CONTNO = X.CONTNO 
-							and A.LOCAT = X.LOCAT and A.NOPAY < X.NOPAY) is null then 0 else (select SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A 
-							where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT and A.NOPAY < X.NOPAY) end) as BARAMT
-							
-							,(select A.NPROFIT from {$this->MAuth->getdb('ARMAST')} A where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT ) as NPROFIT_1
-							,(select A.NKANG from {$this->MAuth->getdb('ARMAST')} A where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT ) as NKANG_1
-							,(select SUM(A.DISCT) from {$this->MAuth->getdb('CHQTRAN')} A where  A.NOPAY <= D.NOPAY and A.TMBILDT<=D.TMBILDT and A.CONTNO = X.CONTNO 
-							and A.LOCATPAY = X.LOCAT and A.PAYFOR in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as DISCT
-							
-							,(select SUM(A.PAYAMT) from {$this->MAuth->getdb('CHQTRAN')} A where A.NOPAY <= D.NOPAY and A.TMBILDT <= D.TMBILDT and A.CONTNO = X.CONTNO 
-							and A.LOCATPAY = X.LOCAT and A.PAYFOR in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as PAYAMTA
-							,(select SUM(A.PAYINT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT  and A.PAYFOR 
-							in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as PAYINT
-							,(select SUM(A.DSCINT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT and A.PAYFOR 
-							in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as DISINT
-							
-							,(case when (
-								select SUM(A.PAYAMT) from {$this->MAuth->getdb('CHQTRAN')}  A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT 
-								and A.PAYFOR in ('006','007') and (A.NOPAY < D.NOPAY OR A.TMBILDT<D.TMBILDT) and A.FLAG <> 'C' 
-								and A.F_PAY > 0
-							)
-							is null then 0 else (
-								select SUM(A.PAYAMT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT 
-								and  A.PAYFOR in ('006','007') and (A.NOPAY < D.NOPAY or A.TMBILDT < D.TMBILDT) and A.FLAG <> 'C' 
-								and A.F_PAY > 0
-							)end) as PAYAMTB 
-						from {$this->MAuth->getdb('ARPAY')} X
-						left join {$this->MAuth->getdb('CHQTRAN')} D on X.CONTNO = D.CONTNO and X.LOCAT = D.LOCATPAY  
-						left join {$this->MAuth->getdb('CHQMAS')} E on D.TMBILL = E.TMBILL 
-						where X.NOPAY between D.F_PAY and D.L_PAY and D.FLAG <> 'C' and D.PAYFOR in ('006','007') and X.CONTNO = '".$CONTNO."' 
-						group by X.CONTNO,X.LOCAT,X.NOPAY,X.DDATE,X.DAMT,X.N_DAMT,X.V_DAMT,X.NPROF,X.VATRT,D.TMBILL,D.TMBILDT,E.BILLNO
-						,E.BILLDT,D.NOPAY,D.F_PAY,D.PAYAMT,D.PAYTYP,D.DISCT
+							select X.CONTNO,X.LOCAT,X.NOPAY,X.DDATE,X.DAMT,X.N_DAMT,X.V_DAMT,X.VATRT,X.NPROF,FN.FPROFIT as EFF,D.TMBILL,D.TMBILDT,E.BILLNO
+								,E.BILLDT,D.PAYAMT,D.PAYTYP,D.DISCT as DSCAMTA,(select  SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A 
+								where A.CONTNO = X.CONTNO 
+								and A.LOCAT = X.LOCAT) as ARAMT,(select  SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A where A.NOPAY <= X.NOPAY and A.CONTNO = X.CONTNO 
+								and A.LOCAT = X.LOCAT) as AARAMT,(select SUM(A.INTAMT) from {$this->MAuth->getdb('ARPAY')} A where A.CONTNO = X.CONTNO 
+								and A.LOCAT = X.LOCAT) as INTAMT
+								
+								,(case when (select SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A where A.CONTNO = X.CONTNO 
+								and A.LOCAT = X.LOCAT and A.NOPAY < X.NOPAY) is null then 0 else (select SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A 
+								where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT and A.NOPAY < X.NOPAY) end) as BARAMT
+								
+								,(select A.NPROFIT from {$this->MAuth->getdb('ARMAST')} A where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT ) as NPROFIT_1
+								,(select A.NKANG from {$this->MAuth->getdb('ARMAST')} A where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT ) as NKANG_1
+								,(select SUM(A.DISCT) from {$this->MAuth->getdb('CHQTRAN')} A where  A.NOPAY <= D.NOPAY and A.TMBILDT<=D.TMBILDT and A.CONTNO = X.CONTNO 
+								and A.LOCATPAY = X.LOCAT and A.PAYFOR in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as DISCT
+								
+								,(select SUM(A.PAYAMT) from {$this->MAuth->getdb('CHQTRAN')} A where A.NOPAY <= D.NOPAY and A.TMBILDT <= D.TMBILDT and A.CONTNO = X.CONTNO 
+								and A.LOCATPAY = X.LOCAT and A.PAYFOR in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as PAYAMTA
+								,(select SUM(A.PAYINT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT  and A.PAYFOR 
+								in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as PAYINT
+								,(select SUM(A.DSCINT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT and A.PAYFOR 
+								in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as DISINT
+								
+								,(case when (
+									select SUM(A.PAYAMT) from {$this->MAuth->getdb('CHQTRAN')}  A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT 
+									and A.PAYFOR in ('006','007') and (A.NOPAY < D.NOPAY OR A.TMBILDT<D.TMBILDT) and A.FLAG <> 'C' 
+									and A.F_PAY > 0
+								)
+								is null then 0 else (
+									select SUM(A.PAYAMT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT 
+									and  A.PAYFOR in ('006','007') and (A.NOPAY < D.NOPAY or A.TMBILDT < D.TMBILDT) and A.FLAG <> 'C' 
+									and A.F_PAY > 0
+								)end) as PAYAMTB 
+							from {$this->MAuth->getdb('ARPAY')} X
+							left join {$this->MAuth->getdb('CHQTRAN')} D on X.CONTNO = D.CONTNO and X.LOCAT = D.LOCATPAY  
+							left join {$this->MAuth->getdb('CHQMAS')} E on D.TMBILL = E.TMBILL 
+							left join {$this->MAuth->getdb('fn_leasing')}('".$CONTNO."','".$LOCAT."') FN on X.NOPAY = FN.NOPAY 
+							where X.NOPAY between D.F_PAY and D.L_PAY and D.FLAG <> 'C' and D.PAYFOR in ('006','007') and X.CONTNO = '".$CONTNO."' 
+							group by X.CONTNO,X.LOCAT,X.NOPAY,X.DDATE,X.DAMT,X.N_DAMT,X.V_DAMT,X.NPROF,X.VATRT,D.TMBILL,D.TMBILDT,E.BILLNO
+							,E.BILLDT,D.NOPAY,D.F_PAY,D.PAYAMT,D.PAYTYP,D.DISCT,FN.FPROFIT
 						) as Y 
 					)as Z 
 					union 
-					select X.CONTNO,X.LOCAT,X.NOPAY,X.DDATE,X.DAMT,X.N_DAMT,X.V_DAMT,X.VATRT,X.NPROF,'' as TMBILL,X.DATE1 as TMBILDT
+					select X.CONTNO,X.LOCAT,X.NOPAY,X.DDATE,X.DAMT,X.N_DAMT,X.V_DAMT,X.VATRT,X.NPROF,'' as EFF,'' as TMBILL,X.DATE1 as TMBILDT
 						,'' as BILLNO,X.DATE1 as BILLDT,0 as PAYAMT,'' as PAYTYP,0 as DSCAMTA
 						,(select SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT ) as ARAMT
 						,(select SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A where A.NOPAY <= X.NOPAY and A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT) as AARAMT
@@ -391,6 +410,7 @@ class ReportCardDT extends MY_Controller {
 				";
 			}
 		}
+		
 		if($query5->row()){
 			foreach($query5->result() as $row){
 				$arrs = array();
@@ -533,6 +553,422 @@ class ReportCardDT extends MY_Controller {
 		$content = $content.$stylesheet;
 		$mpdf->SetHTMLHeader($head);	
 		$mpdf->WriteHTML($content);	
+		$mpdf->Output();
+	}
+	*/
+	function pdf(){
+		$data 	= array();
+		$data[] = $_GET["condpdf"];
+		$arrs 	= $this->generateData($data,"decode");
+		$arrs[0]= urldecode($arrs[0]);
+		
+		$tx 	= explode("||",$arrs[0]);
+		$CONTNO = $tx[0];
+		$LOCAT  = $tx[1];
+		$show1  = $tx[2];
+		$show2  = $tx[3];
+		
+		$head = ""; $html = ""; $i = 0; $nprof = "";
+		$sql = "
+			select COMP_NM from {$this->MAuth->getdb('CONDPAY')}
+		";
+		$query = $this->db->query($sql);
+		$rowcomp	     = $query->row();
+		$arrs["COMP_NM"] = $rowcomp->COMP_NM;
+		
+		$sql = "
+			select LOCATCD from {$this->MAuth->getdb('INVLOCAT')} 
+			where SHORTL like ''+LEFT('".$CONTNO."',1)+'%'
+		";
+		$query = $this->db->query($sql);
+		$rowlocat = $query->row();
+		$LOCAT    = $rowlocat->LOCATCD;
+		
+		if($show1 == 'SYD'){
+			$nprof = ",ROUND(ROUND(CAST(Z.N_DAMT as DEC(12, 2)) * CAST(Z.PAYDUE as DEC(12, 2)) / Z.DAMT, 2) * Z.NPROF / Z.N_DAMT, 2) as RCPROF--1";
+		}else if($show1 == 'STR'){
+			$nprof = ",ROUND(CAST(Z.N_DAMT as DEC(12, 2)) * CAST(Z.NPROFIT_1 as DEC(12, 2)) / Z.NKANG_1, 2) as RCPROF";
+		}else if($show1 == 'EFF'){
+			$nprof = ",ROUND(ROUND(CAST(Z.N_DAMT as DEC(12, 2)) * CAST(Z.PAYDUE as DEC(12, 2)) / Z.DAMT, 2) * Z.EFF / Z.N_DAMT, 2) as RCPROF";
+		}
+		
+		$sql = "
+			IF OBJECT_ID('tempdb..#RCDT') IS NOT NULL DROP TABLE #RCDT
+			select CONVERT(varchar(8),SDATE,112) as SDATE,TOTPRC,STRNO,ENGNO,BILLCOLL,NPROFIT,KEYINUPAY,T_NOPAY,TOTDWN,NKANG,VKANG
+				,TKANG,MEMO1,CONTNO,LOCAT,NOPAY,CONVERT(varchar(8),DDATE,112) as DDATE,DAMT,N_DAMT,V_DAMT,VATRT,NPROF,TMBILL
+				,CONVERT(varchar(8),TMBILDT,112) as TMBILDT,BILLNO,CONVERT(varchar(8),BILLDT,112) as BILLDT,PAYAMT
+				,PAYTYP,DSCAMTA,ARAMT,AARAMT,INTAMT,BARAMT,DISCT,PAYAMTA,PAYINT,DISINT,PAYAMTB,PAYDUE,CRE,PAYVAT
+				,PAYNET,RCPROF,FLAG,ARBL,INTBL,NAME
+			into #RCDT
+			from(
+				select M.SDATE,M.TOTPRC,M.STRNO,I.ENGNO,M.BILLCOLL,M.NPROFIT,M.KEYINUPAY,M.T_NOPAY,M.TOTDWN,M.NKANG,M.VKANG,M.TKANG,M.MEMO1  
+					,T.* ,ARAMT-(case when PAYAMTA > 0 then PAYAMTA ELSE 0 end) + case when PAYDUE = 0 then 0 else 
+					case when PAYDUE = DAMT then PAYAMTA - AARAMT  else case when PAYDUE < DAMT and AARAMT > PAYAMTA then 0 else  
+					PAYAMTA - AARAMT  end  end  end as ARBL 
+					,(INTAMT - (case when PAYINT is null then 0 ELSE PAYINT END)) as INTBL 
+					,RTRIM(C.SNAM)+RTRIM(C.NAME1)+' '+RTRIM(C.NAME2) as NAME  
+				from(
+					select Z.* 
+						,ROUND(CAST(Z.V_DAMT as DEC (12, 2)) * CAST(Z.PAYDUE as DEC(12, 2)) / Z.DAMT, 2) as PAYVAT
+						,ROUND(CAST(Z.N_DAMT as DEC(12, 2)) * CAST(Z.PAYDUE as DEC(12, 2)) / Z.DAMT, 2) as PAYNET
+						".$nprof."
+						,1 as FLAG 
+					from( 
+						select Y. *,case when Y.PAYAMTA >= Y.AARAMT and Y.PAYAMTB <=  Y.BARAMT then Y.AARAMT - Y.BARAMT else 
+							case when Y.PAYAMTA > Y.AARAMT and Y.PAYAMTB > Y.BARAMT then Y.AARAMT - Y.PAYAMTB else 
+							case when Y.PAYAMTA <= Y.AARAMT and Y.PAYAMTB > Y.BARAMT then Y.PAYAMTA - Y.PAYAMTB else
+							Y.PAYAMTA - Y.BARAMT end end end  as  PAYDUE
+							,case when Y.PAYAMTA >= Y.AARAMT and Y.PAYAMTB <= Y.BARAMT then 1 else case when Y.PAYAMTA > Y.AARAMT 
+							and Y.PAYAMTB > Y.BARAMT then 2 else case when Y.PAYAMTA < Y.AARAMT AND Y.PAYAMTB > Y.PAYAMT then 3 else 4 
+							end end end   as  CRE  
+						from(
+							select X.CONTNO,X.LOCAT,X.NOPAY,X.DDATE,X.DAMT,X.N_DAMT,X.V_DAMT,X.VATRT,X.NPROF,FN.FPROFIT as EFF,D.TMBILL,D.TMBILDT,E.BILLNO
+								,E.BILLDT,D.PAYAMT,D.PAYTYP,D.DISCT as DSCAMTA,(select  SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A 
+								where A.CONTNO = X.CONTNO 
+								and A.LOCAT = X.LOCAT) as ARAMT,(select  SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A where A.NOPAY <= X.NOPAY and A.CONTNO = X.CONTNO 
+								and A.LOCAT = X.LOCAT) as AARAMT,(select SUM(A.INTAMT) from {$this->MAuth->getdb('ARPAY')} A where A.CONTNO = X.CONTNO 
+								and A.LOCAT = X.LOCAT) as INTAMT
+								
+								,(case when (select SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A where A.CONTNO = X.CONTNO 
+								and A.LOCAT = X.LOCAT and A.NOPAY < X.NOPAY) is null then 0 else (select SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A 
+								where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT and A.NOPAY < X.NOPAY) end) as BARAMT
+								
+								,(select A.NPROFIT from {$this->MAuth->getdb('ARMAST')} A where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT ) as NPROFIT_1
+								,(select A.NKANG from {$this->MAuth->getdb('ARMAST')} A where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT ) as NKANG_1
+								,(select SUM(A.DISCT) from {$this->MAuth->getdb('CHQTRAN')} A where  A.NOPAY <= D.NOPAY and A.TMBILDT<=D.TMBILDT and A.CONTNO = X.CONTNO 
+								and A.LOCATPAY = X.LOCAT and A.PAYFOR in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as DISCT
+								
+								,(select SUM(A.PAYAMT) from {$this->MAuth->getdb('CHQTRAN')} A where A.NOPAY <= D.NOPAY and A.TMBILDT <= D.TMBILDT and A.CONTNO = X.CONTNO 
+								and A.LOCATPAY = X.LOCAT and A.PAYFOR in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as PAYAMTA
+								,(select SUM(A.PAYINT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT  and A.PAYFOR 
+								in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as PAYINT
+								,(select SUM(A.DSCINT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT and A.PAYFOR 
+								in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as DISINT
+								
+								,(case when (
+									select SUM(A.PAYAMT) from {$this->MAuth->getdb('CHQTRAN')}  A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT 
+									and A.PAYFOR in ('006','007') and (A.NOPAY < D.NOPAY OR A.TMBILDT<D.TMBILDT) and A.FLAG <> 'C' 
+									and A.F_PAY > 0
+								)
+								is null then 0 else (
+									select SUM(A.PAYAMT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT 
+									and  A.PAYFOR in ('006','007') and (A.NOPAY < D.NOPAY or A.TMBILDT < D.TMBILDT) and A.FLAG <> 'C' 
+									and A.F_PAY > 0
+								)end) as PAYAMTB 
+							from {$this->MAuth->getdb('ARPAY')} X
+							left join {$this->MAuth->getdb('CHQTRAN')} D on X.CONTNO = D.CONTNO and X.LOCAT = D.LOCATPAY  
+							left join {$this->MAuth->getdb('CHQMAS')} E on D.TMBILL = E.TMBILL 
+							left join {$this->MAuth->getdb('fn_leasing')}('".$CONTNO."','".$LOCAT."') FN on X.NOPAY = FN.NOPAY 
+							where X.NOPAY between D.F_PAY and D.L_PAY and D.FLAG <> 'C' and D.PAYFOR in ('006','007') and X.CONTNO = '".$CONTNO."' 
+							group by X.CONTNO,X.LOCAT,X.NOPAY,X.DDATE,X.DAMT,X.N_DAMT,X.V_DAMT,X.NPROF,X.VATRT,D.TMBILL,D.TMBILDT,E.BILLNO
+							,E.BILLDT,D.NOPAY,D.F_PAY,D.PAYAMT,D.PAYTYP,D.DISCT,FN.FPROFIT
+						) as Y 
+					)as Z 
+					union 
+					select X.CONTNO,X.LOCAT,X.NOPAY,X.DDATE,X.DAMT,X.N_DAMT,X.V_DAMT,X.VATRT,X.NPROF,'' as EFF,'' as TMBILL,X.DATE1 as TMBILDT
+						,'' as BILLNO,X.DATE1 as BILLDT,0 as PAYAMT,'' as PAYTYP,0 as DSCAMTA
+						,(select SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT ) as ARAMT
+						,(select SUM(A.DAMT) from {$this->MAuth->getdb('ARPAY')} A where A.NOPAY <= X.NOPAY and A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT) as AARAMT
+						,(select SUM(A.INTAMT) from {$this->MAuth->getdb('ARPAY')} A where A.CONTNO = X.CONTNO and A.LOCAT = X.LOCAT ) as INTAMT
+						,0 as BARAMT,0 as NPROFIT_1,0 as NKANG_1
+						,(select SUM(A.DISCT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT and A.PAYFOR  
+						in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as DISCT
+						,(select SUM(A.PAYAMT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT and A.PAYFOR  
+						in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as PAYAMTA 
+						,(select SUM(A.PAYINT) from  {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT and A.PAYFOR  
+						in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as PAYINT
+						,(select SUM(A.DSCINT) from {$this->MAuth->getdb('CHQTRAN')} A where A.CONTNO = X.CONTNO and A.LOCATPAY = X.LOCAT and A.PAYFOR  
+						in ('006','007') and A.FLAG <> 'C' and A.F_PAY > 0) as DISINT
+						,0 as PAYAMTB,0 as PAYDUE,0 as CRE,0 as PAYVAT,0 as PAYNET,0 as RCPROF,2 as FLAG 
+					from {$this->MAuth->getdb('ARPAY')} X where X.PAYMENT = 0 and X.CONTNO = '".$CONTNO."'
+				)as T
+				,{$this->MAuth->getdb('ARMAST')} M,{$this->MAuth->getdb('INVTRAN')} I,{$this->MAuth->getdb('CUSTMAST')} C 
+				where T.CONTNO = M.CONTNO and T.LOCAT = M.LOCAT and M.CUSCOD = C.CUSCOD and M.STRNO = I.STRNO  
+				--ORDER BY T.CONTNO,T.LOCAT,T.NOPAY,T.FLAG,T.TMBILDT,T.TMBILL
+			)RCDT
+		";
+		//echo $sql; 
+		$this->db->query($sql);
+		
+		$sql = "
+			select top 1 CONVERT(varchar(8),SDATE,112) as SDATE,TOTPRC
+				,TOTDWN,T_NOPAY,KEYINUPAY,NAME,STRNO,ENGNO,BILLCOLL,NPROFIT,MEMO1 
+			from #RCDT
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql); 
+		if($query->row()){
+			foreach($query->result() as $row){
+				$arrs["SDATE"]     = $this->Convertdate(2,$row->SDATE);
+				$arrs["TOTPRC"]    = number_format($row->TOTPRC,2);
+				$arrs["TOTDWN"]    = number_format($row->TOTDWN,2);
+				$arrs["T_NOPAY"]   = $row->T_NOPAY;
+				$arrs["KEYINUPAY"] = number_format($row->KEYINUPAY,2);
+				$arrs["NAME"]      = $row->NAME;
+				$arrs["STRNO"]     = $row->STRNO;
+				$arrs["ENGNO"]     = $row->ENGNO;
+				$arrs["BILLCOLL"]  = $row->BILLCOLL;
+				$arrs["NPROFIT"]   = number_format($row->NPROFIT,2);
+				$arrs["MEMO1"]     = $row->MEMO1;
+				
+			}
+		}
+		$rcprof = "";
+		
+		if($show2 == "Y"){
+			$rcprof = "รับดอกผล";
+		}else{
+			$rcprof = "";
+		}
+		$head = "
+			<tr>
+				<th width='60px'  height='40px' align='center' style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>งวดที่</th>
+				<th width='60px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>วันดิว</th>
+				<th width='120px' height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>จำนวนเงินตามดิว</th>
+				<th width='90px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>มูลค่าสินค้า</th>
+				<th width='60px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>ภาษี</th>
+				<th width='90px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>เลขที่ใบรับ</th>
+				<th width='100px' height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>วันที่ใบรับ</th>
+				<th width='100px' height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>เลขที่ใบเสร็จ</th>
+				<th width='90px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>วันชำระ</th>
+				<th width='90px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>อัตราภาษี</th>
+				<th width='90px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>ชำระโดย</th>
+				<th width='90px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>จำนวนชำระ</th>
+				<th width='60px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>มูลค่า</th>
+				<th width='60px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>ภาษี</th>
+				<th width='80px'  height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>ส่วนลด</th>
+				<th width='100px' height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>".$rcprof."</th>
+				<th width='100px' height='40px' align='right'  style='border-top:0.1px solid black;border-bottom:0.1px solid black;vertical-align:top;'>ลูกหนี้คงเหลือ</th>
+			</tr>
+		";
+		$sql = "
+			select  
+				NOPAY,DDATE,DAMT,N_DAMT,V_DAMT,TMBILL,TMBILDT,BILLNO,BILLDT
+				,VATRT,PAYTYP,PAYDUE,PAYNET,PAYVAT,DISCT,RCPROF,ARBL
+			from #RCDT order by CONTNO,LOCAT,NOPAY,FLAG,TMBILDT,TMBILL
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){$i++;
+				if($show2 == "Y"){
+					$rcprof = number_format($row->RCPROF,2);
+				}else{
+					$rcprof = "";
+				}
+				
+				$html .="
+					<tr>
+						<td width='60px'  height='40px'  align='center'>".$row->NOPAY."</td>
+						<td width='60px'  height='40px'  align='right' >".$this->Convertdate(2,$row->DDATE,2)."</td>
+						<td width='120px' height='40px'  align='right' >".number_format($row->DAMT,2)."</td>
+						<td width='90px'  height='40px'  align='right' >".number_format($row->N_DAMT,2)."</td>
+						<td width='60px'  height='40px'  align='right' >".number_format($row->V_DAMT,2)."</td>
+						<td width='90px'  height='40px'  align='right' >".$row->TMBILL."</td>
+						<td width='100px' height='40px'  align='right' >".$this->Convertdate(2,$row->TMBILDT)."</td>
+						<td width='100px' height='40px'  align='right' >".$row->BILLNO."</td>
+						<td width='90px'  height='40px'  align='right' >".$this->Convertdate(2,$row->BILLDT)."</td>
+						<td width='90px'  height='40px'  align='right' >".number_format($row->VATRT,2)."</td>
+						<td width='90px'  height='40px'  align='right' >".$row->PAYTYP."</td>
+						<td width='90px'  height='40px'  align='right' >".number_format($row->PAYDUE,2)."</td>
+						<td width='60px'  height='40px'  align='right' >".number_format($row->PAYNET,2)."</td>
+						<td width='60px'  height='40px'  align='right' >".number_format($row->PAYVAT,2)."</td>
+						<td width='80px'  height='40px'  align='right' >".number_format($row->DISCT,2)."</td>
+						<td width='100px' height='40px'  align='right' >".$rcprof."</td>
+						<td width='100px' height='40px'  align='right' >".number_format($row->ARBL,2)."</td>
+					</tr>
+				";
+			}
+		}
+		/******************************************************************************************************************/
+		$sql = "
+			select SUM(PAYDUE) as PAYDUE,SUM(PAYNET) as PAYNET,SUM(PAYVAT) as PAYVAT
+			,SUM(RCPROF) as RCPROF from #RCDT 
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				if($show2 == "Y"){
+					$rcprof = number_format($row->RCPROF,2);
+				}else{
+					$rcprof = "";
+				}
+				
+				$sql1 = "
+					select NKANG,VKANG,TKANG 
+					from {$this->MAuth->getdb('ARMAST')} where CONTNO = '".$CONTNO."'
+				";
+				$query1 = $this->db->query($sql1);
+				if($query1->row()){
+					foreach($query1->result() as $row1){
+						$arrs['NKANG'] = $row1->NKANG;
+						$arrs['TKANG'] = $row1->TKANG;
+						$arrs['VKANG'] = $row1->VKANG;
+					}
+				}
+				if($i > 0){
+					$html .="
+						<tr>
+							<td width='60px'  height='40px'  align='center' style='border-top:0.1px solid black;' ><b>รวมทั้งสิ้น</b></td>
+							<td width='60px'  height='40px'  align='right'  style='border-top:0.1px solid black;' ></td>
+							<td width='120px' height='40px'  align='right'  style='border-top:0.1px solid black;' >".number_format($arrs['NKANG'],2)."</td>
+							<td width='90px'  height='40px'  align='right'  style='border-top:0.1px solid black;' >".number_format($arrs['TKANG'],2)."</td>
+							<td width='60px'  height='40px'  align='right'  style='border-top:0.1px solid black;' >".number_format($arrs['VKANG'],2)."</td>
+							<td width='90px'  height='40px'  align='right'  style='border-top:0.1px solid black;' ><b>ชำระถึงงวดที่</b></td>
+							<td width='100px' height='40px'  align='right'  style='border-top:0.1px solid black;' ><b>มูลค่าคงเหลือจริง</b></td>
+							<td width='100px' height='40px'  align='right'  style='border-top:0.1px solid black;' ><b>ภาษีคงเหลือจริง</b></td>
+							<td width='90px'  height='40px'  align='right'  style='border-top:0.1px solid black;' ><b>ลูกหนี้คงเหลือ</b></td>
+							<td width='90px'  height='40px'  align='right'  style='border-top:0.1px solid black;' ></td>
+							<td width='90px'  height='40px'  align='right'  style='border-top:0.1px solid black;' ></td>
+							<td width='90px'  height='40px'  align='right'  style='border-top:0.1px solid black;' >".number_format($row->PAYDUE,2)."</td>
+							<td width='60px'  height='40px'  align='right'  style='border-top:0.1px solid black;' >".number_format($row->PAYNET,2)."</td>
+							<td width='60px'  height='40px'  align='right'  style='border-top:0.1px solid black;' >".number_format($row->PAYVAT,2)."</td>
+							<td width='80px'  height='40px'  align='right'  style='border-top:0.1px solid black;' ></td>
+							<td width='100px' height='40px'  align='right'  style='border-top:0.1px solid black;' ><b>".$rcprof."</b></td>
+							<td width='100px' height='40px'  align='right'  style='border-top:0.1px solid black;' ></td>
+						</tr>
+					";	
+				}
+			}
+		}
+		$sql = "
+			declare @A varchar(4) = (
+				select coalesce(MAX(NOPAY),0) 
+				from {$this->MAuth->getdb('ARPAY')} where CONTNO = '".$CONTNO."'
+			);
+			declare @B varchar(5) = (
+				select coalesce(MAX(NOPAY),0) from {$this->MAuth->getdb('ARPAY')} 
+				where CONTNO = '".$CONTNO."' and ((PAYMENT = DAMT)or(PAYMENT > 0))
+			);
+			select @B+'/'+@A as countNOPAY	
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$sql1 = "
+					select NKANG,VKANG,TKANG,EXP_AMT 
+					from {$this->MAuth->getdb('ARMAST')} where CONTNO = '".$CONTNO."'
+				";
+				$query1 = $this->db->query($sql1);
+				if($query1->row()){
+					foreach($query1->result() as $row1){
+						$arrs['EXP_AMT'] = $row1->EXP_AMT;
+						$arrs['VKANG']   = $row1->VKANG;
+					}
+				}
+				$sql3 = "
+					select top 1 INTAMT,PAYINT,DISINT,INTBL from #RCDT 
+				";
+				$query3 = $this->db->query($sql3);
+				if($query3->row()){
+					foreach($query3->result() as $row3){
+						$arrs['INTAMT'] = $row3->INTAMT;
+						$arrs['PAYINT'] = $row3->PAYINT;
+						$arrs['DISINT'] = $row3->DISINT;
+						$arrs['INTBL']  = $row3->INTBL;
+					}
+				}
+				if($i > 0){
+					$html .="
+						<tr>
+							<td width='60px'  height='40px'  align='center' style='border-bottom:0.1px solid black;' ></td>
+							<td width='60px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' ></td>
+							<td width='120px' height='40px'  align='right'  style='border-bottom:0.1px solid black;' ></td>
+							<td width='90px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' ></td>
+							<td width='60px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' ></td>
+							<td width='90px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' >".$row->countNOPAY."</td>
+							<td width='100px' height='40px'  align='right'  style='border-bottom:0.1px solid black;' >".number_format($arrs['EXP_AMT'],2)."</td>
+							<td width='100px' height='40px'  align='right'  style='border-bottom:0.1px solid black;' >".number_format($arrs['VKANG'],2)."</td>
+							<td width='90px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' >".number_format($arrs['EXP_AMT'],2)."</td>
+							<td width='90px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' ><b>ยอดเบี้ยปรับ</b></td>
+							<td width='90px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' >".number_format($arrs['INTAMT'],2)."</td>
+							<td width='90px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' ><b>ชำระแล้ว</b></td>
+							<td width='60px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' >".number_format($arrs['PAYINT'],2)."</td>
+							<td width='60px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' ><b>ส่วนลด</b></td>
+							<td width='80px'  height='40px'  align='right'  style='border-bottom:0.1px solid black;' >".number_format($arrs['DISINT'],2)."</td>
+							<td width='100px' height='40px'  align='right'  style='border-bottom:0.1px solid black;' ><b>เบี้ยปรับคงเหลือ</b></td>
+							<td width='100px' height='40px'  align='right'  style='border-bottom:0.1px solid black;' >".number_format($arrs['INTBL'],2)."</td>
+						</tr>
+					";	
+				}
+			}
+		}
+		if($i > 0){
+			$body = "<table class='fs9' cellspacing='0'>".$html."</table>";	
+		}
+		
+		$mpdf = new \Mpdf\Mpdf([
+			'mode' => 'utf-8', 
+			'format' => 'A4-L',
+			'margin_top' => 60, 	//default = 16
+			'margin_left' => 10, 	//default = 15
+			'margin_right' => 10, 	//default = 15
+			'margin_bottom' => 9, 	//default = 16
+			'margin_header' => 9, 	//default = 9
+			'margin_footer' => 9, 	//default = 9
+		]);
+		
+		$stylesheet = "
+			<style>
+				body { font-family: garuda;font-size:9pt; }
+				.wf { width:100%; }
+				.fs9 { font-size:9pt; }
+				.h30 { height:30px; }
+				.bor { border-top:0.1px solid black;border-bottom:0.1px solid black;}
+			</style>
+		";
+		
+		if($i > 0){
+			$header = "
+				<table class='wf fs9' cellspacing='0' style='border-collapse:collapse;line-height:23px;overflow:wrap;vertical-align:text-top;'>
+					<tbody>
+						<tr>
+							<th colspan='17' style='font-size:11pt;'>".$arrs["COMP_NM"]."</th>
+						</tr>
+						<tr>
+							<th colspan='17' style='font-size:10pt;'>รายงานการ์ดลูกหนี้และการชำระ</th>
+						</tr>
+						<tr>
+							<td style='text-align:right;' colspan='17'>RpCrdpy10,11</td>
+						</tr>
+						<tr>
+							<td colspan='17' style='font-size:10pt;' align='center'>
+								<b>เลขที่สัญญา</b> &nbsp;&nbsp;".$CONTNO."&nbsp;&nbsp;
+								<b>วันทำสัญญา</b> &nbsp;&nbsp;".$arrs["SDATE"]."&nbsp;&nbsp;
+								<b>ราคาขาย</b> &nbsp;&nbsp;".$arrs["TOTPRC"]."&nbsp;&nbsp;<b>บาท</b>
+								<b>เงินดาวน์</b> &nbsp;&nbsp;".$arrs["TOTDWN"]."&nbsp;&nbsp;<b>บาท</b>
+								<b>ผ่อนจำนวน</b> &nbsp;&nbsp;".$arrs["T_NOPAY"]."&nbsp;&nbsp;<b>งวด</b>
+								<b>งวดละ</b> &nbsp;&nbsp;".$arrs["KEYINUPAY"]."&nbsp;&nbsp;<b>บาท</b>
+							</td>
+						</tr>
+						<tr>
+							<td colspan='17' style='font-size:10pt;' align='center'>
+								<b>ชื่อ - นามสกุล</b> &nbsp;&nbsp;".$arrs["NAME"]."&nbsp;&nbsp;
+								<b>หมายเลขเครื่อง</b> &nbsp;&nbsp;".$arrs["STRNO"]."&nbsp;&nbsp;
+								<b>เลขตัวถัง</b> &nbsp;&nbsp;".$arrs["ENGNO"]."&nbsp;&nbsp;
+								<b>พนักงานเก็บเงิน</b> &nbsp;&nbsp;".$arrs["BILLCOLL"]."&nbsp;&nbsp;
+								<b>ดอกผลเช่าซื้อ</b> &nbsp;&nbsp;".$arrs["NPROFIT"]."&nbsp;&nbsp;<b>บาท</b>
+							</td>
+						</tr>
+						<tr>
+							<td colspan='17' style='font-size:10pt;' align='center'>
+								<b>หมายเหตุ : &nbsp;&nbsp;</b>".$arrs["MEMO1"]."
+							</td>
+						</tr><br><br>
+						<tr>
+							<td colspan='3' align='left'>{$this->sess['name']} พิมพ์รายงานวันที่</td>
+							<td colspan='3' align='left'>".date('d/m/').(date('Y')+543)." ".date('H:i')."</td>
+							<td colspan='11' align='right'>หน้าที่ : {PAGENO} / {nb} &emsp;&emsp;</td>
+						</tr>
+						".$head."
+					</tbody>
+				</table>
+			";	
+		}else{
+			$header = "<div style='color:red;font-size:17pt;'>ไม่พบข้อมูลตามเงื่อนไขครับ</div>";
+		}	
+		$mpdf->SetHTMLHeader($header);
+		$mpdf->WriteHTML($body.$stylesheet);
+		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
 		$mpdf->Output();
 	}
 }

@@ -23,7 +23,9 @@ class RevPayment extends MY_Controller {
             }
 		}
 		
-		$this->config_db['database'] = $this->sess["db"];
+		//$this->config_db['database'] = $this->sess["db"];
+		$_REQUEST["SYSTEM_DB"] = $this->sess["db"];
+		$this->config_db['database'] = $this->param("checkmaindb")[$this->sess['db']];
 		$this->connect_db = $this->load->database($this->config_db,true);
 	}
 	
@@ -33,22 +35,30 @@ class RevPayment extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "
-			<div class='tab1' name='home' groupType='{$claim["groupType"]}' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+			<div class='tab1' name='home' groupType='{$claim["groupType"]}' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' dbgroup='{$this->param("checkmaindb")[$this->sess['db']]}'>
 				<div>
 					<div class='row'>
-						<div class='col-sm-2'>	
+						<div class='col-sm-3 col-sm-offset-3'>	
 							<div class='form-group'>
 								ใบรับชั่วคราว
 								<input type='text' id='sch_tmbill' class='form-control input-sm' placeholder='ใบรับชั่วคราว' >
 							</div>
 						</div>
-						<div class='col-sm-2'>	
+						<div class='col-sm-3'>	
 							<div class='form-group'>
 								เลขที่ใบเสร็จ
 								<input type='text' id='sch_billno' class='form-control input-sm' placeholder='เลขที่ใบเสร็จ' >
 							</div>
 						</div>
-						<div class='col-sm-2'>	
+					</div>	
+					<div class='row'>	
+						<div class='col-sm-3 col-sm-offset-3'>	
+							<div class='form-group'>
+								เลขที่สัญญา
+								<input type='text' id='sch_contno' class='form-control input-sm' placeholder='เลขที่สัญญา' >
+							</div>
+						</div>
+						<div class='col-sm-3'>	
 							<div class='form-group'>
 								สาขา
 								<select id='sch_locatrecv' class='form-control' title='เลือก'  multiple data-actions-box='true' data-size='8' data-live-search='true'>
@@ -56,7 +66,9 @@ class RevPayment extends MY_Controller {
 								</select>
 							</div>
 						</div>
-						<div class='col-sm-2'>	
+					</div>	
+					<div class='row'>	
+						<div class='col-sm-3 col-sm-offset-3'>	
 							ลูกค้า
 							<div class='input-group'>
 								<input type='text' id='sch_cuscod' CUSCOD='' class='form-control input-sm' placeholder='ลูกค้า' >
@@ -66,41 +78,31 @@ class RevPayment extends MY_Controller {
 								</span>
 							</div>
 						</div>	
-						<div class='col-sm-2'>	
+					</div>	
+					<div class='row'>	
+						<div class='col-sm-3 col-sm-offset-3'>	
 							<div class='form-group'>
 								วันที่รับ จาก
 								<input type='text' id='sch_stmbildt' class='form-control input-sm' placeholder='จาก' data-provide='datepicker' data-date-language='th-th' value='".$this->today('startofmonthB1')."'>
 							</div>
 						</div>	
-						<div class='col-sm-2'>	
+						<div class='col-sm-3'>	
 							<div class='form-group'>
 								วันที่รับ ถึง
 								<input type='text' id='sch_etmbildt' class='form-control input-sm' placeholder='ถึง' data-provide='datepicker' data-date-language='th-th' value='".$this->today('endofmonth')."'>
 							</div>
 						</div>	
 					</div>
-					<!-- div class='row'>
-						<div class='col-sm-2 col-sm-offset-4'>
-							<b>รายงาน</b>
-							<div class='radio'><label><input type='radio' class='sort' name='REPORT' value='1' checked=''>วันที่รับ</label></div>
-							<div class='radio'><label><input type='radio' class='sort' name='REPORT' value='2'>วันที่ใบกำกับภาษี</label></div>
-						</div>
-						
-						<div class='col-sm-2'>
-							<b>สินค้าและวัตถุดิบ</b>
-							<div class='radio'><label><input type='radio' class='sort' name='turnover' value='Y' checked=''>มีการเคลื่อนไหว</label></div>
-							<div class='radio'><label><input type='radio' class='sort' name='turnover' value='N'>ทั้งหมด</label></div>
-						</div>
-					</div -->
+					
 					<div class='row'>
-						<div class='col-sm-6'>	
+						<div class='col-sm-3 col-sm-offset-3'>	
 							<div class='form-group'>
 								<button id='btnt1revpayment' class='btn btn-cyan btn-block'>
 									<span class='glyphicon glyphicon-pencil'> รับชำระ</span>
 								</button>
 							</div>
 						</div>
-						<div class='col-sm-6'>	
+						<div class='col-sm-3'>	
 							<div class='form-group'>
 								<button id='btnt1search' class='btn btn-primary btn-block'>
 									<span class='glyphicon glyphicon-search'> แสดง</span>
@@ -464,7 +466,7 @@ class RevPayment extends MY_Controller {
 						<div class='input-group'>
 							<span class='input-group-btn'>
 								<button id='add_CONTNO_detail' class='btn btn-info btn-sm' type='button'>
-									<span class='glyphicon glyphicon-zoom-in' aria-hidden='true'></span>
+									<span class='glyphicon glyphicon-zoom-in' aria-hidden='true'> ยอดค้าง</span>
 								</button>
 							</span>	
 							<input type='text' id='add_CONTNO' CUSCOD='' class='form-control input-sm' placeholder='เลขที่สัญญา'  value=''>
@@ -491,7 +493,7 @@ class RevPayment extends MY_Controller {
 				<div class='col-sm-12'>	
 					<div class='form-group'>
 						ค่าเบี้ยปรับ
-						<input type='text' id='add_PAYINT' class='form-control input-sm text-red' value='' style='font-size:12pt;' readonly>
+						<input type='text' id='add_PAYINT' class='form-control input-sm text-red' value='' style='font-size:12pt;' {$this->MMAIN->Allow_payment_discount_intamt($this->sess["IDNo"])}>
 					</div>
 				</div>
 				<div class='col-sm-12'>	
@@ -530,6 +532,8 @@ class RevPayment extends MY_Controller {
 		$tmbildt 	= $this->Convertdate(1,$_POST["tmbildt"]);
 				
 		$data = array();
+		$data["error"] = false;
+		$data["errorMessage"] = "";
 		$data["PAYAMT"] = number_format(0,2);
 		$data["DISCT"]  = number_format(0,2);
 		$data["PAYINT"] = number_format(0,2);
@@ -543,6 +547,7 @@ class RevPayment extends MY_Controller {
 				--select @contno as CONTNO,0 as DAMT,0 as INTAMT,0 as NETPAY
 				
 				SELECT CONTNO
+					,LOCAT
 					,TOTPRC-SMPAY-SMCHQ as DAMT
 					,0 as DISCT
 					,0 as INTAMT
@@ -556,12 +561,13 @@ class RevPayment extends MY_Controller {
 			$sql = "
 				declare @contno varchar(13) = '{$contno}';
 				select a.CONTNO
+					,a.LOCAT
 					,a.TOTDWN-isnull(b.PAYAMT,0) as DAMT
 					,0 as DISCT
 					,0 as INTAMT
 					,a.TOTDWN-isnull(b.PAYAMT,0) as NETPAY 
 				from (
-					select CONTNO,TOTDWN,PAYDWN from {$this->MAuth->getdb('ARMAST')}
+					select CONTNO,LOCAT,TOTDWN,PAYDWN from {$this->MAuth->getdb('ARMAST')}
 					where TOTDWN<>PAYDWN and CONTNO=@contno
 				) as a
 				left join (
@@ -574,12 +580,13 @@ class RevPayment extends MY_Controller {
 			$sql = "
 				declare @contno varchar(13) = '{$contno}';
 				select a.CONTNO
+					,a.LOCAT
 					,a.TOTDWN-isnull(b.PAYAMT,0) as DAMT
 					,0 as DISCT
 					,0 as INTAMT
 					,a.TOTDWN-isnull(b.PAYAMT,0) as NETPAY 
 				from (
-					select CONTNO,TOTDWN,PAYDWN
+					select CONTNO,LOCAT,TOTDWN,PAYDWN
 					from {$this->MAuth->getdb('ARFINC')}
 					where TOTDWN<>PAYDWN and CONTNO=@contno
 				) as a
@@ -594,12 +601,13 @@ class RevPayment extends MY_Controller {
 			$sql = "
 				declare @contno varchar(13) = '{$contno}';
 				select a.CONTNO
+					,a.LOCAT
 					,a.TOTFIN-isnull(b.PAYAMT,0) as DAMT
 					,0 as DISCT
 					,0 as INTAMT
 					,a.TOTFIN-isnull(b.PAYAMT,0) as NETPAY 
 				from (
-					select CONTNO,TOTFIN,PAYFIN
+					select CONTNO,LOCAT,TOTFIN,PAYFIN
 					from {$this->MAuth->getdb('ARFINC')}
 					where CONTNO=@contno
 				) as a
@@ -621,27 +629,34 @@ class RevPayment extends MY_Controller {
 				end
 			";
 			//echo $sql; exit;
-			$this->db->query($sql);
-			
-			$sql = "
-				declare @contno varchar(13) = '{$contno}';
+			if($this->db->query($sql)){
+				$sql = "
+					declare @contno varchar(13) = '{$contno}';
+					
+					select a.CONTNO
+						,a.LOCAT
+						,0 as DAMT
+						,0 as DISCT
+						,a.INTAMT-isnull(b.PAYINT,0) as INTAMT 
+						,a.INTAMT-isnull(b.PAYINT,0) as NETPAY
+					from (
+						select CONTNO,LOCAT,SUM(DAMT) as DAMT,SUM(INTAMT) as INTAMT from {$this->MAuth->getdb('ARPAY')}
+						where CONTNO=@contno and convert(varchar(8),DDATE,112) <= convert(varchar(8),GETDATE(),112)
+						group by CONTNO,LOCAT
+					) as a
+					left join (
+						select CONTNO,SUM(PAYAMT) as PAYAMT,SUM(PAYINT) as PAYINT from {$this->MAuth->getdb('CHQTRAN')}
+						where FLAG!='C' and PAYFOR in ('006','007') and CONTNO=@contno
+						group by CONTNO
+					) as b on a.CONTNO=b.CONTNO
+				";
+			}else{
+				$error = $this->db->error();
 				
-				select a.CONTNO
-					,0 as DAMT
-					,0 as DISCT
-					,a.INTAMT-isnull(b.PAYINT,0) as INTAMT 
-					,a.INTAMT-isnull(b.PAYINT,0) as NETPAY
-				from (
-					select CONTNO,SUM(DAMT) as DAMT,SUM(INTAMT) as INTAMT from {$this->MAuth->getdb('ARPAY')}
-					where CONTNO=@contno and convert(varchar(8),DDATE,112) <= convert(varchar(8),GETDATE(),112)
-					group by CONTNO
-				) as a
-				left join (
-					select CONTNO,SUM(PAYAMT) as PAYAMT,SUM(PAYINT) as PAYINT from {$this->MAuth->getdb('CHQTRAN')}
-					where FLAG!='C' and PAYFOR in ('006','007') and CONTNO=@contno
-					group by CONTNO
-				) as b on a.CONTNO=b.CONTNO
-			";
+				$data["error"] = true;
+				$data["errorMessage"] = $error["message"];
+				echo json_encode($data); exit;
+			}
 			//echo $sql; exit;
 		}else if($payfor == '007'){
 			$sql = "
@@ -654,55 +669,66 @@ class RevPayment extends MY_Controller {
 				end
 			";
 			//echo $sql; exit;
-			$this->db->query($sql);
-			
-			$caldscPERD = $this->MMAIN->getCALDSC($contno);
-			
-			$sql = "
-				declare @contno varchar(13) = '{$contno}';
-				declare @caldscPERD decimal(18,2) = {$caldscPERD};
+			if($this->db->query($sql)){
+				$caldscPERD = $this->MMAIN->getCALDSC($contno);
 				
-				declare @NPROF decimal(8,2)	= isnull((
-					select sum(NPROF) as NPROF from(
-						select case when PAYMENT > 0 then (NPROF/DAMT)*PAYMENT else NPROF end as  NPROF  
-						from {$this->MAuth->getdb('ARPAY')}
-						where CONTNO = @contno and PAYMENT < DAMT and DDATE >= '{$tmbildt}'
-					) as A
-				),0);
+				$sql = "
+					declare @contno varchar(13) = '{$contno}';
+					declare @caldscPERD decimal(18,2) = {$caldscPERD};
+					
+					declare @NPROF decimal(8,2)	= isnull((
+						select sum(NPROF) as NPROF from(
+							select case when PAYMENT > 0 then (NPROF/DAMT)*PAYMENT else NPROF end as  NPROF  
+							from {$this->MAuth->getdb('ARPAY')}
+							where CONTNO = @contno 
+								--and PAYMENT < DAMT 
+								and DDATE >= '{$tmbildt}'
+						) as A
+					),0);
+					
+					select a.CONTNO
+						,a.LOCAT
+						,a.DAMT - b.PAYAMT as DAMT
+						,cast(@NPROF * @caldscPERD as decimal(18,0)) as DISCT
+						,isnull(a.INTAMT,0)-isnull(b.PAYINT,0) as INTAMT 
+						,((a.DAMT - b.PAYAMT) - (cast(@NPROF * @caldscPERD as decimal(18,0)))) 
+							+	a.INTAMT-isnull(b.PAYINT,0) as NETPAY
+					from (
+						select CONTNO,LOCAT,SUM(DAMT) as DAMT,SUM(INTAMT) as INTAMT from {$this->MAuth->getdb('ARPAY')}
+						where CONTNO=@contno --and convert(varchar(8),DDATE,112) <= convert(varchar(8),GETDATE(),112)
+						group by CONTNO,LOCAT
+					) as a
+					left join (
+						select CONTNO,SUM(PAYAMT) as PAYAMT,SUM(PAYINT) as PAYINT from {$this->MAuth->getdb('CHQTRAN')}
+						where FLAG!='C' and PAYFOR in ('006','007') and CONTNO=@contno
+						group by CONTNO
+					) as b on a.CONTNO=b.CONTNO
+				";
+			}else{
+				$error = $this->db->error();
 				
-				select a.CONTNO
-					,a.DAMT - b.PAYAMT as DAMT
-					,cast(@NPROF * @caldscPERD as decimal(18,0)) as DISCT
-					,isnull(a.INTAMT,0)-isnull(b.PAYINT,0) as INTAMT 
-					,((a.DAMT - b.PAYAMT) - (cast(@NPROF * @caldscPERD as decimal(18,0)))) 
-						+	a.INTAMT-isnull(b.PAYINT,0) as NETPAY
-				from (
-					select CONTNO,SUM(DAMT) as DAMT,SUM(INTAMT) as INTAMT from {$this->MAuth->getdb('ARPAY')}
-					where CONTNO=@contno --and convert(varchar(8),DDATE,112) <= convert(varchar(8),GETDATE(),112)
-					group by CONTNO
-				) as a
-				left join (
-					select CONTNO,SUM(PAYAMT) as PAYAMT,SUM(PAYINT) as PAYINT from {$this->MAuth->getdb('CHQTRAN')}
-					where FLAG!='C' and PAYFOR in ('006','007') and CONTNO=@contno
-					group by CONTNO
-				) as b on a.CONTNO=b.CONTNO
-			";
+				$data["error"] = true;
+				$data["errorMessage"] = $error["message"];
+				echo json_encode($data); exit;
+			}	
 			//echo $sql; exit;
 		}else if($payfor == '008'){
 			$sql = "
 				declare @contno varchar(13) = '{$contno}';
 				select a.CONTNO
+					,a.LOCAT
 					,a.DAMT-isnull(b.PAYAMT,0) as DAMT
 					,0 as DISCT
 					,a.INTAMT-isnull(b.PAYINT,0) as INTAMT 
 					,(a.DAMT-isnull(b.PAYAMT,0)) + (a.INTAMT-isnull(b.PAYINT,0)) as NETPAY
 				from (
 					select RESVNO as CONTNO
+						,LOCAT
 						,SUM(RESPAY) as DAMT
 						,0 as INTAMT 
 					from {$this->MAuth->getdb('ARRESV')}
 					where RESVNO=@contno
-					group by RESVNO
+					group by RESVNO,LOCAT
 				) as a
 				left join (
 					select CONTNO,SUM(PAYAMT) as PAYAMT,SUM(PAYINT) as PAYINT from {$this->MAuth->getdb('CHQTRAN')}
@@ -713,14 +739,16 @@ class RevPayment extends MY_Controller {
 		}else{
 			$sql = "
 				declare @contno varchar(13) = '{$contno}';
-				select @contno as CONTNO,0 as DAMT,0 as INTAMT,0 as NETPAY
+				select @contno as CONTNO,'{$this->sess["branch"]}' as LOCAT,0 as DAMT,0 as DISCT,0 as INTAMT,0 as NETPAY
 			";
 		}
+		//print_r($this->sess); exit;
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		if($query->row()){
 			foreach($query->result() as $row){
+				$data["LOCAT"]  = $row->LOCAT;
 				$data["PAYAMT"] = number_format($row->DAMT,2);
 				$data["DISCT"]  = number_format($row->DISCT,2);
 				$data["PAYINT"] = number_format($row->INTAMT,2);
@@ -735,6 +763,7 @@ class RevPayment extends MY_Controller {
 	function Search(){
 		$TMBILL = $_POST["TMBILL"];
 		$BILLNO = $_POST["BILLNO"];
+		$CONTNO = $_POST["CONTNO"];
 		$LOCATRECV = $_POST["LOCATRECV"];
 		$CUSCOD = $_POST["CUSCOD"];
 		$STMBILDT = $this->Convertdate(1,$_POST["STMBILDT"]);
@@ -747,6 +776,10 @@ class RevPayment extends MY_Controller {
 		
 		if($BILLNO != ""){
 			$cond .= " and a.BILLNO like '%".$BILLNO."%'";
+		}
+		
+		if($CONTNO != ""){
+			$cond .= " and b.CONTNO like '%".$CONTNO."%'";
 		}
 		
 		if($LOCATRECV != ""){
@@ -1051,7 +1084,7 @@ class RevPayment extends MY_Controller {
 				<div class='col-sm-12'>
 					<div class='form-group'>
 						ข้อความแจ้งเตือน
-						<textarea id='alert_ae_memo1' class='form-control' style='height:200px;'></textarea>
+						<textarea id='alert_ae_memo1' class='form-control' style='resize:vertical;height:200px;'></textarea>
 					</div>
 				</div>	
 			</div>			
@@ -1199,7 +1232,7 @@ class RevPayment extends MY_Controller {
 		
 		$html = "
 			<div class='col-sm-12'>
-				<textarea class='form-control' style='height:200px;' readonly>{$message}</textarea>
+				<textarea class='form-control' style='resize:vertical;height:200px;' readonly>{$message}</textarea>
 			</div>
 		";
 		
@@ -1254,13 +1287,13 @@ class RevPayment extends MY_Controller {
 							<div class='row'>
 								<div class='col-xs-6'>
 									<label class='radio-inline lobiradio'>
-										<input type='radio' name='print_type' value='tm' checked=''> 
+										<input type='radio' name='print_type' for='tm' value='tm' checked=''> 
 										<i></i> ใบรับชั่วคราว
 									</label>
 								</div>	
 								<div class='col-xs-6'>
 									<label class='radio-inline lobiradio'>
-										<input type='radio' name='print_type' value='bl'> 
+										<input type='radio' name='print_type' for='bl' value='bl'> 
 										<i></i> ใบเสร็จรับเงิน
 									</label>
 								</div>
@@ -1299,254 +1332,6 @@ class RevPayment extends MY_Controller {
 		$response = array();
 		$response["html"] = $html;
 		echo json_encode($response);
-	}
-	
-	function tmbillPDF(){
-		$this->tmbillPDF2();
-		
-		$TMBILL   = $_POST["TMBILL"];
-		$NOPRNTB  = $_POST["NOPRNTB"];
-		$BILLNO   = $_POST["BILLNO"];
-		$NOPRNBL  = $_POST["NOPRNBL"];
-		$TMBILL   = $_POST["TMBILL"];
-		$PRINTFOR = $_POST["PRINTFOR"];
-		
-		$data = array();
-		$sql = "
-			declare @data varchar(28) = '{$this->sess["IDNo"]}'
-				+convert(varchar,getdate(),12)
-				+replace(convert(varchar,getdate(),14),':','');
-				
-			select a.TMBILL,convert(varchar(8),a.TMBILDT,112) as TMBILDT
-				,a.LOCATRECV
-				,(select sa.LOCATNM from {$this->MAuth->getdb('INVLOCAT')} sa where sa.LOCATCD=a.LOCATRECV) LOCATNM
-				,(select sa.LOCADDR2 from {$this->MAuth->getdb('INVLOCAT')} sa where sa.LOCATCD=a.LOCATRECV) LOCADDR2
-				,a.CUSCOD
-				,(select SNAM+NAME1+' '+NAME2 from {$this->MAuth->getdb('CUSTMAST')} sa where sa.CUSCOD=a.CUSCOD) as CUSNAME
-				,convert(varchar(8),TMBILDT,112) as TMBILDT	
-				,a.CHQAMT
-				,a.NOPRNTB
-				,a.NOPRNBL
-				,YTKManagement.dbo.FN_CONVERTNUMBER('Y',@data) as CODE
-			from {$this->MAuth->getdb('CHQMAS')} a
-			where TMBILL='{$TMBILL}'
-		";
-		//echo $sql; exit;
-		$query = $this->db->query($sql);
-		
-		if($query->row()){
-			foreach($query->result() as $row){
-				$data["TMBILL"]   = $row->TMBILL;
-				$data["TMBILDT"]  = $this->Convertdate(2,$row->TMBILDT);
-				$data["LOCATNM"]  = $row->LOCATNM;
-				$data["LOCADDR2"] = $row->LOCADDR2;
-				$data["CUSNAME"]  = $row->CUSNAME;
-				$data["CHQAMT"]   = $row->CHQAMT;
-				
-				if($PRINTFOR == "tm"){
-					$data["btnPrint"] = ($row->NOPRNTB > 0 ? "disabled":"");
-				}else{
-					$data["btnPrint"] = ($row->NOPRNBL > 0 ? "disabled":"");
-				}
-				
-				$data["CODE"] = $row->CODE;
-			}
-		}
-		//$data["btnPrint"] = '';
-		
-		$sql = "
-			select b.PAYFOR as FORCODE
-				,(select FORDESC from {$this->MAuth->getdb('PAYFOR')} sa where sa.FORCODE=b.PAYFOR) + (
-					case when b.PAYFOR in ('006','007') then 
-						' งวดที่ '+CAST(F_PAY as varchar)+'-'+CAST(L_PAY as varchar)
-						else '' 
-					end) as FORDESC
-				,b.PAYAMT
-				,b.DISCT
-				,b.PAYINT
-				,b.DSCINT
-				,b.NETPAY
-				,b.CONTNO
-			from {$this->MAuth->getdb('CHQMAS')} a
-			left join {$this->MAuth->getdb('CHQTRAN')} b on a.TMBILL=b.TMBILL
-			where a.TMBILL='{$TMBILL}'
-		";
-		$query = $this->db->query($sql);
-		
-		$data["body"] = "";
-		if($query->row()){
-			$data["DISCT"] = 0;
-			$data["PAYINT"] = 0;
-			$data["DSCINT"] = 0;
-			
-			$data["CONTNO"] = array();
-			$data["H_CONTNO"] = "";
-			$data["H_ENGNO"]  = "";
-			$data["H_BAAB"]   = "";
-			$data["H_COLOR"]  = "";
-			
-			foreach($query->result() as $row){
-				$data["body"] .= "
-					<tr>
-						<td>{$row->FORDESC}</td>
-						<td style='width:50px;text-align:right;'>".number_format($row->PAYAMT,2)."</td>
-					</tr>
-				";
-				
-				$data["DISCT"] += $row->DISCT;
-				$data["PAYINT"] += $row->PAYINT;
-				$data["DSCINT"] += $row->DSCINT;
-				
-				$data["FORCODE"]  = $row->FORCODE;
-				$data["CONTNO"][] = $row->CONTNO;
-			}
-			
-			$sql= "
-				select count(*) as r from {$this->MAuth->getdb('ARMAST')} a
-				left join {$this->MAuth->getdb('INVTRAN')} b on a.CONTNO=b.CONTNO and a.STRNO=b.STRNO
-				where a.CONTNO in ('".implode("','",$data["CONTNO"])."')
-			";
-			$query = $this->db->query($sql);
-			$query = $query->row();
-			
-			if($query->r != 0){
-				$sql = "
-					select a.CONTNO,b.STRNO,b.ENGNO,b.MODEL,b.BAAB,b.COLOR from {$this->MAuth->getdb('ARMAST')} a
-					left join {$this->MAuth->getdb('INVTRAN')} b on a.CONTNO=b.CONTNO and a.STRNO=b.STRNO
-					where a.CONTNO in ('".implode("','",$data["CONTNO"])."')
-				";
-				//echo $sql; exit;
-				$query = $this->db->query($sql);
-				
-				if($query->row()){
-					foreach($query->result() as $row){
-						$data["H_CONTNO"] 	= $row->CONTNO;
-						$data["H_ENGNO"] 	= $row->ENGNO;
-						$data["H_BAAB"] 	= $row->BAAB;
-						$data["H_COLOR"] 	= $row->COLOR;
-					}
-				}
-			}
-			
-		}
-		
-		$data["body"] .= "
-			<tr>
-				<td>ส่วนลด</td>
-				<td style='width:50px;text-align:right;'>".number_format($data["DISCT"],2)."</td>
-			</tr>
-			<tr>
-				<td>เบี้ยปรับ</td>
-				<td style='width:50px;text-align:right;'>".number_format($data["PAYINT"],2)."</td>
-			</tr>
-			<tr>
-				<td>ส่วนลดเบี้ยปรับ</td>
-				<td style='width:50px;text-align:right;'>".number_format($data["DSCINT"],2)."</td>
-			</tr>
-		";
-		
-		
-		$imgPath = 'public/images/tmbill_temp/'.md5($TMBILL).'.png';
-		//$link = "https://survey.myftp.org/questionnair/Assessment_client/Assessment_client.php?id=".$this->_base64_encrypt_qr($data["CODE"]);
-		$link = "https://survey.myftp.org/questionnair/q/a.php?id=".$this->_base64_encrypt_qr($data["CODE"]);
-		QRcode::png($link,$imgPath,'S','4',2);
-		
-		$content = "
-			<table style='width:100%;font-size:10pt;'>
-				<tr><th colspan='2'>{$data["LOCATNM"]}</th></tr>
-				<tr><th colspan='2'>{$data["LOCADDR2"]}</th></tr>
-				
-				<tr>
-					<td style='width:35%;'>ชื่อ-สกุล ลูกค้า </td>
-					<td style='width:65%;'>{$data["CUSNAME"]}</td>
-				</tr>
-				<tr>
-					<td style='width:35%;'>เลขที่ใบรับเงิน</td>
-					<td style='width:65%;'>{$data["TMBILL"]}</td>
-				</tr>
-				<tr>
-					<td style='width:35%;'>วดป.</td>
-					<td style='width:65%;'>{$data["TMBILDT"]}</td>
-				</tr>
-				<tr>
-					<td style='width:35%;'>เลขที่สัญญา</td>
-					<td style='width:65%;'>{$data["H_CONTNO"]}</td>
-				</tr>
-				<tr>
-					<td style='width:35%;'>เลขเครื่อง</td>
-					<td style='width:65%;'>{$data["H_ENGNO"]}</td>
-				</tr>
-				<tr>
-					<td style='width:35%;'>สี</td>
-					<td style='width:65%;'>{$data["H_COLOR"]}</td>
-				</tr>
-				<tr>
-					<td style='width:35%;'>เงื่อนไขการโอน</td>
-					<td style='width:65%;'>{$data["H_BAAB"]}</td>
-				</tr>
-			</table>
-			
-			<div>&emsp;</div>
-			<table border=0 style='width:100%;font-size:10pt;'>
-				<tr><th colspan='2'><hr></th></tr>
-				<tr class='borderTB' style='color:red;border-top:0.1px solid black;border-bottom:1px solid black;'>
-					<th style='text-align:left;'>ชำระค่า</th>
-					<th style='text-align:right;'>จำนวนเงิน</th>
-				</tr>
-				<tr><th colspan='2'><hr></th></tr>
-				
-				<tr>
-					<td colspan='2'>
-						<table border=0 style='width:100%;font-size:10pt;'>
-							".$data["body"]."
-						</table>
-					</td>
-				</tr>
-				
-				<tr><th colspan='2'><hr></th></tr>
-				<tr class='borderTB' style='color:red;border-top:0.1px solid black;border-bottom:1px solid black;'>
-					<th style='text-align:left;'>ยอดรับสุทธิ</th>
-					<th style='text-align:right;'>".number_format($data["CHQAMT"],2)."</th>
-				</tr>
-				<tr><th colspan='2'><hr></th></tr>
-				<tr><td colspan='2'>&emsp;</td></tr>
-				<tr><td colspan='2' style='padding-left:10px;'>ลงชื่อ..............................................ผู้รับเงิน</td></tr>
-				<tr><td colspan='2' style='line-height:10px;'>&emsp;</td></tr>
-				<tr><td colspan='2' style='padding-left:10px;'>ลงชื่อ..............................................ลูกค้า</td></tr>
-				<tr><td colspan='2'>&emsp;</td></tr>
-				<tr><td colspan='2' align='center'><img src='../{$imgPath}' style='width:100px;height:100px;'/></td></tr>
-				<tr><td colspan='2' style='text-align:center;'>(แบบประเมินความเพิ่งพอใจ)</td></tr>
-				
-				<tr><td colspan='2' style='text-align:center;color:red;line-height:20px;'>กรุณาตรวจสอบใบเสร็จฯทุกครั้ง<br>ใบเสร็จฯจะต้องไม่มีร่องรอยการแก้ไข</td></tr>
-			</table>
-		";
-		
-		$html = "
-			<div align='center'>
-				<div style='width:100%;height:calc(100vh - 300px);overflow:auto;background-color:#bbb;'>
-					<div id='div_print_tm' style='max-width:74mm;height:auto;background-color:#fff;border:1px solid black;font-size:10pt;padding:10px;'>
-						".$content."
-					</div>
-				</div>
-				<br>&emsp;
-				
-				<input type='button' {$data["btnPrint"]} id='print_tm' code='".$data["CODE"]."' class='btn btn-primary' value='พิมพ์ใบรับชั่วคราว'>
-			</div>
-		";
-		
-		if($this->agent->browser() == "Firefox"){
-			$response = array();
-			$response["error"] = false;
-			$response["html"] = $html;
-			$response["OS"] = $this->agent->platform();
-			echo json_encode($response);			
-		}else{
-			$response = array();
-			$response["error"] = true;
-			$response["html"] = "กรณีปริ้นใบรับชั่วคราว ให้เข้าใช้งานด้วย Firefox เท่านั้นครับ";
-			$response["OS"] = $this->agent->platform();
-			echo json_encode($response);
-		}
 	}
 	
 	function _base64_encrypt_qr($str,$passw=null){
@@ -1695,6 +1480,12 @@ class RevPayment extends MY_Controller {
 		$CONTNO = $_POST["CONTNO"];
 		$LOCAT  = $_POST["LOCAT"];
 		
+		$response = array();
+		if($CONTNO == ""){
+			$response["html"] = "ผิดพลาด ไม่พบเลขที่สัญญา โปรดเลือกสัญญาในตารางชำระ";
+			echo json_encode($response);
+		}
+		
 		$sql = "
 			select NOPAY,DDATE,DAMT,VATRT,N_DAMT,V_DAMT,DATE1
 				,PAYMENT,DELAY,ADVDUE,TAXINV,TAXDT,CONTNO,LOCAT 
@@ -1709,7 +1500,7 @@ class RevPayment extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$html .= "
-					<tr>
+					<tr class='trnopay3'>
 						<td>".$row->NOPAY."</td>
 						<td>".$this->Convertdate(103,$row->DDATE)."</td>
 						<td align='right'>".number_format($row->DAMT,2)."</td>
@@ -1753,7 +1544,6 @@ class RevPayment extends MY_Controller {
 			</table>
 		";
 		
-		$response = array();
 		$response["html"] = $html;
 		echo json_encode($response);
 	}
@@ -1841,6 +1631,7 @@ class RevPayment extends MY_Controller {
 	}
 	
 	function SavePayments(){
+		//$_REQUEST["db"] = $this->sess[]
 		$response = array("error"=>false,"errorMessage"=>"");
 		
 		$arrs 				= array();
@@ -1849,6 +1640,8 @@ class RevPayment extends MY_Controller {
 		$arrs["LOCATRECV"] 	= $_POST["LOCATRECV"];
 		$arrs["PAYTYP"] 	= $_POST["PAYTYP"];
 		$arrs["CUSCOD"] 	= $_POST["CUSCOD"];
+		$arrs["TELPChange"] = $_POST["TELPChange"];
+		$arrs["TELP"] 		= $_POST["TELP"];
 		$arrs["REFNO"] 		= trim($_POST["REFNO"]);
 		$arrs["CHQNO"]		= trim($_POST["CHQNO"]);
 		$arrs["CHQDT"] 		= $this->Convertdate(1,$_POST["CHQDT"]);
@@ -1862,6 +1655,12 @@ class RevPayment extends MY_Controller {
 		if(sizeof($data_payment) == 0){
 			$response["error"] = true;
 			$response["errorMessage"] = "ยังไม่ได้ระบุรายการรับชำระ";
+			echo json_encode($response); exit;
+		}
+		
+		if($arrs["TMBILDT"] == ""){
+			$response["error"] = true;
+			$response["errorMessage"] = "โปรดระบุวันที่รับเงินก่อนครับ";
 			echo json_encode($response); exit;
 		}
 		
@@ -1879,11 +1678,24 @@ class RevPayment extends MY_Controller {
 			echo json_encode($response); exit;
 		}
 		
+		if($arrs["TELPChange"] == "Y"){
+			if(strlen($arrs["TELP"]) < 10){
+				$response["error"] = true;
+				$response["errorMessage"] = "เปลี่ยนแปลงเบอร์ติดต่อ<br>โปรดระบุเบอร์ติดต่อให้ครบ 10 หลักด้วยครับ";
+				echo json_encode($response); exit;
+			}
+			
+			if(substr($arrs["TELP"],0,1) != 0){
+				$response["error"] = true;
+				$response["errorMessage"] = "เปลี่ยนแปลงเบอร์ติดต่อ<br>โปรดระบุเบอร์ติดต่อให้ถูกต้องด้วยครับ";
+				echo json_encode($response); exit;
+			}
+		}
+		
 		if($arrs["TMBILL"] == "Auto Genarate"){
 			$data_payment_size = sizeof($data_payment);
 			
 			$CHQTRANQ  = '';
-			$PAYFORTAX = '';
 			for($i=0;$i<$data_payment_size;$i++){
 				switch($data_payment[$i]["opt_payfor"]){
 					case '001' : $CHQTRANQ .= $this->query001($arrs,$data_payment[$i]); break;
@@ -1891,12 +1703,8 @@ class RevPayment extends MY_Controller {
 					case '003' : $CHQTRANQ .= $this->query003($arrs,$data_payment[$i]); break;
 					case '004' : $CHQTRANQ .= $this->query004($arrs,$data_payment[$i]); break;
 					case '005' : $CHQTRANQ .= $this->query005($arrs,$data_payment[$i]); break;
-					case '006' : 
-						//$PAYFORTAX = '006';
-						$CHQTRANQ .= $this->query006($arrs,$data_payment[$i]); break;
-					case '007' : 
-						$PAYFORTAX = '007';
-						$CHQTRANQ .= $this->query007($arrs,$data_payment[$i]); break;
+					case '006' : $CHQTRANQ .= $this->query006($arrs,$data_payment[$i]); break;
+					case '007' : $CHQTRANQ .= $this->query007($arrs,$data_payment[$i]); break;
 					case '008' : $CHQTRANQ .= $this->query008($arrs,$data_payment[$i]); break;
 					case '009' : $CHQTRANQ .= $this->query009($arrs,$data_payment[$i]); break;
 					case '011' : $CHQTRANQ .= $this->query011($arrs,$data_payment[$i]); break;
@@ -1911,23 +1719,20 @@ class RevPayment extends MY_Controller {
 				SET NOCOUNT ON;
 				begin tran transaction1
 				begin try
+					declare @daterun datetime = '".$arrs["TMBILDT"]."';
+					
 					/* @symbol = สัญลักษณ์แทนประเภทของเลขที่ นั้นๆ */
 					declare @symbol varchar(10) = (select H_TMPBILL from {$this->MAuth->getdb('CONDPAY')});
 					/* @rec = รหัสพื้นฐาน */
-					declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs["LOCATRECV"]."');
+					declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),@daterun,112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs["LOCATRECV"]."');
 					/* @TMBILL = รหัสที่จะใช้ */
 					declare @TMBILL varchar(12) = isnull((select MAX(TMBILL) from {$this->MAuth->getdb('CHQMAS')} where TMBILL like ''+@rec+'%'),@rec+'0000');
 					set @TMBILL = left(@TMBILL ,8)+right(right(@TMBILL ,4)+10001,4);
 					
 					declare @symbol2 varchar(10) = (select H_BILLNO from {$this->MAuth->getdb('CONDPAY')});
-					declare @rec2 varchar(10) = (select SHORTL+@symbol2+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs["LOCATRECV"]."');
-					declare @BILLNO varchar(12) = isnull((select MAX(BILLNO) from {$this->MAuth->getdb('CHQMAS')} where BILLNO like ''+@rec2+'%'),@rec2+'0000');
+					declare @rec2 varchar(10) = (select SHORTL+@symbol2+'-'+right(left(convert(varchar(8),@daterun,112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs["LOCATRECV"]."');
+					declare @BILLNO varchar(12) = isnull((select MAX(BILLNO) from {$this->MAuth->getdb('BILLMAS')} where LOCATRECV='".$arrs["LOCATRECV"]."' and BILLNO like ''+@rec2+'%'),@rec2+'0000');
 					set @BILLNO = left(@BILLNO ,8)+right(right(@BILLNO ,4)+10001,4);
-					
-					declare @symbol3 varchar(10) = (select H_TXPAY from {$this->MAuth->getdb('CONDPAY')});
-					declare @rec3 varchar(10) = (select SHORTL+@symbol3+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs["LOCATRECV"]."');
-					declare @TAXNO varchar(12) = isnull((select MAX(TAXNO) from {$this->MAuth->getdb('TAXTRAN')} where TAXNO like ''+@rec3+'%'),@rec3+'0000');
-					set @TAXNO = left(@TAXNO ,8)+right(right(@TAXNO,4)+10001,4);
 					
 					declare @LOCATRECV varchar(5) = '".$arrs["LOCATRECV"]."';
 					declare @TMBILDT datetime = '".$arrs["TMBILDT"]."';
@@ -1945,7 +1750,7 @@ class RevPayment extends MY_Controller {
 					declare @PAYDT datetime = (case when @PAYTYP != '02' then @TMBILDT else NULL end);
 					declare @AMTPAID decimal(12,2) = 0;
 					declare @CHQTMP decimal(12,2) = @CHQAMT;
-					--declare @TAXNO varchar(12) = '';
+					declare @TAXNO varchar(12) = null;
 					declare @TAXRT decimal(12,2);
 					declare @TAXDT datetime = @TMBILDT;
 					declare @RVPERCD varchar(8) = '';
@@ -1962,6 +1767,8 @@ class RevPayment extends MY_Controller {
 					declare @REFNO varchar(35) = '".$arrs["REFNO"]."';
 					declare @INPTIME datetime = @INPDT;
 					declare @CANID varchar(8) = '';
+					declare @F_PAR varchar(1) = '';
+					declare @L_PAR varchar(1) = '';
 					
 					declare @PAYFOR varchar(3)
 						,@CONTNO varchar(12)
@@ -1992,11 +1799,53 @@ class RevPayment extends MY_Controller {
 						set @BILLDT = NULL;
 					end
 					
-					if('{$PAYFORTAX}' != '007')
-					begin
-						set @TAXNO = '';
-						set @TAXDT = null;
-					end	
+					if('".$arrs["TELPChange"]."' = 'Y')
+					begin 
+						update b 
+						set b.TELP='".$arrs["TELP"]."'
+						from {$this->MAuth->getdb('CUSTMAST')} a
+						left join {$this->MAuth->getdb('CUSTADDR')} b on a.CUSCOD=b.CUSCOD collate thai_cs_as and a.ADDRNO=b.ADDRNO
+						where a.CUSCOD=@CUSCOD
+						
+						if('HIINCOME' = '{$this->param("checkmaindb")[$this->sess["db"]]}')
+						begin
+							-- เก็บประวัติแก้ไขเบอร์ติดต่อ เพื่อออกรายงานให้ฝ่าย ชซ.ดู ในโปรแกรมเร่งรัด 
+							insert into [serviceweb].[dbo].[wb_CUSTEditInfo] ([changeWhat])	select 'address'
+							declare @requestId bigint = (IDENT_CURRENT('[serviceweb].[dbo].[wb_CUSTEditInfo]'))
+							
+							insert into serviceweb.dbo.wb_CUSTADDR4Edit01 (
+								[requestId],[addSeq],[CUSCOD],[ADDRNO],[ADDR1],[ADDR2],[TUMB],[AUMPCOD],[PROVCOD]
+								,[ZIP],[TELP],[MEMO1],[ACPDT],[USERID],[PICT1],[MOOBAN],[SOI],[requestBy],[requestDate],[ipAddress]
+							)
+							select @requestId,a.ADDRNO,a.CUSCOD,a.ADDRNO,b.ADDR1,b.ADDR2,b.TUMB,b.AUMPCOD,b.PROVCOD
+								,b.ZIP,b.TELP,b.MEMO1,b.ACPDT,b.USERID,b.PICT1,b.MOOBAN,b.SOI,@USERID,GETDATE(),'".$_SERVER["REMOTE_ADDR"]."' 
+							from {$this->MAuth->getdb('CUSTMAST')} a
+							left join {$this->MAuth->getdb('CUSTADDR')} b on a.CUSCOD=b.CUSCOD collate thai_cs_as and a.ADDRNO=b.ADDRNO
+							where a.CUSCOD=@CUSCOD
+							
+							insert into serviceweb.dbo.wb_CUSTADDR4Edit02 (
+								[requestId],[CUSCOD],[ADDRNO],[ADDR1],[ADDR2],[TUMB],[AUMPCOD],[PROVCOD]
+								,[ZIP],[TELP],[MEMO1],[ACPDT],[USERID],[PICT1],[MOOBAN],[SOI],[comments]
+								,[approvedBy],[approvedDate],[ipAddressApprover],[edited],[approverComments],[assignedAddrNO]
+							)
+							select @requestId,a.CUSCOD,a.ADDRNO,null,null,null,null,null
+								,null,'".$arrs["TELP"]."' TELP,null,null,null,null,null,null,null
+								,@USERID,GETDATE(),'".$_SERVER["REMOTE_ADDR"]."','Y','ตอบรับอัตโนมัติ แก้เบอร์::รับชำระ',null
+							from {$this->MAuth->getdb('CUSTMAST')} a
+							left join {$this->MAuth->getdb('CUSTADDR')} b on a.CUSCOD=b.CUSCOD collate thai_cs_as and a.ADDRNO=b.ADDRNO
+							where a.CUSCOD=@CUSCOD
+
+							insert into serviceweb.dbo.wb_CUSTADDR4Edit03 (
+								[requestId],[CUSCOD],[ADDRNO],[ADDR1],[ADDR2],[TUMB],[AUMPCOD],[PROVCOD]
+								,[ZIP],[TELP],[MEMO1],[ACPDT],[USERID],[PICT1],[MOOBAN],[SOI]
+							)
+							select @requestId,a.CUSCOD,a.ADDRNO,null,null,null,null,null
+								,null,'".$arrs["TELP"]."' TELP,null,null,null,null,null,null
+							from {$this->MAuth->getdb('CUSTMAST')} a
+							left join {$this->MAuth->getdb('CUSTADDR')} b on a.CUSCOD=b.CUSCOD collate thai_cs_as and a.ADDRNO=b.ADDRNO
+							where a.CUSCOD=@CUSCOD
+						end
+					end
 					
 					insert into {$this->MAuth->getdb('CHQMAS')} (
 						TMBILL, LOCATRECV, TMBILDT, BILLNO, BILLDT, 
@@ -2025,6 +1874,9 @@ class RevPayment extends MY_Controller {
 						insert into {$this->MAuth->getdb('BILLMAS')} (BILLNO, LOCATRECV, BILLDT, TMBILL, FLAG, INPDT, USERID)
 						values (@BILLNO,@LOCATRECV,@BILLDT,@TMBILL,@FLAG,@INPDT,@USERID);
 					end
+					
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+					values ('".$this->sess["IDNo"]."','SYS06::บันทึกรับชำระ','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 					
 					insert into #paymentTemp select 'S' as id,@TMBILL,'รับชำระเงินเรียบร้อยแล้ว <br>เลขที่บิลรับชำระ '+@TMBILL as msg;
 					commit tran transaction1;
@@ -2120,6 +1972,8 @@ class RevPayment extends MY_Controller {
 			}
 		}
 		
+		$arrs["topicid"] = $_POST["topicid"];
+		$arrs["comments"] = $_POST["comments"];
 		//print_r($data_payment); exit;
 		
 		$SQLCANC = "";
@@ -2149,6 +2003,20 @@ class RevPayment extends MY_Controller {
 			begin try
 				declare @TMBILL varchar(13) = '{$arrs["TMBILL"]}';
 				declare @LOCATRECV varchar(5) = '{$arrs["LOCATRECV"]}'; 
+				
+				if @TMBILL = '' 
+				begin 
+					rollback tran transaction1;
+					insert into #CanCPaymentTemp select 'E' as id,@TMBILL,'ผิดพลาด :: ไม่พบข้อมูลเลขที่บิล โปรดทำรายการใหม่อีกครั้ง' as msg;
+					return;
+				end 
+				
+				if @LOCATRECV = '' 
+				begin 
+					rollback tran transaction1;
+					insert into #CanCPaymentTemp select 'E' as id,@TMBILL,'ผิดพลาด :: ไม่พบข้อมูลสาขา โปรดทำรายการใหม่อีกครั้ง' as msg;
+					return;
+				end 
 				
 				/* ปิดสาขาแล้ว */
 				if exists (
@@ -2185,23 +2053,6 @@ class RevPayment extends MY_Controller {
 				
 				{$SQLCANC}
 				
-				/*ยกเลิกใบเสร็จ*/
-				if exists (
-					select * from {$this->MAuth->getdb('BILLMAS')}
-					WHERE 1=1 AND TMBILL=@TMBILL and BILLNO='{$arrs["BILLNO"]}' AND LOCATRECV=@LOCATRECV and FLAG='C'
-				)
-				begin
-					rollback tran transaction1;
-					insert into #CanCPaymentTemp select 'E' as id,@TMBILL,'เลขที่ใบเสร็จ {$arrs["BILLNO"]} ถูกยกเลิกไปแล้ว' as msg;
-					return;
-				end
-				else 
-				begin	
-					UPDATE {$this->MAuth->getdb('BILLMAS')}
-					SET FLAG='C' 
-					WHERE 1=1 AND TMBILL=@TMBILL and BILLNO='{$arrs["BILLNO"]}' AND LOCATRECV=@LOCATRECV and FLAG!='C' 
-				end 
-				
 				/*ยกเลิกบิลรับชั่วคราว*/
 				if exists (
 					select * from {$this->MAuth->getdb('CHQMAS')}
@@ -2222,12 +2073,37 @@ class RevPayment extends MY_Controller {
 					WHERE TMBILL=@TMBILL AND LOCATRECV=@LOCATRECV
 				end
 				
+				/*ยกเลิกใบเสร็จ*/
+				if exists (
+					select * from {$this->MAuth->getdb('BILLMAS')}
+					WHERE 1=1 AND TMBILL=@TMBILL and BILLNO='{$arrs["BILLNO"]}' AND LOCATRECV=@LOCATRECV and FLAG='C'
+				)
+				begin
+					rollback tran transaction1;
+					insert into #CanCPaymentTemp select 'E' as id,@TMBILL,'เลขที่ใบเสร็จ {$arrs["BILLNO"]} ถูกยกเลิกไปแล้ว' as msg;
+					return;
+				end
+				else 
+				begin	
+					UPDATE {$this->MAuth->getdb('BILLMAS')}
+					SET FLAG='C' 
+					WHERE 1=1 AND TMBILL=@TMBILL and BILLNO='{$arrs["BILLNO"]}' AND LOCATRECV=@LOCATRECV and FLAG!='C' 
+				end
+
+				insert into {$this->MAuth->getdb('JD_BILLCANC')}
+				select isnull(B_CANID,1),@TMBILL,'{$arrs["topicid"]}','{$arrs["comments"]}','".$this->sess["USERID"]."',getdate() from (
+					select max(B_CANID) + 1  as B_CANID from {$this->MAuth->getdb('JD_BILLCANC')}
+				) as data
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS06::ยกเลิกบิลรับชำระ','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+					
 				insert into #CanCPaymentTemp select 'S' as id,@TMBILL,'ยกเลิกบิลรับชำระเงินเรียบร้อยแล้ว <br>เลขที่บิลรับชำระ '+@TMBILL as msg;
 				commit tran transaction1;
 			end try
 			begin catch	
 				rollback tran transaction1;
-				insert into #CanCPaymentTemp select 'E' as id,@TMBILL,ERROR_MESSAGE() as msg;
+				insert into #CanCPaymentTemp select 'E' as id,@TMBILL,cast(ERROR_LINE() as varchar)+' '+ERROR_MESSAGE() as msg;
 			end catch
 		";
 		//echo $sql; exit;
@@ -2255,11 +2131,22 @@ class RevPayment extends MY_Controller {
 		$CHQTRANQ_001 = "";
 		if($event == "save"){
 			$CHQTRANQ_001 = "
+				set @PAYFOR = '".$datatable["opt_payfor"]."';
 				set @CONTNO = '".$datatable["opt_contno"]."';
+				set @PAYAMT = ".str_replace(",","",$datatable["opt_payamt"]).";
+				set @PAYAMTCAL = @PAYAMT;
+				set @DISCT  = ".str_replace(",","",$datatable["opt_disct"]).";
+				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
+				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
+				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
+				set @TSALE  = (select TSALE from {$this->MAuth->getdb('ARCRED')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARCRED')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @TAXRT  = @VATRT;
+				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('ARCRED')} where CONTNO=@CONTNO collate thai_cs_as); 
 				
-				DISABLE TRIGGER AFTINS_PAY001 ON {$this->MAuth->getdb('CHQTRAN')};
-				
-				set @VATRT = (select VATRT from {$this->MAuth->getdb('ARCRED')} where CONTNO=@CONTNO);
+				DISABLE TRIGGER AFTINS_PAY001 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
+				set @PAYAMT_N = case when @VATRT=0 then @PAYAMT else (@PAYAMT / ((100+@VATRT) / 100.0)) end;
+				set @PAYAMT_V = case when @VATRT=0 then 0 else (@PAYAMT - (@PAYAMT / ((100+@VATRT) / 100.0))) end;
 				insert into {$this->MAuth->getdb('CHQTRAN')} (
 					TMBILL, LOCATRECV, TMBILDT, CHQNO, CHQDT, 
 					TSALE, PAYFOR, CONTNO, LOCATPAY, CUSCOD, 
@@ -2269,55 +2156,49 @@ class RevPayment extends MY_Controller {
 					TAXNO, TAXFL, INPDT, FLAG, YFLAG, 
 					USERID, DOSBILL, BALANCE, INPTIME, CANID, SYSTVER
 				) values (
-					@TMBILL,'".$req["LOCATRECV"]."','".$req["TMBILDT"]."','".$req["CHQNO"]."',".($req["CHQDT"] == "" ? "null":"'".$req["CHQDT"]."'").",
-					'C','".$datatable["opt_payfor"]."','".$datatable["opt_contno"]."',
-					(select LOCAT from {$this->MAuth->getdb('ARCRED')} where CONTNO=@CONTNO),'".$req["CUSCOD"]."',
-					'".$req["PAYTYP"]."',@VATRT,
-					
-					".str_replace(",","",$datatable["opt_payamt"]).",				
-					cast(".str_replace(",","",$datatable["opt_payamt"])." / ((100+@VATRT)/100) as decimal(18,2)),
-					".str_replace(",","",$datatable["opt_payamt"])." - (cast(".str_replace(",","",$datatable["opt_payamt"])." / ((100+@VATRT)/100) as decimal(18,2))),
-					
-					'".str_replace(",","",$datatable["opt_disct"])."','".str_replace(",","",$datatable["opt_payint"])."','".str_replace(",","",$datatable["opt_dscint"])."','".str_replace(",","",$datatable["opt_netpay"])."','".$req["TMBILDT"]."',
+					@TMBILL,@LOCATRECV,@TMBILDT,@CHQNO,@CHQDT,
+					@TSALE,@PAYFOR,@CONTNO,@LOCATPAY,@CUSCOD,
+					@PAYTYP,@TAXRT,@PAYAMT,@PAYAMT_N,@PAYAMT_V,
+					@DISCT,@PAYINT,@DSCINT,@NETPAY,@PAYDT,
 					0,'',0,'',0,
 					'','N',getdate(),'H','',
-					'".$this->sess["USERID"]."','',0,getdate(),'','YTKMini'
+					@USERID,'',0,@INPTIME,@CANID,'YTKMini'
 				);
-										
+				
 				if('".$req["PAYTYP"]."'='02')
 				begin
 					update {$this->MAuth->getdb('ARCRED')}
-					set SMCHQ=SMCHQ+@PAYAMT
+					set SMCHQ=isnull(SMCHQ,0)+@PAYAMT
 						,LPAYDT=@TMBILDT
-					where CONTNO=@CONTNO
+					where CONTNO=@CONTNO collate thai_cs_as
 				end
 				else
 				begin
 					update {$this->MAuth->getdb('ARCRED')}
-					set SMPAY=SMPAY+@PAYAMT
+					set SMPAY=isnull(SMPAY,0)+@PAYAMT
 						,LPAYDT=@TMBILDT
-					where CONTNO=@CONTNO
+					where CONTNO=@CONTNO collate thai_cs_as
 				end;
 				
-				ENABLE TRIGGER AFTINS_PAY001 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTINS_PAY001 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}else if($event == "cancel"){
 			$CHQTRANQ_001 = "
-				DISABLE TRIGGER AFTINS_PAY001 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTINS_PAY001 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				
-				if exists (select * from {$this->MAuth->getdb('ARCRED')} where CONTNO='{$datatable["opt_contno"]}')
+				if exists (select * from {$this->MAuth->getdb('ARCRED')} where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as)
 				begin
 					if('".$req["PAYTYP"]."' = '02')
 					begin
 						update {$this->MAuth->getdb('ARCRED')}
-						set SMCHQ=SMCHQ - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMCHQ=isnull(SMCHQ,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('ARCRED')}
-						set SMPAY=SMPAY - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMPAY=isnull(SMPAY,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 				end
 				
@@ -2326,9 +2207,10 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAY001 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTINS_PAY001 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}
 		
@@ -2339,18 +2221,29 @@ class RevPayment extends MY_Controller {
 		$CHQTRANQ_002 = "";
 		if($event == "save"){
 			$CHQTRANQ_002 = "
+				set @PAYFOR = '".$datatable["opt_payfor"]."';
 				set @CONTNO = '".$datatable["opt_contno"]."';
+				set @PAYAMT = ".str_replace(",","",$datatable["opt_payamt"]).";
+				set @PAYAMTCAL = @PAYAMT;
+				set @DISCT  = ".str_replace(",","",$datatable["opt_disct"]).";
+				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
+				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
+				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
+				set @TSALE  = (select TSALE from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @TAXRT  = @VATRT;
+				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as); 
 				
-				DISABLE TRIGGER AFTINS_PAY002 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTINS_PAY002 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				
 				declare @ch_down decimal(18,2) = (
 					select TOTDWN from {$this->MAuth->getdb('ARMAST')}
-					where CONTNO=@CONTNO
+					where CONTNO=@CONTNO collate thai_cs_as
 				)
 				
 				declare @ch_payment decimal(18,2) = (
 					select sum(PAYAMT) as PAYAMT from {$this->MAuth->getdb('CHQTRAN')}
-					where PAYFOR='002' and FLAG <> 'C' and CONTNO=@CONTNO
+					where PAYFOR='002' and FLAG <> 'C' and CONTNO=@CONTNO collate thai_cs_as
 				)
 				
 				-- เงินดาวน์ น้อกว่า ที่รับชำระแล้ว + ที่กำลังจะชำระ
@@ -2361,7 +2254,8 @@ class RevPayment extends MY_Controller {
 					return;
 				end
 				
-				set @VATRT = (select VATRT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO);
+				set @PAYAMT_N = case when @VATRT=0 then @PAYAMT else (@PAYAMT / ((100+@VATRT) / 100.0)) end;
+				set @PAYAMT_V = case when @VATRT=0 then 0 else (@PAYAMT - (@PAYAMT / ((100+@VATRT) / 100.0))) end;
 				insert into {$this->MAuth->getdb('CHQTRAN')} (
 					TMBILL, LOCATRECV, TMBILDT, CHQNO, CHQDT, 
 					TSALE, PAYFOR, CONTNO, LOCATPAY, CUSCOD, 
@@ -2371,70 +2265,69 @@ class RevPayment extends MY_Controller {
 					TAXNO, TAXFL, INPDT, FLAG, YFLAG, 
 					USERID, DOSBILL, BALANCE, INPTIME, CANID, SYSTVER
 				) values (
-					@TMBILL,'".$req["LOCATRECV"]."','".$req["TMBILDT"]."','".$req["CHQNO"]."',".($req["CHQDT"] == "" ? "null":"'".$req["CHQDT"]."'").",
-					'H','".$datatable["opt_payfor"]."','".$datatable["opt_contno"]."',
-					(select LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO),'".$req["CUSCOD"]."',
-					'".$req["PAYTYP"]."',@VATRT,
-					
-					".str_replace(",","",$datatable["opt_payamt"]).",				
-					cast(".str_replace(",","",$datatable["opt_payamt"])." / ((100+@VATRT)/100) as decimal(18,2)),
-					".str_replace(",","",$datatable["opt_payamt"])." - (cast(".str_replace(",","",$datatable["opt_payamt"])." / ((100+@VATRT)/100) as decimal(18,2))),
-					
-					'".str_replace(",","",$datatable["opt_disct"])."','".str_replace(",","",$datatable["opt_payint"])."','".str_replace(",","",$datatable["opt_dscint"])."','".str_replace(",","",$datatable["opt_netpay"])."','".$req["TMBILDT"]."',
+					@TMBILL,@LOCATRECV,@TMBILDT,@CHQNO,@CHQDT,
+					@TSALE,@PAYFOR,@CONTNO,@LOCATPAY,@CUSCOD,
+					@PAYTYP,@TAXRT,@PAYAMT,@PAYAMT_N,@PAYAMT_V,
+					@DISCT,@PAYINT,@DSCINT,@NETPAY,@PAYDT,					
 					0,'',0,'',0,
 					'','N',getdate(),'H','',
-					'".$this->sess["USERID"]."','',0,getdate(),'','YTKMini'
+					@USERID,'',
+						isnull((
+							select SUM(DAMT-PAYMENT) from {$this->MAuth->getdb('ARPAY')}
+							where CONTNO=@CONTNO collate thai_cs_as AND LOCAT=@LOCATPAY
+						 ),0)
+					,@INPTIME,@CANID,'YTKMini'
 				);
 				
 				insert into {$this->MAuth->getdb('DAWNTRN')} (
 					LOCAT,CONTNO,TMBILL ,BILLNO, PAYDT,PAYAMT,PAYINT,DISCT, CHQNO,CHQDT,INPDT,USERID 
 				)
-				select '".$req["LOCATRECV"]."','".$datatable["opt_contno"]."',@TMBILL,'','".$req["TMBILDT"]."'
-					,'".str_replace(",","",$datatable["opt_payamt"])."','".str_replace(",","",$datatable["opt_payint"])."'
-					,'".str_replace(",","",$datatable["opt_disct"])."','".$req["CHQNO"]."',".($req["CHQDT"] == "" ? "null":"'".$req["CHQDT"]."'")."
-					,getdate(),'".$this->sess["USERID"]."';
-										
+				select @LOCATRECV,@CONTNO,@TMBILL,'',@TMBILDT
+					,@PAYAMT,@PAYINT,@DISCT,@CHQNO,@CHQDT
+					,@INPTIME,@USERID;
+				
 				if('".$req["PAYTYP"]."'='02')
 				begin
 					update {$this->MAuth->getdb('ARMAST')}
-					set SMCHQ=SMCHQ+@PAYAMT
-						,LPAYD='".$req["TMBILDT"]."'
-						,LPAYA=".str_replace(",","",$datatable["opt_payamt"])."
-					where CONTNO=@CONTNO
+					set SMCHQ=isnull(SMCHQ,0)+@PAYAMT
+						,LPAYD=@TMBILDT
+						,LPAYA=@PAYAMT
+					where CONTNO=@CONTNO collate thai_cs_as
 				end
 				else
 				begin
 					update {$this->MAuth->getdb('ARMAST')}
-					set SMPAY=SMPAY+@PAYAMT
-						,LPAYD='".$req["TMBILDT"]."'
-						,LPAYA=".str_replace(",","",$datatable["opt_payamt"])."
-						,PAYDWN=PAYDWN+".str_replace(",","",$datatable["opt_payamt"])."
-					where CONTNO=@CONTNO
+					set SMPAY=isnull(SMPAY,0)+@PAYAMT
+						,LPAYD=@TMBILDT
+						,LPAYA=@PAYAMT
+						,PAYDWN=isnull(PAYDWN,0)+@PAYAMT
+					where CONTNO=@CONTNO collate thai_cs_as
 				end;
 				
-				ENABLE TRIGGER AFTINS_PAY002 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTINS_PAY002 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}else if($event == "cancel"){
 			$CHQTRANQ_002 = "
-				DISABLE TRIGGER AFTINS_PAY002 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTUPD_PAY002 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				
 				update {$this->MAuth->getdb('DAWNTRN')} 
 				SET CANDT=getdate()
-				where CONTNO='{$datatable["opt_contno"]}'
+				where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 				
-				if exists (select * from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$datatable["opt_contno"]}')
+				if exists (select * from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as)
 				begin
 					if('".$req["PAYTYP"]."' = '02')
 					begin
 						update {$this->MAuth->getdb('ARMAST')}
-						set SMCHQ=SMCHQ - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMCHQ=isnull(SMCHQ,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('ARMAST')}
-						set SMPAY=SMPAY - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMPAY=isnull(SMPAY,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+							,PAYDWN=isnull(PAYDWN,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 				end
 				
@@ -2443,9 +2336,10 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAY002 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTUPD_PAY002 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}
 		
@@ -2456,11 +2350,22 @@ class RevPayment extends MY_Controller {
 		$CHQTRANQ_003 = "";
 		if($event == "save"){
 			$CHQTRANQ_003 = "
+				set @PAYFOR = '".$datatable["opt_payfor"]."';
 				set @CONTNO = '".$datatable["opt_contno"]."';
+				set @PAYAMT = ".str_replace(",","",$datatable["opt_payamt"]).";
+				set @PAYAMTCAL = @PAYAMT;
+				set @DISCT  = ".str_replace(",","",$datatable["opt_disct"]).";
+				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
+				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
+				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
+				set @TSALE  = (select TSALE from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @TAXRT  = @VATRT;
+				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO collate thai_cs_as); 
 				
-				DISABLE TRIGGER AFTINS_PAY003 ON {$this->MAuth->getdb('CHQTRAN')};
-				
-				set @VATRT = (select VATRT from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO);
+				DISABLE TRIGGER AFTINS_PAY003 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
+				set @PAYAMT_N = case when @VATRT=0 then @PAYAMT else (@PAYAMT / ((100+@VATRT) / 100.0)) end;
+				set @PAYAMT_V = case when @VATRT=0 then 0 else (@PAYAMT - (@PAYAMT / ((100+@VATRT) / 100.0))) end;
 				insert into {$this->MAuth->getdb('CHQTRAN')} (
 					TMBILL, LOCATRECV, TMBILDT, CHQNO, CHQDT, 
 					TSALE, PAYFOR, CONTNO, LOCATPAY, CUSCOD, 
@@ -2470,55 +2375,50 @@ class RevPayment extends MY_Controller {
 					TAXNO, TAXFL, INPDT, FLAG, YFLAG, 
 					USERID, DOSBILL, BALANCE, INPTIME, CANID, SYSTVER
 				) values (
-					@TMBILL,'".$req["LOCATRECV"]."','".$req["TMBILDT"]."','".$req["CHQNO"]."',".($req["CHQDT"] == "" ? "null":"'".$req["CHQDT"]."'").",
-					'F','".$datatable["opt_payfor"]."','".$datatable["opt_contno"]."',
-					(select LOCAT from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO),'".$req["CUSCOD"]."',
-					'".$req["PAYTYP"]."',@VATRT,
-					".str_replace(",","",$datatable["opt_payamt"]).",				
-					cast(".str_replace(",","",$datatable["opt_payamt"])." / ((100+@VATRT)/100) as decimal(18,2)),
-					".str_replace(",","",$datatable["opt_payamt"])." - (cast(".str_replace(",","",$datatable["opt_payamt"])." / ((100+@VATRT)/100) as decimal(18,2))),
-					
-					'".str_replace(",","",$datatable["opt_disct"])."','".str_replace(",","",$datatable["opt_payint"])."','".str_replace(",","",$datatable["opt_dscint"])."','".str_replace(",","",$datatable["opt_netpay"])."','".$req["TMBILDT"]."',
+					@TMBILL,@LOCATRECV,@TMBILDT,@CHQNO,@CHQDT,
+					@TSALE,@PAYFOR,@CONTNO,@LOCATPAY,@CUSCOD,
+					@PAYTYP,@TAXRT,@PAYAMT,@PAYAMT_N,@PAYAMT_V,
+					@DISCT,@PAYINT,@DSCINT,@NETPAY,@PAYDT,			
 					0,'',0,'',0,
 					'','N',getdate(),'H','',
-					'".$this->sess["USERID"]."','',0,getdate(),'','YTKMini'
+					@USERID,'',0,@INPTIME,@CANID,'YTKMini'
 				);
-				
+					
 				if('".$req["PAYTYP"]."'='02')
 				begin
 					update {$this->MAuth->getdb('ARFINC')}
-					set SMCHQ=SMCHQ+@PAYAMT
-						,LPAYD='".$req["TMBILDT"]."'
-					where CONTNO=@CONTNO
+					set SMCHQ=isnull(SMCHQ,0)+@PAYAMT
+						,LPAYD=@TMBILDT
+					where CONTNO=@CONTNO collate thai_cs_as
 				end
 				else
 				begin
 					update {$this->MAuth->getdb('ARFINC')}
-					set SMPAY=SMPAY+@PAYAMT
-						,LPAYD='".$req["TMBILDT"]."'
-						,PAYDWN=PAYDWN+".str_replace(",","",$datatable["opt_payamt"])."
-					where CONTNO=@CONTNO
+					set SMPAY=isnull(SMPAY,0)+@PAYAMT
+						,LPAYD=@TMBILDT
+						,PAYDWN=isnull(PAYDWN,0)+@PAYAMT
+					where CONTNO=@CONTNO collate thai_cs_as
 				end;
 				
-				ENABLE TRIGGER AFTINS_PAY003 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTINS_PAY003 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}else if($event == "cancel"){
 			$CHQTRANQ_003 = "
-				DISABLE TRIGGER AFTINS_PAY003 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTUPD_PAY003 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 								
-				if exists (select * from {$this->MAuth->getdb('ARFINC')} where CONTNO='{$datatable["opt_contno"]}')
+				if exists (select * from {$this->MAuth->getdb('ARFINC')} where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as)
 				begin
 					if('".$req["PAYTYP"]."' = '02')
 					begin
 						update {$this->MAuth->getdb('ARFINC')}
-						set SMCHQ=SMCHQ - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMCHQ=isnull(SMCHQ,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('ARFINC')}
-						set SMPAY=SMPAY - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMPAY=isnull(SMPAY,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 				end
 				
@@ -2527,9 +2427,10 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAY003 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTUPD_PAY003 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}
 		
@@ -2540,11 +2441,22 @@ class RevPayment extends MY_Controller {
 		$CHQTRANQ_004 = "";
 		if($event == "save"){
 			$CHQTRANQ_004 = "
+				set @PAYFOR = '".$datatable["opt_payfor"]."';
 				set @CONTNO = '".$datatable["opt_contno"]."';
+				set @PAYAMT = ".str_replace(",","",$datatable["opt_payamt"]).";
+				set @PAYAMTCAL = @PAYAMT;
+				set @DISCT  = ".str_replace(",","",$datatable["opt_disct"]).";
+				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
+				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
+				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
+				set @TSALE  = (select TSALE from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @TAXRT  = @VATRT;
+				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO collate thai_cs_as); 
 				
-				DISABLE TRIGGER AFTINS_PAY004 ON {$this->MAuth->getdb('CHQTRAN')};
-				
-				set @VATRT = (select VATRT from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO);
+				DISABLE TRIGGER AFTINS_PAY004 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
+				set @PAYAMT_N = case when @VATRT=0 then @PAYAMT else (@PAYAMT / ((100+@VATRT) / 100.0)) end;
+				set @PAYAMT_V = case when @VATRT=0 then 0 else (@PAYAMT - (@PAYAMT / ((100+@VATRT) / 100.0))) end;
 				insert into {$this->MAuth->getdb('CHQTRAN')} (
 					TMBILL, LOCATRECV, TMBILDT, CHQNO, CHQDT, 
 					TSALE, PAYFOR, CONTNO, LOCATPAY, CUSCOD, 
@@ -2554,58 +2466,51 @@ class RevPayment extends MY_Controller {
 					TAXNO, TAXFL, INPDT, FLAG, YFLAG, 
 					USERID, DOSBILL, BALANCE, INPTIME, CANID, SYSTVER
 				) values (
-					@TMBILL,'".$req["LOCATRECV"]."','".$req["TMBILDT"]."','".$req["CHQNO"]."',".($req["CHQDT"] == "" ? "null":"'".$req["CHQDT"]."'").",
-					'F','".$datatable["opt_payfor"]."','".$datatable["opt_contno"]."',
-					(select LOCAT from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO),'".$req["CUSCOD"]."',
-					'".$req["PAYTYP"]."',@VATRT,
-					
-					".str_replace(",","",$datatable["opt_payamt"]).",				
-					cast(".str_replace(",","",$datatable["opt_payamt"])." / ((100+@VATRT)/100) as decimal(18,2)),
-					".str_replace(",","",$datatable["opt_payamt"])." - (cast(".str_replace(",","",$datatable["opt_payamt"])." / ((100+@VATRT)/100) as decimal(18,2))),
-					
-					
-					'".str_replace(",","",$datatable["opt_disct"])."','".str_replace(",","",$datatable["opt_payint"])."','".str_replace(",","",$datatable["opt_dscint"])."','".str_replace(",","",$datatable["opt_netpay"])."','".$req["TMBILDT"]."',
+					@TMBILL,@LOCATRECV,@TMBILDT,@CHQNO,@CHQDT,
+					@TSALE,@PAYFOR,@CONTNO,@LOCATPAY,@CUSCOD,
+					@PAYTYP,@TAXRT,@PAYAMT,@PAYAMT_N,@PAYAMT_V,
+					@DISCT,@PAYINT,@DSCINT,@NETPAY,@PAYDT,
 					0,'',0,'',0,
 					'','N',getdate(),'H','',
-					'".$this->sess["USERID"]."','',0,getdate(),'','YTKMini'
+					@USERID,'',0,@INPTIME,@CANID,'YTKMini'
 				);
 				
 				if('".$req["PAYTYP"]."'='02')
 				begin
 					update {$this->MAuth->getdb('ARFINC')}
-					set SMCHQ=SMCHQ+@PAYAMT
-						,LPAYD='".$req["TMBILDT"]."'
-					where CONTNO=@CONTNO
+					set SMCHQ=isnull(SMCHQ,0)+@PAYAMT
+						,LPAYD=@TMBILDT
+					where CONTNO=@CONTNO collate thai_cs_as
 				end
 				else
 				begin
 					update {$this->MAuth->getdb('ARFINC')}
-					set SMPAY=SMPAY+@PAYAMT
-						,LPAYD='".$req["TMBILDT"]."'
-						,PAYFIN=PAYFIN+".str_replace(",","",$datatable["opt_payamt"])."
-					where CONTNO=@CONTNO
+					set SMPAY=isnull(SMPAY,0)+@PAYAMT
+						,LPAYD=@TMBILDT
+						,PAYFIN=isnull(PAYFIN,0)+@PAYAMT
+					where CONTNO=@CONTNO collate thai_cs_as
 				end;
 				
-				ENABLE TRIGGER AFTINS_PAY004 ON {$this->MAuth->getdb('CHQTRAN')};				
+				ENABLE TRIGGER AFTINS_PAY004 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;				
 			";
 		}else if($event == "cancel"){
 			$CHQTRANQ_004 = "
-				DISABLE TRIGGER AFTINS_PAY004 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTUPD_PAY004 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 								
-				if exists (select * from {$this->MAuth->getdb('ARFINC')} where CONTNO='{$datatable["opt_contno"]}')
+				if exists (select * from {$this->MAuth->getdb('ARFINC')} where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as)
 				begin
 					if('".$req["PAYTYP"]."' = '02')
 					begin
 						update {$this->MAuth->getdb('ARFINC')}
-						set SMCHQ=SMCHQ - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMCHQ=isnull(SMCHQ,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('ARFINC')}
-						set SMPAY=SMPAY - ".str_replace(",","",$datatable["opt_payamt"])."
-							,PAYFIN=PAYFIN - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMPAY=isnull(SMPAY,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+							,PAYFIN=isnull(PAYFIN,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 				end
 				
@@ -2614,9 +2519,10 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAY004 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTUPD_PAY004 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}
 		return $CHQTRANQ_004;
@@ -2626,11 +2532,22 @@ class RevPayment extends MY_Controller {
 		$CHQTRANQ_005 = "";
 		if($event == "save"){
 			$CHQTRANQ_005 = "
+				set @PAYFOR = '".$datatable["opt_payfor"]."';
 				set @CONTNO = '".$datatable["opt_contno"]."';
+				set @PAYAMT = ".str_replace(",","",$datatable["opt_payamt"]).";
+				set @PAYAMTCAL = @PAYAMT;
+				set @DISCT  = ".str_replace(",","",$datatable["opt_disct"]).";
+				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
+				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
+				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
+				set @TSALE  = (select TSALE from {$this->MAuth->getdb('AROPTMST')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @VATRT  = (select VATRT from {$this->MAuth->getdb('AROPTMST')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @TAXRT  = @VATRT;
+				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('AROPTMST')} where CONTNO=@CONTNO collate thai_cs_as); 
 				
-				DISABLE TRIGGER AFTINS_PAY005 ON {$this->MAuth->getdb('CHQTRAN')};
-				
-				set @VATRT = (select VATRT from {$this->MAuth->getdb('ARFINC')} where CONTNO=@CONTNO);
+				DISABLE TRIGGER AFTINS_PAY005 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
+				set @PAYAMT_N = case when @VATRT=0 then @PAYAMT else (@PAYAMT / ((100+@VATRT) / 100.0)) end;
+				set @PAYAMT_V = case when @VATRT=0 then 0 else (@PAYAMT - (@PAYAMT / ((100+@VATRT) / 100.0))) end;
 				insert into {$this->MAuth->getdb('CHQTRAN')} (
 					TMBILL, LOCATRECV, TMBILDT, CHQNO, CHQDT, 
 					TSALE, PAYFOR, CONTNO, LOCATPAY, CUSCOD, 
@@ -2640,50 +2557,50 @@ class RevPayment extends MY_Controller {
 					TAXNO, TAXFL, INPDT, FLAG, YFLAG, 
 					USERID, DOSBILL, BALANCE, INPTIME, CANID, SYSTVER
 				) values (
-					@TMBILL,'".$req["LOCATRECV"]."','".$req["TMBILDT"]."','".$req["CHQNO"]."',".($req["CHQDT"] == "" ? "null":"'".$req["CHQDT"]."'").",
-					'R','".$datatable["opt_payfor"]."','".$datatable["opt_contno"]."','".$req["LOCATRECV"]."','".$req["CUSCOD"]."',
-					'".$req["PAYTYP"]."',0,'".str_replace(",","",$datatable["opt_payamt"])."','".str_replace(",","",$datatable["opt_payamt"])."',0,
-					'".str_replace(",","",$datatable["opt_disct"])."','".str_replace(",","",$datatable["opt_payint"])."','".str_replace(",","",$datatable["opt_dscint"])."','".str_replace(",","",$datatable["opt_netpay"])."','".$req["TMBILDT"]."',
+					@TMBILL,@LOCATRECV,@TMBILDT,@CHQNO,@CHQDT,
+					@TSALE,@PAYFOR,@CONTNO,@LOCATPAY,@CUSCOD,
+					@PAYTYP,@TAXRT,@PAYAMT,@PAYAMT_N,@PAYAMT_V,
+					@DISCT,@PAYINT,@DSCINT,@NETPAY,@PAYDT,
 					0,'',0,'',0,
 					'','N',getdate(),'H','',
-					'".$this->sess["USERID"]."','',0,getdate(),'','YTKMini'
+					@USERID,'',0,@INPTIME,@CANID,'YTKMini'
 				);
 				
 				if('".$req["PAYTYP"]."'='02')
 				begin
 					update {$this->MAuth->getdb('AROPTMST')}
-					set SMCHQ=SMCHQ+@PAYAMT
+					set SMCHQ=isnull(SMCHQ,0)+@PAYAMT
 						,LPAYDT=@TMBILDT
-					where CONTNO=@CONTNO
+					where CONTNO=@CONTNO collate thai_cs_as
 				end
 				else
 				begin
 					update {$this->MAuth->getdb('AROPTMST')}
-					set SMPAY=SMPAY+@PAYAMT
+					set SMPAY=isnull(SMPAY,0)+@PAYAMT
 						,LPAYDT=@TMBILDT
-					where CONTNO=@CONTNO
+					where CONTNO=@CONTNO collate thai_cs_as
 				end;
 				
-				ENABLE TRIGGER AFTINS_PAY005 ON {$this->MAuth->getdb('CHQTRAN')};				
+				ENABLE TRIGGER AFTINS_PAY005 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;				
 			";
 		}else if($event == "cancel"){
 			$CHQTRANQ_005 = "
-				DISABLE TRIGGER AFTINS_PAY005 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTUPD_PAY005 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 								
-				if exists (select * from {$this->MAuth->getdb('AROPTMST')} where CONTNO='{$datatable["opt_contno"]}')
+				if exists (select * from {$this->MAuth->getdb('AROPTMST')} where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as)
 				begin
 					if('".$req["PAYTYP"]."' = '02')
 					begin
 						update {$this->MAuth->getdb('AROPTMST')}
-						set SMCHQ=SMCHQ - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMCHQ=isnull(SMCHQ,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('AROPTMST')}
-						set SMPAY=SMPAY - ".str_replace(",","",$datatable["opt_payamt"])."
-							,PAYFIN=PAYFIN - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMPAY=isnull(SMPAY,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+							,PAYFIN=isnull(PAYFIN,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 				end
 				
@@ -2692,9 +2609,10 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAY005 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTUPD_PAY005 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}	
 		
@@ -2713,46 +2631,43 @@ class RevPayment extends MY_Controller {
 				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
 				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
 				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
-				set @TSALE  = (select TSALE from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO);
-				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO);
+				set @TSALE  = (select TSALE from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as);
 				set @TAXRT  = @VATRT;
-				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO); 
+				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as); 
 				set @FNOPAY = (
 						select top 1 NOPAY from {$this->MAuth->getdb('ARPAY')}
-						where CONTNO=@CONTNO and DAMT != PAYMENT
+						where CONTNO=@CONTNO collate thai_cs_as and DAMT != PAYMENT
 						order by NOPAY
 				);
 				
-				if exists(select * from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO and LPAYD > @TMBILDT)
+				if exists(select * from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as and LPAYD > @TMBILDT)
 				begin 
 					rollback tran transaction1;
 					insert into #paymentTemp select 'E' as id,@TMBILL,'วันที่รับชำระเงินน้อยกว่าวันที่รับชำระล่าสุด<br>รับชำระเงินล่าสุดวันที่ '  
-						+(select convert(varchar(6),LPAYD,103)+cast(year(LPAYD)+543 as varchar(4)) from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO and LPAYD > @TMBILDT) as msg;
+						+(select convert(varchar(6),LPAYD,103)+cast(year(LPAYD)+543 as varchar(4)) from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as and LPAYD > @TMBILDT) as msg;
 					return;
 				end 
 				
-				if exists(
-					select * from (
-						select case when sum(DAMT - PAYMENT) > @PAYAMT then 1 else 0 end 
-						from {$this->MAuth->getdb('ARPAY')} 
-						where CONTNO=@CONTNO
-					} as data
+				if exists (
+					select * from {$this->MAuth->getdb('ARPAY')}
+					where CONTNO=@CONTNO collate thai_cs_as and NOPAY = (
+						select max(NOPAY) from {$this->MAuth->getdb('ARPAY')}
+						where CONTNO=@CONTNO collate thai_cs_as and PAYMENT > 0
+					) and DAMT != PAYMENT
 				)
 				begin 
-					rollback tran transaction1;
-					insert into #paymentTemp select 'E' as id,@TMBILL,'วันที่รับชำระเงินน้อยกว่าวันที่รับชำระล่าสุด<br>รับชำระเงินล่าสุดวันที่ '  
-						+(select convert(varchar(6),LPAYD,103)+cast(year(LPAYD)+543 as varchar(4)) from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO and LPAYD > @TMBILDT) as msg;
-					return;
-				end 
+					set @F_PAR = '*';
+				end;
 				
 				declare cs cursor for
 					select NOPAY,DAMT-PAYMENT as BFPAY from {$this->MAuth->getdb('ARPAY')}
-					where CONTNO=@CONTNO and DAMT != PAYMENT
+					where CONTNO=@CONTNO collate thai_cs_as and DAMT != PAYMENT
 					order by NOPAY
 
 				open cs;
 				fetch next from cs into @NOPAY,@BFPAY;
-
+				
 				while @@FETCH_STATUS = 0
 				begin 
 					if @PAYAMTCAL = 0 
@@ -2770,7 +2685,7 @@ class RevPayment extends MY_Controller {
 							,N_PAYMENT 	= (case when @VATRT=0 then (PAYMENT + @BFPAY) else ((PAYMENT + @BFPAY) / ((100+@VATRT) / 100.0)) end)
 							,DELAY 		= case when datediff(day,DDATE,@TMBILDT) < 0 then 0 else datediff(day,DDATE,@TMBILDT) end
 							,ADVDUE 	= case when datediff(day,DDATE,@TMBILDT) >= 0 then 0 else datediff(day,DDATE,@TMBILDT) * -1 end
-						where CONTNO=@CONTNO and NOPAY=@NOPAY
+						where CONTNO=@CONTNO collate thai_cs_as and NOPAY=@NOPAY
 						
 						set @LNOPAY = @NOPAY;
 						set @PAYAMTCAL = @PAYAMTCAL - @BFPAY;
@@ -2785,7 +2700,7 @@ class RevPayment extends MY_Controller {
 							,N_PAYMENT 	= (case when @VATRT=0 then (PAYMENT + (@BFPAY - (@BFPAY - @PAYAMTCAL))) else ((PAYMENT + (@BFPAY - (@BFPAY - @PAYAMTCAL))) / ((100+@VATRT) / 100.0)) end)
 							,DELAY 		= case when datediff(day,DDATE,@TMBILDT) < 0 then 0 else datediff(day,DDATE,@TMBILDT) end
 							,ADVDUE 	= case when datediff(day,DDATE,@TMBILDT) >= 0 then 0 else datediff(day,DDATE,@TMBILDT) * -1 end
-						where CONTNO=@CONTNO and NOPAY=@NOPAY
+						where CONTNO=@CONTNO collate thai_cs_as and NOPAY=@NOPAY
 						
 						set @LNOPAY = @NOPAY;
 						set @PAYAMTCAL = 0;
@@ -2795,9 +2710,19 @@ class RevPayment extends MY_Controller {
 				end
 				close cs;
 				deallocate cs;
-
+				
+				if exists (
+					select * from {$this->MAuth->getdb('ARPAY')}
+					where CONTNO=@CONTNO collate thai_cs_as and NOPAY = (
+						select max(NOPAY) from {$this->MAuth->getdb('ARPAY')}
+						where CONTNO=@CONTNO collate thai_cs_as and PAYMENT > 0
+					) and DAMT != PAYMENT
+				)
+				begin 
+					set @L_PAR = '*';
+				end;
 			
-				DISABLE TRIGGER AFTINS_PAY006 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTINS_PAY006 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				set @PAYAMT_N = case when @VATRT=0 then @PAYAMT else (@PAYAMT / ((100+@VATRT) / 100.0)) end;
 				set @PAYAMT_V = case when @VATRT=0 then 0 else (@PAYAMT - (@PAYAMT / ((100+@VATRT) / 100.0))) end;
 				insert into {$this->MAuth->getdb('CHQTRAN')} (
@@ -2814,14 +2739,14 @@ class RevPayment extends MY_Controller {
 					@TSALE,@PAYFOR,@CONTNO,@LOCATPAY,@CUSCOD,
 					@PAYTYP,@TAXRT,@PAYAMT,@PAYAMT_N,@PAYAMT_V,
 					@DISCT,@PAYINT,@DSCINT,@NETPAY,@PAYDT,
-					isnull((select max(NOPAY) from {$this->MAuth->getdb('CHQTRAN')} where CONTNO=@CONTNO and PAYFOR='006' and FLAG!='C'),0)+1,
-					'*',@FNOPAY,'*',isnull(@LNOPAY,@FNOPAY),
+					isnull((select max(NOPAY) from {$this->MAuth->getdb('CHQTRAN')} where CONTNO=@CONTNO collate thai_cs_as and PAYFOR='006' and FLAG!='C'),0)+1,
+					@F_PAR,@FNOPAY,@L_PAR,isnull(@LNOPAY,@FNOPAY),
 					--'','N',@INPDT,@FLAG,@YFLAG,
 					@INPDT,@FLAG,@YFLAG,
 					@USERID,@DOSBILL,
 						isnull((
 							select SUM(DAMT-PAYMENT) from {$this->MAuth->getdb('ARPAY')}
-							where CONTNO=@CONTNO AND LOCAT=@LOCATPAY AND DDATE <= @TMBILDT
+							where CONTNO=@CONTNO collate thai_cs_as AND LOCAT=@LOCATPAY AND DDATE <= @TMBILDT
 						 ),0)
 					,@INPTIME,@CANID,'YTKMini'
 				);
@@ -2829,18 +2754,18 @@ class RevPayment extends MY_Controller {
 				if(@PAYTYP='02')
 				begin
 					update {$this->MAuth->getdb('ARMAST')}
-					set SMCHQ=SMCHQ+@PAYAMT
+					set SMCHQ=isnull(SMCHQ,0)+@PAYAMT
 						,LPAYD=@TMBILDT
 						,LPAYA=@PAYAMT
-					where CONTNO=@CONTNO
+					where CONTNO=@CONTNO collate thai_cs_as
 				end
 				else
 				begin
 					update {$this->MAuth->getdb('ARMAST')}
-					set SMPAY=SMPAY+@PAYAMT
+					set SMPAY=isnull(SMPAY,0)+@PAYAMT
 						,LPAYD=@TMBILDT
 						,LPAYA=@PAYAMT
-					where CONTNO=@CONTNO
+					where CONTNO=@CONTNO collate thai_cs_as
 				end;
 				
 				update {$this->MAuth->getdb('INVTRAN')}
@@ -2848,16 +2773,16 @@ class RevPayment extends MY_Controller {
 					,CURSTAT='' 
 				where STRNO IN (
 					select STRNO from {$this->MAuth->getdb('ARMAST')}
-					where CONTNO=@CONTNO AND LOCAT=@LOCATPAY
+					where CONTNO=@CONTNO collate thai_cs_as AND LOCAT=@LOCATPAY
 				);
 				
 				update a
 				set a.YSTAT='N'
 					,a.YDATE=NULL 
-					,a.EXP_AMT=b.EXP_AMT
-					,a.EXP_PRD=b.EXP_PRD
-					,a.EXP_FRM=b.EXP_FRM
-					,a.EXP_TO=b.EXP_TO
+					,a.EXP_AMT=isnull(b.EXP_AMT,0)
+					,a.EXP_PRD=isnull(b.EXP_PRD,0)
+					,a.EXP_FRM=isnull(b.EXP_FRM,0)
+					,a.EXP_TO=isnull(b.EXP_TO,0)
 				--select * 
 				from {$this->MAuth->getdb('ARMAST')} a
 				left join (
@@ -2868,23 +2793,24 @@ class RevPayment extends MY_Controller {
 					from {$this->MAuth->getdb('ARPAY')}
 					where 1=1 and DAMT>PAYMENT and DDATE <= @TMBILDT
 					group by CONTNO
-				) as b on a.CONTNO=b.CONTNO
-				where a.CONTNO=@CONTNO
+				) as b on a.CONTNO=b.CONTNO collate thai_cs_as
+				where a.CONTNO=@CONTNO collate thai_cs_as;
 				
-				ENABLE TRIGGER AFTINS_PAY006 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTINS_PAY006 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}else if($event == "cancel"){
+			$stROW = "@R".rand(100000,999999);
 			$CHQTRANQ_006 = "
 				-- เช็คว่ายกเลิกบิล จากงวดสุดท้ายหรือไม่
 				if (
 					select max(r) from (
 						select row_number() over(order by TMBILDT) r,* from {$this->MAuth->getdb('CHQTRAN')}
-						where CONTNO='{$datatable["opt_contno"]}' and FLAG!='C' and PAYFOR in ('006','007')
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and FLAG!='C' and PAYFOR in ('006','007')
 					) as data
 				) != (
 					select r from (
 						select row_number() over(order by TMBILDT) r,* from {$this->MAuth->getdb('CHQTRAN')}
-						where CONTNO='{$datatable["opt_contno"]}' and FLAG!='C' and PAYFOR in ('006','007')
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and FLAG!='C' and PAYFOR in ('006','007')
 					) as data
 					where TMBILL='{$req["TMBILL"]}'
 				)
@@ -2894,21 +2820,20 @@ class RevPayment extends MY_Controller {
 					return;
 				end;
 			
-				DISABLE TRIGGER AFTINS_PAY006 ON {$this->MAuth->getdb('CHQTRAN')};
-								
-				if exists (select * from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$datatable["opt_contno"]}')
+				DISABLE TRIGGER AFTUPD_PAY006 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
+				if exists (select * from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as)
 				begin
 					if('".$req["PAYTYP"]."' = '02')
 					begin
 						update {$this->MAuth->getdb('ARMAST')}
-						set SMCHQ=SMCHQ - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMCHQ=isnull(SMCHQ,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('ARMAST')}
-						set SMPAY=SMPAY - ".str_replace(",","",$datatable["opt_payamt"])."
-						where CONTNO='{$datatable["opt_contno"]}'
+						set SMPAY=isnull(SMPAY,0) - ".str_replace(",","",$datatable["opt_payamt"])."
+						where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					end
 					
 					update {$this->MAuth->getdb('INVTRAN')}
@@ -2916,15 +2841,15 @@ class RevPayment extends MY_Controller {
 						,CURSTAT='Y'    
 					where STRNO IN (
 						select STRNO from {$this->MAuth->getdb('ARMAST')} a
-						left join {$this->MAuth->getdb('CHQTRAN')} b on a.CONTNO=b.CONTNO and a.LOCAT=b.LOCATPAY 
-						where b.YFLAG='Y' and a.CONTNO='{$datatable["opt_contno"]}'
+						left join {$this->MAuth->getdb('CHQTRAN')} b on a.CONTNO=b.CONTNO collate thai_cs_as and a.LOCAT=b.LOCATPAY 
+						where b.YFLAG='Y' and a.CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
 					)
 					
 					update a
 					set a.YSTAT='Y'
 					from {$this->MAuth->getdb('ARMAST')} a
-					left join {$this->MAuth->getdb('CHQTRAN')} b on a.CONTNO=b.CONTNO and a.LOCAT=b.LOCATPAY 
-					where a.CONTNO='{$datatable["opt_contno"]}' and b.YFLAG='Y'
+					left join {$this->MAuth->getdb('CHQTRAN')} b on a.CONTNO=b.CONTNO collate thai_cs_as and a.LOCAT=b.LOCATPAY 
+					where a.CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and b.YFLAG='Y'
 				end
 				
 				update {$this->MAuth->getdb('CHQTRAN')}
@@ -2932,15 +2857,108 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and PAYFOR='".$datatable["opt_payfor"]."';  
+				
+				declare {$stROW} int = 0;
+				declare {$stROW}_FPAY int;
+				declare {$stROW}_LPAY int;
+				declare {$stROW}_PAYAMT decimal(18,2);
+				
+				select {$stROW}_FPAY = F_PAY
+					,{$stROW}_LPAY = L_PAY
+					,{$stROW}_PAYAMT = PAYAMT
+				from {$this->MAuth->getdb('CHQTRAN')}
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}'	
+					and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and PAYFOR='".$datatable["opt_payfor"]."';  
+			
+				
+				while {$stROW} <= (
+					select L_PAY - F_PAY from {$this->MAuth->getdb('CHQTRAN')}
+					where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}'	
+						and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and PAYFOR='".$datatable["opt_payfor"]."'
+				)
+				begin
+					if(
+						select MAX(NOPAY) from {$this->MAuth->getdb('ARPAY')}
+						where 1=1 and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and PAYMENT>0
+					) > {$stROW}_LPAY
+					begin
+						rollback tran transaction1;
+						insert into #CanCPaymentTemp select 'E' as id,'{$req["TMBILL"]}','การยกเลิกรับชำระ ต้องยกเลิกจากการรับชำระล่าสุด จะยกเลิกการรับชำระกลางงวดไม่ได้' as msg;
+						return;
+					end
+					else
+					begin
+						if exists (				
+							select * from {$this->MAuth->getdb('ARPAY')}
+							where 1=1 and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and NOPAY={$stROW}_LPAY
+								and PAYMENT <= {$stROW}_PAYAMT
+						)
+						begin 
+							set {$stROW}_PAYAMT = {$stROW}_PAYAMT  - (
+								select PAYMENT from {$this->MAuth->getdb('ARPAY')}
+								where 1=1 and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and NOPAY={$stROW}_LPAY
+							)
+							
+							update {$this->MAuth->getdb('ARPAY')}
+							SET DATE1=null
+								,PAYMENT=0
+								,V_PAYMENT=0
+								,N_PAYMENT=0
+								,DELAY=0
+								,ADVDUE=0
+							where 1=1 and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and NOPAY={$stROW}_LPAY
+						end
+						else
+						begin 
+							update {$this->MAuth->getdb('ARPAY')}
+							SET DATE1 = (case when PAYMENT - {$stROW}_PAYAMT = 0 
+									then null else (
+										select DATE1 from {$this->MAuth->getdb('ARPAY')}
+										where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and NOPAY=({$stROW}_LPAY-1)
+									) end) 
+								,PAYMENT = (PAYMENT - {$stROW}_PAYAMT)
+								,V_PAYMENT= (case when VATRT != 0 
+									then ((PAYMENT - {$stROW}_PAYAMT) - ((PAYMENT - {$stROW}_PAYAMT) / 1.07))
+									else 0 end)
+								,N_PAYMENT= (case when VATRT != 0 
+									then (PAYMENT - {$stROW}_PAYAMT) - (((PAYMENT - {$stROW}_PAYAMT) - ((PAYMENT - {$stROW}_PAYAMT) / 1.07)))
+									else (PAYMENT - {$stROW}_PAYAMT) end)
+								,DELAY=0
+								,ADVDUE=0
+							where 1=1 and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and NOPAY={$stROW}_LPAY
+							
+							set {$stROW}_PAYAMT = 0;
+						end			
+						
+						set {$stROW}_LPAY -= 1;
+						set {$stROW} += 1;
+					end
+				end
+				
+				update a
+				set a.LPAYD=b.TMBILDT
+					,a.LPAYA=b.PAYAMT
+				from {$this->MAuth->getdb('ARMAST')} a
+				left join (
+					select a.CONTNO,a.NOPAY,b.TMBILL,b.TMBILDT,b.PAYAMT from {$this->MAuth->getdb('ARPAY')} a
+					left join {$this->MAuth->getdb('CHQTRAN')} b on a.CONTNO=b.CONTNO collate thai_cs_as and a.NOPAY between b.F_PAY and b.L_PAY
+					where a.CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and b.TMBILL is not null and b.FLAG!='C'
+						and a.NOPAY=(
+							select MAX(NOPAY) from {$this->MAuth->getdb('ARPAY')} 
+							where PAYMENT > 0 and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as
+						)
+				) as b on a.CONTNO=b.CONTNO collate thai_cs_as
+				where a.CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as;
 				
 				update a
 				set a.YSTAT='N'
 					,a.YDATE=NULL 
-					,a.EXP_AMT=b.EXP_AMT
-					,a.EXP_PRD=b.EXP_PRD
-					,a.EXP_FRM=b.EXP_FRM
-					,a.EXP_TO=b.EXP_TO
+					,a.EXP_AMT=isnull(b.EXP_AMT,0)
+					,a.EXP_PRD=isnull(b.EXP_PRD,0)
+					,a.EXP_FRM=isnull(b.EXP_FRM,0)
+					,a.EXP_TO=isnull(b.EXP_TO,0)
 				--select * 
 				from {$this->MAuth->getdb('ARMAST')} a
 				left join (
@@ -2951,12 +2969,13 @@ class RevPayment extends MY_Controller {
 					from {$this->MAuth->getdb('ARPAY')}
 					where 1=1 and DAMT>PAYMENT and DDATE <= '{$req["TMBILDT"]}'
 					group by CONTNO
-				) as b on a.CONTNO=b.CONTNO
-				where a.CONTNO='{$datatable["opt_contno"]}';
+				) as b on a.CONTNO=b.CONTNO collate thai_cs_as
+				where a.CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as;
 				
-				ENABLE TRIGGER AFTINS_PAY006 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTUPD_PAY006 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}
+		//echo $CHQTRANQ_006; exit;
 		return $CHQTRANQ_006;
 	}
 	
@@ -2972,32 +2991,44 @@ class RevPayment extends MY_Controller {
 				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
 				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
 				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
-				set @TSALE  = (select TSALE from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO);
-				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO);
+				set @TSALE  = (select TSALE from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as);
 				set @TAXRT  = @VATRT;
-				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO); 
+				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as); 
 				set @FNOPAY = (
 						select top 1 NOPAY from {$this->MAuth->getdb('ARPAY')}
-						where CONTNO=@CONTNO and DAMT != PAYMENT
+						where CONTNO=@CONTNO collate thai_cs_as and DAMT != PAYMENT
 						order by NOPAY
 				);
+				set @TAXFL  = 'Y';
 				
-				if exists(select * from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO and LPAYD > @TMBILDT)
+				if exists(select * from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as and LPAYD > @TMBILDT)
 				begin 
 					rollback tran transaction1;
 					insert into #paymentTemp select 'E' as id,@TMBILL,'วันที่รับชำระเงินน้อยกว่าวันที่รับชำระล่าสุด<br>รับชำระเงินล่าสุดวันที่ '  
-						+(select convert(varchar(6),LPAYD,103)+cast(year(LPAYD)+543 as varchar(4)) from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO and LPAYD > @TMBILDT) as msg;
+						+(select convert(varchar(6),LPAYD,103)+cast(year(LPAYD)+543 as varchar(4)) from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as and LPAYD > @TMBILDT) as msg;
 					return;
 				end 
 				
+				if exists (
+					select * from {$this->MAuth->getdb('ARPAY')}
+					where CONTNO=@CONTNO collate thai_cs_as and NOPAY = (
+						select max(NOPAY) from {$this->MAuth->getdb('ARPAY')}
+						where CONTNO=@CONTNO collate thai_cs_as and PAYMENT > 0
+					) and DAMT != PAYMENT
+				)
+				begin 
+					set @F_PAR = '*';
+				end;
+				
 				declare cs cursor for
 					select NOPAY,DAMT-PAYMENT as BFPAY from {$this->MAuth->getdb('ARPAY')}
-					where CONTNO=@CONTNO and DAMT != PAYMENT
+					where CONTNO=@CONTNO collate thai_cs_as and DAMT != PAYMENT
 					order by NOPAY
 
 				open cs;
 				fetch next from cs into @NOPAY,@BFPAY;
-
+				
 				while @@FETCH_STATUS = 0
 				begin 
 					if @PAYAMTCAL = 0 
@@ -3010,15 +3041,12 @@ class RevPayment extends MY_Controller {
 						-- select @NOPAY,@BFPAY,@BFPAY
 						update {$this->MAuth->getdb('ARPAY')}
 						set DATE1 		= @TMBILDT
-							,PAYMENT 	= (PAYMENT + @BFPAY)
+							,PAYMENT 	= (isnull(PAYMENT,0) + @BFPAY)
 							,V_PAYMENT 	= (case when @VATRT=0 then 0 else (PAYMENT + @BFPAY) - ((PAYMENT + @BFPAY) / ((100+@VATRT) / 100.0)) end)
 							,N_PAYMENT 	= (case when @VATRT=0 then (PAYMENT + @BFPAY) else ((PAYMENT + @BFPAY) / ((100+@VATRT) / 100.0)) end)
-							--,DELAY 	= @DELAY
-							--,ADVDUE 	= @ADVDUE
-							,TAXPAY		= (PAYMENT + @BFPAY)
-							,TAXAMT 	= (case when @VATRT=0 then 0 when @TAXNO='' then 0
-											else (PAYMENT + @BFPAY) - ((PAYMENT + @BFPAY) / ((100+@VATRT) / 100.0)) end)
-						where CONTNO=@CONTNO and NOPAY=@NOPAY
+							,DELAY 		= case when datediff(day,DDATE,@TMBILDT) < 0 then 0 else datediff(day,DDATE,@TMBILDT) end
+							,ADVDUE 	= case when datediff(day,DDATE,@TMBILDT) >= 0 then 0 else datediff(day,DDATE,@TMBILDT) * -1 end
+						where CONTNO=@CONTNO collate thai_cs_as and NOPAY=@NOPAY
 						
 						set @LNOPAY = @NOPAY;
 						set @PAYAMTCAL = @PAYAMTCAL - @BFPAY;
@@ -3028,15 +3056,12 @@ class RevPayment extends MY_Controller {
 						-- select @NOPAY,@BFPAY,@BFPAY - (@BFPAY - @PAYAMTCAL)
 						update {$this->MAuth->getdb('ARPAY')}
 						set DATE1 		= @TMBILDT
-							,PAYMENT 	= PAYMENT + (@BFPAY - (@BFPAY - @PAYAMTCAL))
+							,PAYMENT 	= isnull(PAYMENT,0) + (@BFPAY - (@BFPAY - @PAYAMTCAL))
 							,V_PAYMENT 	= (case when @VATRT=0 then 0 else (PAYMENT + (@BFPAY - (@BFPAY - @PAYAMTCAL))) - ((PAYMENT + (@BFPAY - (@BFPAY - @PAYAMTCAL))) / ((100+@VATRT) / 100.0)) end)
 							,N_PAYMENT 	= (case when @VATRT=0 then (PAYMENT + (@BFPAY - (@BFPAY - @PAYAMTCAL))) else ((PAYMENT + (@BFPAY - (@BFPAY - @PAYAMTCAL))) / ((100+@VATRT) / 100.0)) end)
-							--,DELAY 	= @DELAY
-							--,ADVDUE 	= @ADVDUE
-							,TAXPAY		= (PAYMENT + @BFPAY)
-							,TAXAMT 	= (case when @VATRT=0 then 0 when @TAXNO='' then 0
-											else (PAYMENT + (@BFPAY - (@BFPAY - @PAYAMTCAL))) - ((PAYMENT + (@BFPAY - (@BFPAY - @PAYAMTCAL))) / ((100+@VATRT) / 100.0)) end)
-						where CONTNO=@CONTNO and NOPAY=@NOPAY
+							,DELAY 		= case when datediff(day,DDATE,@TMBILDT) < 0 then 0 else datediff(day,DDATE,@TMBILDT) end
+							,ADVDUE 	= case when datediff(day,DDATE,@TMBILDT) >= 0 then 0 else datediff(day,DDATE,@TMBILDT) * -1 end
+						where CONTNO=@CONTNO collate thai_cs_as and NOPAY=@NOPAY
 						
 						set @LNOPAY = @NOPAY;
 						set @PAYAMTCAL = 0;
@@ -3047,7 +3072,18 @@ class RevPayment extends MY_Controller {
 				close cs;
 				deallocate cs;
 				
-				DISABLE TRIGGER AFTINS_PAY007 ON {$this->MAuth->getdb('CHQTRAN')};
+				if exists (
+					select * from {$this->MAuth->getdb('ARPAY')}
+					where CONTNO=@CONTNO collate thai_cs_as and NOPAY = (
+						select max(NOPAY) from {$this->MAuth->getdb('ARPAY')}
+						where CONTNO=@CONTNO collate thai_cs_as and PAYMENT > 0
+					) and DAMT != PAYMENT
+				)
+				begin 
+					set @L_PAR = '*';
+				end;
+				
+				DISABLE TRIGGER AFTINS_PAY007 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				set @PAYAMT_N = case when @VATRT=0 then @PAYAMT else (@PAYAMT / ((100+@VATRT) / 100.0)) end;
 				set @PAYAMT_V = case when @VATRT=0 then 0 else (@PAYAMT - (@PAYAMT / ((100+@VATRT) / 100.0))) end;
 				insert into {$this->MAuth->getdb('CHQTRAN')} (
@@ -3063,13 +3099,13 @@ class RevPayment extends MY_Controller {
 					@TSALE,@PAYFOR,@CONTNO,@LOCATPAY,@CUSCOD,
 					@PAYTYP,@TAXRT,@PAYAMT,@PAYAMT_N,@PAYAMT_V,
 					@DISCT,@PAYINT,@DSCINT,@NETPAY,@PAYDT,
-					isnull((select max(NOPAY) from {$this->MAuth->getdb('CHQTRAN')} where CONTNO=@CONTNO and PAYFOR='006' and FLAG!='C'),0)+1,
-					'*',@FNOPAY,'*',isnull(@LNOPAY,@FNOPAY),
-					'','N',@INPDT,@FLAG,@YFLAG,
+					isnull((select max(NOPAY) from {$this->MAuth->getdb('CHQTRAN')} where CONTNO=@CONTNO collate thai_cs_as and PAYFOR='006' and FLAG!='C'),0)+1,
+					@F_PAR,@FNOPAY,@L_PAR,isnull(@LNOPAY,@FNOPAY),
+					'',@TAXFL,@INPDT,@FLAG,@YFLAG,
 					@USERID,@DOSBILL,
 						isnull((
 							select SUM(DAMT-PAYMENT) from {$this->MAuth->getdb('ARPAY')}
-							where CONTNO=@CONTNO AND LOCAT=@LOCATPAY AND DDATE <= @TMBILDT
+							where CONTNO=@CONTNO collate thai_cs_as AND LOCAT=@LOCATPAY AND DDATE <= @TMBILDT
 						 ),0)
 					,@INPTIME,@CANID,'YTKMini'
 				);
@@ -3077,50 +3113,55 @@ class RevPayment extends MY_Controller {
 				if('".$req["PAYTYP"]."'='02')
 				begin
 					update {$this->MAuth->getdb('ARMAST')}
-					set SMCHQ=SMCHQ+@PAYAMT
+					set SMCHQ=isnull(SMCHQ,0)+@PAYAMT
 						,LPAYD=@TMBILDT
 						,LPAYA=@PAYAMT
-					where CONTNO=@CONTNO
+					where CONTNO=@CONTNO collate thai_cs_as
 				end
 				else
 				begin
 					update {$this->MAuth->getdb('ARMAST')}
-					set SMPAY=SMPAY+@PAYAMT
+					set SMPAY=isnull(SMPAY,0)+@PAYAMT
 						,LPAYD=@TMBILDT
 						,LPAYA=@PAYAMT
-					where CONTNO=@CONTNO
+					where CONTNO=@CONTNO collate thai_cs_as
 				end;
 				
 				UPDATE {$this->MAuth->getdb('ARMAST')}
 				SET YSTAT='N',YDATE=NULL 
-				where CONTNO=@CONTNO AND LOCAT=@LOCATPAY
+				where CONTNO=@CONTNO collate thai_cs_as AND LOCAT=@LOCATPAY
 				
 				
 				if (@VATRT > 0)
 				begin
+					declare @symbol3 varchar(10) = (select H_TXPAY from {$this->MAuth->getdb('CONDPAY')});
+					declare @rec3 varchar(10) = (select SHORTL+@symbol3+'-'+right(left(convert(varchar(8),@daterun,112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD=@LOCATPAY);
+					set @TAXNO = isnull((select MAX(TAXNO) from {$this->MAuth->getdb('TAXTRAN')} where TAXNO like ''+@rec3+'%'),@rec3+'0000');
+					set @TAXNO = left(@TAXNO ,8)+right(right(@TAXNO,4)+10001,4);
+					
 					declare @TOTAMT007 decimal(18,0) = (
 						select sum(DAMT) from {$this->MAuth->getdb('ARPAY')} 
-						where CONTNO=@CONTNO and LOCAT=@LOCATPAY and isnull(TAXINV,'')=''
+						where CONTNO=@CONTNO collate thai_cs_as and LOCAT=@LOCATPAY and isnull(TAXINV,'')=''
 					);
 					
 					insert into {$this->MAuth->getdb('TAXTRAN')} (
 						LOCAT ,TAXNO ,TAXDT ,TSALE ,CONTNO ,CUSCOD ,SNAM ,NAME1 ,NAME2 ,STRNO ,VATRT 
 						,NETAMT ,VATAMT ,TOTAMT ,DESCP ,FPAY ,LPAY ,INPDT ,TAXTYP ,TAXFLG ,USERID ,TMBILL 
 					) values (
-						@LOCATRECV,@TAXNO,@TAXDT,@TSALE,@CONTNO,@CUSCOD
+						@LOCATPAY,@TAXNO,@TAXDT,@TSALE,@CONTNO,@CUSCOD
 						,(select SNAM from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD=@CUSCOD)
 						,(select NAME1 from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD=@CUSCOD)
 						,(select NAME2 from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD=@CUSCOD)
-						,(select STRNO from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO and LOCAT=@LOCATPAY)
+						,(select STRNO from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO collate thai_cs_as and LOCAT=@LOCATPAY)
 						,@VATRT
 						
 						,(case when @VATRT=0 then @TOTAMT007 else (@TOTAMT007 / ((100+@VATRT) / 100.0)) end)
 						,(case when @VATRT=0 then 0 else (@TOTAMT007 - (@TOTAMT007 / ((100+@VATRT) / 100.0))) end)
 						,@TOTAMT007,'รับชำระค่างวดตัดสด'
 						,(select MIN(NOPAY) from {$this->MAuth->getdb('ARPAY')} 
-							where CONTNO=@CONTNO and LOCAT=@LOCATPAY and isnull(TAXINV,'')='')
+							where CONTNO=@CONTNO collate thai_cs_as and LOCAT=@LOCATPAY and isnull(TAXINV,'')='')
 						,(select MAX(NOPAY) from {$this->MAuth->getdb('ARPAY')}
-							where CONTNO=@CONTNO and LOCAT=@LOCATPAY and isnull(TAXINV,'')='')
+							where CONTNO=@CONTNO collate thai_cs_as and LOCAT=@LOCATPAY and isnull(TAXINV,'')='')
 						,@INPDT,'B','N',@USERID,@TMBILL
 					);
 					
@@ -3128,7 +3169,11 @@ class RevPayment extends MY_Controller {
 					set TAXINV=@TAXNO
 						,TAXDT=@TAXDT
 						,TAXAMT= (DAMT / ((100+VATRT) / 100.0))
-					where CONTNO=@CONTNO and LOCAT=@LOCATPAY and isnull(TAXINV,'')=''
+					where CONTNO=@CONTNO collate thai_cs_as and LOCAT=@LOCATPAY and isnull(TAXINV,'')=''
+					
+					update {$this->MAuth->getdb('CHQMAS')} 
+					set TAXNO=@TAXNO
+					where TMBILL=@TMBILL
 					
 					update {$this->MAuth->getdb('CHQTRAN')} 
 					set TAXNO=@TAXNO
@@ -3138,11 +3183,10 @@ class RevPayment extends MY_Controller {
 				update a
 				set a.YSTAT='N'
 					,a.YDATE=NULL 
-					,a.EXP_AMT=b.EXP_AMT
-					,a.EXP_PRD=b.EXP_PRD
-					,a.EXP_FRM=b.EXP_FRM
-					,a.EXP_TO=b.EXP_TO
-				--select * 
+					,a.EXP_AMT=isnull(b.EXP_AMT,0)
+					,a.EXP_PRD=isnull(b.EXP_PRD,0)
+					,a.EXP_FRM=isnull(b.EXP_FRM,0)
+					,a.EXP_TO=isnull(b.EXP_TO,0)
 				from {$this->MAuth->getdb('ARMAST')} a
 				left join (
 					select CONTNO,COUNT(*) as EXP_PRD
@@ -3152,12 +3196,13 @@ class RevPayment extends MY_Controller {
 					from {$this->MAuth->getdb('ARPAY')}
 					where 1=1 and DAMT>PAYMENT and DDATE <= @TMBILDT
 					group by CONTNO
-				) as b on a.CONTNO=b.CONTNO
-				where a.CONTNO=@CONTNO;
+				) as b on a.CONTNO=b.CONTNO collate thai_cs_as
+				where a.CONTNO=@CONTNO collate thai_cs_as;
 				
-				ENABLE TRIGGER AFTINS_PAY007 ON {$this->MAuth->getdb('CHQTRAN')};				
+				ENABLE TRIGGER AFTINS_PAY007 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;				
 			";
 		}else if($event == "cancel"){
+			$stROW = "@R".rand(100000,999999);
 			$CHQTRANQ_007 = "
 				-- เช็คว่ายกเลิกบิล จากงวดสุดท้ายหรือไม่
 				if (
@@ -3178,20 +3223,20 @@ class RevPayment extends MY_Controller {
 					return;
 				end;
 				
-				DISABLE TRIGGER AFTINS_PAY007 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTUPD_PAY007 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 								
 				if exists (select * from {$this->MAuth->getdb('ARMAST')} where CONTNO='{$datatable["opt_contno"]}')
 				begin
 					if('".$req["PAYTYP"]."' = '02')
 					begin
 						update {$this->MAuth->getdb('ARMAST')}
-						set SMCHQ=SMCHQ - ".str_replace(",","",$datatable["opt_payamt"])."
+						set SMCHQ=isnull(SMCHQ,0) - ".str_replace(",","",$datatable["opt_payamt"])."
 						where CONTNO='{$datatable["opt_contno"]}'
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('ARMAST')}
-						set SMPAY=SMPAY - ".str_replace(",","",$datatable["opt_payamt"])."
+						set SMPAY=isnull(SMPAY,0) - ".str_replace(",","",$datatable["opt_payamt"])."
 						where CONTNO='{$datatable["opt_contno"]}'
 					end
 				end
@@ -3201,9 +3246,148 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAY007 ON {$this->MAuth->getdb('CHQTRAN')};
+				declare {$stROW} int = 0;
+				declare {$stROW}_FPAY int;
+				declare {$stROW}_LPAY int;
+				declare {$stROW}_PAYAMT decimal(18,2);
+				
+				select {$stROW}_FPAY = F_PAY
+					,{$stROW}_LPAY = L_PAY
+					,{$stROW}_PAYAMT = PAYAMT
+				from {$this->MAuth->getdb('CHQTRAN')}
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}'	
+					and CONTNO='{$datatable["opt_contno"]}' and PAYFOR='".$datatable["opt_payfor"]."';  
+			
+				
+				while {$stROW} <= (
+					select L_PAY - F_PAY from {$this->MAuth->getdb('CHQTRAN')}
+					where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+						and CONTNO='{$datatable["opt_contno"]}' and PAYFOR='".$datatable["opt_payfor"]."'
+				)
+				begin
+					if(
+						select MAX(NOPAY) from {$this->MAuth->getdb('ARPAY')}
+						where 1=1 and CONTNO='{$datatable["opt_contno"]}' and PAYMENT>0
+					) > {$stROW}_LPAY
+					begin
+						rollback tran transaction1;
+						insert into #CanCPaymentTemp select 'E' as id,'{$req["TMBILL"]}','การยกเลิกรับชำระ ต้องยกเลิกจากการรับชำระล่าสุด จะยกเลิกการรับชำระกลางงวดไม่ได้' as msg;
+						return;
+					end
+					else
+					begin
+						if exists (				
+							select * from {$this->MAuth->getdb('ARPAY')}
+							where 1=1 and CONTNO='{$datatable["opt_contno"]}' and NOPAY={$stROW}_LPAY
+								and PAYMENT <= {$stROW}_PAYAMT
+						)
+						begin 
+							set {$stROW}_PAYAMT = {$stROW}_PAYAMT  - (
+								select PAYMENT from {$this->MAuth->getdb('ARPAY')}
+								where 1=1 and CONTNO='{$datatable["opt_contno"]}' and NOPAY={$stROW}_LPAY
+							)
+							
+							update {$this->MAuth->getdb('ARPAY')}
+							SET DATE1=null
+								,PAYMENT=0
+								,V_PAYMENT=0
+								,N_PAYMENT=0
+								,DELAY=0
+								,ADVDUE=0
+							where 1=1 and CONTNO='{$datatable["opt_contno"]}' and NOPAY={$stROW}_LPAY
+						end
+						else
+						begin 
+							update {$this->MAuth->getdb('ARPAY')}
+							SET DATE1 = (case when isnull(PAYMENT,0) - {$stROW}_PAYAMT = 0 
+									then null else (
+										select DATE1 from {$this->MAuth->getdb('ARPAY')}
+										where CONTNO='{$datatable["opt_contno"]}' and NOPAY=({$stROW}_LPAY-1)
+									) end) 
+								,PAYMENT = (isnull(PAYMENT,0) - {$stROW}_PAYAMT)
+								,V_PAYMENT= (case when VATRT != 0 
+									then ((isnull(PAYMENT,0) - {$stROW}_PAYAMT) - ((isnull(PAYMENT,0) - {$stROW}_PAYAMT) / 1.07))
+									else 0 end)
+								,N_PAYMENT= (case when VATRT != 0 
+									then (isnull(PAYMENT,0) - {$stROW}_PAYAMT) - (((isnull(PAYMENT,0) - {$stROW}_PAYAMT) - ((isnull(PAYMENT,0) - {$stROW}_PAYAMT) / 1.07)))
+									else (isnull(PAYMENT,0) - {$stROW}_PAYAMT) end)
+								,DELAY=0
+								,ADVDUE=0
+							where 1=1 and CONTNO='{$datatable["opt_contno"]}' and NOPAY={$stROW}_LPAY
+							
+							set {$stROW}_PAYAMT = 0;
+						end			
+						
+						set {$stROW}_LPAY -= 1;
+						set {$stROW} += 1;
+					end
+				end
+				
+				update a
+				set a.LPAYD=b.TMBILDT
+					,a.LPAYA=b.PAYAMT
+				from {$this->MAuth->getdb('ARMAST')} a
+				left join (
+					select a.CONTNO,a.NOPAY,b.TMBILL,b.TMBILDT,b.PAYAMT from {$this->MAuth->getdb('ARPAY')} a
+					left join {$this->MAuth->getdb('CHQTRAN')} b on a.CONTNO=b.CONTNO and a.NOPAY between b.F_PAY and b.L_PAY
+					where a.CONTNO='{$datatable["opt_contno"]}' and b.TMBILL is not null and b.FLAG!='C'
+						and a.NOPAY=(
+							select MAX(NOPAY) from {$this->MAuth->getdb('ARPAY')} 
+							where PAYMENT > 0 and CONTNO='{$datatable["opt_contno"]}'
+						)
+				) as b on a.CONTNO=b.CONTNO
+				where a.CONTNO='{$datatable["opt_contno"]}';
+				
+				
+				/* กรณีมีใบกำกับภาษี */
+				if exists (
+					select * from {$this->MAuth->getdb('CHQTRAN')}
+					where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' and isnull(TAXNO,'') != ''
+				)
+				begin
+					update {$this->MAuth->getdb('ARPAY')}
+					set TAXINV=null
+						,TAXDT=null
+					where CONTNO='{$datatable["opt_contno"]}' and TAXINV in (
+						select TAXNO from {$this->MAuth->getdb('CHQTRAN')}
+						where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}'
+					)
+					
+					update {$this->MAuth->getdb('TAXTRAN')}
+					set FLAG='C'
+						,CANDT=getdate()
+						,USERID='".$this->sess["USERID"]."'
+					where CONTNO='{$datatable["opt_contno"]}' and TAXNO in (
+						select TAXNO from {$this->MAuth->getdb('CHQTRAN')}
+						where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}'
+					)
+				end
+				
+				
+				update a
+				set a.YSTAT='N'
+					,a.YDATE=NULL 
+					,a.EXP_AMT=isnull(b.EXP_AMT,0)
+					,a.EXP_PRD=isnull(b.EXP_PRD,0)
+					,a.EXP_FRM=isnull(b.EXP_FRM,0)
+					,a.EXP_TO=isnull(b.EXP_TO,0)
+				--select * 
+				from {$this->MAuth->getdb('ARMAST')} a
+				left join (
+					select CONTNO,COUNT(*) as EXP_PRD
+						,SUM(isnull(DAMT,0)-isnull(PAYMENT,0)) as EXP_AMT
+						,MIN(NOPAY) as EXP_FRM
+						,MAX(NOPAY) as EXP_TO
+					from {$this->MAuth->getdb('ARPAY')}
+					where 1=1 and DAMT>PAYMENT and DDATE <= '{$req["TMBILDT"]}'
+					group by CONTNO
+				) as b on a.CONTNO=b.CONTNO
+				where a.CONTNO='{$datatable["opt_contno"]}';
+				
+				ENABLE TRIGGER AFTUPD_PAY007 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}
 		
@@ -3225,14 +3409,14 @@ class RevPayment extends MY_Controller {
 				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
 				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
 				set @TSALE  = 'R';
-				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO);
+				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARRESV')} where RESVNO=@CONTNO collate thai_cs_as);
 				set @TAXRT  = @VATRT;
-				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('ARRESV')} where RESVNO=@CONTNO); 
+				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('ARRESV')} where RESVNO=@CONTNO collate thai_cs_as); 
 				set @NOPAY  = null;
 				set @FNOPAY = null;
 				set @LNOPAY = null;
 				
-				if((select RESPAY-(SMPAY+@PAYAMT) from {$this->MAuth->getdb('ARRESV')} where RESVNO=@CONTNO) < 0)
+				if((select RESPAY-(SMPAY+@PAYAMT) from {$this->MAuth->getdb('ARRESV')} where RESVNO=@CONTNO collate thai_cs_as) < 0)
 				begin 
 					rollback tran transaction1;
 					insert into #paymentTemp select 'n' as id,'','ผิดพลาด <br>เลขที่สัญญา ".$datatable["opt_contno"]."<br>รับชำระมากกว่าที่จำนวนที่จองไว้<br>โปรดตรวจสอบข้อมูลใหม่อีกครั้ง ' as msg;
@@ -3240,7 +3424,7 @@ class RevPayment extends MY_Controller {
 				end
 				else
 				begin
-					DISABLE TRIGGER AFTINS_PAY008 ON {$this->MAuth->getdb('CHQTRAN')};
+					DISABLE TRIGGER AFTINS_PAY008 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 					set @PAYAMT_N = case when @VATRT=0 then @PAYAMT else (@PAYAMT / ((100+@VATRT) / 100.0)) end;
 					set @PAYAMT_V = case when @VATRT=0 then 0 else (@PAYAMT - (@PAYAMT / ((100+@VATRT) / 100.0))) end;
 					
@@ -3255,7 +3439,6 @@ class RevPayment extends MY_Controller {
 					) values (
 						@TMBILL,@LOCATRECV,@TMBILDT,@CHQNO,@CHQDT,
 						@TSALE,@PAYFOR,@CONTNO,@LOCATPAY,@CUSCOD,
-						
 						@PAYTYP,@TAXRT,@PAYAMT,@PAYAMT_N,@PAYAMT_V,
 						@DISCT, @PAYINT, @DSCINT, @NETPAY, @PAYDT,
 						@NOPAY,'',@FNOPAY,'',@LNOPAY,
@@ -3266,35 +3449,35 @@ class RevPayment extends MY_Controller {
 					if('".$req["PAYTYP"]."'='02')
 					begin
 						update {$this->MAuth->getdb('ARRESV')}
-						set SMCHQ=SMCHQ+@PAYAMT
-						where RESVNO=@CONTNO
+						set SMCHQ=isnull(SMCHQ,0)+@PAYAMT
+						where RESVNO=@CONTNO collate thai_cs_as
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('ARRESV')}
-						set SMPAY=SMPAY+@PAYAMT
-						where RESVNO=@CONTNO
+						set SMPAY=isnull(SMPAY,0)+@PAYAMT
+						where RESVNO=@CONTNO collate thai_cs_as
 					end;
 					
-					ENABLE TRIGGER AFTINS_PAY008 ON {$this->MAuth->getdb('CHQTRAN')};
+					ENABLE TRIGGER AFTINS_PAY008 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				end
 			";
 		}else if($event == "cancel"){
 			$CHQTRANQ_008 = "
-				DISABLE TRIGGER AFTINS_PAY008 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTUPD_PAY008 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				
 				if exists (select * from {$this->MAuth->getdb('ARRESV')} where RESVNO='{$datatable["opt_contno"]}')
 				begin
 					if('".$req["PAYTYP"]."' = '02')
 					begin
 						update {$this->MAuth->getdb('ARRESV')}
-						set SMCHQ=SMCHQ - ".str_replace(",","",$datatable["opt_payamt"])."
+						set SMCHQ=isnull(SMCHQ,0) - ".str_replace(",","",$datatable["opt_payamt"])."
 						where RESVNO='{$datatable["opt_contno"]}'
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('ARRESV')}
-						set SMPAY=SMPAY - ".str_replace(",","",$datatable["opt_payamt"])."
+						set SMPAY=isnull(SMPAY,0) - ".str_replace(",","",$datatable["opt_payamt"])."
 						where RESVNO='{$datatable["opt_contno"]}'
 					end
 				end
@@ -3304,9 +3487,10 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAY008 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTUPD_PAY008 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}	
 		
@@ -3317,8 +3501,25 @@ class RevPayment extends MY_Controller {
 		$CHQTRANQ_009 = "";
 		if($event == "save"){
 			$CHQTRANQ_009 = "
-				DISABLE TRIGGER AFTINS_PAY009 ON {$this->MAuth->getdb('CHQTRAN')};
+				set @PAYFOR = '".$datatable["opt_payfor"]."';
+				set @CONTNO = '".$datatable["opt_contno"]."';
+				set @PAYAMT = ".str_replace(",","",$datatable["opt_payamt"]).";
+				set @PAYAMTCAL = @PAYAMT;
+				set @DISCT  = ".str_replace(",","",$datatable["opt_disct"]).";
+				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
+				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
+				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
+				set @TSALE  = 'R';
+				set @VATRT  = (select VATRT from {$this->MAuth->getdb('AR_INVOI')} where CONTNO=@CONTNO collate thai_cs_as);
+				set @TAXRT  = @VATRT;
+				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('AR_INVOI')} where RESVNO=@CONTNO collate thai_cs_as); 
+				set @NOPAY  = null;
+				set @FNOPAY = null;
+				set @LNOPAY = null;
 				
+				DISABLE TRIGGER AFTINS_PAY009 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
+				set @PAYAMT_N = case when @VATRT=0 then @PAYAMT else (@PAYAMT / ((100+@VATRT) / 100.0)) end;
+				set @PAYAMT_V = case when @VATRT=0 then 0 else (@PAYAMT - (@PAYAMT / ((100+@VATRT) / 100.0))) end;
 				insert into {$this->MAuth->getdb('CHQTRAN')} (
 					TMBILL, LOCATRECV, TMBILDT, CHQNO, CHQDT, 
 					TSALE, PAYFOR, CONTNO, LOCATPAY, CUSCOD, 
@@ -3328,48 +3529,48 @@ class RevPayment extends MY_Controller {
 					TAXNO, TAXFL, INPDT, FLAG, YFLAG, 
 					USERID, DOSBILL, BALANCE, INPTIME, CANID, SYSTVER
 				) values (
-					@TMBILL,'".$req["LOCATRECV"]."','".$req["TMBILDT"]."','".$req["CHQNO"]."',".($req["CHQDT"] == "" ? "null":"'".$req["CHQDT"]."'").",
-					'R','".$datatable["opt_payfor"]."','".$datatable["opt_contno"]."','".$req["LOCATRECV"]."','".$req["CUSCOD"]."',
-					'".$req["PAYTYP"]."',0,'".str_replace(",","",$datatable["opt_payamt"])."','".str_replace(",","",$datatable["opt_payamt"])."',0,
-					'".str_replace(",","",$datatable["opt_disct"])."','".str_replace(",","",$datatable["opt_payint"])."','".str_replace(",","",$datatable["opt_dscint"])."','".str_replace(",","",$datatable["opt_netpay"])."','".$req["TMBILDT"]."',
+					@TMBILL,@LOCATRECV,@TMBILDT,@CHQNO,@CHQDT,
+					@TSALE,@PAYFOR,@CONTNO,@LOCATPAY,@CUSCOD,
+					@PAYTYP,@TAXRT,@PAYAMT,@PAYAMT_N,@PAYAMT_V,
+					@DISCT, @PAYINT, @DSCINT, @NETPAY, @PAYDT,
 					0,'',0,'',0,
 					'','N',getdate(),'H','',
-					'".$this->sess["USERID"]."','',0,getdate(),'','YTKMini'
+					@USERID,'',0,@INPTIME,@CANID,'YTKMini'
 				);
-										
+				
 				if('".$req["PAYTYP"]."'='02')
 				begin
 					update {$this->MAuth->getdb('AR_INVOI')}
-					set SMCHQ=SMCHQ+@PAYAMT
+					set SMCHQ=isnull(SMCHQ,0)+@PAYAMT
 						,LPAYDT=@TMBILDT
-					where CONTNO=@CONTNO and LOCAT='".$req["LOCATRECV"]."'
+					where CONTNO=@CONTNO collate thai_cs_as
 				end
 				else
 				begin
 					update {$this->MAuth->getdb('AR_INVOI')}
-					set SMPAY=SMPAY+@PAYAMT
+					set SMPAY=isnull(SMPAY,0)+@PAYAMT
 						,LPAYDT=@TMBILDT
-					where CONTNO=@CONTNO and LOCAT='".$req["LOCATRECV"]."'
+					where CONTNO=@CONTNO collate thai_cs_as
 				end;
 				
-				ENABLE TRIGGER AFTINS_PAY009 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTINS_PAY009 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}else if($event == "cancel"){
 			$CHQTRANQ_009 = "
-				DISABLE TRIGGER AFTINS_PAY009 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTUPD_PAY009 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				
 				if exists (select * from {$this->MAuth->getdb('AR_INVOI')} where CONTNO='{$datatable["opt_contno"]}')
 				begin
 					if('".$req["PAYTYP"]."' = '02')
 					begin
 						update {$this->MAuth->getdb('AR_INVOI')}
-						set SMCHQ=SMCHQ - ".str_replace(",","",$datatable["opt_payamt"])."
+						set SMCHQ=isnull(SMCHQ,0) - ".str_replace(",","",$datatable["opt_payamt"])."
 						where CONTNO='{$datatable["opt_contno"]}'
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('AR_INVOI')}
-						set SMPAY=SMPAY - ".str_replace(",","",$datatable["opt_payamt"])."
+						set SMPAY=isnull(SMPAY,0) - ".str_replace(",","",$datatable["opt_payamt"])."
 						where CONTNO='{$datatable["opt_contno"]}'
 					end
 				end
@@ -3379,9 +3580,10 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAY009 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTUPD_PAY009 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}
 		return $CHQTRANQ_009;
@@ -3391,7 +3593,7 @@ class RevPayment extends MY_Controller {
 		$CHQTRANQ_011 = "";
 		if($event == "save"){
 			$CHQTRANQ_011 = "
-				DISABLE TRIGGER AFTINS_PAY011 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTINS_PAY011 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				
 				insert into {$this->MAuth->getdb('CHQTRAN')} (
 					TMBILL, LOCATRECV, TMBILDT, CHQNO, CHQDT, 
@@ -3412,19 +3614,19 @@ class RevPayment extends MY_Controller {
 				);
 				
 				UPDATE {$this->MAuth->getdb('ARFINC')};  
-				SET FINCOM=FINCOM+".str_replace(",","",$datatable["opt_payamt"])."
-				WHERE @CONTNO and LOCAT='".$req["LOCATRECV"]."'
+				SET FINCOM=isnull(FINCOM,0)+".str_replace(",","",$datatable["opt_payamt"])."
+				WHERE CONTNO=='{$datatable["opt_contno"]}' --and LOCAT='".$req["LOCATRECV"]."'
 				
-				ENABLE TRIGGER AFTINS_PAY011 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTINS_PAY011 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}else if($event == "cancel"){
 			$CHQTRANQ_011 = "
-				DISABLE TRIGGER AFTINS_PAY011 ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTUPD_PAY011 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				
 				if exists (select * from {$this->MAuth->getdb('ARFINC')} where CONTNO='{$datatable["opt_contno"]}')
 				begin
 					update {$this->MAuth->getdb('ARFINC')}
-					set FINCOM=FINCOM - ".str_replace(",","",$datatable["opt_payamt"])."
+					set FINCOM=isnull(FINCOM,0) - ".str_replace(",","",$datatable["opt_payamt"])."
 					where CONTNO='{$datatable["opt_contno"]}'
 				end
 				
@@ -3433,9 +3635,10 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAY011 ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTUPD_PAY011 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}	
 		
@@ -3446,7 +3649,20 @@ class RevPayment extends MY_Controller {
 		$CHQTRANQ_OTH = "";
 		if($event == "save"){
 			$CHQTRANQ_OTH = "
-				DISABLE TRIGGER AFTINS_PAYOTH ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTINS_PAYOTH ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
+				
+				set @PAYFOR = '".$datatable["opt_payfor"]."';
+				set @CONTNO = '".$datatable["opt_contno"]."';
+				set @PAYAMT = ".str_replace(",","",$datatable["opt_payamt"]).";
+				set @PAYAMTCAL = @PAYAMT;
+				set @DISCT  = ".str_replace(",","",$datatable["opt_disct"]).";
+				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
+				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
+				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
+				set @TSALE  = 'T';
+				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@CONTNO);
+				set @TAXRT  = @VATRT;
+				set @LOCATPAY = isnull((select LOCAT from {$this->MAuth->getdb('AROTHR')} where ARCONT=@CONTNO),'".$req["LOCATRECV"]."'); 
 				
 				insert into {$this->MAuth->getdb('CHQTRAN')} (
 					TMBILL, LOCATRECV, TMBILDT, CHQNO, CHQDT, 
@@ -3458,32 +3674,32 @@ class RevPayment extends MY_Controller {
 					USERID, DOSBILL, BALANCE, INPTIME, CANID, SYSTVER
 				) values (
 					@TMBILL,'".$req["LOCATRECV"]."','".$req["TMBILDT"]."','".$req["CHQNO"]."',".($req["CHQDT"] == "" ? "null":"'".$req["CHQDT"]."'").",
-					'T','".$datatable["opt_payfor"]."','".$datatable["opt_contno"]."','".$req["LOCATRECV"]."','".$req["CUSCOD"]."',
+					@TSALE,@PAYFOR,@CONTNO,@LOCATPAY,'".$req["CUSCOD"]."',
 					'".$req["PAYTYP"]."',0,'".str_replace(",","",$datatable["opt_payamt"])."','".str_replace(",","",$datatable["opt_payamt"])."',0,
 					'".str_replace(",","",$datatable["opt_disct"])."','".str_replace(",","",$datatable["opt_payint"])."','".str_replace(",","",$datatable["opt_dscint"])."','".str_replace(",","",$datatable["opt_netpay"])."','".$req["TMBILDT"]."',
 					0,'',0,'',0,
 					'','N',getdate(),'H','',
 					'".$this->sess["USERID"]."','',0,getdate(),'','YTKMini'
 				);
-										
+				
 				if('".$req["PAYTYP"]."'='02')
 				begin
 					update {$this->MAuth->getdb('AROTHR')}
-					set SMCHQ=SMCHQ+@PAYAMT
-					where ARCONT='".$datatable["opt_contno"]."' and LOCAT='".$req["LOCATRECV"]."' and PAYFOR='".$datatable["opt_payfor"]."'
+					set SMCHQ=isnull(SMCHQ,0)+@PAYAMT
+					where ARCONT='".$datatable["opt_contno"]."' and LOCAT=@LOCATPAY and PAYFOR='".$datatable["opt_payfor"]."'
 				end
 				else
 				begin
 					update {$this->MAuth->getdb('AROTHR')}
-					set SMPAY=SMPAY+@PAYAMT
-					where ARCONT='".$datatable["opt_contno"]."' and LOCAT='".$req["LOCATRECV"]."' and PAYFOR='".$datatable["opt_payfor"]."'
+					set SMPAY=isnull(SMPAY,0)+@PAYAMT
+					where ARCONT='".$datatable["opt_contno"]."' and LOCAT=@LOCATPAY and PAYFOR='".$datatable["opt_payfor"]."'
 				end;
 				
-				ENABLE TRIGGER AFTINS_PAYOTH ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTINS_PAYOTH ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}else if($event == "cancel"){
 			$CHQTRANQ_OTH = "
-				DISABLE TRIGGER AFTINS_PAYOTH ON {$this->MAuth->getdb('CHQTRAN')};
+				DISABLE TRIGGER AFTUPD_PAYOTH ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				
 				if exists (
 					select * from {$this->MAuth->getdb('CHQMAS')} 
@@ -3510,13 +3726,13 @@ class RevPayment extends MY_Controller {
 					if('".$req["PAYTYP"]."' = '02')
 					begin
 						update {$this->MAuth->getdb('AROTHR')}
-						set SMCHQ=SMCHQ - ".str_replace(",","",$datatable["opt_payamt"])."
+						set SMCHQ=isnull(SMCHQ,0) - ".str_replace(",","",$datatable["opt_payamt"])."
 						where ARCONT='{$datatable["opt_contno"]}'
 					end
 					else
 					begin
 						update {$this->MAuth->getdb('AROTHR')}
-						set SMPAY=SMPAY - ".str_replace(",","",$datatable["opt_payamt"])."
+						set SMPAY=isnull(SMPAY,0) - ".str_replace(",","",$datatable["opt_payamt"])."
 						where ARCONT='{$datatable["opt_contno"]}'
 					end
 				end
@@ -3526,13 +3742,64 @@ class RevPayment extends MY_Controller {
 					,CANDT=getdate()
 					,CANID='".$this->sess["USERID"]."'
 					,CANTIME=getdate()
-				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}';  
+				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
+					and CONTNO='{$datatable["opt_contno"]}' and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAYOTH ON {$this->MAuth->getdb('CHQTRAN')};
+				ENABLE TRIGGER AFTUPD_PAYOTH ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}
 		
 		return $CHQTRANQ_OTH;
+	}
+	
+	function getNOPAY(){
+		$response = array();
+		$response["error"] = false;
+		$response["errorMessage"] = "";
+		
+		$CONTNO = $_POST["CONTNO"];
+		
+		$sql = "
+			select NOPAY,DDATE,DAMT,VATRT,V_DAMT,N_DAMT
+				,DATE1,PAYMENT,DELAY,ADVDUE,isnull(TAXINV,'') as TAXINV
+				,TAXDT,CONTNO,LOCAT
+			from {$this->MAuth->getdb('ARPAY')}
+			where CONTNO='{$CONTNO}'
+			order by NOPAY
+		";
+		$query = $this->db->query($sql);
+		
+		$r = 0;
+		if($query->row()){
+			foreach($query->result() as $row){
+				foreach($row as $key => $val){ 
+					switch($key){
+						case 'DDATE':
+						case 'DATE1':
+						case 'TAXDT':
+							$response["data"][$r][$key] = $this->Convertdate(103,$val);
+							break;
+						case 'DAMT':
+						case 'VATRT':
+						case 'V_DAMT':
+						case 'N_DAMT':
+						case 'PAYMENT':
+							$response["data"][$r][$key] = number_format($val,2);
+							break;
+						default:
+							$response["data"][$r][$key] = $val; 
+							break;
+					}
+					
+				}
+				$r += 1;
+			}
+		}else{
+			$response["error"] = true;
+			$response["errorMessage"] = "ไม่พบข้อมูลตามเงื่อนไข";
+		}
+		
+		echo json_encode($response);
 	}
 	
 	function getFormNOPAYCancel(){
@@ -3545,15 +3812,23 @@ class RevPayment extends MY_Controller {
 				where TMBILL='{$tmbill}'
 			);
 			
-			select a.CONTNO,a.STRNO
-				,a.CUSCOD
-				,b.SNAM+b.NAME1+' '+b.NAME2 as CUSNAME
-				,a.LOCAT
-				,'{$tmbill}' as thisTMBILL
-			from {$this->MAuth->getdb('ARMAST')} a 
-			left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD
-			where a.CONTNO=@contno
+			if exists (select * from {$this->MAuth->getdb('ARMAST')} where CONTNO=@contno)
+			begin 
+				select a.CONTNO,a.STRNO
+					,a.CUSCOD
+					,b.SNAM+b.NAME1+' '+b.NAME2 as CUSNAME
+					,a.LOCAT
+					,'{$tmbill}' as thisTMBILL
+				from {$this->MAuth->getdb('ARMAST')} a 
+				left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD
+				where a.CONTNO=@contno
+			end 
+			else 
+			begin 
+				select '' as CONTNO,'' as STRNO,'' as CUSCOD,'' as CUSNAME,'' as LOCAT,'' as thisTMBILL
+			end
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		if($query->row()){
@@ -3567,15 +3842,20 @@ class RevPayment extends MY_Controller {
 			$response["errorMessage"] = "ไม่พบข้อมูลตามเงื่อนไข";
 		}
 		
+		if($response["CONTNO"] == ""){
+			$response["error"] = true;
+			$response["errorMessage"] = "ผิดพลาด ไม่พบข้อมูลสัญญา ".$response["CONTNO"]."<br>อาจมีการยกเลิกสัญญาไปแล้ว";
+		}
+		
 		$sql = "
 			select a.TMBILL,a.TMBILDT,a.PAYFOR,a.TSALE,a.CANDT,a.FLAG
-				,a.PAYAMT,a.DISCT,a.PAYINT,a.DSCINT,a.NETPAY,a.TAXNO
-				,a.F_PAR,a.F_PAY,a.L_PAR,a.L_PAY,b.PAYTYP
+				,a.PAYAMT,a.DISCT,a.PAYINT,a.DSCINT,a.NETPAY,isnull(a.TAXNO,'') as TAXNO
+				,isnull(a.F_PAR,'') as F_PAR,a.F_PAY,isnull(a.L_PAR,'') as L_PAR,a.L_PAY,b.PAYTYP
 			
 			from {$this->MAuth->getdb('CHQTRAN')} a 
 			left join {$this->MAuth->getdb('CHQMAS')} b on a.TMBILL=b.TMBILL and a.LOCATRECV=b.LOCATRECV
 			where a.CONTNO='{$response["CONTNO"]}' and a.PAYFOR in ('006','007')
-			order by TMBILDT asc
+			order by a.TMBILDT asc,a.INPDT asc
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -3612,12 +3892,32 @@ class RevPayment extends MY_Controller {
 	
 	function getOutstandingBalance(){
 		$CONTNO = $_POST["CONTNO"];
+		$TMBILDT = $this->Convertdate(1,$_POST["TMBILDT"]);
+		
+		
+		if($CONTNO == ""){
+			$response = array("html"=>"ไม่พบเลขที่สัญญา ไม่สามารถดูรายการค้างชำระได้");
+			echo json_encode($response); exit;
+		}
+		
+		$sql = "
+			select count(*) as r from {$this->MAuth->getdb('ARMAST')}
+			where CONTNO='{$CONTNO}'
+		";
+		$query = $this->db->query($sql);
+		$row = $query->row();
+		
+		if($row->r == 0){
+			$response = array("html"=>"ไม่พบเลขที่สัญญา ในรายการขายผ่อน");
+			echo json_encode($response); exit;
+		}
 		
 		//ปรับปรุงเบี้ยปรับล่าช้า
 		$sql = "
-			declare @dts datetime = (convert(varchar(8),getdate(),112));
+			declare @dts datetime = '".$TMBILDT."';
 			exec {$this->MAuth->getdb('FN_JD_LatePenalty')} @contno='{$CONTNO}',@dt = @dts;
 		";
+		//echo $sql; exit;
 		$this->db->query($sql);
 		
 		//ปรับปรุงยอดค้าง
@@ -3659,8 +3959,10 @@ class RevPayment extends MY_Controller {
 			);
 			
 			declare @TOTNOPAY decimal(18,2) = (
-				SELECT DAMT FROM {$this->MAuth->getdb('ARPAY')}
+				--SELECT DAMT 
+				select DAMT-PAYMENT as DAMT FROM {$this->MAuth->getdb('ARPAY')}
 				WHERE CONTNO='{$CONTNO}' and convert(varchar(6),DDATE,112) = convert(varchar(6),getdate(),112)
+						and DAMT != PAYMENT
 			);
 			
 			if exists (
@@ -3850,6 +4152,290 @@ class RevPayment extends MY_Controller {
 		";
 		
 		return $html;
+	}
+	
+	function tmbillPDF(){
+		$this->tmbillPDF2();
+		
+		$TMBILL   = $_POST["TMBILL"];
+		$NOPRNTB  = $_POST["NOPRNTB"];
+		$BILLNO   = $_POST["BILLNO"];
+		$NOPRNBL  = $_POST["NOPRNBL"];
+		$TMBILL   = $_POST["TMBILL"];
+		$PRINTFOR = $_POST["PRINTFOR"];
+		
+		$data = array();
+		$sql = "
+			declare @data varchar(28) = '{$this->sess["IDNo"]}'
+				+convert(varchar,getdate(),12)
+				+replace(convert(varchar,getdate(),14),':','');
+				
+			select a.TMBILL,convert(varchar(8),a.TMBILDT,112) as TMBILDT
+				,a.LOCATRECV
+				,(select sa.LOCATNM from {$this->MAuth->getdb('INVLOCAT')} sa where sa.LOCATCD=a.LOCATRECV) LOCATNM
+				,(select sa.LOCADDR2 from {$this->MAuth->getdb('INVLOCAT')} sa where sa.LOCATCD=a.LOCATRECV) LOCADDR2
+				,a.CUSCOD
+				,(select SNAM+NAME1+' '+NAME2 from {$this->MAuth->getdb('CUSTMAST')} sa where sa.CUSCOD=a.CUSCOD) as CUSNAME
+				,convert(varchar(8),TMBILDT,112) as TMBILDT
+				,a.CHQAMT
+				,a.NOPRNTB
+				,a.NOPRNBL
+				,case when (isnull(b.ALTMB,0) - a.NOPRNTB) < 0 then 'disabled' else '' end LOCKTMB
+				,case when (isnull(b.ALBIL,0) - a.NOPRNBL) < 0 then 'disabled' else '' end LOCKBIL
+				,{$this->MAuth->getdb('FN_CONVERTNUMBER')}('Y',@data) as CODE
+			from {$this->MAuth->getdb('CHQMAS')} a
+			left join (
+				select a.TMBILL,a.BILLNO,a.ALTMB,a.ALBIL from {$this->MAuth->getdb('JD_APDoubleBill')} a
+				left join (
+					select TMBILL,BILLNO,LOCATRECV,max(INSDT) INSDT from {$this->MAuth->getdb('JD_APDoubleBill')}
+					group by TMBILL,BILLNO,LOCATRECV
+				) as b on a.TMBILL=b.TMBILL and a.BILLNO=b.BILLNO and a.LOCATRECV=b.LOCATRECV and a.INSDT=b.INSDT 
+				where b.INSDT is not null
+			) b on a.TMBILL=b.TMBILL collate thai_cs_as and a.BILLNO=b.BILLNO collate thai_cs_as
+			where a.TMBILL='{$TMBILL}'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["TMBILL"]   = $row->TMBILL;
+				$data["TMBILDT"]  = $this->Convertdate(2,$row->TMBILDT);
+				$data["LOCATNM"]  = $row->LOCATNM;
+				$data["LOCADDR2"] = $row->LOCADDR2;
+				$data["CUSNAME"]  = $row->CUSNAME;
+				$data["CHQAMT"]   = $row->CHQAMT;
+				
+				if($PRINTFOR == "tm"){
+					$data["btnPrint"] = ($row->NOPRNTB > 0 ? "disabled":"");
+					$data["btnPrint"] = ($row->LOCKTMB);
+				}else{
+					$data["btnPrint"] = ($row->NOPRNBL > 0 ? "disabled":"");
+					$data["btnPrint"] = ($row->LOCKBIL);
+				}
+				
+				$data["CODE"] = $row->CODE;
+			}
+		}
+		//$data["btnPrint"] = '';
+		
+		$sql = "
+			select b.PAYFOR as FORCODE
+				,(select FORDESC from {$this->MAuth->getdb('PAYFOR')} sa where sa.FORCODE=b.PAYFOR) + (
+					case when b.PAYFOR in ('006','007') then 
+						' งวดที่ '+CAST(F_PAY as varchar)+'-'+CAST(L_PAY as varchar)
+						else '' 
+					end) as FORDESC
+				,b.PAYAMT
+				,b.DISCT
+				,b.PAYINT
+				,b.DSCINT
+				,b.NETPAY
+				,b.CONTNO
+				,convert(varchar(8),getdate(),112) dt
+				,convert(varchar(5),getdate(),108) tm 
+			from {$this->MAuth->getdb('CHQMAS')} a
+			left join {$this->MAuth->getdb('CHQTRAN')} b on a.TMBILL=b.TMBILL
+			where a.TMBILL='{$TMBILL}'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$data["body"] = "";
+		if($query->row()){
+			$data["DISCT"] = 0;
+			$data["PAYINT"] = 0;
+			$data["DSCINT"] = 0;
+			
+			$data["CONTNO"] = array();
+			$data["H_CONTNO"] = "";
+			$data["H_ENGNO"]  = "";
+			$data["H_BAAB"]   = "";
+			$data["H_COLOR"]  = "";
+			$data["datetime"]  = "";
+			
+			foreach($query->result() as $row){
+				$data["body"] .= "
+					<tr>
+						<td>{$row->FORDESC}</td>
+						<td style='width:50px;text-align:right;'>".number_format($row->PAYAMT,2)."</td>
+					</tr>
+				";
+				
+				$data["DISCT"] += $row->DISCT;
+				$data["PAYINT"] += $row->PAYINT;
+				$data["DSCINT"] += $row->DSCINT;
+				
+				$data["FORCODE"][]  = $row->FORCODE;
+				$data["CONTNO"][] = $row->CONTNO;
+				
+				$data["datetime"] = $this->Convertdate(2,$row->dt)." ".$row->tm." น.";
+			}
+			
+			$sql= "
+				select count(*) as r from {$this->MAuth->getdb('ARMAST')} a
+				left join {$this->MAuth->getdb('INVTRAN')} b on a.CONTNO=b.CONTNO and a.STRNO=b.STRNO
+				where a.CONTNO in ('".implode("','",$data["CONTNO"])."')
+			";
+			$query = $this->db->query($sql);
+			$query = $query->row();
+			
+			if($query->r != 0){
+				$sql = "
+					select a.CONTNO,b.STRNO,b.ENGNO,b.MODEL,b.BAAB,b.COLOR from {$this->MAuth->getdb('ARMAST')} a
+					left join {$this->MAuth->getdb('INVTRAN')} b on a.CONTNO=b.CONTNO and a.STRNO=b.STRNO
+					where a.CONTNO in ('".implode("','",$data["CONTNO"])."')
+				";
+				//echo $sql; exit;
+				$query = $this->db->query($sql);
+				
+				if($query->row()){
+					foreach($query->result() as $row){
+						$data["H_CONTNO"] 	= $row->CONTNO;
+						$data["H_ENGNO"] 	= $row->ENGNO;
+						$data["H_BAAB"] 	= $row->BAAB;
+						$data["H_COLOR"] 	= $row->COLOR;
+					}
+				}
+			}
+			
+		}
+		
+		$data["body"] .= "
+			<tr>
+				<td>ส่วนลด</td>
+				<td style='width:50px;text-align:right;'>".number_format($data["DISCT"],2)."</td>
+			</tr>
+			<tr>
+				<td>เบี้ยปรับ</td>
+				<td style='width:50px;text-align:right;'>".number_format($data["PAYINT"],2)."</td>
+			</tr>
+			<tr>
+				<td>ส่วนลดเบี้ยปรับ</td>
+				<td style='width:50px;text-align:right;'>".number_format($data["DSCINT"],2)."</td>
+			</tr>
+		";
+		
+		$QRCODE = "";
+		foreach($data["FORCODE"] as $key => $val){
+			if(in_array($val,array('001','002','006','007','008'))){
+				$imgPath = 'public/images/tmbill_temp/'.md5($TMBILL).'.png';
+				//$link = "https://survey.myftp.org/questionnair/Assessment_client/Assessment_client.php?id=".$this->_base64_encrypt_qr($data["CODE"]);
+				$link = "https://survey.myftp.org/questionnair/q/a.php?id=".$this->_base64_encrypt_qr($data["CODE"]);
+				QRcode::png($link,$imgPath,'S','4',2);
+				
+				$QRCODE = "
+					<tr><td colspan='2' align='center'><img src='../{$imgPath}' style='width:100px;height:100px;'/></td></tr>
+					<tr><td colspan='2' style='text-align:center;'>(แบบประเมินความเพิ่งพอใจ)</td></tr>
+				";
+			}
+		}
+		
+		$content = "
+			<table style='width:100%;font-size:10pt;'>
+				<tr><th colspan='2'>{$data["LOCATNM"]}</th></tr>
+				<tr><th colspan='2'>{$data["LOCADDR2"]}</th></tr>
+				
+				<tr>
+					<td style='width:35%;'>ชื่อ-สกุล ลูกค้า </td>
+					<td style='width:65%;'>{$data["CUSNAME"]}</td>
+				</tr>
+				<tr>
+					<td style='width:35%;'>เลขที่ใบรับเงิน</td>
+					<td style='width:65%;'>{$data["TMBILL"]}</td>
+				</tr>
+				<tr>
+					<td style='width:35%;'>วดป.</td>
+					<td style='width:65%;'>{$data["TMBILDT"]}</td>
+				</tr>
+				<tr>
+					<td style='width:35%;'>เลขที่สัญญา</td>
+					<td style='width:65%;'>{$data["H_CONTNO"]}</td>
+				</tr>
+				<tr>
+					<td style='width:35%;'>เลขเครื่อง</td>
+					<td style='width:65%;'>{$data["H_ENGNO"]}</td>
+				</tr>
+				<tr>
+					<td style='width:35%;'>สี</td>
+					<td style='width:65%;'>{$data["H_COLOR"]}</td>
+				</tr>
+				<tr>
+					<td style='width:35%;'>เงื่อนไขการโอน</td>
+					<td style='width:65%;'>{$data["H_BAAB"]}</td>
+				</tr>
+				<tr>
+					<td style='width:35%;'>พนักงาน</td>
+					<td style='width:65%;'>{$this->sess["name"]}</td>
+				</tr>
+				<tr>
+					<td style='width:35%;'>ออก ณ วันที่</td>
+					<td style='width:65%;'>{$data["datetime"]}</td>
+				</tr>
+			</table>
+			
+			<div>&emsp;</div>
+			<table border=0 style='width:100%;font-size:10pt;'>
+				<tr><th colspan='2'><hr></th></tr>
+				<tr class='borderTB' style='color:red;border-top:0.1px solid black;border-bottom:1px solid black;'>
+					<th style='text-align:left;'>ชำระค่า</th>
+					<th style='text-align:right;'>จำนวนเงิน</th>
+				</tr>
+				<tr><th colspan='2'><hr></th></tr>
+				
+				<tr>
+					<td colspan='2'>
+						<table border=0 style='width:100%;font-size:10pt;'>
+							".$data["body"]."
+						</table>
+					</td>
+				</tr>
+				
+				<tr><th colspan='2'><hr></th></tr>
+				<tr class='borderTB' style='color:red;border-top:0.1px solid black;border-bottom:1px solid black;'>
+					<th style='text-align:left;'>ยอดรับสุทธิ</th>
+					<th style='text-align:right;'>".number_format($data["CHQAMT"],2)."</th>
+				</tr>
+				<tr><th colspan='2'><hr></th></tr>
+				<tr><td colspan='2'>&emsp;</td></tr>
+				<tr><td colspan='2' style='padding-left:10px;'>ลงชื่อ..............................................ผู้รับเงิน</td></tr>
+				<tr><td colspan='2' style='line-height:10px;'>&emsp;</td></tr>
+				<tr><td colspan='2' style='padding-left:10px;'>ลงชื่อ..............................................ลูกค้า</td></tr>
+				<tr><td colspan='2'>&emsp;</td></tr>
+				
+				".$QRCODE."
+				
+				<tr><td colspan='2' style='text-align:center;color:red;line-height:20px;'>กรุณาตรวจสอบใบเสร็จฯทุกครั้ง<br>ใบเสร็จฯจะต้องไม่มีร่องรอยการแก้ไข</td></tr>
+			</table>
+		";
+		
+		$html = "
+			<div align='center'>
+				<div style='width:100%;height:calc(100vh - 300px);overflow:auto;background-color:#bbb;'>
+					<div id='div_print_tm' style='max-width:74mm;height:auto;background-color:#fff;border:1px solid black;font-size:10pt;padding:10px;'>
+						".$content."
+					</div>
+				</div>
+				<br>&emsp;
+				
+				<input type='button' {$data["btnPrint"]} id='print_tm' code='".$data["CODE"]."' class='btn btn-primary' value='พิมพ์ใบรับชั่วคราว'>
+			</div>
+		";
+		
+		if($PRINTFOR == "tm"){ $html = "ใบรับชั่วคราว ยังไม่สามารถพิมพ์ได้ กรุณาพิมพ์ใน Senior ก่อนครับ"; }
+		if($this->agent->browser() == "Firefox"){
+			$response = array();
+			$response["error"] = false;
+			$response["html"] = $html;
+			$response["OS"] = $this->agent->platform();
+			echo json_encode($response);			
+		}else{
+			$response = array();
+			$response["error"] = true;
+			$response["html"] = "กรณีปริ้นใบรับชั่วคราว ให้เข้าใช้งานด้วย Firefox เท่านั้นครับ";
+			$response["OS"] = $this->agent->platform();
+			echo json_encode($response);
+		}
 	}
 	
 	function tmbillPDF2(){

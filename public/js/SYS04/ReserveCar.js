@@ -639,6 +639,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 						
 						$('#btnGetSTD').attr('stdid','');
 						$('#btnGetSTD').attr('subid','');
+						$('#btnGetSTD').attr('shcid','');
 						
 						Lobibox.notify('warning', {
 							title: 'แจ้งเตือน',
@@ -655,6 +656,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 						$('#fPRICE').val(data.PRICE);
 						$('#btnGetSTD').attr('stdid',data.STDID);
 						$('#btnGetSTD').attr('subid',data.SUBID);
+						$('#btnGetSTD').attr('shcid',data.SHCID);
 						
 						if(data.HASSTR == 0){
 							$('#fSTRNO').empty().trigger('change');
@@ -902,6 +904,7 @@ function fn_save($thisWindow,lobibox){
 	dataToPost.PRICE 	= $('#fPRICE').val();
 	dataToPost.STDID 	= (typeof $('#btnGetSTD').attr('stdid') === 'undefined' ? '':$('#btnGetSTD').attr('stdid'));
 	dataToPost.SUBID	= (typeof $('#btnGetSTD').attr('subid') === 'undefined' ? '':$('#btnGetSTD').attr('subid'));
+	dataToPost.SHCID	= (typeof $('#btnGetSTD').attr('shcid') === 'undefined' ? '':$('#btnGetSTD').attr('shcid'));
 	dataToPost.RESPAY 	= $('#fRESPAY').val();
 	dataToPost.BALANCE 	= $('#fBALANCE').val();
 	dataToPost.RECVDUE 	= $('#fRECVDUE').val();

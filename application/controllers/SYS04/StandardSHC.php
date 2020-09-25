@@ -153,6 +153,7 @@ class StandardSHC extends MY_Controller {
 				}
 			}
 		}
+		//print_r($arrs["shc_baab"]); exit;
 		
 		$html = "
 			<div class='col-sm-12 col-md-12 col-lg-8 col-lg-offset-2'>
@@ -287,6 +288,7 @@ class StandardSHC extends MY_Controller {
 				from {$this->MAuth->getdb('STDSHCAR')} a
 				left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID and b.ACTIVE='Yes'
 				left join {$this->MAuth->getdb('SETGROUP')} c on a.GCODE=c.GCODE collate thai_cs_as
+				where a.ACTIVE='Yes'
 			) as data
 			where 1=1 {$cond}
 			order by ID
@@ -459,20 +461,21 @@ class StandardSHC extends MY_Controller {
 					close Datatable;
 					deallocate Datatable;
 					
+					declare @SHCID bigint = isnull((select max(ID) from {$this->MAuth->getdb('STDSHCAR')}),0)+1;
 					if(@seem = 0)
 					begin
-						insert into {$this->MAuth->getdb('STDSHCAR')} (TYPECOD,MODEL,BAAB,MANUYR,GCODE,ACTIVE,INSBY,INSDT)
-						select '{$type}','{$model}','{$baab}','{$year}','{$gcode}','Yes','{$this->sess["IDNo"]}',@datetime
+						insert into {$this->MAuth->getdb('STDSHCAR')} (ID,TYPECOD,MODEL,BAAB,MANUYR,GCODE,ACTIVE,INSBY,INSDT)
+						select @SHCID,'{$type}','{$model}','{$baab}','{$year}','{$gcode}','Yes','{$this->sess["IDNo"]}',@datetime
 						
 						set @ID=IDENT_CURRENT('{$this->MAuth->getdb('STDSHCAR')}');
 						insert into {$this->MAuth->getdb('STDSHCARDetails')} (ID,NPRICE,OPRICE,ACTIVE,INSBY,INSDT)
-						select @ID,'{$nprice}','{$oprice}','Yes','{$this->sess["IDNo"]}',@datetime
+						select @SHCID,'{$nprice}','{$oprice}','Yes','{$this->sess["IDNo"]}',@datetime
 						
 						insert into {$this->MAuth->getdb('STDSHCARColors')}(ID,COLOR)
-						select @ID,'".str_replace(",","' union all select @ID,'",($color == "" ? "ALL":$color))."'
+						select @SHCID,'".str_replace(",","' union all select @SHCID,'",($color == "" ? "ALL":$color))."'
 						
 						insert into {$this->MAuth->getdb('STDSHCARLocats')}(ID,LOCAT)
-						select @ID,'".str_replace(",","' union all select @ID,'",($locat == "" ? "ALL":$locat))."'
+						select @SHCID,'".str_replace(",","' union all select @SHCID,'",($locat == "" ? "ALL":$locat))."'
 					end
 					else
 					begin
@@ -949,6 +952,7 @@ class StandardSHC extends MY_Controller {
 			
 			insert into #tempshc_declare select getdate();
 		";
+		//echo $sql; exit;
 		$this->db->query($sql);
 		
 		$sql = "";
@@ -1177,8 +1181,8 @@ class StandardSHC extends MY_Controller {
 			select * from (
 				select ROW_NUMBER() over(order by a.ID) r,a.* 
 					,isnull(z.TYPECOD,'NOT') as settype
-					,isnull(b.MODELCOD,'NOT') as setmodel
-					,isnull(c.BAABCOD,'NOT') as setbaab
+					,(case when a.BAAB = 'ทุกรุ่น' then 'all' else isnull(b.MODELCOD,'NOT') end) as setmodel
+					,(case when a.BAAB = 'ทุกแบบ' then 'all' else isnull(c.BAABCOD,'NOT') end) as setbaab
 					,isnull(d.GCODE,'NOT') as setgroup
 				from {$this->MAuth->getdb('STDSHCARTemp')}  a
 				left join {$this->MAuth->getdb('SETTYPE')} z on a.typecod=z.TYPECOD collate thai_cs_as 
@@ -1511,7 +1515,7 @@ class StandardSHC extends MY_Controller {
 						where TYPECOD=@typecod collate thai_ci_as and MODELCOD=@model collate thai_ci_as
 					)
 					begin 
-						insert into {$this->MAuth->getdb('SETMODEL')}
+						insert into {$this->MAuth->getdb('SETMODEL')} (TYPECOD,MODELCOD,MEMO1)
 						select @typecod,@model,convert(varchar(8),GETDATE(),112);
 					end
 					
@@ -1520,9 +1524,9 @@ class StandardSHC extends MY_Controller {
 						where TYPECOD=@typecod collate thai_ci_as and MODELCOD=@model collate thai_ci_as and BAABCOD=@baab collate thai_ci_as 
 					)
 					begin 
-						if(@baab != '')
+						if(@baab != 'ทุกแบบ')
 						begin	
-							insert into {$this->MAuth->getdb('SETBAAB')}
+							insert into {$this->MAuth->getdb('SETBAAB')} (TYPECOD,MODELCOD,BAABCOD,MEMO1)
 							select @typecod,@model,@baab,convert(varchar(8),GETDATE(),112);
 						end
 					end
@@ -1534,7 +1538,7 @@ class StandardSHC extends MY_Controller {
 					begin
 						close csimportshc; deallocate csimportshc;
 						rollback tran import_transaction
-						insert into #tempResult select 'y','ผิดพลาด ไม่พบกลุ่ม '+@gcode+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง'
+						insert into #tempResult select 'y','ผิดพลาด ไม่พบประเภทรถ '+@gcode+' ในลำดับที่ '+cast(@keyid as varchar)+' โปรดตรวจสอบใหม่อีกครั้ง'
 							,@typecod,@model,@baab,@gcode,4;
 						return;
 					end
@@ -1650,7 +1654,7 @@ class StandardSHC extends MY_Controller {
 							set @ID=(isnull((select MAX(ID) from {$this->MAuth->getdb('STDSHCAR')}),0) + 1);
 							
 							insert into {$this->MAuth->getdb('STDSHCAR')} (ID,TYPECOD,MODEL,BAAB,MANUYR,GCODE,ACTIVE,INSBY,INSDT)
-							select @ID,@typecod,@model,(case when @baab = '' then 'all' else @baab end),@manuyr,@gcode,'Yes',@insby,@datetime
+							select @ID,@typecod,@model,(case when @baab = 'ทุกแบบ' then 'all' else @baab end),@manuyr,@gcode,'Yes',@insby,@datetime
 							
 							insert into {$this->MAuth->getdb('STDSHCARDetails')} (ID,NPRICE,OPRICE,ACTIVE,INSBY,INSDT)
 							select @ID,@nprice,@oprice,'Yes',@insby,@datetime

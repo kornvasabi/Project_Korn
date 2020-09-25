@@ -2914,7 +2914,8 @@ function btnOther($thisWindowLeasing){
 					//height: $(window).height(),
 					content: data.html,
 					draggable: false,
-					closeOnEsc: true,					
+					closeOnEsc: true,		
+					onShow: function(lobibox){ $('body').append(jbackdrop); },	
 					shown: function($this){
 						document.getElementById("dataTable-fixed-arpay").addEventListener("scroll", function(){
 							var translate = "translate(0,"+(this.scrollTop - 7)+"px)";
@@ -2924,6 +2925,7 @@ function btnOther($thisWindowLeasing){
 					},
 					beforeClose: function($this){
 						$('#btnArpay').attr('disabled',false);
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 					}
 				});
 				
@@ -3018,7 +3020,6 @@ function btnOther($thisWindowLeasing){
 			dataType: 'json',
 			//beforeSend: function(){ if(OBJadd_btnFORMSETAlert !== null){ OBJadd_btnFORMSETAlert.abort(); }},
 			success: function(data){
-				
 				$('#btnApproveSell').attr('disabled',true);	
 				var baseUrl = $('body').attr('baseUrl');
 				var url = baseUrl+'SYS04/Leasing/approvepdf?contno='+data.CONTNO;
@@ -3041,27 +3042,34 @@ function btnOther($thisWindowLeasing){
 	});
 	
 	$('#btnEFF').click(function(){
-		/*
-		$('#btnEFF').attr('disabled',true);		
-		
-		var baseUrl = $('body').attr('baseUrl');
-		var url = baseUrl+'SYS04/Leasing/effpdf?contno='+$("#add_contno").val();
-		var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
-		
-		Lobibox.window({
-			title: 'ใบอนุมัติขาย',
-			width: $(window).width(),
-			height: $(window).height(),
-			content: content,
-			draggable: false,
-			closeOnEsc: true,			
-			beforeClose : function(){
-				$('#btnEFF').attr('disabled',false);
+		var dataToPost = new Object();
+		dataToPost.CONTNO = $("#add_contno").val();
+		$.ajax({
+			url:'../SYS04/Leasing/Encode',
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
+			//beforeSend: function(){ if(OBJadd_btnFORMSETAlert !== null){ OBJadd_btnFORMSETAlert.abort(); }},
+			success: function(data){
+				$('#btnEFF').attr('disabled',true);
+				var baseUrl = $('body').attr('baseUrl');
+				var url = baseUrl+'SYS04/Leasing/effpdf?contno='+data.CONTNO;
+				var content = "<iframe src='"+url+"' style='width:100%;height:100%;'></iframe>";
+				
+				Lobibox.window({
+					title: 'ตารางแสดงภาระหนี้ตามสัญญา',
+					width: $(window).width(),
+					height: $(window).height(),
+					content: content,
+					draggable: false,
+					closeOnEsc: true,			
+					beforeClose : function(){
+						$('#btnEFF').attr('disabled',false);
+					}
+				});
 			}
 		});
-		*/
-		
-		
+		/*
 		Lobibox.notify('info', {
 			title: 'info',
 			size: 'mini',
@@ -3073,6 +3081,7 @@ function btnOther($thisWindowLeasing){
 			messageHeight: '90vh',
 			msg: 'feature นี้ยังไม่สามารถใช้งานได้ครับ'
 		});
+		*/
 	});
 	
 	$('#btnSend').click(function(){

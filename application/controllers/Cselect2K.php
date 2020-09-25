@@ -27,7 +27,8 @@ class Cselect2K extends MY_Controller {
 			where LOCATCD = '".$dataNow."' collate Thai_CI_AS
 			union
 			select top 20 LOCATCD,LOCATNM from {$this->MAuth->getdb('INVLOCAT')}
-			where LOCATCD like '%".$dataSearch."%' collate Thai_CI_AS or LOCATNM like '%".$dataSearch."%' collate Thai_CI_AS
+			where LOCATCD like '%".$dataSearch."%' collate Thai_CI_AS 
+			or LOCATNM like '%".$dataSearch."%' collate Thai_CI_AS
 			order by LOCATCD
 		";
 		//echo $sql; exit;
@@ -171,13 +172,12 @@ class Cselect2K extends MY_Controller {
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
         $dataSearch = trim($_REQUEST["q"]);
         $provcod = $_REQUEST["provcod"];
-
+		
         $cond = "";
-        if($provcod == ""){
-            $cond = "";
-        }else{
-            $cond = " and PROVCOD = '".$provcod."'";
+        if($provcod != ""){
+            $cond .= " and PROVCOD = '".$provcod."'";
         }
+		
         $sql = "
             select PROVCOD,AUMPCOD,AUMPDES from {$this->MAuth->getdb('SETAUMP')}
             where AUMPCOD = '".$dataNow."' 
@@ -242,23 +242,29 @@ class Cselect2K extends MY_Controller {
 		$sess = $this->session->userdata('cbjsess001');
 		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
         $dataSearch = trim($_REQUEST["q"]);
-        $provcod = $_REQUEST["provcod"];
+        $aumpcod = (!isset($_REQUEST["aumpcod"]) ? "":$_REQUEST["aumpcod"]);
+		$provcod = (!isset($_REQUEST["provcod"]) ? "":$_REQUEST["provcod"]);
 
         $cond = "";
-        if($provcod == ""){
-            $cond = "";
-        }else{
-            $cond = " and PROVCOD ='".$provcod."' ";
+        if($aumpcod != ""){
+            $cond .= " and AUMPCOD like '".$aumpcod."%'";
         }
+		if($provcod != ""){
+            $cond .= " and PROVCOD like '".$provcod."%'";
+        }
+		
         $sql = "
             select PROVCOD,AUMPCOD from {$this->MAuth->getdb('SETAUMP')}
             where PROVCOD='".$dataNow."' 
 
             union
-            select top 20 PROVCOD,AUMPCOD from {$this->MAuth->getdb('SETAUMP')}
-            where AUMPCOD like '%".$dataSearch."%' ".$cond." 
+            select top 20 * from (
+				select PROVCOD,AUMPCOD from {$this->MAuth->getdb('SETAUMP')}
+				where 1=1 ".$cond."				
+			)a where AUMPCOD like '%".$dataSearch."%'  
         ";
-        
+		//echo $sql; exit;
+		
         $query = $this->db->query($sql);
         $json = array();
         if($query->row()){
@@ -445,12 +451,13 @@ class Cselect2K extends MY_Controller {
 		if($s_name2 != ""){
 			$cond .= "and C.NAME2 like '%".$s_name2."%'";
 		}
-		$sql = "
-			select top 100 A.CONTNO,A.LOCAT,C.SNAM+C.NAME1+' '+C.NAME2+'' as CUSNAME 
-			from {$this->MAuth->getdb('ARMAST')} A
-			left join {$this->MAuth->getdb('CUSTMAST')} C on A.CUSCOD = C.CUSCOD
-			left join {$this->MAuth->getdb('INVTRAN')} I on A.STRNO = I.STRNO where 1=1 ".$cond."
-			order by A.CONTNO
+		$sql = "	
+			SELECT 
+				top 100 A.CONTNO,A.LOCAT,C.SNAM+C.NAME1+' '+C.NAME2+'' as CUSNAME 
+			FROM {$this->MAuth->getdb('ARMAST')} A,{$this->MAuth->getdb('CUSTMAST')} C
+			,{$this->MAuth->getdb('INVTRAN')} I 
+			WHERE A.CUSCOD = C.CUSCOD AND A.STRNO = I.STRNO ".$cond."
+			ORDER BY A.CONTNO 
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -461,8 +468,9 @@ class Cselect2K extends MY_Controller {
 				$html .="
 					<tr class='trow' seq='".$NRow."'>
 						<td  style='cursor:pointer;' class='getit' seq='".$NRow++."'
-							CONTNO ='".$row->CONTNO."'
-							LOCAT  ='".$row->LOCAT."'
+							CONTNO  = '".$row->CONTNO."'
+							LOCAT   = '".$row->LOCAT."'
+							CUSNAME = '".$row->CUSNAME."' 
 						><b>เลือก</b></td>
 						<td>".$row->CONTNO."</td>
 						<td>".$row->LOCAT."</td>
@@ -638,8 +646,9 @@ class Cselect2K extends MY_Controller {
 		$dataSearch = trim($_REQUEST['q']);
 		
 		$sql = "
-			select top 20 GCODE,GDESC from {$this->MAuth->getdb('SETGROUP')} 
-			where GCODE like '%".$dataSearch."%' order by GCODE 
+			select top 50 GCODE,GDESC from {$this->MAuth->getdb('SETGROUP')} 
+			where GCODE like '".$dataSearch."%' or GDESC like '".$dataSearch."%' 
+			order by GCODE 
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -1557,7 +1566,7 @@ class Cselect2K extends MY_Controller {
 		$dataSearch    = trim($_REQUEST['q']);
 		
 		$sql = "
-			select top 20 MODELCOD from {$this->MAuth->getdb('SETMODEL')}
+			select top 50 MODELCOD from {$this->MAuth->getdb('SETMODEL')}
 			where MODELCOD like '%".$dataSearch."%' order by MODELCOD
 		";
 		//echo $sql; exit;
@@ -1577,8 +1586,8 @@ class Cselect2K extends MY_Controller {
 		$dataSearch    = trim($_REQUEST['q']);
 		
 		$sql = "
-			select top 20 BAABCOD,BAABCOD+' ('+TYPECOD+')' as BAABNAM from {$this->MAuth->getdb('SETBAAB')}
-			where BAABCOD like '%".$dataSearch."%' order by BAABCOD
+			select top 100 BAABCOD,BAABCOD+' ('+TYPECOD+')' as BAABNAM from {$this->MAuth->getdb('SETBAAB')}
+			where BAABCOD like '".$dataSearch."%' order by BAABCOD
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -1657,11 +1666,16 @@ class Cselect2K extends MY_Controller {
 	function getOPTCODE(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = $_REQUEST['q'];
-		
+		$locat = (!isset($_REQUEST["LOCAT"]) ? "":$_REQUEST["LOCAT"]);
+		$cond = "";
+		if($locat !== ""){
+			$cond .=" and LOCAT = '".$locat."'";
+		}
 		$sql = "
-			select top 100 OPTCODE,OPTNAME,OPTCODE+'('+OPTNAME+')' as OPTNAM 
-			from {$this->MAuth->getdb('OPTMAST')} where OPTCODE like '".$dataSearch."%'
-			or OPTNAME like '".$dataSearch."%'
+			select LOCAT,OPTCODE,OPTNAME,OPTNAM from (
+				select LOCAT,OPTCODE,OPTNAME,OPTCODE+'('+OPTNAME+')' as OPTNAM 
+				from {$this->MAuth->getdb('OPTMAST')} where 1=1 ".$cond."
+			)a where OPTCODE like '".$dataSearch."%' or OPTNAME like '".$dataSearch."%' 
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -1770,12 +1784,13 @@ class Cselect2K extends MY_Controller {
 	function getOPTCODE_ACS(){
 		$sess = $this->session->userdata('cbjsess001');
 		$dataSearch = $_REQUEST['q'];
-		$add_locat = $_REQUEST['add_locat'];
+		$add_locat = (!isset($_REQUEST['add_locat']) ? "":$_REQUEST['add_locat']);
 		
 		$sql = "
 			select top 100 OPTCODE,OPTNAME,OPTCODE+'('+OPTNAME+')' as OPTNAM 
-			from {$this->MAuth->getdb('OPTMAST')} where LOCAT = '".$add_locat."' and 
-			(OPTCODE like '".$dataSearch."%' or OPTNAME like '".$dataSearch."%') ORDER BY OPTCODE
+			from {$this->MAuth->getdb('OPTMAST')} where LOCAT like '".$add_locat."%' and 
+			(OPTCODE like '".$dataSearch."%' or OPTNAME like '".$dataSearch."%') 
+			ORDER BY OPTCODE
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -1785,6 +1800,346 @@ class Cselect2K extends MY_Controller {
 					"id" => str_replace(chr(0),'',$row->OPTCODE),
 					"text" => str_replace(chr(0),'',$row->OPTNAM)
 				);
+			}
+		}
+		echo json_encode($json);
+	}
+	function getfromSTRNO(){
+		$html = "
+			<div class='row'>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						เลขตัวถัง
+						<input type='text' id='s_strno' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						ยี่ห้อ
+						<input type='text' id='s_type' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						รุ่น
+						<input type='text' id='s_model' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-12'>
+					<button id='str_search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'>ค้นหา</span></button>
+				</div>
+				<br>
+				<div id='str_result' class='col-sm-12'></div>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getResultSTRNO(){
+		$sess = $this->session->userdata('cbjsess001');
+		$s_strno  = $_REQUEST['s_strno'];
+		$s_type   = $_REQUEST['s_type'];
+		$s_model  = $_REQUEST['s_model'];
+		$cond = "";
+		if($s_strno !== ""){
+			$cond .=" and STRNO like '".$s_strno."%'";
+		}
+		if($s_type !== ""){
+			$cond .=" and TYPE like '".$s_type."%'";
+		}
+		if($s_model !== ""){
+			$cond .=" and MODEL like '".$s_model."%'";
+		}
+		
+		$sql = "
+			select top 100 STRNO,TYPE,MODEL,STAT 
+			from {$this->MAuth->getdb('INVTRAN')} 
+			where 1=1 ".$cond." 
+		";
+		$query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trow' seq='".$NRow."'>
+						<td style='cursor:pointer;' class='getit' seq='".$NRow++."'
+							STRNO  ='".$row->STRNO."'
+						><b>เลือก</b></td>
+						<td>".$row->STRNO."</td>
+						<td>".$row->TYPE."</td>
+						<td>".$row->MODEL."</td>
+						<td>".$row->STAT."</td>
+					</tr>
+				";
+			}
+		}
+		$html = "
+			<div id='tbstrno' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>เลขตัวถัง</th>
+							<th>ยี่ห้อ</th>
+							<th>รุ่น</th>
+							<th>สถานะ</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getformLOCAT(){
+		$html = "
+			<div class='row'>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						รหัสสาขา
+						<input type='text' id='locat' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						ชื่อสาขา
+						<input type='text' id='locatnm' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						รหัสย่อ
+						<input type='text' id='shortl' class='form-control'>
+					</div>
+				</div>
+				
+				<div class='col-sm-12'>
+					<button id='btnsearch' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'>ค้นหา</span></button>
+				</div>
+				<br>
+				<div id='locat_result' class='col-sm-12'></div>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getResultLOCAT(){
+		$locat    = $_REQUEST['locat'];
+		$locatnm  = $_REQUEST['locatnm'];
+		$shortl   = $_REQUEST['shortl'];
+		
+		$cond = "";
+		if($locat !== ""){
+			$cond .=" and LOCATCD like '".$locat."%'";
+		}
+		if($locatnm !== ""){
+			$cond .=" and LOCATNM like '".$locatnm."%'";
+		}
+		if($shortl !== ""){
+			$cond .=" and SHORTL like '".$shortl."%'";
+		}
+		
+		$sql = "
+			select LOCATCD,LOCATNM,SHORTL,'('+LOCATCD+') '+LOCATNM as LOCATNAM
+			from {$this->MAuth->getdb('INVLOCAT')} 
+			where 1=1 ".$cond." 
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trow' seq='".$NRow."'>
+						<td style='cursor:pointer;' class='getit' seq='".$NRow++."'
+							LOCAT ='".$row->LOCATCD."' LOCATNAM = '".$row->LOCATNAM."' 
+						><b>เลือก</b></td>
+						<td>".$row->LOCATCD."</td>
+						<td>".$row->LOCATNM."</td>
+						<td>".$row->SHORTL."</td>
+					</tr>
+				";
+			}
+		}
+		$html = "
+			<div id='tbstrno' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>รหัสสาขา</th>
+							<th>ชื่อสาขา</th>
+							<th>รหัสย่อ</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function getAPCODE(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select APCODE,'('+APCODE+') '+APNAME as APNAME 
+			from {$this->MAuth->getdb('APMAST')} 
+			where APCODE = '".$dataNow."' collate Thai_ci_as
+			union
+			select top 20 APCODE,'('+APCODE+') '+APNAME as APNAME
+			from {$this->MAuth->getdb('APMAST')} 
+			where APCODE like '".$dataNow."%' collate Thai_ci_as 
+			or APNAME like '".$dataSearch."%' collate Thai_ci_as
+			order by APCODE
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->APCODE), 'text'=>str_replace(chr(0),'',$row->APNAME)];
+			}
+		}
+		echo json_encode($json);
+	}
+	function getformOPTCODE(){
+		$html = "
+			<div class='row'>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						รหัสอุปกรณ์
+						<input type='text' id='optcode' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						ชื่อชื่ออุปกรณ์
+						<input type='text' id='optname' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-4'>
+					<div class='form-group'>
+						สาขา
+						<input type='text' id='locat' class='form-control'>
+					</div>
+				</div>
+				<div class='col-sm-12'>
+					<button id='btn_searchopt' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'>ค้นหา</span></button>
+				</div>
+				<br>
+				<div id='opt_result' class='col-sm-12'></div>
+			</div>
+		";
+		$response = array("html"=>$html);
+		$response["locat"] = $this->sess["branch"];
+		echo json_encode($response);
+	}
+	function getSearchOPTCODE(){
+		$optcode = $_REQUEST["optcode"];
+		$optname = $_REQUEST["optname"];
+		$locat = $_REQUEST["locat"];
+		
+		$cond = "";
+		if($optcode !== ""){
+			$cond .=" and OPTCODE like '".$optcode."%'";
+		}
+		if($optname !== ""){
+			$cond .=" and OPTNAME like '".$optname."%'";
+		}
+		if($locat !== ""){
+			$cond .=" and LOCAT like '".$locat."%'";
+		}
+		
+		$sql = "
+			select OPTCODE,OPTNAME,LOCAT from {$this->MAuth->getdb('OPTMAST')}
+			where 1=1 ".$cond."
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trows' seqs='".$NRow."'>
+						<td style='cursor:pointer;' class='getitopt' seqs='".$NRow++."'
+							OPTCODE = '".str_replace(chr(0),"",$row->OPTCODE)."' 
+							OPTNAME = '".str_replace(chr(0),"",$row->OPTNAME)."' 
+						><b>เลือก</b></td>
+						<td>".$row->OPTCODE."</td>
+						<td>".$row->OPTNAME."</td>
+						<td>".$row->LOCAT."</td>
+					</tr>
+				";
+			}
+		}
+		$html = "
+			<div id='table_optcode' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='data-table-optcode' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>รหัสอุปกรณ์</th>
+							<th>ชื่ออุปกรณ์</th>
+							<th>สาขา</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function changeLOCAT(){
+		$response = array();
+		$locat  = (!isset($_REQUEST["locat"]) ? "":$_REQUEST["locat"]);
+		
+		$sql = "
+			select LOCATCD,LOCATNM from {$this->MAuth->getdb('INVLOCAT')}
+			where LOCATCD = '".$locat."'
+		";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["locatnm"] = $row->LOCATNM;
+			}
+		}else{
+			$response["locatnm"] = "";
+		}
+		echo json_encode($response);
+	}
+	function getFINCODE(){
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select FINCODE,FINNAME 
+			from {$this->MAuth->getdb('FINMAST')}
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = [
+					'id'=>str_replace(chr(0),'',$row->FINCODE)
+					,'text'=>str_replace(chr(0),'',$row->FINNAME)
+				];
 			}
 		}
 		echo json_encode($json);

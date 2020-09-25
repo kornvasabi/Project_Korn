@@ -32,7 +32,7 @@ function fn_searchSTDSpecial(){
 			$("#result").html(data.html);
 			
 			$('#table-PriceSpecial').on('draw.dt',function(){ redraw(); });
-			fn_datatables('table-PriceSpecial',1,350);
+			fn_datatables('table-PriceSpecial',1,400);
 			/*
 			// Export data to Excel
 			$('.data-export').prepend('<img id="table-ReserveCar-excel" src="../public/images/excel.png" style="width:30px;height:30px;cursor:pointer;">');
@@ -43,7 +43,7 @@ function fn_searchSTDSpecial(){
 			function redraw(){
 				$('.IDClick').unbind('click');
 				$('.IDClick').click(function(){
-					if($(this).attr('STATUS') == "ขายแล้ว"){
+					if($(this).attr('STATUS') == "sale"){
 						Lobibox.notify('warning', {
 							title: 'แจ้งเตือน',
 							size: 'mini',
@@ -68,6 +68,7 @@ function fn_searchSTDSpecial(){
 				});
 			}
 		}
+		,error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 $('#btninsert').click(function(){
@@ -76,6 +77,7 @@ $('#btninsert').click(function(){
 function fn_loadformSetPrice($this,$event){
 	dataToPost = new Object();
 	dataToPost.STRNO = (typeof $this.attr('STRNO') === 'undefined' ? '':$this.attr('STRNO'));
+	dataToPost.ID    = (typeof $this.attr('IDS') === 'undefined' ? '':$this.attr('IDS'));
 	dataToPost.EVENT = $event;
 	$('#loadding').fadeIn(250);
 	$.ajax({
@@ -93,32 +95,46 @@ function fn_loadformSetPrice($this,$event){
 				draggable: false,
 				closeOnEsc: false,
 				shown: function($this){
-					fn_loadPropoties($this,data.EVENT);
+					fn_loadPropoties($this,data,$event);
 				}
 			});
 		}
 	});
 }
-function fn_loadPropoties($this,$EVENT){
-	if(_insert == "T"){
-		$('#btnsave').attr('disabled',false);
+function fn_loadPropoties($this,$data,$event){
+	$("#ISTYPE").select2({
+        placeholder: 'เลือก',		
+        minimumResultsForSearch: -1,
+        dropdownParent: $("#ISTYPE").parent().parent(),
+        width: '100%'
+    });
+	
+	if($event == "add"){
+		if(_insert == "T"){
+			$('#btnsave').attr('disabled',false);
+		}else{
+			$('#btnsave').attr('disabled',true);
+		}
 	}else{
-		$('#btnsave').attr('disabled',true);
+		if(_update == "T"){
+			$('#btnsave').attr('disabled',false);
+		}else{
+			$('#btnsave').attr('disabled',true);
+		}
 	}
-	if(_update == "T"){
-		$('#btnsave').attr('disabled',false);
-	}else{
-		$('#btnsave').attr('disabled',true);
-	}
+	
 	if(_delete == "T"){
 		$('#btndelete').attr('disabled',false);
 	}else{
 		$('#btndelete').attr('disabled',true);
 	}
-	if($EVENT == 'add'){
+	if($data.EVENT == 'add'){
 		$('#btndelete').hide(0);
 		$('#ID').attr('disabled',false);
 	}else{
+		$('#StartDT').val($data.StartDT);
+		$('#INSBY').val($data.INSBY);
+		$('#EndDT').val($data.EndDT);
 		$('#btnclear').hide(0);
 		$('#ID').attr('disabled',true);
 	}
@@ -126,12 +142,14 @@ function fn_loadPropoties($this,$EVENT){
 		$('#STRNO').val('');
 		$('#PRICE').val('');
 		$('#ISTYPE').val('');
-		$('#INSBY').val('');
+		//$('#INSBY').val('');
 	});
 	$('#btnsave').click(function(){
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
 			iconClass: false,
+			closeOnEsc: false,
+			closeButton: false,
 			msg: 'คุณต้องการบันทึกรายกำหนดราคาพิเศษรถ ?',
 			buttons: {
 				ok : {
@@ -145,11 +163,13 @@ function fn_loadPropoties($this,$EVENT){
 					closeOnClick: true
 				},
 			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				var btnType;
 				if (type === 'ok'){
 					fn_save($this)
 				}
+				$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 			}
 		});
 	});	
@@ -158,6 +178,8 @@ function fn_loadPropoties($this,$EVENT){
 		Lobibox.confirm({
 			title: 'ยืนยันการทำรายการ',
 			iconClass: false,
+			closeOnEsc: false,
+			closeButton: false,
 			msg: 'คุณต้องการลบรายกำหนดราคาพิเศษรถ รหัส : '+id+' ?',
 			buttons: {
 				ok : {
@@ -171,11 +193,13 @@ function fn_loadPropoties($this,$EVENT){
 					closeOnClick: true
 				},
 			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				var btnType;
 				if (type === 'ok'){
 					fn_delete($this);
 				}
+				$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 			}
 		});
 	});
@@ -224,8 +248,8 @@ function fn_save($this){
 					soundExt: '.ogg',
 					msg: data.msg
 				});
-				$this.destroy();
 				fn_searchSTDSpecial();
+				$this.destroy();
 			}else{
 				Lobibox.notify('error', {
 					title: 'แจ้งเตือน',
@@ -310,5 +334,207 @@ function fn_delete($this){
 				DelCarPrice.abort();
 			}
 		}
+	});
+}
+/*
+var KBbtn1import = null;
+$('#btnimport').click(function(){
+	KBbtn1import = $.ajax({
+		url:'../SYS04/SetCarPriceSpecial/stdFormUPLOAD',
+		type: 'POST',
+		dataType: 'json',
+		success: function(data){
+			Lobibox.window({
+				title: 'นำเข้ารายการสแตนดาร์ด',
+				//width: $(window).width(),
+				height: '200',
+				content: data.html,
+				draggable: false,
+				closeOnEsc: false,
+				shown: function($this){
+					$("#form_import").unbind('click');
+					$("#form_import").click(function(){
+						window.open("../public/form_upload/std_sell_multiple.xlsx");
+					});
+				}
+			});
+			
+			KBbtn1import = null;
+		},
+		beforeSend: function(){ if(KBbtn1import !== null){ KBbtn1import.abort(); } },
+		error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+	});
+});
+*/
+$('#btn1import').click(function(){
+	var html =  "<div class='row'>";
+		html += "	<input type='button' id='form_import' class='btn btn-info btn-sm' style='width:100%;' value='ดาวน์โหลดฟอร์มนำเข้า'>";		
+		html += "</div><hr>";	
+		html += "<div class='row'>";	
+		html += "	<div id='form_std'></div>";		
+		html += "</div>";
+	Lobibox.window({
+		title: 'นำเข้ารายการสแตนดาร์ด',
+		//width: $(window).width(),
+		height: '200',
+		content: html,
+		draggable: false,
+		closeOnEsc: false,
+		shown: function($this){
+			$("#form_std").uploadFile({		
+				url:'../SYS04/SetCarPriceSpecial/import_setprice',
+				fileName:'myfile',
+				autoSubmit: true,
+				acceptFiles: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+				allowedTypes: 'xls,xlsx',
+				onSubmit:function(files){			
+					$("#loadding").fadeIn(200);
+				},
+				onSuccess:function(files,data,xhr,pd){
+					obj = JSON.parse(data);
+					
+					if(obj["error"]){
+						Lobibox.notify('warning', {
+							title: 'แจ้งเตือน',
+							size: 'mini',
+							closeOnClick: false,
+							delay: false,
+							pauseDelayOnHover: true,
+							continueDelayOnInactiveTab: false,
+							icon: true,
+							messageHeight: '90vh',
+							msg: obj["errorMsg"]
+						});
+					}else{
+						Lobibox.window({
+							title: 'นำเข้าสแตนดาร์ดกำหนดรถราคาพิเศษ',
+							width: $(window).width(),
+							height: $(window).height(),
+							content: obj["html"],
+							draggable: false,
+							closeOnEsc: false,
+							shown: function($this){
+								fn_importdb($this);
+							}
+						});
+
+						$this.destroy();
+					}
+					
+					$("#loadding").fadeOut(200);
+				}
+			});
+			
+			$("#form_import").unbind('click');
+			$("#form_import").click(function(){
+				window.open("../public/form_upload/CopyofFormUploadSpecial.xlsx");
+			});
+		}
+	});
+});
+
+function fn_importdb($thiswindows){
+	var KB_importdb = null; 
+	$('#std_import').click(function(){
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			iconClass: false,
+			closeOnEsc: false,
+			closeButton: false,
+			msg: "คุณต้องการนำเข้าข้อมูลสแตนดาร์ดหรือไม่",
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: 'นำเข้า',
+					closeOnClick: false,
+				},
+				cancel : {
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ยกเลิก',
+					closeOnClick: true
+				},
+			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
+			callback: function(lobibox, type){
+				if (type === 'ok'){
+					var dataToPost = new Object();
+					
+					var list = [];
+					$(".listSpecial").each(function(){
+						var datalist = [];
+						datalist.push($(this).attr('STRNO'));
+						datalist.push($(this).attr('PRICE'));
+						datalist.push($(this).attr('STARTDT'));
+						datalist.push($(this).attr('MODEL'));
+						datalist.push($(this).attr('IDKEY'));
+						
+						list.push(datalist);
+					});
+					//alert(list);
+					dataToPost.LISTPS = list;
+					$('#loadding').fadeIn(200);
+					KB_importdb = $.ajax({
+						url:'../SYS04/SetCarPriceSpecial/import_save',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						success: function(data){
+							if(data.error){
+								var msg = data.msg2.length;
+								var msgNum = "";
+								for(i=0;i<msg;i++){
+									if(i>0){ msgNum +="<br >";}
+									msgNum += (i+1)+". "+data.msg2[i];
+								}
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 8000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg1+="<br >"+msgNum
+								});
+							}else if(data.status){
+								Lobibox.notify('success', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 8000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}else{
+								Lobibox.notify('error', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 8000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.msg
+								});
+							}
+							
+							KB_importdb = null;
+							lobibox.destroy();
+							$('#loadding').fadeOut(200);
+						},
+						beforeSend: function(){ if(KB_importdb !== null){ KB_importdb.abort(); } }
+						
+						,error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+					});
+				}
+				
+				$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
+			}
+		});
 	});
 }

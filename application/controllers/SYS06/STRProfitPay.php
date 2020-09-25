@@ -126,7 +126,7 @@ class STRProfitPay extends MY_Controller {
 		.'||'.$_REQUEST['order']);
 		echo json_encode($this->generateData($data,"encode"));
 	}
-	function pdf(){
+	function pdftax(){
 		$data = array();
 		$data[] = $_REQUEST["condpdf"];
 		$arrs = $this->generateData($data,"decode");
@@ -235,7 +235,7 @@ class STRProfitPay extends MY_Controller {
 				select STRNO from {$this->MAuth->getdb('HINVTRAN')} where GCODE like '".$GCODE."%'
 			) order by A.".$order."
 		";
-		//echo $sql;
+		//echo $sql; exit;
 		$arrs = array();
 		$query = $this->db->query($sql);
 		if($query->row()){
@@ -301,8 +301,8 @@ class STRProfitPay extends MY_Controller {
 							) as STRPROF_T 
 							,isnull(
 								sum(case when DDATE > '".$T_DATE."'
-								then V_DAMT else 0 end),0
-							) as VT_DAMT 
+								then V_DAMT else 0 end)
+							,0) as VT_DAMT 
 						from {$this->MAuth->getdb('HARPAY')} where LOCAT = '".$row->LOCAT."' 
 						and  CONTNO = '".$row->CONTNO."'
 					)a

@@ -28,6 +28,7 @@ class CGroup extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$getdb = $this->param('database');
+		//print_r($getdb); exit;
 		$selectdb = "";
 		
 		for($i=0;$i<sizeof($getdb);$i++){

@@ -12,8 +12,8 @@ var _insert = $('.tab1[name="home"]').attr('cin');
 var _update = $('.tab1[name="home"]').attr('cup');
 var _delete = $('.tab1[name="home"]').attr('cdel');
 var _level  = $('.tab1[name="home"]').attr('clev');
-
-
+var _groupType  = $('.tab1[name="home"]').attr('groupType');
+var OBJfn_Save=null;
 
 var JDbtnt1search = null;
 $('#btnt1search').click(function(){
@@ -45,9 +45,7 @@ function redraw(){
 }
 
 var jdloadReceived = null;
-function loadReceived(){
-	dataToPost = new Object();
-	
+function loadReceived(dataToPost){
 	$('#loadding').fadeIn(200);
 	jdloadReceived = $.ajax({
 		url:'../SYS02/CreceiveStock/getfromReceived',
@@ -86,9 +84,13 @@ function fn_reactive($thisWindow){
 	$('#fa_recvno').attr('readonly',true);
 	
 	$('#fa_locat').select2({
+		disabled: (_groupType == 'OFF' ? true:false),
+	});
+	/*
+	$('#fa_locat').select2({
 		placeholder: 'เลือก',
 		ajax: {
-			url: '../Cselect2/getLCOAT',
+			url: '../Cselect2/getLOCAT',
 			data: function (params) {
 				dataToPost = new Object();
 				dataToPost.now = (typeof $('#fa_locat').find(':selected').val() === 'undefined' ? '':$('#fa_locat').find(':selected').val());
@@ -111,7 +113,10 @@ function fn_reactive($thisWindow){
 		//theme: 'classic',
 		width: '100%'
 	});
+	*/
 	
+	$('#fa_apmast').select2();
+	/*
 	$('#fa_apmast').select2({
 		placeholder: 'เลือก',
 		ajax: {
@@ -138,11 +143,13 @@ function fn_reactive($thisWindow){
 		//theme: 'classic',
 		width: '100%'
 	});
+	*/
 	
 	$('#add_newcar').click(function(){
 		$('#add_newcar').attr('disabled',true);
 		$('#loadding').fadeIn(200);
 		dataToPost = new Object();
+		dataToPost.locat = (typeof $('#fa_locat').find(':selected').val() === "undefined" ? "":$('#fa_locat').find(':selected').val());
 		
 		jdadd_newcar = $.ajax({
 			url:'../SYS02/CreceiveStock/getfromADDSTRNO',
@@ -156,12 +163,14 @@ function fn_reactive($thisWindow){
 					height: $(window).height() - 100,
 					content: data.html,
 					draggable: false,
-					closeOnEsc: true,
+					closeOnEsc: false,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($this){
 						fn_fromADDSTRNO($this);
 					},
 					beforeClose: function(){
 						$('#add_newcar').attr('disabled',false);
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 					}
 				});
 				
@@ -199,9 +208,53 @@ function fn_Save(){
 	dataToPost.fltax  = ($('#fa_fltax').is(':checked') ? 'Y':'N');
 	dataToPost.memo1  = $('#fa_memo1').val();
 	
-	$.ajax({
-		url:'xxx',
-		data:dataToPost
+	$dataSTR = [];
+	$(".del_newcar").each(function(){
+		var row = new Object();
+		row.type		= $(this).attr('type');
+		row.model		= $(this).attr('model');
+		row.baab		= $(this).attr('baab');
+		row.color 		= $(this).attr('color');
+		row.cc 			= $(this).attr('cc');
+		row.strno 		= $(this).attr('strno');
+		row.engno 		= $(this).attr('engno');
+		row.keyno 		= $(this).attr('keyno');
+		row.rvcode 		= $(this).attr('rvcode');
+		row.rvcodnam 	= $(this).attr('rvcodnam');
+		row.rvlocat 	= $(this).attr('rvlocat');
+		row.refno 		= $(this).attr('refno');
+		row.milert 		= $(this).attr('milert');
+		row.stdprc 		= $(this).attr('stdprc');
+		row.crcost 		= $(this).attr('crcost');
+		row.disct 		= $(this).attr('disct');
+		row.netcost 	= $(this).attr('netcost');
+		row.vatrt 		= $(this).attr('vatrt');
+		row.crvat 		= $(this).attr('crvat');
+		row.totcost 	= $(this).attr('totcost');
+		row.gcode 		= $(this).attr('gcode');
+		row.gdesc 		= $(this).attr('gdesc');
+		row.menuyr 		= $(this).attr('menuyr');
+		row.bonus 		= $(this).attr('bonus');
+		row.stat 		= $(this).attr('stat');
+		row.statname	= $(this).attr('statname');
+		row.memo1 		= $(this).attr('memo1');
+		
+		$dataSTR.push(row);
+	});
+	dataToPost.dataSTR 	 = ($dataSTR.length == 0 ? "":JSON.stringify($dataSTR));
+	
+	$('#loadding').fadeIn(200);
+	OBJfn_Save = $.ajax({
+		url:'../SYS02/CreceiveStock/Save',
+		data:dataToPost,
+		type:'POST',
+		dataType:'json',
+		beforeSend: function(){ if(OBJfn_Save !== null){ OBJfn_Save.abort(); }},
+		success:function(data){
+			
+			OBJfn_Save = null;
+			$('#loadding').fadeOut(200);
+		}
 	});
 }
 
@@ -306,7 +359,7 @@ function fn_fromADDSTRNO($thisASTRNO){
 	$('#fc_color').select2({
 		placeholder: 'เลือก',
         ajax: {
-			url: '../Cselect2/getCOLORSTOCK',
+			url: '../Cselect2/getJDCOLOR',
 			data: function (params) {
 				dataToPost = new Object();
 				dataToPost.now 	 = (typeof $('#fc_color').find(':selected').val() === 'undefined' ? '':$('#fc_color').find(':selected').val());
@@ -408,7 +461,7 @@ function fn_fromADDSTRNO($thisASTRNO){
         },
 		allowClear: false,
 		multiple: false,
-		disabled: false,
+		disabled: (_groupType == "OFF" ? true:false),
 		//theme: 'classic',
 		width: '100%'
 	});
@@ -529,8 +582,77 @@ function fn_fromADDSTRNO($thisASTRNO){
 }
 
 $('#btnt1receiveStock').click(function(){
-	loadReceived();
+	dataToPost = new Object();
+	dataToPost.action = "manual";
+	dataToPost.obj = "";
+	loadReceived(dataToPost);
 });
+
+var OBJbtnt1UploadStock=null;
+$('#btnt1UploadStock').click(function(){
+	OBJbtnt1UploadStock = $.ajax({
+		url:'../SYS02/CreceiveStock/FormUPLOAD',
+		type: 'POST',
+		dataType: 'json',
+		beforeSend: function(){ if(OBJbtnt1UploadStock !== null){ OBJbtnt1UploadStock.abort(); } },
+		success: function(data){
+			Lobibox.window({
+				title: 'รับรถเข้าสต๊อค (Upload)',
+				//width: $(window).width(),
+				height: '200',
+				content: data.html,
+				draggable: false,
+				closeOnEsc: false,
+				shown: function($this){
+					$("#form_std").uploadFile({		
+						url:'../SYS02/CreceiveStock/checkFileUpload',
+						fileName:'myfile',
+						autoSubmit: true,
+						acceptFiles: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+						allowedTypes: 'xls,xlsx',
+						onSubmit:function(files){			
+							$("#loadding").fadeIn(200);
+						},
+						onSuccess:function(files,data,xhr,pd){
+							obj = JSON.parse(data);
+							
+							if(obj["error"]){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: false,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: obj["errorMassage"]
+								});
+							}else{
+								dataToPost = new Object();
+								dataToPost.action = "autoupload";
+								dataToPost.obj = JSON.stringify(obj["data"]);
+								loadReceived(dataToPost);
+
+								$this.destroy();
+							}
+							
+							$("#loadding").fadeOut(200);
+						}
+					});
+					
+					$("#form_import").unbind('click');
+					$("#form_import").click(function(){
+						window.open("../public/form_upload/upload_cycle_multiple.xlsx");
+					});
+				}
+			});		
+			
+			OBJbtnt1UploadStock = null;
+		}
+	});			
+});
+
 
 
 

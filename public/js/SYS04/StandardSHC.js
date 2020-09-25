@@ -146,6 +146,7 @@ function fn_after_upload_stdshc(data,events,thisWindow){
 			$html += "<td>"+data.data[i]["typecod"]+"</td>";
 			$html += "<td style='"+(data.data[i]["setmodel"] == "NOT" ? "background-color:pink;color:red;":"")+"'>"+data.data[i]["model"]+"</td>";
 			$html += "<td style='"+(data.data[i]["setbaab"] == "NOT" ? "background-color:pink;color:red;":"")+"'>"+data.data[i]["baab"]+"</td>";
+			$html += "<td>"+data.data[i]["manuyr"]+"</td>";
 			$html += "<td style='"+(data.data[i]["setgroup"] == "NOT" ? "background-color:pink;color:red;":"")+"'>"+data.data[i]["gcode"]+"</td>";
 			$html += "<td align='right'>"+data.data[i]["nprice"]+"</td>";
 			$html += "<td align='right'>"+data.data[i]["oprice"]+"</td>";
@@ -182,7 +183,7 @@ function fn_after_upload_stdshc(data,events,thisWindow){
 		if(events == "new"){
 			var $html2 = "<div id='DivReload' style='width:100%;height:calc(100vh - 100px);overflow:auto;'>";
 			$html2+= "<table id='table_confirm_upstdshc' class='table' style='width:100%;'>";
-			$html2+= "  <thead class='thead-dark'><tr><th>#</th><th>ยี่ห้อ</th><th>รุ่น</th><th>แบบ</th><th>กิจกรรมการขาย</th><th>ราคารถใหม่</th><th>ราคามือสอง</th><th>สี</th><th>สาขา</th></tr></thead>";
+			$html2+= "  <thead class='thead-dark'><tr><th>#</th><th>ยี่ห้อ</th><th>รุ่น</th><th>แบบ</th><th>ปีรถ</th><th>ประเภทรถ</th><th>ราคารถใหม่</th><th>ราคามือสอง</th><th>สี</th><th>สาขา</th></tr></thead>";
 			$html2+= "  <tbody>"+$html+"</tbody></table></div>";
 			$html2+= "<div class='col-sm-12' align='right'><button id='mp_save' class='btn btn-xs btn-primary'><span class='glyphicon glyphicon-upload'> นำเข้า</span></button></div>";
 			Lobibox.window({
@@ -266,66 +267,91 @@ function fn_import($thisForm){
 	var JDmp_save = null;
 	$("#mp_save").unbind('click');
 	$("#mp_save").click(function(){
-		$data = new Array();
-		$('.mp_stdshc').each(function(){
-			in_data = new Object();
-			in_data.model  = $(this).attr('MODEL');
-			in_data.baab   = $(this).attr('BAAB');
-			in_data.year   = $(this).attr('YEAR');
-			in_data.gcode  = $(this).attr('GCODE');
-			in_data.nprice = $(this).attr('NPRICE');
-			in_data.oprice = $(this).attr('OPRICE');
-			in_data.color  = $(this).attr('COLOR');
-			in_data.locat  = $(this).attr('LOCAT');
-			
-			$data.push(in_data);
-		});
-		
-		dataToPost = new Object();
-		dataToPost.data = ($data.length > 0 ? $data:"");
-		
-		$('loadding').fadeIn(200);
-		JDmp_save = $.ajax({
-			url:'../SYS04/StandardSHC/import_save',
-			data: dataToPost,
-			type: 'POST',
-			dataType: 'json',
-			success: function(data){
-				if(data.error){
-					Lobibox.notify('warning', {
-						title: 'แจ้งเตือน',
-						size: 'mini',
-						closeOnClick: false,
-						delay: 5000,
-						pauseDelayOnHover: true,
-						continueDelayOnInactiveTab: false,
-						icon: true,
-						messageHeight: '90vh',
-						msg: data["errorMsg"]
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			iconClass: false,
+			closeButton: false,
+			msg: 'ยืนยันนำเข้าราคารถมือสอง',
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ยืนยัน ,นำเข้าสแตนดาร์ดรถมือสอง',
+					closeOnClick: true,
+				},
+				cancel : {
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ไว้ทีหลัง',
+					closeOnClick: true
+				},
+			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
+			callback: function(lobibox, type){
+				if (type === 'ok'){
+					$data = new Array();
+					$('.mp_stdshc').each(function(){
+						in_data = new Object();
+						in_data.model  = $(this).attr('MODEL');
+						in_data.baab   = $(this).attr('BAAB');
+						in_data.year   = $(this).attr('YEAR');
+						in_data.gcode  = $(this).attr('GCODE');
+						in_data.nprice = $(this).attr('NPRICE');
+						in_data.oprice = $(this).attr('OPRICE');
+						in_data.color  = $(this).attr('COLOR');
+						in_data.locat  = $(this).attr('LOCAT');
+						
+						$data.push(in_data);
 					});
-				}else{
-					Lobibox.window({
-						title: 'นำเข้าสแตนดาร์ดรถมือสอง',
-						width: $(window).width() - 100,
-						height: $(window).height() - 100,
-						content: data.html,
-						draggable: true,
-						closeOnEsc: false,
-						shown: function($this){
-							fn_datatables('mp_result',2,300);
-							$thisForm.destroy();
-						}
+					
+					dataToPost = new Object();
+					dataToPost.data = ($data.length > 0 ? $data:"");
+					
+					$('#loadding').fadeIn(200);
+					JDmp_save = $.ajax({
+						url:'../SYS04/StandardSHC/import_save',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						success: function(data){
+							if(data.error){
+								Lobibox.notify('warning', {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: 5000,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data["errorMsg"]
+								});
+							}else{
+								Lobibox.window({
+									title: 'นำเข้าสแตนดาร์ดรถมือสอง',
+									width: $(window).width() - 100,
+									height: $(window).height() - 100,
+									content: data.html,
+									draggable: true,
+									closeOnEsc: false,
+									shown: function($this){
+										fn_datatables('mp_result',2,300);
+										$thisForm.destroy();
+									}
+								});
+							}
+							
+							$('#loadding').fadeOut(200);
+						},
+						beforeSend: function(){
+							if(JDbtnt1search !== null){
+								JDbtnt1search.abort();
+							}
+						},
+						error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }	
 					});
 				}
 				
-				$('loadding').fadeOut(200);
-			},
-			beforeSend: function(){
-				if(JDbtnt1search !== null){
-					JDbtnt1search.abort();
-				}
-			},
-			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }	
+				$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
+			}
 		});
 	});
 }

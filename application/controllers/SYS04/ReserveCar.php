@@ -631,20 +631,24 @@ class ReserveCar extends MY_Controller {
 		$sql = "
 			select * from {$this->MAuth->getdb('fn_STDVehicles')}('{$arrs["MODEL"]}','{$arrs["BAAB"]}','{$arrs["COLOR"]}','{$arrs["STAT"]}','{$arrs["ACTICOD"]}','{$arrs["LOCAT"]}','{$arrs["RESVDT"]}')
 		";
-		//echo $sql; //exit;
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 			
 		if($query->row()){
 			foreach($query->result() as $row){
 				if($row->STAT == "N"){
-					$sql = "
-						select STDID,SUBID,case when '{$arrs["ACTICOD"]}' in (37,38) then PRICES else PRICE end PRICE
+					$qsql = "
+						select STDID,SUBID,'' as SHCID
+							,case when '{$arrs["ACTICOD"]}' in (37,38) then PRICES else PRICE end PRICE
 						from {$this->MAuth->getdb('STDVehiclesPRICE')}
-						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
+						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."' and ACTIVE='yes'
 					";
 				}else{
-					$sql = "
-						select a.ID as STDID,b.OPRICE as PRICE,'' as SUBID
+					$qsql = "
+						select ".$row->STDID." as STDID
+							,".$row->SUBID." as SUBID
+							,a.ID as SHCID
+							,b.OPRICE as PRICE
 						from {$this->MAuth->getdb('STDSHCAR')} a
 						left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
 						left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
@@ -658,13 +662,14 @@ class ReserveCar extends MY_Controller {
 					";
 				}
 				//echo $sql; exit;
-				$query = $this->db->query($sql);
+				$qquery = $this->db->query($qsql);
 				
-				if($query->row()){
-					foreach($query->result() as $row){
-						$response["STDID"] = $row->STDID;
-						$response["SUBID"] = $row->SUBID;
-						$response["PRICE"] = $row->PRICE;
+				if($qquery->row()){
+					foreach($qquery->result() as $qrow){
+						$response["STDID"] = $qrow->STDID;
+						$response["SUBID"] = $qrow->SUBID;
+						$response["SHCID"] = $qrow->SHCID;
+						$response["PRICE"] = $qrow->PRICE;
 					}
 				}else{
 					$response["error"] = true;
@@ -760,6 +765,7 @@ class ReserveCar extends MY_Controller {
 		$arrs["PRICE"] 		= $_POST["PRICE"];
 		$arrs["STDID"] 		= $_POST["STDID"];
 		$arrs["SUBID"] 		= $_POST["SUBID"];
+		$arrs["SHCID"] 		= $_POST["SHCID"];
 		$arrs["RESPAY"] 	= $_POST["RESPAY"];
 		$arrs["BALANCE"] 	= $_POST["BALANCE"];
 		$arrs["RECVDUE"] 	= $this->Convertdate(1,$_POST["RECVDUE"]);
@@ -852,7 +858,7 @@ class ReserveCar extends MY_Controller {
 					declare @RESVNO varchar(12) = isnull((select MAX(RESVNO) from {$this->MAuth->getdb('ARRESV')} where RESVNO like ''+@rec+'%'),@rec+'0000');
 					set @RESVNO = left(@RESVNO ,8)+right(right(@RESVNO ,4)+10001,4);
 					
-					if exists (select * from {$this->MAuth->getdb('ARRESV')} where RESVNO=@RESVNO)
+					if exists (select * from {$this->MAuth->getdb('ARRESV')} where RESVNO=@RESVNO collate thai_cs_as)
 					begin
 						rollback tran tst;
 						insert into #transaction select 'Y' as id,'','ผิดพลาด เลขที่ใบจองถูกใช้ไปแล้ว โปรดทำรายการใหม่อีกครั้ง' as msg;
@@ -932,21 +938,31 @@ class ReserveCar extends MY_Controller {
 				begin try 
 					if exists (
 						select * from {$this->MAuth->getdb('ARANALYZE')}
-						where RESVNO='".$arrs["RESVNO"]."' and ANSTAT != 'C'
-					) or exists (
+						where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as and ANSTAT not in ('C','I','P') 
+					) 
+					begin
+						rollback tran tst;
+						insert into #transaction select 'Y' as id,'','ผิดพลาด เลขที่บิลจองถูกนำไปใช้แล้ว (A)  ไม่สามารถแก้ไขบิลจองได้อีก' as msg;
+						return;
+					end
+					
+					if exists (
 						select * from {$this->MAuth->getdb('INVTRAN')}
-						where RESVNO='".$arrs["RESVNO"]."' and isnull(CONTNO,'') != ''
+						where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as and isnull(CONTNO,'') != ''
 					)
 					begin
 						rollback tran tst;
-						insert into #transaction select 'Y' as id,'','ผิดพลาด เลขที่บิลจองถูกนำไปใช้แล้ว ไม่สามารถแก้ไขบิลจองได้อีก' as msg;
+						insert into #transaction select 'Y' as id,'','ผิดพลาด เลขที่บิลจองถูกนำไปใช้แล้ว (I) ไม่สามารถแก้ไขบิลจองได้อีก' as msg;
 						return;
 					end
 				
+					declare @STRNO varchar(50) = (
+						select STRNO from {$this->MAuth->getdb('ARRESV')} 
+						where RESVNO='".$arrs["RESVNO"]."'
+					);
+					
 					if ('".$arrs["STRNO"]."' = '')
 					begin
-						declare @STRNO varchar(50) = (select STRNO from {$this->MAuth->getdb('ARRESV')} where RESVNO='".$arrs["RESVNO"]."');
-						
 						if isnull(@STRNO,'') <> ''
 						begin
 							update {$this->MAuth->getdb('INVTRAN')}
@@ -980,6 +996,7 @@ class ReserveCar extends MY_Controller {
 						set ACTICOD='".$arrs["ACTICOD"]."'
 							,STDID='".$arrs["STDID"]."'
 							,SUBID='".$arrs["SUBID"]."'
+							,SHCID='".$arrs["SHCID"]."'
 							,REF='".strtoupper($this->sess["db"])."'
 						where RESVNO='".$arrs["RESVNO"]."'
 					end 
@@ -1004,8 +1021,65 @@ class ReserveCar extends MY_Controller {
 						,GRPCOD	 = '".$arrs["GCODE"]."'
 						,MEMO1 	 = '".$arrs["MEMO1"]."'
 						,PRICE	 = '".$arrs["PRICE"]."'
-						,BALANCE = '".$arrs["BALANCE"]."'						
+						,BALANCE = '".$arrs["BALANCE"]."'
 					where RESVNO='".$arrs["RESVNO"]."'
+					
+					if exists(
+						select * from {$this->MAuth->getdb('ARANALYZE')}
+						where RESVNO='".$arrs["RESVNO"]."' and ANSTAT in ('C','I','P') 
+					)
+					begin
+						
+						if exists (
+							select * from {$this->MAuth->getdb('STDVehicles')} sa
+							left join {$this->MAuth->getdb('STDVehiclesDetail')} sb on sa.STDID=sb.STDID
+							where sa.STDID='".$arrs["STDID"]."' and sb.SUBID='".$arrs["SUBID"]."' and sb.STAT='N'
+						)
+						begin
+							update {$this->MAuth->getdb('ARANALYZE')}
+							set STRNO 	 = '".$arrs["STRNO"]."'
+								,MODEL   = '".$arrs["MODEL"]."'
+								,BAAB	 = '".$arrs["BAAB"]."'
+								,COLOR	 = '".$arrs["COLOR"]."'
+								,STAT	 = '".$arrs["STAT"]."'
+								,GCODE	 = '".$arrs["GCODE"]."'
+								,PRICE	 = '".$arrs["PRICE"]."'
+								,STDID	 = '".$arrs["STDID"]."'
+								,SUBID	 = '".$arrs["SUBID"]."'
+								,ACTICOD = '".$arrs["ACTICOD"]."'
+								,INTEREST_RT = (
+									select INTERESTRT from {$this->MAuth->getdb('STDVehiclesDown')} sa
+									where sa.STDID='".$arrs["STDID"]."' and sa.SUBID='".$arrs["SUBID"]."' 
+										and DWN between sa.DOWNS and sa.DOWNE
+								)
+							where RESVNO='".$arrs["RESVNO"]."' and ANSTAT in ('C','I','P') 
+						end
+						else if exists (
+							select * from {$this->MAuth->getdb('STDVehicles')} sa
+							left join {$this->MAuth->getdb('STDVehiclesDetail')} sb on sa.STDID=sb.STDID
+							where sa.STDID='".$arrs["STDID"]."' and sb.SUBID='".$arrs["SUBID"]."' and sb.STAT='O'
+						)
+						begin
+							update {$this->MAuth->getdb('ARANALYZE')}
+							set STRNO 	 = '".$arrs["STRNO"]."'
+								,MODEL   = '".$arrs["MODEL"]."'
+								,BAAB	 = '".$arrs["BAAB"]."'
+								,COLOR	 = '".$arrs["COLOR"]."'
+								,STAT	 = '".$arrs["STAT"]."'
+								,GCODE	 = '".$arrs["GCODE"]."'
+								,PRICE	 = '".$arrs["PRICE"]."'
+								,STDID	 = '".$arrs["STDID"]."'
+								,SUBID	 = '".$arrs["SUBID"]."'
+								,ACTICOD = '".$arrs["ACTICOD"]."'
+								,INTEREST_RT = (
+									select INTERESTRT from {$this->MAuth->getdb('STDVehiclesDown')} sa
+									where sa.STDID='".$arrs["STDID"]."' and sa.SUBID='".$arrs["SUBID"]."' 
+										and DWN between sa.DOWNS and sa.DOWNE
+										and ".$arrs["PRICE"]." between sa.PRICES and sa.PRICEE
+								)
+							where RESVNO='".$arrs["RESVNO"]."' and ANSTAT in ('C','I','P') 
+						end
+					end
 					
 					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 					values ('".$this->sess["IDNo"]."','SYS04::บันทึกบิลจองแล้ว (แก้ไข)','".$arrs["RESVNO"]." :: ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');

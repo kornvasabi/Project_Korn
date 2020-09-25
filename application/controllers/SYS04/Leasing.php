@@ -1,4 +1,5 @@
 <?php
+error_reporting(0);
 defined('BASEPATH') OR exit('No direct script access allowed');
 /********************************************************
              ______@08/03/2019______
@@ -3312,20 +3313,20 @@ class Leasing extends MY_Controller {
 			SET NOCOUNT ON;
 			begin tran leasingTran
 			begin try
-			
+				declare @daterun datetime = '".$arrs["sdate"]."';
 				/* @symbol = สัญลักษณ์แทนประเภทของเลขที่ นั้นๆ */
 				declare @symbol varchar(10) = (select H_MASTNO from {$this->MAuth->getdb('CONDPAY')});
 				/* @rec = รหัสพื้นฐาน */
-				declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs['locat']."');
+				declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),@daterun,112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs['locat']."');
 				/* @RESVNO = รหัสที่จะใช้ */
 				declare @CONTNO varchar(12) = isnull((select MAX(CONTNO) from {$this->MAuth->getdb('ARMAST')} where CONTNO like ''+@rec+'%' collate thai_cs_as),@rec+'0000');
 				set @CONTNO = left(@CONTNO,8)+right(right(@CONTNO,4)+10001,4);
 				
 				set @symbol = (select H_TXMAST from {$this->MAuth->getdb('CONDPAY')});
-				set @rec = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs["locat"]."');
+				set @rec = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),@daterun,112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs["locat"]."');
 				
 				declare @TAXNO varchar(12) = isnull((select MAX(TAXNO) from {$this->MAuth->getdb('TAXTRAN')} where TAXNO like ''+@rec+'%' collate thai_cs_as),@rec+'0000');
-				declare @TAXDT datetime = (select convert(varchar(8),getdate(),112));
+				declare @TAXDT datetime = (select convert(varchar(8),@daterun,112));
 				set @TAXNO = left(@TAXNO ,8)+right(right(@TAXNO ,4)+10001,4);
 				
 				if(".$arrs["vatrt"]." = '0.00')
@@ -3333,6 +3334,40 @@ class Leasing extends MY_Controller {
 					set @TAXNO = null;
 					set @TAXDT = null;
 				END
+				
+				/* @anutin.s 20200804 */
+				if exists (
+					select * from {$this->MAuth->getdb('ARRESV')} a 
+					left join (
+						select * from {$this->MAuth->getdb('INVTRAN')}
+						where STRNO='".$arrs['strno']."' collate thai_cs_as 
+							and isnull(RESVNO,'') = ''
+							and RESVDT is null
+							and CURSTAT != 'R'
+					) as b on a.TYPE=b.TYPE collate thai_cs_as 
+						and a.MODEL=b.MODEL collate thai_cs_as 
+						and a.BAAB=b.BAAB collate thai_cs_as 
+						and a.COLOR=b.COLOR collate thai_cs_as 
+						and a.CC=b.CC 
+					where a.RESVNO='".$arrs['resvno']."' collate thai_cs_as and isnull(a.STRNO,'')=''
+				)
+				begin 
+					update {$this->MAuth->getdb('INVTRAN')}
+					set RESVNO='".$arrs['resvno']."'
+						,RESVDT=(
+							select RESVDT from {$this->MAuth->getdb('ARRESV')} 
+							where RESVNO='".$arrs['resvno']."' collate thai_cs_as 
+						)
+						,CURSTAT = 'R'
+					where STRNO='".$arrs['strno']."' collate thai_cs_as 
+						and isnull(RESVNO,'') = ''
+						and RESVDT is null
+						and CURSTAT != 'R'
+						
+					update {$this->MAuth->getdb('ARRESV')}	
+					set STRNO='".$arrs['strno']."'
+					where RESVNO='".$arrs['resvno']."' collate thai_cs_as and isnull(STRNO,'')=''
+				end
 				
 				insert into {$this->MAuth->getdb('ARMAST')} (
 					[CONTNO],[LOCAT],[CUSCOD],[ADDRNO],[RESVNO]
@@ -3695,12 +3730,18 @@ class Leasing extends MY_Controller {
 	}
 	
 	function effpdf(){
+		error_reporting(0);
+		
+		$data = $this->generateData(array($_REQUEST["contno"]),"decode");
+		$_REQUEST['contno'] = $data[0];
+		//echo $_REQUEST['contno']; exit;
+		
 		$mpdf = new \Mpdf\Mpdf([
 			'mode' => 'utf-8', 
 			'format' => 'A4',
-			'margin_top' => 0, 	//default = 16
-			'margin_left' => 15, 	//default = 15
-			'margin_right' => 15, 	//default = 15
+			'margin_top' => 9, 	//default = 16
+			'margin_left' => 9, 	//default = 15
+			'margin_right' => 9, 	//default = 15
 			'margin_bottom' => 16, 	//default = 16
 			'margin_header' => 9, 	//default = 9
 			'margin_footer' => 9, 	//default = 9
@@ -3732,8 +3773,88 @@ class Leasing extends MY_Controller {
 			"INTRT"=>"",
 			"EFF"=>0,
 			"NKANG"=>0,
-			"head"=>"",
+			"tbBody"=>"",
 		);
+		
+		$sql = "
+			declare @contno varchar(20) = '{$_REQUEST['contno']}';
+			declare @locat varchar(20) = (select LOCAT from {$this->MAuth->getdb('ARMAST')} where CONTNO=@contno);
+
+			select a.CONTNO,b.SNAM,b.NAME1,b.NAME2,convert(varchar(8),a.SDATE,112) as SDATE
+				,a.STRNO,c.TYPE,c.MODEL,c.BAAB,c.COLOR,c.CC
+				,a.TCSHPRC,a.TOTPRC,a.TOTDWN,a.T_NOPAY
+				,convert(varchar(8),a.FDATE,112) as FDATE,convert(varchar(8),a.LDATE,112) as LDATE,a.DLDAY
+				,a.TOTPRC-a.TCSHPRC as NKANG
+				,p.NOPAY,a.INTRT
+				,convert(varchar(8),p.DDATE,112) as DDATE
+				,z.AMT,cast(z.EFF as decimal(18,6)) as EFF
+				,cast(z.BALANCE as decimal(18,2)) as BALANCE 
+				,cast(z.FPRINCIPLE as decimal(18,2)) as FPRINCIPLE
+				,cast(z.FPROFIT as decimal(18,2)) as FPROFIT
+				,cast(z.VAT as decimal(18,2)) as VAT
+				,cast(z.APRINCIPLE as decimal(18,2)) as APRINCIPLE
+				,cast(z.APROFIT as decimal(18,2)) as APROFIT
+				,cast(z.DISCOUNT as decimal(18,2)) as DISCOUNT
+			from {$this->MAuth->getdb('ARMAST')} a
+			left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD = b.CUSCOD
+			left join {$this->MAuth->getdb('INVTRAN')} c on a.STRNO = c.STRNO 
+			left join {$this->MAuth->getdb('ARPAY')} p  on a.CONTNO = p.CONTNO and a.LOCAT = p.LOCAT 
+			left join {$this->MAuth->getdb('fn_leasing')}(@contno, @locat) z on p.NOPAY=z.NOPAY
+			where  a.TOTPRC > 0 
+				and a.CONTNO = @contno 
+				and a.LOCAT = @locat
+			order by a.CONTNO,p.NOPAY
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$dataHead["STRNO"] = $row->STRNO;
+				$dataHead["TYPE"] = $row->TYPE;
+				$dataHead["MODEL"] = $row->MODEL;
+				$dataHead["BAAB"] = $row->BAAB;
+				$dataHead["COLOR"] = $row->COLOR;
+				$dataHead["CC"] = $row->CC;
+				
+				$dataHead["CONTNO"] = $row->CONTNO;
+				$dataHead["SNAM"] = $row->SNAM;
+				$dataHead["NAME1"] = $row->NAME1;
+				$dataHead["NAME2"] = $row->NAME2;
+				$dataHead["SDATE"] = $row->SDATE;
+				
+				$dataHead["TCSHPRC"] = $row->TCSHPRC;
+				$dataHead["TOTPRC"] = $row->TOTPRC;
+				$dataHead["TOTDWN"] = $row->TOTDWN;
+				$dataHead["T_NOPAY"] = $row->T_NOPAY;
+				
+				$dataHead["FDATE"] = $row->FDATE;
+				$dataHead["LDATE"] = $row->LDATE;
+				$dataHead["DLDAY"] = $row->DLDAY;
+				
+				$dataHead["INTRT"] = $row->INTRT;
+				$dataHead["EFF"] = $row->EFF;
+				$dataHead["NKANG"] = $row->NKANG;
+				
+				$css = "";
+				if($row->T_NOPAY == $row->NOPAY){
+					$css = " style='border-bottom:0.1px solid black;'";
+				}
+				$dataHead["tbBody"] .= "
+					<tr>
+						<td {$css}>".$row->NOPAY."</td>
+						<td {$css} align='center'>".$this->Convertdate(2,$row->DDATE)."</td>
+						<td {$css} align='right'>".number_format($row->AMT,2)."</td>
+						<td {$css} align='right'>".number_format($row->FPRINCIPLE,2)."</td>
+						<td {$css} align='right'>".number_format($row->FPROFIT,2)."</td>
+						<td {$css} align='right'>".number_format($row->VAT,2)."</td>
+						<td {$css} align='right'>".number_format($row->APRINCIPLE,2)."</td>
+						<td {$css} align='right'>".number_format($row->APROFIT,2)."</td>
+						<td {$css} align='right'>".number_format($row->DISCOUNT,2)."</td>
+					</tr>
+				";
+			}
+		}
 		
 		$content = "
 			<table style='width:100%;'>
@@ -3742,7 +3863,7 @@ class Leasing extends MY_Controller {
 					<td align='center' style='font-size:16pt;'>
 						<b>ตารางแสดงภาระหนี้ตามสัญญา </b>
 					</td>
-					<td align='right' style='width:200px;font-size:9pt;'>{PAGENO} / {nbpg}</td>
+					<td align='right' style='width:200px;font-size:9pt;color:#fff;'>{PAGENO} / {nbpg}</td>
 				</tr>
 				<tr>
 					<td colspan='3'>&emsp;</td>
@@ -3798,12 +3919,29 @@ class Leasing extends MY_Controller {
 				<div style='text-align:left;width:100px;height:40px;float:left;border:0px;'>".number_format($dataHead["NKANG"],2)." บาท</div>
 			</div>
 			
-			<table style='font-size:8.5pt;'>".$dataHead['head']."</table>
+			<table style='font-family: garuda;font-size:7pt;width:100%;border-collapse:collapse;line-height:16px;' border=0>
+				<tr>
+					<th rowspan='2' style='width:75px;border:0.1px solid black;'>งวด​ที่</th>
+					<th rowspan='2' style='width:75px;border:0.1px solid black;'>วัน​ที่​ชําระ<br>ค่า​เช่า​ซื้อ</th>
+					<th rowspan='2' style='width:100px;border:0.1px solid black;'>จํานว​นเงิน<br>ค่า​เช่า​ซื้อ<br>(ร​ายง​วด)</th>
+					<th colspan='3' style='width:200px;border:0.1px solid black;'>การนําเงิน​ค่า​งวด​เช่า​ซื้อ​ไป​</th>
+					<th colspan='2' style='width:200px;border:0.1px solid black;'>จํานวน​เงิน​ค่า​เช่า​ซื้อ​คง​ค้า​ง</th>
+					<th rowspan='2' style='width:150px;border:0.1px solid black;'>ส่วน​ลด<br>ดอกเบี้ย​เช่า​ซื้อ<br>ห้า​สิบ​เปอร์​เซ็น​ต์ (50%)</th>
+				</tr>
+				<tr>
+					<th style='border:0.1px solid black;'>เงิน​ต้น</th>
+					<th style='border:0.1px solid black;'>ดอก​เบี้​ย<br>ค่า​เช่า​ซื้อ</th>
+					<th style='border:0.1px solid black;'>ภา​ษี<br>มูล​ค่า​เพิ่ม</th>
+					<th style='border:0.1px solid black;'>เงินต้น<br>คงค้าง</th>
+					<th style='border:0.1px solid black;'>ดอกเบี้ย<br>เช่าซื้อ</th>
+				</tr>
+				".$dataHead['tbBody']."
+			</table>
 		";
 		
 		$stylesheet = "
 			<style>
-				body { font-family: garuda;font-size:10pt; }
+				body { font-family: garuda;font-size:9pt; }
 				.wf { width:100%; }
 				.h10 { height:10px; }
 				.tc { text-align:center; }
@@ -3815,7 +3953,7 @@ class Leasing extends MY_Controller {
 		";
 		
 		$mpdf->WriteHTML($content.$other.$stylesheet);
-		$mpdf->SetHTMLFooter("<div class='wf pf' style='top:1060;left:0;font-size:6pt;width:720px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
+		$mpdf->SetHTMLFooter("<div class='wf pf' style='top:1060;left:0;font-size:6pt;width:730px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
 		$mpdf->Output();
 	}
@@ -4171,10 +4309,29 @@ class Leasing extends MY_Controller {
 			</style>
 		";
 		
+		$mpdf->SetCompression(true);
 		$mpdf->WriteHTML($content.$other.$stylesheet);
 		$mpdf->SetHTMLFooter("<div class='wf pf' style='top:1060;left:0;font-size:6pt;width:720px;text-align:right;'>{$this->sess["name"]} ออกเอกสาร ณ วันที่ ".date('d/m/').(date('Y')+543)." ".date('H:i')."</div>");
 		$mpdf->fontdata['qanela'] = array('R' => "QanelasSoft-Regular.ttf",'B' => "QanelasSoft-Bold.ttf",); //แก้ปริ้นแล้วอ่านไม่ออก
 		$mpdf->Output();
+	}
+	
+	function readpdf(){
+		require_once __DIR__ . '/vendor/autoload.php';
+		$mpdf = new \Mpdf\Mpdf();
+		
+		$mpdf->SetImportUse();
+
+		$pagecount = $mpdf->SetSourceFile('../../public/3646296470736e49c3efc34ebc163457.pdf');
+
+		// Import the last page of the source PDF file
+		$tplId = $mpdf->ImportPage($pagecount);
+		$mpdf->UseTemplate($tplId);
+		
+		$mpdf->WriteHTML('Hello World');
+		$mpdf->Output();
+
+		//echo "<iframe src='../../public/3646296470736e49c3efc34ebc163457.pdf'/>";
 	}
 	
 	// 20191009 created
@@ -5023,11 +5180,14 @@ class Leasing extends MY_Controller {
 					$qref = $this->db->query($sql);
 					
 					if($qref->row()){
+						$i = 1;
 						foreach($qref->result() as $row_qref){
-							$data['REF'][$row_qref->CUSTYPE]['rank'] = $row_qref->CUSTYPE;
-							$data['REF'][$row_qref->CUSTYPE]['cuscod'] = $row_qref->CUSCOD;
-							$data['REF'][$row_qref->CUSTYPE]['refname'] = $row_qref->REFNAME;
-							$data['REF'][$row_qref->CUSTYPE]['relation'] = '';
+							$data['REF'][$i]['rank'] = $row_qref->CUSTYPE;
+							$data['REF'][$i]['cuscod'] = $row_qref->CUSCOD;
+							$data['REF'][$i]['refname'] = $row_qref->REFNAME;
+							$data['REF'][$i]['relation'] = '';
+							
+							$i += 1;
 						}
 					}
 				}

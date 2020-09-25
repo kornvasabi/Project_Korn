@@ -916,11 +916,26 @@ class Sell extends MY_Controller {
 				
 				if($row->STAT == "N"){
 					$sql = "
-						select STDID,SUBID,0 as SHCID,PRICE,0 as PRICE_ADD from {$this->MAuth->getdb('STDVehiclesPRICE')}
+						declare @PRICE_SPECIAL decimal(18,2) = (
+							select PRICE from {$this->MAuth->getdb('STDSpecial')} 
+							where STRNO='".$strno."'
+								and '".$sdate."' between StartDT and isnull(EndDT,'".$sdate."')
+						);
+						
+						select STDID,SUBID,0 as SHCID
+							,isnull(@PRICE_SPECIAL,PRICE) as PRICE
+							,0 as PRICE_ADD 
+						from {$this->MAuth->getdb('STDVehiclesPRICE')}
 						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
 					";
 				}else{
 					$sql = "
+						declare @PRICE_SPECIAL decimal(18,2) = (
+							select PRICE from {$this->MAuth->getdb('STDSpecial')} 
+							where STRNO='".$strno."'
+								and '".$sdate."' between StartDT and isnull(EndDT,'".$sdate."')
+						);
+					
 						declare @CONTNO varchar(12) = '".$data["CONTNO"]."';
 						declare @STAT varchar(1)  = (case when @CONTNO = '' 
 							then 'O' else (select STAT from {$this->MAuth->getdb('HINVTRAN')} where CONTNO=@CONTNO) end);
@@ -934,16 +949,16 @@ class Sell extends MY_Controller {
 							,'{$row->SUBID}' as SUBID
 							,a.ID as SHCID
 						
-							,b.OPRICE as PRICE
+							,isnull(@PRICE_SPECIAL,b.OPRICE) as PRICE
 							,case when @STAT = 'N'
 								then (case when @price_add is null then 0 else @price_add end) else 0 end as PRICE_ADD
 						from {$this->MAuth->getdb('STDSHCAR')} a
 						left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
 						left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
 						left join {$this->MAuth->getdb('STDSHCARLocats')} d on a.ID=d.ID
-						where b.ACTIVE='yes' collate thai_ci_as 
+						where a.ACTIVE='yes' collate thai_ci_as  and b.ACTIVE='yes' collate thai_ci_as 
 							and a.MODEL='".$row->MODEL."' collate thai_cs_as
-							and a.BAAB='".$row->BAAB."' collate thai_cs_as 
+							and (case when a.BAAB = 'all' then '".$row->BAAB."' else a.BAAB end) = '".$row->BAAB."' collate thai_cs_as 
 							and (case when c.COLOR = 'ALL' then '".$row->COLOR."' else c.COLOR end) = '".$row->COLOR."' collate thai_cs_as 
 							and (case when d.LOCAT = 'ALL' then '".$row->LOCAT."' else d.LOCAT end) = '".$row->LOCAT."' collate thai_cs_as
 							and a.GCODE='".$data["GCODE"]."'

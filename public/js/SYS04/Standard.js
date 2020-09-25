@@ -35,6 +35,8 @@ $(function(){
 	}
 });
 
+
+
 var JDbtnt1search = null;
 $("#btnt1search").click(function(){
 	var dataToPost = new Object();
@@ -1993,7 +1995,7 @@ $("#btnt1import").click(function(){
 			Lobibox.window({
 				title: 'นำเข้ารายการสแตนดาร์ด',
 				//width: $(window).width(),
-				height: '200',
+				height: '250',
 				content: data.html,
 				draggable: false,
 				closeOnEsc: false,
@@ -2004,10 +2006,18 @@ $("#btnt1import").click(function(){
 						autoSubmit: true,
 						acceptFiles: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
 						allowedTypes: 'xls,xlsx',
-						onSubmit:function(files){			
+						dynamicFormData: function()
+						{
+							var dataToPost = new Object();
+							dataToPost.stat = $('input[type=radio][name=std_stat_upload]:checked').val();
+							
+							return dataToPost;        
+						},
+						onSubmit:function(files){
 							$("#loadding").fadeIn(200);
 						},
 						onSuccess:function(files,data,xhr,pd){
+							$('.ajax-file-upload-container').remove();
 							obj = JSON.parse(data);
 							
 							if(obj["error"]){
@@ -2020,7 +2030,7 @@ $("#btnt1import").click(function(){
 									continueDelayOnInactiveTab: false,
 									icon: true,
 									messageHeight: '90vh',
-									msg: obj["errorMsg"]
+									msg: obj["errorMessage"]
 								});
 							}else{
 								Lobibox.window({

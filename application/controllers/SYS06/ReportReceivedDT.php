@@ -254,9 +254,11 @@ class ReportReceivedDT extends MY_Controller {
 		}
 		$sql = "
 			IF OBJECT_ID('tempdb..#ONE') IS NOT NULL DROP TABLE #ONE
-			select LOCATRECV,TMBILL,convert(varchar(8),TMBILDT,112) as TMBILDT,CONTNO,LOCATPAY,PAYFOR,PAYTYP,PAYAMT,DISCT
-			,NPAYINT,NETPAY,USERID,INPDT,convert(varchar(8),INPTIME,112) as INPTIME_D,convert(varchar(8),INPTIME,114) as INPTIME_T
-			,FLAG,NAME,BAL,BILLCOLL,FINNAME,PAYINDT,CHQDT,BILLNO
+			select 
+				LOCATRECV,TMBILL,convert(varchar(8),TMBILDT,112) as TMBILDT,CONTNO,LOCATPAY,PAYFOR,PAYTYP
+				,PAYAMT,DISCT,NPAYINT,NETPAY,USERID,INPDT,convert(varchar(8),INPTIME,112) as INPTIME_D
+				,convert(varchar(8),INPTIME,114) as INPTIME_T,FLAG,NAME,BAL,BILLCOLL,FINNAME,PAYINDT,CHQDT
+				,BILLNO
 			into #ONE
 			FROM(
 				select A.LOCATRECV,A.TMBILL,A.TMBILDT,A.CONTNO,A.LOCATPAY,A.PAYFOR,A.PAYTYP,A.PAYAMT,A.DISCT
@@ -265,45 +267,47 @@ class ReportReceivedDT extends MY_Controller {
 
 				left join {$this->MAuth->getdb('CHQTRAN')} A on A.TMBILL = S.TMBILL and A.LOCATRECV = S.LOCATRECV
 				left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD = B.CUSCOD
-				left join (select CONTNO,STRNO,LOCAT,BILLCOLL,TOTPRC,SMPAY,'H' as TSALE,'' as FINCOD from {$this->MAuth->getdb('ARMAST')} where CONTNO in 
-				(select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV like '%".$LOCATRECV."%' and ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."')
-				union 
-				select CONTNO,STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'C' as TSALE,'''' as FINCOD from {$this->MAuth->getdb('ARCRED')}  
-				where CONTNO in (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV like '%".$LOCATRECV."%' and ".$MDT." 
-				BETWEEN '".$DATE1."' and '".$DATE2."')  
-				union
-				select CONTNO,STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'F' as TSALE,FINCOD 
-				from {$this->MAuth->getdb('ARFINC')} where CONTNO IN (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} 
-				where LOCATRECV LIKE '%".$LOCATRECV."%' and ".$MDT." BETWEEN 
-				'".$DATE1."' and '".$DATE2."')  
-				union
-				select CONTNO,'''' as STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'A' as TSALE,'''' as FINCOD from {$this->MAuth->getdb('AR_INVOI')}  
-				where CONTNO IN (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV LIKE '%".$LOCATRECV."%' 
-				AND ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."')
-				union
-				select CONTNO,'''' as STRNO,LOCAT,'''' as BILLCOLL,OPTPTOT as TOTPRC,SMPAY,'O' as TSALE,'''' as FINCOD 
-				from {$this->MAuth->getdb('AROPTMST')} where CONTNO IN (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} 
-				where LOCATRECV like '%".$LOCATRECV."%' AND ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."')
-				union
-				select CONTNO,STRNO,LOCAT,BILLCOLL,TOTPRC,SMPAY,'H' as TSALE,'''' as FINCOD from {$this->MAuth->getdb('HARMAST')}  
-				where CONTNO in (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV like '%".$LOCATRECV."%' 
-				and ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."') 
-				union
-				select CONTNO,STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'C' as TSALE,'''' as FINCOD from {$this->MAuth->getdb('HARCRED')} 
-				where CONTNO in (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV like '%".$LOCATRECV."%' 
-				and ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."') 
-				union
-				select CONTNO,STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'F' as TSALE,FINCOD from {$this->MAuth->getdb('HARFINC')}  
-				where CONTNO IN (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV LIKE '%".$LOCATRECV."%' 
-				and ".$MDT." BETWEEN '".$DATE2."' and '".$DATE1."')
-				union
-				select CONTNO,'''' as STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'A' as TSALE,'''' as FINCOD from {$this->MAuth->getdb('HAR_INVO')}  
-				where CONTNO IN (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV like '%".$LOCATRECV."%' 
-				and ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."') 
-				union
-				select CONTNO,'''' as STRNO,LOCAT,'''' as BILLCOLL,OPTPTOT as TOTPRC,SMPAY,'O' as TSALE,'''' as FINCOD 
-				from {$this->MAuth->getdb('HAROPMST')} where CONTNO in (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} 
-				where LOCATRECV like '%".$LOCATRECV."%' and ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."')) as XX  on XX.CONTNO = A.CONTNO and XX.LOCAT = A.LOCATPAY  
+				left join (
+					select CONTNO,STRNO,LOCAT,BILLCOLL,TOTPRC,SMPAY,'H' as TSALE,'' as FINCOD from {$this->MAuth->getdb('ARMAST')} where CONTNO in 
+					(select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV like '%".$LOCATRECV."%' and ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."')
+					union 
+					select CONTNO,STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'C' as TSALE,'''' as FINCOD from {$this->MAuth->getdb('ARCRED')}  
+					where CONTNO in (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV like '%".$LOCATRECV."%' and ".$MDT." 
+					BETWEEN '".$DATE1."' and '".$DATE2."')  
+					union
+					select CONTNO,STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'F' as TSALE,FINCOD 
+					from {$this->MAuth->getdb('ARFINC')} where CONTNO IN (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} 
+					where LOCATRECV LIKE '%".$LOCATRECV."%' and ".$MDT." BETWEEN 
+					'".$DATE1."' and '".$DATE2."')  
+					union
+					select CONTNO,'''' as STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'A' as TSALE,'''' as FINCOD from {$this->MAuth->getdb('AR_INVOI')}  
+					where CONTNO IN (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV LIKE '%".$LOCATRECV."%' 
+					AND ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."')
+					union
+					select CONTNO,'''' as STRNO,LOCAT,'''' as BILLCOLL,OPTPTOT as TOTPRC,SMPAY,'O' as TSALE,'''' as FINCOD 
+					from {$this->MAuth->getdb('AROPTMST')} where CONTNO IN (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} 
+					where LOCATRECV like '%".$LOCATRECV."%' AND ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."')
+					union
+					select CONTNO,STRNO,LOCAT,BILLCOLL,TOTPRC,SMPAY,'H' as TSALE,'''' as FINCOD from {$this->MAuth->getdb('HARMAST')}  
+					where CONTNO in (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV like '%".$LOCATRECV."%' 
+					and ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."') 
+					union
+					select CONTNO,STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'C' as TSALE,'''' as FINCOD from {$this->MAuth->getdb('HARCRED')} 
+					where CONTNO in (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV like '%".$LOCATRECV."%' 
+					and ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."') 
+					union
+					select CONTNO,STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'F' as TSALE,FINCOD from {$this->MAuth->getdb('HARFINC')}  
+					where CONTNO IN (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV LIKE '%".$LOCATRECV."%' 
+					and ".$MDT." BETWEEN '".$DATE2."' and '".$DATE1."')
+					union
+					select CONTNO,'''' as STRNO,LOCAT,'''' as BILLCOLL,TOTPRC,SMPAY,'A' as TSALE,'''' as FINCOD from {$this->MAuth->getdb('HAR_INVO')}  
+					where CONTNO IN (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} where LOCATRECV like '%".$LOCATRECV."%' 
+					and ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."') 
+					union
+					select CONTNO,'''' as STRNO,LOCAT,'''' as BILLCOLL,OPTPTOT as TOTPRC,SMPAY,'O' as TSALE,'''' as FINCOD 
+					from {$this->MAuth->getdb('HAROPMST')} where CONTNO in (select CONTNO from {$this->MAuth->getdb('CHQTRAN')} 
+					where LOCATRECV like '%".$LOCATRECV."%' and ".$MDT." BETWEEN '".$DATE1."' and '".$DATE2."')
+				) as XX on XX.CONTNO = A.CONTNO and XX.LOCAT = A.LOCATPAY  
 				left join {$this->MAuth->getdb('FINMAST')} F on XX.FINCOD = F.FINCODE and (A.PAYFOR = '004' or A.PAYFOR = '011') 
 				left join {$this->MAuth->getdb('INVTRAN')} G on XX.STRNO = G.STRNO  where  A.LOCATRECV like '%".$LOCATRECV."%' and A.LOCATPAY like '%".$LOCATPAY."%' 
 				and ".$MDT1." BETWEEN '".$DATE1."' and '".$DATE2."' and  A.PAYTYP like '%".$PAYTYP."%' and A.PAYFOR like '%".$PAYFOR."%' and (A.USERID like '%".$USERID."%')  
@@ -311,7 +315,7 @@ class ReportReceivedDT extends MY_Controller {
 				like '%".$GROUP1."%' --order by A.TMBILL  
 			)ONE
 		";
-		//echo $sql; exit;
+		//echo $sql; 
 		$query = $this->db->query($sql);
 		$SET = "";
 		$SCRT = "";
@@ -342,6 +346,7 @@ class ReportReceivedDT extends MY_Controller {
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
+		
 		$sql = "
 			select COUNT(PAYAMT) as countorder,SUM(PAYAMT) as Total,sum(DISCT) as DISCT
 			,sum(NPAYINT) as NPAYINT,sum(NETPAY) as NETPAY from #ONE

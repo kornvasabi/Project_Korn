@@ -135,7 +135,8 @@ function fn_search(){
 			});
 			$('.getit').click(function(){
 				var contno = $(this).attr('CONTNO');
-				fn_getharpay(contno);
+				alert("รอดำเนินการแก้ไขอยู่ครับ");
+				//fn_getharpay(contno);
 			});
 			getoutsys = null;
 		},
