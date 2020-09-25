@@ -8,7 +8,7 @@ class MY_Controller extends CI_Controller {
 	//public $sess = array(); 
 	public $connect_db = "";
 	public $config_db = array(); 
-	
+	public $response = array();
 	public $username = "";
 	public $thaiLongMonthArray = array(1=>'มกราคม',2=>'กุมภาพันธ์',3=>'มีนาคม',4=>'เมษายน',5=>'พฤษภาคม',6=>'มิถุนายน',7=>'กรกฎาคม',8=>'สิงหาคม',9=>'กันยายน',10=>'ตุลาคม',11=>'พฤศจิกายน',12=>'ธันวาคม');
 	
@@ -28,6 +28,9 @@ class MY_Controller extends CI_Controller {
 		$this->config_db['autoinit'] = TRUE;
 		$this->config_db['stricton'] = FALSE;
 		//$this->connect_db = $this->load->database($config_db,true);
+		
+		$this->response["error"] = false;
+		$this->response["errorMessage"] = "";
 	}
 	
 	public function input($type,$id,$class,$attr,$value){
@@ -111,6 +114,28 @@ class MY_Controller extends CI_Controller {
 					5=> array('TJYL2556'),
 					6=> array('TJYN','HTJYN','FTJYN'),
 					7=> array('TJYN2004','HTJYN2004','FTJYN2004'),
+				);
+				break;
+			case 'checkmaindb':
+				$data = array(
+					'HIC2SHORTL' => 'HIC2SHORTL',
+					'HIINCOME' => 'HIINCOME',
+					'HN' => 'HIINCOME',
+					'FN' => 'HIINCOME',
+					'RJYN' => 'RJYN',
+					'HRJYN' => 'RJYN',
+					'FRJYN' => 'RJYN',
+					'TJHON' => 'TJHON',
+					'TJPAT' => 'TJPAT',
+					'HTJPAT' => 'TJPAT',
+					'FTJPAT' => 'TJPAT',
+					'TJYL2556' => 'TJYL2556',
+					'TJYN' => 'TJYN',
+					'HTJYN' => 'TJYN',
+					'FTJYN' => 'TJYN',
+					'TJYN2004' => 'TJYN2004',
+					'HTJYN2004' => 'TJYN2004',
+					'FTJYN2004' => 'TJYN2004'					
 				);
 				break;
 			default: 
@@ -331,6 +356,18 @@ class MY_Controller extends CI_Controller {
 			$pos++;
 		}
 		return $ret;
+	}
+	
+	public function getInfoSTRNO($strno){
+		/*
+			ดึงข้อมูล ณ วันที่ 15/08/2563
+			หมายเหตุ เป็นการดึงข้อมูลจาก aphonda โดยไม่ได้แจ้งให้ทราบก่อน ซึ่งในอนาคตมีโอกาศที่เราจะไม่สามารถดึงข้อมูลได้
+		*/
+		
+		$pc = 'vindat';
+		$vin = $strno;
+		
+		return file_get_contents('https://dealer.aphonda.co.th/service/claim/clmcommon.asp?pc='.$pc.'&vin='.$vin);
 	}
 }
 

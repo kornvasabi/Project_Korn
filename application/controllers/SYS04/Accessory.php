@@ -17,6 +17,8 @@ class Accessory extends MY_Controller {
                 $this->sess[$key] = $value;
             }
 		}
+		$this->config_db['database'] = $this->sess["db"];
+		$this->connect_db = $this->load->database($this->config_db,true);
 	}
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
@@ -399,7 +401,7 @@ class Accessory extends MY_Controller {
 								<div class='col-sm-3'>	
 									<div class='form-group'>
 										วันครบกำหนดชำระ
-										<input type='text' id='add_duedt' class='form-control input-sm' placeholder='วันที่ทำสัญญา' data-provide='datepicker' data-date-language='th-th' value='".$this->today('today')."'>
+										<input type='text' id='add_duedt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' value='".$this->today('today')."'>
 									</div>
 								</div>
 								<div class='col-sm-3'>	
@@ -722,6 +724,7 @@ class Accessory extends MY_Controller {
 						,".$arrs['listacs'][$i][7].",".$arrs['listacs'][$i][8].",null,'".$this->sess["USERID"]."'
 						,getdate(),null,'".$arrs['sdate']."',null
 					)
+					
 					update {$this->MAuth->getdb('OPTMAST')} set ONHAND = ONHAND - ".$arrs['listacs'][$i][2]." 
 					where LOCAT = '".$arrs['locat']."' and OPTCODE = '".$arrs['listacs'][$i][0]."'
 					
@@ -750,6 +753,7 @@ class Accessory extends MY_Controller {
 			where CONTNO = '".$arrs['contno']."' and LOCAT = '".$arrs['locat']."' 
 			and OPTCODE not in('".$arrs['optcode']."')
 		";
+		//echo $sql; 
 		$query = $this->db->query($sql);
 		$arrs['trigger_update'] = ""; //ติ๊กเกอร์ UPDATE ลบรายการอุปกรณ์
 		if($query->row()){
@@ -779,40 +783,35 @@ class Accessory extends MY_Controller {
 				
 				declare @year varchar(4) = (select left(CONVERT(varchar(8),'".$arrs['sdate']."',112),4))
 				declare @month varchar(2) = (select right(left(CONVERT(varchar(8),'".$arrs['sdate']."',112),6),2))
-				declare @lastno int = (
-					select COUNT(*) from {$this->MAuth->getdb('LASTNO')} 
-					where LOCAT = '".$arrs['locat']."' and CR_YEAR = @year and CR_MONTH = @month
-				)
+				
 				--เลขที่สัญญา
-				declare @h_optcno varchar(5) = ( 
-					select H_OPTCNO from {$this->MAuth->getdb('CONDPAY')}	
-				);	
-				declare @createcont varchar(8) = (
+				declare @h_optcno varchar(10) = (select H_OPTCNO from {$this->MAuth->getdb('CONDPAY')});
+				declare @cno varchar(10) = (
 					select SHORTL+@h_optcno+'-'+right(left(convert(varchar(8),'".$arrs['sdate']."',112),6),4) 
 					from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD = '".$arrs['locat']."'
 				);
-				declare @CONTNO varchar(12) = (
-					select @createcont+ISNULL(
-						right('0000' + cast(max(cast(coalesce(L_OPTCNO,0) as int) + 1) as varchar(4)), 4)  ,'0001'
-					)
-					from {$this->MAuth->getdb('LASTNO')} where LOCAT = '".$arrs['locat']."' 
-					and CR_YEAR = @year and CR_MONTH = @month
+				declare @CONTNO varchar(12) = isnull((
+					select MAX(CONTNO) from {$this->MAuth->getdb('AROPTMST')}
+					where CONTNO like ''+@cno+'%' collate thai_cs_as)
+					,@cno+'0000'
 				);
+				set @CONTNO = left(@CONTNO,8)+right(right(@CONTNO,4)+10001,4);
+				
 				--เลขที่ใบกำกับ
-				declare @h_txopt varchar(5) = ( 
-					select H_TXOPT from {$this->MAuth->getdb('CONDPAY')}	
-				);
-				declare @createtax varchar(8) = (
+				declare @h_txopt varchar(10) = (select H_TXOPT from {$this->MAuth->getdb('CONDPAY')});
+				declare @tno varchar(10) = (
 					select SHORTL+@h_txopt+'-'+right(left(convert(varchar(8),'".$arrs['sdate']."',112),6),4) 
-					from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD = '".$arrs['locat']."'
+					from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs['locat']."'
 				);
-				declare @TAXNO varchar(12) = (
-					select @createtax+ISNULL(
-						right('0000' + cast(max(cast(coalesce(L_TXOPT,0) as int) + 1) as varchar(4)), 4)  ,'0001')
-					from {$this->MAuth->getdb('LASTNO')} where LOCAT = '".$arrs['locat']."' 
-					and CR_YEAR = @year and CR_MONTH = @month
+				declare @TAXNO varchar(12) = isnull((
+					select MAX(TAXNO) from {$this->MAuth->getdb('TAXTRAN')}
+					where TAXNO like ''+@tno+'%' collate thai_cs_as)
+					,@tno+'0000'
 				);
-				declare @TAXDT datetime = (select convert(varchar(8),getdate(),112));
+				set @TAXNO = left(@TAXNO,8)+right(right(@TAXNO,4)+10001,4);
+				
+				
+				declare @TAXDT datetime = (select convert(varchar(8),'".$arrs['sdate']."',112));
 				--select @contno,@taxno
 				
 				if exists(select * from #tempOPTCODE)
@@ -826,16 +825,6 @@ class Accessory extends MY_Controller {
 					return;
 				end
 				
-				if(@lastno = 1)
-					update {$this->MAuth->getdb('LASTNO')} set L_OPTCNO = L_OPTCNO+1,L_TXOPT = L_TXOPT+1 
-					where LOCAT = '".$arrs['locat']."' and CR_YEAR = @year and CR_MONTH = @month
-				else
-					insert into {$this->MAuth->getdb('LASTNO')} (
-						LOCAT,CR_YEAR,CR_MONTH,L_OPTCNO,L_TXOPT
-					)values(
-						'".$arrs['locat']."',@year,@month,1,1
-					)
-					
 				insert into {$this->MAuth->getdb('AROPTMST')} (
 					CONTNO,LOCAT,CUSCOD,INCLVAT,VATRT,SDATE,SMPAY,SMCHQ,KANG,COST,TAXNO,TAXDT
 					,OPTCST,OPTCVT,OPTCTOT

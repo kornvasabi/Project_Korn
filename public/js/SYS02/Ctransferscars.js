@@ -14,6 +14,8 @@ var _delete = $('.tab1[name="home"]').attr('cdel');
 var _level  = $('.tab1[name="home"]').attr('clev');
 var _locat  = $('.tab1[name="home"]').attr('locat');
 var _diunem = $('.tab1[name="home"]').attr('diunem');
+var _groupType = $('.tab1[name="home"]').attr('groupType');
+
 
 $(function(){
 	$('.tab1').show();
@@ -320,7 +322,7 @@ function loadData(dataToPost){
 				$('#btnt2save').attr('disabled',false);
 				
 				$('#btnt2del').show();
-				if(_level == 1){
+				if(_level == 1 || data.groupusers == "AD"){
 					if(_update == 'T'){ //มีสิทธิ์แก้ไขไหม
 						$('#btnt2save').attr('disabled',false);	
 						$('#btnt2addSTRNo').attr('disabled',true);
@@ -369,7 +371,7 @@ function loadData(dataToPost){
 				$('#btnt2addSTRNo').attr('disabled',true);
 				
 				
-				if(_level == 1){
+				if(_level == 1 || data.groupusers == "AD"){
 					if(_update == 'T'){ //มีสิทธิ์แก้ไขไหม
 						$('#btnt2save').attr('disabled',false);
 						$('#btnt2addSTRNo').attr('disabled',true);
@@ -493,7 +495,7 @@ $('#btnt1transfers').click(function(){
 	$('#add_EMPCARRY').attr('disabled',false);
 	$('#add_MEMO1').attr('disabled',false);
 	
-	if(_level == '1'){
+	if(_level == '1' || _groupType == 'OFF'){
 		$('#add_TRANSFM').attr('disabled',false);	
 	}else{
 		$('#add_TRANSFM').attr('disabled',true);

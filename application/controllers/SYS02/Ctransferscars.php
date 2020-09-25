@@ -30,7 +30,7 @@ class Ctransferscars extends MY_Controller {
 		$diunem = $this->generateData(array($claim["menuid"]),"encode");
 
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' diunem='{$diunem[0]}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+			<div class='tab1' name='home' groupType='{$claim["groupType"]}' locat='{$this->sess['branch']}' diunem='{$diunem[0]}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
 				<div>
 					<div class='col-sm-2'>
 						<div class='form-group'>
@@ -424,6 +424,8 @@ class Ctransferscars extends MY_Controller {
 						}else{
 							if($arrs['clev'] == 1){
 								$disabled = '';
+							}else if($this->sess["groupusers"] == "AD"){ //ให้สิทธิ์ฝ่ายออดิต ระบุวันที่ส่ง-พขร ทุกสาขา
+								$disabled = '';
 							}else{
 								$disabled = 'disabled';
 							}
@@ -453,7 +455,7 @@ class Ctransferscars extends MY_Controller {
 			}
 		}
 
-		$response = array("html"=>$html);
+		$response = array("html"=>$html,"groupusers"=>$this->sess["groupusers"]);
 		echo json_encode($response);
 	}
 
@@ -700,10 +702,12 @@ class Ctransferscars extends MY_Controller {
 
 				begin tran ins
 				begin try
+					declare @daterun datetime = '".$arrs["TRANSDT"]."';
+					
 					/* @symbol = สัญลักษณ์แทนประเภทของเลขที่ นั้นๆ */
 					declare @symbol varchar(10) = (select H_TFCAR from {$this->MAuth->getdb('CONDPAY')});
 					/* @rec = รหัสพื้นฐาน */
-					declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs['TRANSFM']."');
+					declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),@daterun,112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs['TRANSFM']."');
 					/* @TRANSNO = รหัสที่จะใช้ */
 
 					declare @TRANSNO varchar(12) = (select isnull(MAX(TRANSNO),@rec+'0000') from (

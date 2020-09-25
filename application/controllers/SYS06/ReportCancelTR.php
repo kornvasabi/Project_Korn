@@ -274,7 +274,7 @@ class ReportCancelTR extends MY_Controller {
 							<th colspan='15' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
 						</tr>
 						<tr>
-							<th colspan='15' style='font-size:9pt;'>รายงานการยกเลิกการรับชำระ</th>
+							<th colspan='15' style='font-size:9pt;'>รายงานใบเสร็จที่ถูกยกเลิกแต่ใบรับไม่ถูกยกเลิก</th>
 						</tr>
 						<tr>
 							<td style='text-align:center;' colspan='15'>

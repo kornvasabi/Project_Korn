@@ -651,7 +651,11 @@ function fn_loadFormAnalyze($_data){
 						var newOption = new Option($_data["COLOR"], $_data["COLOR"], true, true);
 						$('#color').empty().append(newOption).attr('disabled',mbcs).trigger('change');
 						$('#stat').val($_data['STAT']).attr('disabled',mbcs).trigger('change');
-						$('#gcode').val($_data['GCODE']).attr('disabled',mbcs).trigger('change');
+						
+						var newOption = new Option($_data["GCODE"], $_data["GCODE"], true, true);
+						$('#gcode').empty().append(newOption).attr('disabled',mbcs).trigger('change');
+						
+						//$('#gcode').val($_data['GCODE']).attr('disabled',mbcs).trigger('change');
 						$('#sdateold').val($_data['SDATE']);
 						$('#ydate').val($_data['YDATE']);
 						$('#price_add').val($_data['PRICE_ADD']).attr('disabled',true);
@@ -659,8 +663,19 @@ function fn_loadFormAnalyze($_data){
 						$('#price').attr('stdid',$_data['STDID']);
 						$('#price').attr('subid',$_data['SUBID']);
 						$('#price').attr('shcid',$_data['SHCID']);
-						$('#interatert').val($_data['INTEREST_RT']).attr('disabled',true);
+						$('#price').attr('downappr',$_data['DOWNAPPR']);
+												
+						if($_data["ISFinance"] == "Y"){
+							$('#checknotfn').show();
+							$('#calstdfn').attr({'checked':true,'disabled':true});
+							$('#toggleFinance').show();
+							$('#price').attr('disabled',false);
+						}else{
+							$('#calstdfn').attr('checked',false);
+							$('#toggleFinance').hide();
+						}
 						
+						$('#interatert').val($_data['INTEREST_RT']).attr('disabled',true);
 						$('#insuranceType').val($_data['INSURANCE_TYP']).trigger('change');
 						$('#insuranceAmt').val($_data['DWN_INSURANCE']);
 						$('#inc_trans').val($_data['CALTRANS']).trigger('change');
@@ -668,7 +683,7 @@ function fn_loadFormAnalyze($_data){
 						$('#inc_act').val($_data['CALACT']).trigger('change');
 						$('#inc_coupon').val($_data['CALCOUPON']).trigger('change');
 						
-						for(var i=0;i<4;i++){
+						for(var i=0;i<5;i++){
 							if (typeof $_data['REF'+i+''] !== 'undefined') {
 								var tags = "";
 								if($_data['REF'+i+'']["CUSTYPE"] == 1){
@@ -746,22 +761,28 @@ function fn_loadFormAnalyze($_data){
 						var picture_msg = $_data['EVIDENCE'];
 						if($_data['EVIDENCE'] != "(none)"){
 							picture_msg = '<image style="width:'+widpic+'px;height:auto;" src="'+$_data['EVIDENCE']+'?'+Math.random()+'"/>';
-						}
-						
+						}						
 						$('#analyze_picture').val("");
 						$('#analyze_picture').attr('source','');
 						$('#analyze_picture').attr('data-original-title',picture_msg);
-						
 						
 						var widpic = ($('#approve_picture').width());						
 						var picture_msg = $_data['APPROVE_IMG'];
 						if($_data['APPROVE_IMG'] != "(none)"){
 							picture_msg = '<image style="width:'+widpic+'px;height:auto;" src="'+$_data['APPROVE_IMG']+'?'+Math.random()+'"/>';
-						}
-						
+						}						
 						$('#approve_picture').val("");
 						$('#approve_picture').attr('source','');
 						$('#approve_picture').attr('data-original-title',picture_msg);
+						
+						var widpic = ($('#approve_picture').width());						
+						var picture_msg = $_data['CAR_IMG'];
+						if($_data['CAR_IMG'] != "(none)"){
+							picture_msg = '<image style="width:'+widpic+'px;height:auto;" src="'+$_data['CAR_IMG']+'"/>';
+						}						
+						$('#carpic_picture').val("");
+						$('#carpic_picture').attr('source','');
+						$('#carpic_picture').attr('data-original-title',picture_msg);
 						
 					}
 					
@@ -834,13 +855,16 @@ function fn_checkstd($this){
 				$('#price_add').val('').attr("disabled",true);
 				if($('#calstdfn').is(':checked')){
 					$('#price').attr('disabled',false);
+					$('#toggleFinance').fadeIn(200);
 				}else{
 					$('#price').val('').attr("disabled",true);
+					$('#toggleFinance').fadeOut(200);
 				}
 				//$('#price').val('').attr("disabled",true);
 				$('#price').attr("stdid","");
 				$('#price').attr("subid","");
 				$('#price').attr("shcid","");
+				$('#price').attr("downappr","N");
 				$('#interatert').val('').attr("disabled",true);
 				
 				$('#cuscod').val('');
@@ -868,8 +892,10 @@ function fn_checkstd($this){
 				//ไฟแนนท์ไหม
 				if($('#calstdfn').is(':checked')){
 					$('#price').attr("disabled",false);
+					$('#toggleFinance').fadeIn(200);
 				}else{
 					$('#price').attr("disabled",true);
+					$('#toggleFinance').fadeOut(200);
 				}
 				
 				$('#price').attr("stdid",data.stdid);
@@ -885,7 +911,8 @@ function fn_checkstd($this){
 				}else{
 					$('#cuscod').val(data.customer.cusname);
 					$('#cuscod').attr("CUSCOD",data.customer.cuscod);
-					$('#cuscod ,#cuscod_removed').attr("disabled",true);
+					//$('#cuscod ,#cuscod_removed').attr("disabled",true);
+					$('#cuscod ,#cuscod_removed').attr("disabled",false); //20200916 ให้สาขาสามารถแก้ไขชื่อ ลค. กรณี เปลี่ยนคนออกรถได้
 				}
 				
 				$("#idno").val(data.customer.idno);
@@ -926,6 +953,7 @@ function fn_changestd(){
 		$('#price').attr("stdid","");
 		$('#price').attr("subid","");
 		$('#price').attr("shcid","");
+		$('#price').attr("downappr","N");
 		$('#interatert').val('').attr("disabled",true);
 		
 		$('#cuscod').val('');
@@ -1269,6 +1297,7 @@ function fnload($thisForm){
 		$('#price').attr("stdid","");
 		$('#price').attr("subid","");
 		$('#price').attr("shcid","");
+		$('#price').attr("downappr","N");
 		$('#interatert').val('').attr("disabled",true);
 		
 		$('#cuscod').val('');
@@ -1666,9 +1695,11 @@ function fnload($thisForm){
 				});
 			}else{
 				$('#price').attr('disabled',false).focus();
+				$('#toggleFinance').fadeIn(200);
 			}
 		}else{
 			$('#price').val('').attr('disabled',true);
+			$('#toggleFinance').fadeOut(200);
 		}
 	});
 	
@@ -1806,6 +1837,9 @@ function fnload($thisForm){
 		dataToPost.sdateold		= $('#sdateold').val();
 		dataToPost.ydate		= $('#ydate').val();
 		dataToPost.price		= $('#price').val();
+		dataToPost.price_add 	= $('#price_add').val(); // 20200824
+		dataToPost.price_dis 	= $('#discount').val(); // 20200824
+		
 		dataToPost.stdid		= $('#price').attr('stdid');
 		dataToPost.subid		= $('#price').attr('subid');
 		dataToPost.shcid		= $('#price').attr('shcid');
@@ -1817,6 +1851,11 @@ function fnload($thisForm){
 		dataToPost.regist 		= $('#inc_regist').find(':selected').val();
 		dataToPost.act 			= $('#inc_act').find(':selected').val();
 		dataToPost.coupon		= $('#inc_coupon').find(':selected').val();
+		
+		dataToPost.is_finance	= ($('#calstdfn').is(':checked') ? "Y":"N");
+		dataToPost.carpic_name	= $('#carpic_picture').val();
+		dataToPost.carpic		= $('#carpic_picture').attr('source');
+		
 		
 		dataToPost.cuscod 		= $('#cuscod').attr('cuscod');
 		dataToPost.idno			= $('#idno').val();
@@ -1953,6 +1992,7 @@ function fnload($thisForm){
 					closeOnClick: true
 				},
 			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				if (type === 'ok'){
 					$('#loadding').fadeIn(500);
@@ -2027,6 +2067,7 @@ function fnload($thisForm){
 					});
 				}
 				
+				
 				if ($('#anid').val() == "Auto Genarate"){
 					$('#save').attr('disabled',(_insert == "T" ? false:true));
 					$('#deleted').attr('disabled',true);
@@ -2034,6 +2075,8 @@ function fnload($thisForm){
 					$('#save').attr('disabled',(_update == "T" ? false:true));
 					$('#deleted').attr('disabled',(_delete == "T" ? false:true));
 				}
+				
+				$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
 			}
 		});
 	});
@@ -2060,6 +2103,7 @@ function fnload($thisForm){
 					closeOnClick: true
 				},
 			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				if (type === 'ok'){
 					var dataToPost = new Object();
@@ -2128,8 +2172,11 @@ function fnload($thisForm){
 						$('#save').attr('disabled',(_update == "T" ? false:true));
 						$('#deleted').attr('disabled',(_delete == "T" ? false:true));
 					}
-				}
-			}	
+				}				
+			},
+			beforeClose: function(){
+				$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
+			}
 		});	
 	});
 	

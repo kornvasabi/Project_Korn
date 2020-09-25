@@ -151,27 +151,9 @@ class Analyze extends MY_Controller {
 		echo $html;
 	}
 	
-	// function search(){
-		// $url = "http://192.168.1.30:81/public/images/{$_POST['SSTRNO']}.jpg";
-		// $handle = curl_init($url);
-		// curl_setopt($handle,  CURLOPT_RETURNTRANSFER, TRUE);
-
-		// /* Get the HTML or whatever is linked in $url. */
-		// $response = curl_exec($handle);
-
-		// /* Check for 404 (file not found). */
-		// $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
-		// if($httpCode == 404) {
-			// echo json_encode(array("html"=>"not found"));
-		// }else{
-			// echo json_encode(array("html"=>"<image src='$url'/>"));
-		// }
-		
-		// curl_close($handle);
-	// }
-	
 	function search(){
 		$arrs = array();
+		//sleep(5);
 		
 		$arrs['SANID']	= $_POST['SANID'];
 		$arrs['SSTRNO']	= $_POST['SSTRNO'];
@@ -553,7 +535,7 @@ class Analyze extends MY_Controller {
 			left join {$this->MAuth->getdb('CUSTADDR')} f on cast(a.ADDRDOCNO as varchar)=f.ADDRNO and a.CUSCOD=f.CUSCOD collate thai_cs_as 
 			left join {$this->MAuth->getdb('SETAUMP')} g on f.AUMPCOD=g.AUMPCOD
 			left join {$this->MAuth->getdb('SETPROV')} h on g.PROVCOD=h.PROVCOD
-			left join {$this->MAuth->getdb('CUSTPICT')} i on i.CUSCOD=a.CUSCOD collate thai_cs_as
+			--left join {$this->MAuth->getdb('CUSTPICT')} i on i.CUSCOD=a.CUSCOD collate thai_cs_as
 			where a.ID='".$anid."'
 			order by a.CUSTYPE
 		";
@@ -964,7 +946,7 @@ class Analyze extends MY_Controller {
 		$sql = "
 			declare @filePath varchar(250) = (
 				select filePath from {$this->MAuth->getdb('config_fileupload')}
-				where refno = '".$this->sess["db"]."' and ftpfolder like 'Senior/%/ANALYZE' and ftpstatus = 'Y'
+				where refno = '".$this->sess["db"]."' and ftpfolder like 'Senior/%/CUSTOMERS/Picture' and ftpstatus = 'Y'
 			);
 			select a.CUSTYPE,a.CUSCOD
 				,b.SNAM+b.NAME1+' '+b.NAME2 as CUSNAME 
@@ -997,7 +979,9 @@ class Analyze extends MY_Controller {
 				,a.REFERANT
 				,a.REFERANTTEL
 				,b.GRADE
-				,isnull(@filePath+convert(varchar(30),cast(i.PICTUR as varbinary)),'(none)') as filePath
+				--,isnull(@filePath+convert(varchar(30),cast(i.PICTUR as varbinary)),'(none)') as filePath
+				,isnull(@filePath+b.PICT1,'(none)') as filePath
+				
 				,isnull(a.MEMO1,'') as CUSMEMO1
 			from {$this->MAuth->getdb('ARANALYZEREF')} a
 			left join {$this->MAuth->getdb('CUSTMAST')} b on a.CUSCOD=b.CUSCOD collate thai_cs_as
@@ -1007,7 +991,7 @@ class Analyze extends MY_Controller {
 			left join {$this->MAuth->getdb('CUSTADDR')} f on cast(a.ADDRDOCNO as varchar)=f.ADDRNO and a.CUSCOD=f.CUSCOD collate thai_cs_as 
 			left join {$this->MAuth->getdb('SETAUMP')} g on f.AUMPCOD=g.AUMPCOD
 			left join {$this->MAuth->getdb('SETPROV')} h on g.PROVCOD=h.PROVCOD
-			left join {$this->MAuth->getdb('CUSTPICT')} i on i.CUSCOD=a.CUSCOD collate thai_cs_as
+			--left join {$this->MAuth->getdb('CUSTPICT')} i on i.CUSCOD=a.CUSCOD collate thai_cs_as
 			where a.ID='".$ANID."'
 			order by a.CUSTYPE
 		";
@@ -1125,7 +1109,7 @@ class Analyze extends MY_Controller {
 						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
 								<div class='col-sm-4'><b>เงินดาวน์รถ :: </b>".$arrs["DWN"]." ".($arrs["APPRV_DWN"] > 0 ? "[".$arrs["APPRV_DWN"]."]":"")."</div>
-								<div class='col-sm-4'><b>เงินจอง :: </b> ".$arrs["RESVAMT"]."</div>
+								<div class='col-sm-4'><b>เงินจอง :: </b> ".$arrs["RESVNO"]." - ".$arrs["RESVAMT"]."</div>
 								<div class='col-sm-4'><b>วันที่ขายล่าสุด :: </b> ".$arrs["SDATE"]."</div>
 							</td>
 						</tr>
@@ -1613,7 +1597,7 @@ class Analyze extends MY_Controller {
 							<div class='form-group'>
 								<div id='checknotfn' ".($row->FNANALYZE == "Y" ? "":"hidden").">
 									<input class='form-check-input' style='cursor:pointer;max-width:20px;max-height:10px;' type='checkbox' id='calstdfn' value='Y'>
-									<label class='form-check-label' style='cursor:pointer;' for='calstdfn'>ตั้งไฟแนนท์</label>
+									<label class='form-check-label text-red' style='cursor:pointer;' for='calstdfn'>จัดไฟแนนท์</label>
 								</div>
 								<div id='checknotfn' ".($row->FNANALYZE == "Y" ? "hidden":"").">&emsp;</div>
 								<button id='checkstd' class='btn btn-sm btn-info btn-block'><span class='glyphicon glyphicon-refresh'> ดึงสแตนดาร์ด</span></button>
@@ -1716,6 +1700,24 @@ class Analyze extends MY_Controller {
 									<option value='Y'>รวม คูปองชิงโชค</option>
 									<option value='N'>ไม่รวม คูปองชิงโชค</option>
 								</select>
+							</div>
+						</div>
+						
+						<div id='toggleFinance' class='col-sm-2 col-sm-offset-6' hidden>	
+							<div class='form-group'>
+								<span class='text-red'>*</span>
+								รูปรถ								
+								<div class='input-group'>
+									<input type='text' id='carpic_picture' class='form-control input-sm' readonly='' 
+										data-toggle='tooltip'
+										data-placement='top'
+										data-html='true'
+										data-original-title=''										
+										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' data-tags='carpic_' class='jd-upload-an input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -2072,7 +2074,7 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								เลข ปชช.(เจ้าบ้าน)
-								<input type='number' id='is1_hostIDNo' class='form-control input-sm' maxlength=13>
+								<input type='text' id='is1_hostIDNo' class='form-control input-sm' maxlength=13>
 							</div>
 						</div>
 					</div>
@@ -2282,7 +2284,7 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								เลข ปชช.(เจ้าบ้าน)
-								<input type='number' id='is2_hostIDNo' class='form-control input-sm' maxlength=13>
+								<input type='text' id='is2_hostIDNo' class='form-control input-sm' maxlength=13>
 							</div>
 						</div>
 					</div>
@@ -2493,7 +2495,7 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-3'>
 							<div class='form-group'>
 								เลข ปชช.(เจ้าบ้าน)
-								<input type='number' id='is3_hostIDNo' class='form-control input-sm' maxlength=13>
+								<input type='text' id='is3_hostIDNo' class='form-control input-sm' maxlength=13>
 							</div>
 						</div>
 					</div>
@@ -2748,8 +2750,8 @@ class Analyze extends MY_Controller {
 				where ftpfolder like 'Senior/%/ANALYZE' and ftpstatus='Y' and refno='".$this->sess["db"]."'
 			);
 			set @filePath = (
-				select @filePath + convert(varchar(30),cast([PICTUR] as varbinary))
-				from {$this->MAuth->getdb('CUSTPICT')} 
+				select @filePath + isnull(PICT1,'')
+				from {$this->MAuth->getdb('CUSTMAST')} 
 				where CUSCOD='".$data["CUSCOD"]."'
 			)
 			
@@ -3199,11 +3201,11 @@ class Analyze extends MY_Controller {
 		$sql = "
 			declare @filePath varchar(250) = (
 				select filePath from {$this->MAuth->getdb('config_fileupload')}
-				where ftpfolder like 'Senior/%/ANALYZE' and ftpstatus='Y' and refno='".$this->sess["db"]."'
+				where ftpfolder like 'Senior/%/CUSTOMERS/Picture' and ftpstatus='Y' and refno='".$this->sess["db"]."'
 			);
 			set @filePath = (
-				select @filePath + convert(varchar(30),cast([PICTUR] as varbinary))
-				from {$this->MAuth->getdb('CUSTPICT')} 
+				select @filePath + isnull(PICT1,'')
+				from {$this->MAuth->getdb('CUSTMAST')} 
 				where CUSCOD='".$cuscod."'
 			)
 			select a.CUSCOD
@@ -3341,18 +3343,7 @@ class Analyze extends MY_Controller {
 		}
 	}
 	*/
-	
-	function ConvertToUTF8($text){
-		$encoding = mb_detect_encoding($text, mb_detect_order(), false);
-		if($encoding == "UTF-8")
-		{
-			$text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');    
-		}
 		
-		$out = iconv(mb_detect_encoding($text, mb_detect_order(), false), "UTF-8//IGNORE", $text);
-		return $out;
-	}
-	
 	function save_picture($picture){
 		//print_r($picture); exit;
 		//$LOCAT = @$_POST["locat"];
@@ -3362,21 +3353,30 @@ class Analyze extends MY_Controller {
 					$ex = explode(".",$arrs["name"]);
 					if($ex[0] == "ภาพประกอบ"){
 						$arrs["target"] = "EVIDENCE";
-						$picture_name = $arrs["anid"]."_1.".$ex[sizeof($ex)-1];
+						$picture_name = md5($arrs["anid"])."_1.".$ex[sizeof($ex)-1];
 					}else if($ex[0] == "ภาพอนุมัติ"){
 						$arrs["target"] = "APPROVE_IMG";
-						$picture_name = $arrs["anid"]."_2.".$ex[sizeof($ex)-1];
+						$picture_name = md5($arrs["anid"])."_2.".$ex[sizeof($ex)-1];
+					}else if($ex[0] == "รูปรถ"){
+						$arrs["target"] = "CAR_IMG";
+						$picture_name = md5($arrs["anid"])."_3.".$ex[sizeof($ex)-1];
 					}
-					
-					$picture_name = $this->ConvertToUTF8($_POST["locat"].substr($picture_name,1,strlen($picture_name)));
 				}else{
 					$picture_name = $arrs["name"];					
 				}
 				//echo $picture_name ; exit;
+				
+				$cond = "";
+				if($arrs["desc"] == "person"){
+					$cond .= " and ftpfolder like 'Senior/%/CUSTOMERS/Picture'";
+				}else{
+					$cond .= " and ftpfolder like 'Senior/%/ANALYZE'";
+				}
+				
 				$sql = "
 					select ftpserver, ftpuser, ftppass, ftpfolder, filePath
 					from {$this->MAuth->getdb('config_fileupload')}
-					where refno = '".$this->sess["db"]."' and ftpfolder like 'Senior/%/ANALYZE' and ftpstatus = 'Y'
+					where refno='".$this->sess["db"]."' and ftpstatus='Y' ".$cond."
 				";
 				//echo $sql; exit;
 				$query = $this->connect_db->query($sql);
@@ -3412,7 +3412,7 @@ class Analyze extends MY_Controller {
 				$img  = str_replace('data:image/tmp;base64,', '', $img);
 				$img  = str_replace(' ', '+', $img);
 				$data = base64_decode($img);
-				
+				//if($arrs["desc"] == "person"){ echo $img; exit; }
 				
 				
 				// Initializing new session 
@@ -3429,7 +3429,13 @@ class Analyze extends MY_Controller {
 				}
 				
 				if(file_put_contents('ftp://'.$ftp_user_name.':'.$ftp_user_pass.'@'.$ftp_server.'/'.$arrsResult['ftpfolder'].'/'.$picture_name, $data)){
-					if(isset($arrs["anid"])){
+					if ($arrs["desc"] == "carpic"){
+						$sql = "
+							update {$this->MAuth->getdb('ARANALYZE')}
+							set ISCarImg='{$picture_name}'
+							where ID='{$arrs["anid"]}'
+						";
+					}else if(isset($arrs["anid"])){
 						$sql = "
 							update {$this->MAuth->getdb('ARANALYZEDATA')}
 							set {$arrs["target"]}='{$picture_name}'
@@ -3437,17 +3443,9 @@ class Analyze extends MY_Controller {
 						";
 					}else{
 						$sql = "
-							if exists (select * from {$this->MAuth->getdb('CUSTPICT')} where CUSCOD='{$arrs["cuscod"]}')
-							begin
-								update {$this->MAuth->getdb('CUSTPICT')} 
-								set PICTUR='{$picture_name}'
-								where CUSCOD='{$arrs["cuscod"]}'
-							end 
-							else 
-							begin
-								insert into {$this->MAuth->getdb('CUSTPICT')} (CUSCOD,PICTUR)
-								select '{$arrs["cuscod"]}','{$picture_name}'
-							end
+							update {$this->MAuth->getdb('CUSTMAST')} 
+							set PICT1='{$picture_name}'
+							where CUSCOD='{$arrs["cuscod"]}'
 						";
 					}
 					$this->connect_db->query($sql);					
@@ -3489,6 +3487,10 @@ class Analyze extends MY_Controller {
 		$arrs["regist"]		= "'".$_POST["regist"]."'";
 		$arrs["act"]		= "'".$_POST["act"]."'";
 		$arrs["coupon"]		= "'".$_POST["coupon"]."'";
+		$arrs["price_dis"]	= ($_POST["price_dis"] == "" ? "null":$_POST["price_dis"]);
+		$arrs["price_add"]	= ($_POST["price_add"] == "" ? "null":$_POST["price_add"]);
+		$arrs["is_finance"]	= "'".$_POST["is_finance"]."'";
+		
 		
 		$arrs["cuscod"] 	= "'".$_POST["cuscod"]."'";
 		$arrs["idno"] 		= "'".$_POST["idno"]."'";
@@ -3515,6 +3517,7 @@ class Analyze extends MY_Controller {
 		
 		$arrs["is1_insChoose"] 	= "'".$_POST["is1_insChoose"]."'";
 		$arrs["is1_insChooseDetail"] = "'".$_POST["is1_insChooseDetail"]."'";
+		
 		$arrs["is1_cuscod"] 	= "'".$_POST["is1_cuscod"]."'";
 		$arrs["is1_idno"] 		= "'".$_POST["is1_idno"]."'";
 		$arrs["is1_idnoBirth"] 	= ($_POST["is1_idnoBirth"] == "" ? "NULL":"'".$_POST["is1_idnoBirth"]."'");
@@ -3597,29 +3600,44 @@ class Analyze extends MY_Controller {
 		$picture[0]["tmp"] 	= (isset($_POST["picture"])?$_POST["picture"]:'');
 		$picture[0]["name"] = (isset($_POST["picture_name"])?$_POST["picture_name"]:'');
 		$picture[0]["cuscod"] = $_POST["cuscod"];
+		$picture[0]["desc"] = "person";
 		
 		$picture[1]["tmp"] 	= (isset($_POST["is1_picture"])?$_POST["is1_picture"]:'');
 		$picture[1]["name"] = (isset($_POST["is1_picture_name"])?$_POST["is1_picture_name"]:'');
 		$picture[1]["cuscod"] = $_POST["is1_cuscod"];
+		$picture[1]["desc"] = "person";
 		
 		$picture[2]["tmp"] 	= (isset($_POST["is2_picture"])?$_POST["is2_picture"]:'');
 		$picture[2]["name"] = (isset($_POST["is2_picture_name"])?$_POST["is2_picture_name"]:'');
 		$picture[2]["cuscod"] = $_POST["is2_cuscod"];
+		$picture[2]["desc"] = "person";
 		
 		$picture[3]["tmp"] 	= (isset($_POST["is3_picture"])?$_POST["is3_picture"]:'');
 		$picture[3]["name"] = (isset($_POST["is3_picture_name"])?$_POST["is3_picture_name"]:'');
 		$picture[3]["cuscod"] = $_POST["is3_cuscod"];
-
+		$picture[3]["desc"] = "person";
+		
 		$picture[4]["tmp"] 	= (isset($_POST["analyze_picture"])?$_POST["analyze_picture"]:'');
 		$picture[4]["name"] = (isset($_POST["analyze_picture_name"])?$_POST["analyze_picture_name"]:'');
-		$picture[4]["cuscod"] = $_POST["is3_cuscod"];
+		$picture[4]["cuscod"] = "";
 		$picture[4]["anid"] = "";
+		$picture[4]["desc"] = "analyze";
 		
 		$picture[5]["tmp"] 	= (isset($_POST["approve_picture"])?$_POST["approve_picture"]:'');
 		$picture[5]["name"] = (isset($_POST["approve_picture_name"])?$_POST["approve_picture_name"]:'');
-		$picture[5]["cuscod"] = $_POST["is3_cuscod"];
+		$picture[5]["cuscod"] = "";
 		$picture[5]["anid"] = "";
+		$picture[5]["desc"] = "approve";
 		
+		$picture[6]["tmp"] 	= (isset($_POST["carpic"])?$_POST["carpic"]:'');
+		$picture[6]["name"] = (isset($_POST["carpic_name"])?$_POST["carpic_name"]:'');
+		$picture[6]["cuscod"] = "";
+		$picture[6]["anid"] = "";
+		$picture[6]["desc"] = "carpic";
+		
+		//exit;
+		// ทดสอบ upload รูป
+		//$this->save_picture($picture); exit;
 		if($arrs["anid"] == "Auto Genarate"){
 			$sql = "
 				if object_id('tempdb..#transaction') is not null drop table #transaction;
@@ -3627,17 +3645,19 @@ class Analyze extends MY_Controller {
 
 				begin tran ins
 				begin try
+					declare @daterun datetime = GETDATE();
+					
 					/* @symbol = สัญลักษณ์แทนประเภทของเลขที่ นั้นๆ */
 					declare @symbol varchar(10) = (select H_ANALYZE from {$this->MAuth->getdb('CONDPAY')});
 					/* @rec = รหัสพื้นฐาน */
-					declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD=".$arrs['locat'].");
+					declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),@daterun,112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD=".$arrs['locat'].");
 					/* @ANID = รหัสที่จะใช้ */
 					declare @ANID varchar(12) = (select isnull(MAX(ID),@rec+'0000') from ( 
 						select ID collate Thai_CS_AS as ID from {$this->MAuth->getdb('ARANALYZE')} where ID like ''+@rec+'%' collate thai_cs_as
 					) as a);
 					set @ANID = left(@ANID ,8)+right(right(@ANID ,4)+10001,4);
 					
-					declare @ANID_CHECK varchar(12) = isnull((select ID from {$this->MAuth->getdb('ARANALYZE')} where RESVNO=".$arrs["resvno"]." and ANSTAT != 'C'),'');
+					declare @ANID_CHECK varchar(12) = isnull((select ID from {$this->MAuth->getdb('ARANALYZE')} where RESVNO!='' and RESVNO=isnull(".$arrs["resvno"].",'') collate thai_cs_as and ANSTAT != 'C'),'');
 					if(@ANID_CHECK != '')
 					begin
 						rollback tran ins;
@@ -3659,14 +3679,14 @@ class Analyze extends MY_Controller {
 					declare @id bigint;
 					insert into {$this->MAuth->getdb('ARANALYZE')} (
 						ID,LOCAT,ACTICOD,RESVNO,RESVAMT,DWN,INSURANCE_TYP,DWN_INSURANCE,INTEREST_RT,NOPAY,STRNO,MODEL
-						,BAAB,COLOR,STAT,SDATE,YDATE,PRICE,ANSTAT,STDID,SUBID,SHCID,INSBY,INSDT
-						,CALTRANS,CALREGIST,CALACT,CALCOUPON
+						,BAAB,COLOR,STAT,SDATE,YDATE,PRICE,PRICE_ADD,PRICE_DIS,ANSTAT,STDID,SUBID,SHCID,INSBY,INSDT
+						,CALTRANS,CALREGIST,CALACT,CALCOUPON,ISFinance
 					) 
 					select @ANID,".$arrs["locat"].",".$arrs["acticod"].",".$arrs["resvno"].",".$arrs["resvAmt"].",".$arrs["dwnAmt"].",".$arrs["insuranceType"]."
 						,".$arrs["insuranceAmt"].",".$arrs["interatert"].",".$arrs["nopay"].",".$arrs["strno"].",".$arrs["model"]."
 						,".$arrs["baab"].",".$arrs["color"].",".$arrs["stat"].",".$arrs["sdateold"].",".$arrs["ydate"]."
-						,".$arrs["price"].",'I',".$arrs["stdid"].",".$arrs["subid"].",".$arrs["shcid"].",'".$this->sess["IDNo"]."',getdate()
-						,".$arrs["trans"].",".$arrs["regist"].",".$arrs["act"].",".$arrs["coupon"].";
+						,".$arrs["price"].",".$arrs["price_add"].",".$arrs["price_dis"].",'I',".$arrs["stdid"].",".$arrs["subid"].",".$arrs["shcid"].",'".$this->sess["IDNo"]."',getdate()
+						,".$arrs["trans"].",".$arrs["regist"].",".$arrs["act"].",".$arrs["coupon"].",".$arrs["is_finance"].";
 					
 					insert into {$this->MAuth->getdb('ARANALYZEREF')} (
 						ID,CUSCOD,CUSTYPE,CUSSTAT,CUSBABY,ADDRNO,ADDRDOCNO,SOCAILSECURITY,CAREER,CAREERADDR,
@@ -3814,12 +3834,25 @@ class Analyze extends MY_Controller {
 				begin try
 					declare @ANID varchar(12) = '{$arrs["anid"]}';
 					
+					declare @ANID_CHECK varchar(12) = isnull((
+						select ID from {$this->MAuth->getdb('ARANALYZE')} 
+						where RESVNO!='' and RESVNO=isnull(".$arrs["resvno"].",'') collate thai_cs_as 
+							and ANSTAT != 'C' and ID != @ANID collate thai_cs_as 
+					),'');
+					if(@ANID_CHECK != '')
+					begin
+						rollback tran ins;
+						insert into #transaction select 'y' as error,'' as id,'ผิดพลาด เลขที่บิลจอง {$_POST["resvno"]} ถูกบันทึกในใบวิเคราะห์เลขที่ '+@ANID_CHECK+' แล้ว ไม่สามารถเพิ่มซ้ำได้ครับ' as msg;
+						return;
+					end
+					
 					if exists (select * from {$this->MAuth->getdb('ARANALYZE')} where ID=@ANID)
 					begin
 						update {$this->MAuth->getdb('ARANALYZE')}
 						set ACTICOD=".$arrs["acticod"]."
 							
 							,RESVNO=".$arrs["resvno"]."
+							,RESVAMT=".$arrs["resvAmt"]."
 							,STRNO=".$arrs["strno"]."
 							,MODEL=".$arrs["model"]."
 							,BAAB=".$arrs["baab"]."
@@ -3836,6 +3869,9 @@ class Analyze extends MY_Controller {
 							,DWN_INSURANCE=".$arrs["insuranceAmt"]."
 							,NOPAY=".$arrs["nopay"]."
 							,PRICE=".$arrs["price"]."
+							,PRICE_ADD=".$arrs["price_add"]."
+							,PRICE_DIS=".$arrs["price_dis"]."
+							
 							,INTEREST_RT=".$arrs["interatert"]."
 							,CALTRANS=".$arrs["trans"]."
 							,CALREGIST=".$arrs["regist"]."
@@ -3897,7 +3933,32 @@ class Analyze extends MY_Controller {
 							,REFERANT=".$arrs["is1_reference"]."
 							,REFERANTTEL=".$arrs["is1_referencetel"]."
 							,CUSRELATION=".$arrs["is1_cusRelation"]."
+							,MEMO1=".$arrs["is1_insChooseDetail"]."
 						where ID=@ANID and CUSTYPE=1
+						
+						if (".$arrs["is1_insChoose"]." = 'N')
+						begin
+							update {$this->MAuth->getdb('ARANALYZEREF')}
+							set CUSCOD='cannot'
+								,CUSSTAT=null
+								,CUSBABY=null
+								,ADDRNO=null
+								,ADDRDOCNO=null
+								,SOCAILSECURITY=null
+								,CAREER=null
+								,CAREERADDR=null
+								,CAREERTEL=null
+								,HOSTNAME=null
+								,HOSTIDNO=null
+								,HOSTTEL=null
+								,HOSTRELATION=null
+								,EMPRELATION=null
+								,REFERANT=null
+								,REFERANTTEL=null
+								,CUSRELATION=null
+								,MEMO1=".$arrs["is1_insChooseDetail"]."
+							where ID=@ANID and CUSTYPE=1
+						end							
 						
 						update {$this->MAuth->getdb('CUSTMAST')}
 						set AGE=".$arrs["is1_idnoAge"]."
@@ -4098,7 +4159,7 @@ class Analyze extends MY_Controller {
 					insert into #transaction select 'y' as error,'' as id,ERROR_MESSAGE() as msg;
 				end catch		
 			";
-			//echo $sql; exit;
+			// echo $sql; exit;
 			$this->connect_db->query($sql);
 		}
 		//echo $sql; exit;
@@ -4115,6 +4176,7 @@ class Analyze extends MY_Controller {
 				if($row->error == "n"){
 					$picture[4]["anid"] = $row->id;
 					$picture[5]["anid"] = $row->id;
+					$picture[6]["anid"] = $row->id;
 					$this->save_picture($picture);					
 					$stat = false;
 				}
@@ -4472,6 +4534,31 @@ class Analyze extends MY_Controller {
 			}
 		}
 		
+		// ตรวจสอบตั้งไฟแนนท์ ต้องแนบรูปรถด้วย
+		$carpic_picture = (isset($_POST["carpic"])?$_POST["carpic"]:'');
+		//echo $carpic_picture; exit;
+		if($_POST["is_finance"] == "Y" && $carpic_picture == ""){
+			if($_POST["anid"] == "Auto Genarate"){
+				$response["error"] = true; 
+				$response["msg"][] = "ตั้งไฟแนนท์ ต้องแนบรูปรถด้วยครับ";
+			}else{
+				$sql = "
+					select ISCarImg from {$this->MAuth->getdb('ARANALYZE')}
+					where ID='{$_POST["anid"]}'
+				";
+				$query = $this->connect_db->query($sql);
+				
+				if($query->row()){
+					foreach($query->result() as $row){
+						if($row->ISCarImg == ""){
+							$response["error"] = true; 
+							$response["msg"][] = "ตั้งไฟแนนท์ ต้องแนบรูปรถด้วยครับ";
+						}
+					}
+				}
+			}
+		}
+		
 		if($response["error"]){ echo json_encode($response); exit; }
 	}
 	
@@ -4639,6 +4726,7 @@ class Analyze extends MY_Controller {
 				insert into #transaction select 'y' as error,'' as id,ERROR_MESSAGE() as msg,'';
 			end catch
 		";
+		//echo $sql; exit;
 		$this->connect_db->query($sql);
 		
 		$sql 	= "select * from #transaction";   
@@ -4705,6 +4793,38 @@ class Analyze extends MY_Controller {
 				select filePath from {$this->MAuth->getdb('config_fileupload')}
 				where refno = '{$this->sess["db"]}' and ftpfolder like 'Senior/%/ANALYZE' and ftpstatus = 'Y'
 			);
+			
+			declare @APPROVE varchar(1);
+			if exists (select * from {$this->MAuth->getdb('ARANALYZE')} where ID='{$anid}' and STAT='N')
+			begin 
+				set @APPROVE = (
+					select b.APPROVE from {$this->MAuth->getdb('ARANALYZE')} a
+					left join {$this->MAuth->getdb('STDVehiclesDown')} b on a.STDID=b.STDID and a.SUBID=b.SUBID 	
+						and a.DWN between b.DOWNS and b.DOWNE
+					where ID='{$anid}' and b.ACTIVE='yes'
+				);
+			end 
+			else if exists (select * from {$this->MAuth->getdb('ARANALYZE')} where ID='{$anid}' and STAT='O' and ISFinance!='Y')
+			begin 
+				set @APPROVE = (
+					select b.APPROVE from {$this->MAuth->getdb('ARANALYZE')} a
+					left join {$this->MAuth->getdb('STDVehiclesDown')} b on a.STDID=b.STDID and a.SUBID=b.SUBID 
+						and a.PRICE between b.PRICES and b.PRICEE
+						and a.DWN between b.DOWNS and b.DOWNE
+					where ID='{$anid}' and b.ACTIVE='yes'
+				);
+			end 
+			else if exists (select * from {$this->MAuth->getdb('ARANALYZE')} where ID='{$anid}' and STAT='O' and ISFinance='Y')
+			begin 
+				set @APPROVE = (
+					select b.APPROVE from {$this->MAuth->getdb('ARANALYZE')} a
+					left join {$this->MAuth->getdb('STDVehiclesDown')} b on a.STDID=b.STDID and a.SUBID=b.SUBID 	
+						and a.PRICE between b.PRICES and b.PRICEE
+						and a.NOPAY between b.DOWNS and b.DOWNE
+					where ID='{$anid}' and b.ACTIVE='yes'
+				);
+			end 
+			
 			select a.ID,a.LOCAT,a.ACTICOD
 				,(select '('+aa.ACTICOD+') '+aa.ACTIDES from {$this->MAuth->getdb('SETACTI')} aa where aa.ACTICOD=a.ACTICOD collate thai_cs_as) as ACTIDES
 				,a.CREATEDATE
@@ -4712,7 +4832,7 @@ class Analyze extends MY_Controller {
 				,a.CALTRANS,a.CALREGIST,a.CALACT,a.CALCOUPON
 				,a.NOPAY
 				,a.RESVNO,a.RESVAMT,a.STRNO,a.MODEL,a.BAAB,a.COLOR,a.STAT,a.GCODE
-				,a.SDATE,a.YDATE
+				,a.SDATE,a.YDATE,a.ISFinance
 				,a.STDID,a.SUBID,a.SHCID
 				,a.PRICE_ADD,a.PRICE,a.INTEREST_RT
 				,b.EMP
@@ -4725,7 +4845,9 @@ class Analyze extends MY_Controller {
 				,c.APPRTEL as APPROVETEL
 				,isnull(@filePath+b.EVIDENCE,'(none)') as EVIDENCE
 				,isnull(@filePath+b.APPROVE_IMG,'(none)') as APPROVE_IMG
+				,isnull(@filePath+a.ISCarImg,'(none)') as CAR_IMG
 				,b.BRCOMMENT as COMMENT
+				,@APPROVE as DOWNAPPR
 			from {$this->MAuth->getdb('ARANALYZE')} a
 			left join {$this->MAuth->getdb('ARANALYZEDATA')} b on a.ID=b.ID
 			left join {$this->MAuth->getdb('ARANALYZEAPPR')} c on a.ID=c.ID collate thai_cs_as
@@ -4756,8 +4878,9 @@ class Analyze extends MY_Controller {
 		$sql = "
 			declare @filePath varchar(250) = (
 				select filePath from {$this->MAuth->getdb('config_fileupload')}
-				where refno = '{$this->sess["db"]}' and ftpfolder like 'Senior/%/ANALYZE' and ftpstatus = 'Y'
+				where refno = '{$this->sess["db"]}' and ftpfolder like 'Senior/%/CUSTOMERS/Picture' and ftpstatus = 'Y'
 			);
+			
 			select a.ID,a.CUSTYPE,a.CUSCOD
 				,c.SNAM+c.NAME1+' '+c.NAME2+' ('+c.CUSCOD+')' as CUSNAME
 				,c.IDNO,c.BIRTHDT,c.EXPDT
@@ -4785,10 +4908,9 @@ class Analyze extends MY_Controller {
 				,isnull(c.MREVENU,0) as MREVENU
 				,a.HOSTNAME,a.HOSTIDNO,a.HOSTTEL,a.HOSTRELATION
 				,a.EMPRELATION,a.REFERANT,a.REFERANTTEL,a.CUSRELATION
-				,isnull(@filePath+convert(varchar(30),cast(b.PICTUR as varbinary))+'?x='+cast((rand()*1000) as varchar),'(none)') as filePath
+				,isnull(@filePath+isnull(c.PICT1,'')+'?x='+cast((rand()*1000) as varchar),'(none)') as filePath
 				,a.MEMO1
 			from {$this->MAuth->getdb('ARANALYZEREF')} a
-			left join {$this->MAuth->getdb('CUSTPICT')} b on a.CUSCOD=b.CUSCOD collate thai_cs_as
 			left join {$this->MAuth->getdb('CUSTMAST')} c on a.CUSCOD=c.CUSCOD collate thai_cs_as
 			where a.ID='{$anid}'
 		";
@@ -4887,6 +5009,16 @@ class Analyze extends MY_Controller {
 					where ID='".$anid."'
 				end
 				
+				if exists(
+					select * from {$this->MAuth->getdb('ARANALYZE')} 
+					where ID='".$anid."' and RESVNO != '' and STRNO=''
+				)
+				begin
+					rollback tran upd;
+					insert into #transaction select 'y' as error,'".$anid."' as id,'ผิดพลาด ใบวิเคราะห์เลขที่  ".$anid." ระบุรายการจองมา แต่ยังไม่ได้ระบุเลขถัง ต้องแจ้งให้สาขาเข้าไประบุเลขถังในบิลจองก่อนครับ' as msg;
+					return;
+				end
+				
 				if exists(select * from {$this->MAuth->getdb('ARANALYZEAPPR')} where ID='".$anid."')
 				begin 
 					update {$this->MAuth->getdb('ARANALYZEAPPR')} 
@@ -4953,9 +5085,23 @@ class Analyze extends MY_Controller {
 			select a.LOCAT,a.INTEREST_RT,a.NOPAY,a.DWN,a.ANSTAT,a.INSURANCE_TYP
 				,b.APPROVE,b.COMMENTS,b.DWN as DWN2,b.NOPAY as NOPAY2,b.INTEREST_RT as INTEREST_RT2,b.OPTCODE
 				,b.INSURANCE as INSURANCE2
+				
+				/*
 				,(select INSURANCE from {$this->MAuth->getdb('STDVehiclesDown')} sa
 				  where sa.STDID=a.STDID and sa.SUBID=a.SUBID and a.DWN between sa.DOWNS and sa.DOWNE
 				) as INSURANCE
+				*/
+				
+				,case when a.STAT = 'N' then (
+					select INSURANCE from {$this->MAuth->getdb('STDVehiclesDown')} sa
+					where sa.STDID=a.STDID and sa.SUBID=a.SUBID 
+						and a.DWN between sa.DOWNS and sa.DOWNE				
+				) else (
+					select INSURANCE from {$this->MAuth->getdb('STDVehiclesDown')} sa
+					where sa.STDID=a.STDID and sa.SUBID=a.SUBID 
+						and a.price between sa.PRICES and sa.PRICEE
+						and a.DWN between sa.DOWNS and sa.DOWNE
+				) end as INSURANCE	
 			from {$this->MAuth->getdb('ARANALYZE')} a
 			left join {$this->MAuth->getdb('ARANALYZEAPPR')} b on a.ID=b.ID collate thai_cs_as
 			where a.ID='{$ANID}'
@@ -5247,6 +5393,8 @@ class Analyze extends MY_Controller {
 			$fileName = "ภาพประกอบ".'.'.$fileName[sizeof($fileName)-1];
 		}else if($_POST["tags"] == "approve_"){
 			$fileName = "ภาพอนุมัติ".'.'.$fileName[sizeof($fileName)-1];
+		}else if($_POST["tags"] == "carpic_"){
+			$fileName = "รูปรถ".'.'.$fileName[sizeof($fileName)-1];
 		}else{
 			$fileName = $_POST["IDNO"].'.'.$fileName[sizeof($fileName)-1];			
 		}
@@ -5262,187 +5410,8 @@ class Analyze extends MY_Controller {
 		$base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
 		echo json_encode(array("source"=>$base64,"name"=>$fileName));
 	}
-	/*
-	function fn_checkstd(){
-		$response = array("html"=>"","error"=>false,"msg"=>"");
-		$data = array();
-		$data["STRNO"] 	 = $_POST["STRNO"];
-		$data["MODEL"] 	 = $_POST["MODEL"];
-		$data["BAAB"] 	 = $_POST["BAAB"];
-		$data["COLOR"] 	 = $_POST["COLOR"];
-		$data["STATEN"]  = $_POST["STAT"];
-		$data["STAT"] 	 = ($data["STATEN"] == "N" ? "รถใหม่":($data["STATEN"] == "O" ? "รถเก่า":""));
-		$data["ACTICOD"] = $_POST["ACTICOD"];
-		$data["dwnAmt"]  = str_replace(",","",$_POST["dwnAmt"]);
-		$data["LOCAT"] 	 = $_POST["LOCAT"];
-		$data["DT"] 	 = $this->Convertdate(1,$_POST["DT"]);
-		
-		if($data["ACTICOD"] == '' || $data["dwnAmt"] == '' || $data["MODEL"] == '' || $data["BAAB"] == '' || $data["COLOR"] == '' || $data["STAT"] == ''){ 
-			$response["msg"] = "CANTSTRNO";
-			echo json_encode($response); exit;
-		}
-		
-		if($data["dwnAmt"] != "" && !is_numeric($data["dwnAmt"])){
-			$response["error"] = true;
-			$response["msg"] = "ผิดพลาด คุณระบุเงินดาวน์ ไม่ถูกต้อง";
-			echo json_encode($response); exit;
-		}
-		
-		if($data["STRNO"] != ""){
-			$sql = "
-				declare @STRNO_USE int = (
-					select count(*) from {$this->MAuth->getdb('ARANALYZE')}
-					where STRNO = '{$data["STRNO"]}' and ANSTAT != 'C' collate thai_ci_as
-				);
-				select a.STRNO,@STRNO_USE as STRNO_USE,a.MODEL,a.BAAB,a.COLOR
-					,case when a.STAT='N' then 'รถใหม่'  else 'รถเก่า' end as STAT
-					,a.STAT as STATEN
-					,convert(varchar(8),b.SDATE,112) as SDATE
-					,convert(varchar(8),b.YDATE,112) as YDATE
-					,a.CRLOCAT as LOCAT
-					,a.GCODE
-					,datediff(day,b.SDATE,b.YDATE) as daysy
-					,b.CONTNO
-				from {$this->MAuth->getdb('INVTRAN')} a
-				left join (
-					select ROW_NUMBER() over(partition by STRNO order by STRNO,sdate desc) r,* 
-					from {$this->MAuth->getdb('ARHOLD')}
-				) as b on a.STRNO=b.STRNO and b.r=1
-				where a.STRNO='".$data["STRNO"]."'
-			";
-			
-			$query = $this->connect_db->query($sql);
-			
-			if($query->row()){
-				foreach($query->result() as $row){
-					foreach($row as $key => $val){
-						switch($key){
-							case 'SDATE': $data[$key] = $this->Convertdate(2,$val); break;
-							case 'YDATE': $data[$key] = $this->Convertdate(2,$val); break;
-							default:  $data[$key] = $val; break;
-						}
-					}
-				}
-			}
-		}
-		
-		$sql = "select * from {$this->MAuth->getdb('fn_STDVehicles')}('{$data["MODEL"]}','{$data["BAAB"]}','{$data["COLOR"]}','{$data["STATEN"]}','{$data["ACTICOD"]}','{$data["LOCAT"]}','{$data["DT"]}')";
-		$query = $this->connect_db->query($sql);
-		
-		$data["mainstdid"] = "";
-		$data["mainsubid"] = "";
-		if($query->row()){
-			foreach($query->result() as $row){
-				$data["mainstdid"] = $row->STDID;
-				$data["mainsubid"] = $row->SUBID;
-				
-				if($row->STAT == "N"){
-					$sql = "
-						select STDID,SUBID,'' as SHCID,PRICE,0 as PRICE_ADD from {$this->MAuth->getdb('STDVehiclesPRICE')}
-						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
-					";
-				}else{
-					$sql = "
-						declare @CONTNO varchar(12) = '".$data["CONTNO"]."';
-						declare @STAT varchar(1)  = (case when @CONTNO = '' 
-							then 'O' else (select STAT from {$this->MAuth->getdb('HINVTRAN')} where CONTNO=@CONTNO) end);
-						declare @price_add decimal(18,2) = (
-							select price_add from {$this->MAuth->getdb('config_addpricesale')}
-							where getdate() between event_st and isnull(event_ed,getdate()) 
-								and '".$data["daysy"]."' between in_sday and in_eday
-						);
-						
-						select '{$row->STDID}' as STDID
-							,'{$row->SUBID}' as SUBID
-							,a.ID as 
-						
-							,b.OPRICE as PRICE
-							,case when @STAT = 'N'
-								then (case when @price_add is null then 0 else @price_add end) else 0 end as PRICE_ADD
-						from {$this->MAuth->getdb('STDSHCAR')} a
-						left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
-						left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
-						left join {$this->MAuth->getdb('STDSHCARLocats')} d on a.ID=d.ID
-						where b.ACTIVE='yes' collate thai_ci_as 
-							and a.MODEL='".$row->MODEL."' collate thai_cs_as
-							and a.BAAB='".$row->BAAB."' collate thai_cs_as 
-							and (case when c.COLOR = 'ALL' then '".$row->COLOR."' else c.COLOR end) = '".$row->COLOR."' collate thai_cs_as 
-							and (case when d.LOCAT = 'ALL' then '".$row->LOCAT."' else d.LOCAT end) = '".$row->LOCAT."' collate thai_cs_as
-							and a.GCODE='".$data["GCODE"]."'
-					";
-				}
-				//echo $sql; exit;
-				$query = $this->connect_db->query($sql);
-				
-				if($query->row()){
-					foreach($query->result() as $row){
-						$data["STDID"] = $row->STDID;
-						$data["SUBID"] = $row->SUBID;
-						$data["SHCID"] = $row->SHCID;
-						$data["PRICE"] = ($row->PRICE+$row->PRICE_ADD);
-						$data["PRICE_ADD"] = number_format($row->PRICE_ADD,2);
-					}
-				}else{
-					$response["error"] = true;
-					$response["msg"] = "
-						ผิดพลาด ไม่พบราคาในสแตนดาร์ด <br>โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
-						รุ่น :: ".$data["MODEL"]."<br>
-						แบบ :: ".$data["BAAB"]."<br>
-						สี :: ".$data["COLOR"]."<br>
-						สถานะรถ :: ".$data["STAT"]."<br>
-						กิจกรรมการขาย :: ".$data["ACTICOD"]."<br>
-						วันที่ขออนุมัติ :: ".$this->Convertdate(2,$data["DT"])."
-					";
-					echo json_encode($response); exit;
-				}
-			}
-		}else{
-			$response["error"] = true;
-			$response["msg"] = "
-				ผิดพลาด ไม่พบราคาขายรถ <br>โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
-				รุ่น :: ".$data["MODEL"]."<br>
-				แบบ :: ".$data["BAAB"]."<br>
-				สี :: ".$data["COLOR"]."<br>
-				สถานะรถ :: ".$data["STAT"]."<br>
-				กิจกรรมการขาย :: ".$data["ACTICOD"]."<br>
-				วันที่ขออนุมัติ :: ".$this->Convertdate(2,$data["DT"])."
-			";
-			echo json_encode($response); exit;
-		}
-		
-		$sql = "
-			select * from {$this->MAuth->getdb('STDVehiclesDown')} a
-			where STDID='".$data["mainstdid"]."' 
-				and SUBID='".$data["mainsubid"]."' and '".$data["dwnAmt"]."' between DOWNS and isnull(DOWNE,'".$data["dwnAmt"]."')
-				and '".$data["PRICE"]."' between PRICES and isnull(PRICEE,'".$data["PRICE"]."')
-		";
-		//echo $sql; exit;
-		$query = $this->connect_db->query($sql);
-		
-		if($query->row()){
-			foreach($query->result() as $row){
-				$data["interest_rate"] 	= $row->INTERESTRT;
-				$data["interest_rate2"]	= $row->INTERESTRT_GVM;
-			}
-		}else{
-			$response["error"] = true;
-			$response["msg"] = "
-				ผิดพลาด ไม่พบขั้นเงินดาวน์ที่ระบุมา โปรดตรวจสอบข้อมูลใหม่อีกครั้ง<br><br>
-				รุ่น :: ".$data["MODEL"]."<br>
-				แบบ :: ".$data["BAAB"]."<br>
-				สี :: ".$data["COLOR"]."<br>
-				สถานะรถ :: ".$data["STAT"]."<br>
-				กิจกรรมการขาย :: ".$data["ACTICOD"]."<br>
-				วันที่ขออนุมัติ :: ".$this->Convertdate(2,$data["DT"])."
-			";
-			
-			echo json_encode($response); exit;
-		}
-		
-		$response["html"] = $data;
-		echo json_encode($response);
-	}
-	*/
+	
+	
 	function fn_checkstd(){
 		$response = array("html"=>"","error"=>false,"msg"=>"");
 		$data = array();
@@ -5521,12 +5490,25 @@ class Analyze extends MY_Controller {
 			echo json_encode($response); exit;
 		}
 		
-		if($data["ISF"] == "Y" and $data["PRICE"] == ""){
+		if($data["ISF"] == "Y" and $data["RESVNO"] != ""){
 			$response["error"] = true;
-			$response["msg"] = "ตั้งไฟแนนท์โปรดระบุวงเงินด้วยครับ";
+			$response["msg"] = "ผิดพลาด :: ตั้งไฟแนนท์ แต่ระบุบิลจองมา";
 			echo json_encode($response); exit;
 		}
 		
+		if($data["ISF"] == "Y" and $data["PRICE"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "ตั้งไฟแนนท์โปรดระบุวงเงิน<br>ที่ช่อง <b class='text-black'>ราคารถ(สด) ก่อนหักส่วนลด</b> ด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		
+		if($data["ISF"] == "Y" and $data["STRNO"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "ตั้งไฟแนนท์โปรดระบุเลขตัวถังด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		
+		if($data["ISF"] == "Y" and $data["STAT"] == "O"){ $data["STAT"] = "F"; }
 		$this->load->model('MDATA');
 		$standard = $this->MDATA->getstandard($data);
 		
@@ -5589,30 +5571,18 @@ class Analyze extends MY_Controller {
 				begin 
 					update {$this->MAuth->getdb('ARANALYZE')}
 					set ANSTAT='C'
+						,CANBY='".$this->sess["IDNo"]."'
+						,CANDT=getdate()
 					where ANSTAT in ('I','P') and ID=@ANID
 					
-					if exists (
-						select * from {$this->MAuth->getdb('ARANALYZEAPPR')}
-						where ID=@ANID
-					)
-					begin 
-						update {$this->MAuth->getdb('ARANALYZEAPPR')}
-						set APPROVE='C'
-							,COMMENTS=@MASSAGE
-							,APPRBY='".$this->sess["IDNo"]."'
-							,APPRDT=getdate()
-						where ID=@ANID
-					end 
-					else 
-					begin
-						insert into {$this->MAuth->getdb('ARANALYZEAPPR')} (ID,APPROVE,COMMENTS,APPRBY,APPRDT)
-						select @ANID,'C',@MASSAGE,'".$this->sess["IDNo"]."',getdate()
-					end
+					update {$this->MAuth->getdb('ARANALYZEDATA')}
+					set BRCOMMENT=@MASSAGE
+					where ID=@ANID
 				end
 				else 
 				begin
 					rollback tran transup;
-					insert into #transaction select 'y',@ANID as id,'ผิดพลาด ไม่สามารถยกเลิกใบวิเคราะห์ '+@ANID+' ได้โปรดตรวจสอบข้อมูลใหม่อีกครั้ง';
+					insert into #transaction select 'y',@ANID as id,'ผิดพลาด ไม่สามารถยกเลิกใบวิเคราะห์ '+@ANID+'<br>สามารถยกเลิกใบวิเคราะห์ได้ในสถานะสร้างคำร้อง/รออนุมัติเท่านั้น โปรดตรวจสอบข้อมูลใหม่อีกครั้ง';
 					return;
 				end
 				

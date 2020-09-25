@@ -867,6 +867,159 @@ class CHomenew extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	function chatLoad(){
+		$sql = "
+			select b.CHATID,b.MSG,b.IMG,b.IPAddress,b.INSBY,b.INSDT from {$this->MAuth->getdb('CHAT')} a
+			left join {$this->MAuth->getdb('CHATDetails')} b on a.CHATID=b.CHATID
+			where a.INSBY='".$this->sess["IDNo"]."' and  b.INSDT > '".$_POST["lastLoad"]."'
+			order by b.INSDT
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$lastLoad = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				if($row->INSBY == $this->sess["IDNo"]){
+					$html .= "
+						<div class='col-sm-12' align='right'>
+							<div align='left' style='word-break:break-all;max-width:90%;width:auto;padding-left:5px;border:0.1px solid #ddd;background-color:pink;border-radius: 10px 0px 0px 10px;'>
+								".str_replace("\n","<br/>",$row->MSG)."
+							</div>
+							<span style='color:#aaa;font-size:6pt;'>".$this->Convertdate(103,$row->INSDT)." ".$this->Convertdate(108,$row->INSDT)."</span>
+						</div>
+					";
+				}else{
+					$html .= "
+						<div class='col-sm-12' align='left'>
+							<div align='left' style='word-break:break-all;max-width:90%;width:auto;padding-left:5px;border:0.1px solid #ddd;background-color:#ccc;border-radius: 0px 10px 10px 0px;'>
+								".str_replace("\n","<br/>",$row->MSG)."
+							</div>
+							<span style='color:#aaa;font-size:6pt;'>".$this->Convertdate(103,$row->INSDT)." ".$this->Convertdate(108,$row->INSDT)."</span>
+						</div>
+					";
+				}
+				
+				$lastLoad = $row->INSDT;
+			}
+		}
+		
+		$this->response["html"] = $html;
+		$this->response["lastLoad"] = $lastLoad;
+		echo json_encode($this->response);
+	}
+	
+	function chatSend(){
+		$text = trim($_POST["text"]);
+		
+		if($text != ""){
+			$sql = "
+				if OBJECT_ID('tempdb..#chatTemp') is not null drop table #chatTemp;
+				create table #chatTemp (id varchar(20),tmbill varchar(20),msg varchar(max));
+				
+				SET NOCOUNT ON;
+				begin tran transaction1
+				begin try
+					declare @IDNo varchar(20) = '".$this->sess["IDNo"]."';
+					declare @CHATID bigint;
+					if not exists(
+						select * from {$this->MAuth->getdb('CHAT')}
+						where INSBY=@IDNo
+					)
+					begin
+						insert into {$this->MAuth->getdb('CHAT')} (IPAddress,INSBY,INSDT)
+						select '".$_SERVER["REMOTE_ADDR"]."',@IDNo,getdate()
+					end
+					
+					set @CHATID = (select CHATID from {$this->MAuth->getdb('CHAT')} where INSBY=@IDNo)
+					
+					insert into {$this->MAuth->getdb('CHATDetails')} (CHATID,MSG,IMG,IPAddress,INSBY,INSDT)
+					select @CHATID,'".$text."',null,'".$_SERVER["REMOTE_ADDR"]."',@IDNo,getdate()
+					
+					insert into #chatTemp select 'S' as id,'','';
+					commit tran transaction1;
+				end try
+				begin catch	
+					rollback tran transaction1;
+					insert into #chatTemp select 'E' as id,'',cast(ERROR_LINE() as varchar)+'::'+ERROR_MESSAGE() as msg;
+				end catch
+			";
+			
+			$success = true;
+			if($this->db->query($sql)){
+				$sql = "select * from #chatTemp";
+				$query = $this->db->query($sql);
+				
+				if($query->row()){
+					foreach($query->result() as $row){
+						if($row->id == "E"){
+							$success = false;
+						}
+					}
+				}
+			}
+			
+			if($success){
+				$sql = "
+					select b.CHATID,b.MSG,b.IMG,b.IPAddress,b.INSBY
+						,c.titleName+c.firstName+' '+c.lastName as INSNM
+						,b.INSDT 
+					from {$this->MAuth->getdb('CHAT')} a
+					left join {$this->MAuth->getdb('CHATDetails')} b on a.CHATID=b.CHATID
+					left join {$this->MAuth->getdb('hp_vusers_all')} c on a.INSBY=c.IDNo collate thai_cs_as
+					where a.INSBY='".$this->sess["IDNo"]."' and  b.INSDT > '".$_POST["lastLoad"]."'
+					order by b.INSDT
+				";
+				//echo $sql; exit;
+				$query = $this->db->query($sql);
+				
+				$html = "";
+				$lastLoad = "";
+				if($query->row()){
+					foreach($query->result() as $row){
+						if($row->INSBY == $this->sess["IDNo"]){
+							$html .= "
+								<div class='col-sm-12' align='right'>
+									<div align='left' style='word-break:break-all;max-width:90%;width:auto;padding-left:5px;border:0.1px solid #ddd;background-color:pink;border-radius: 10px 0px 0px 10px;'>
+										".str_replace("\n","<br/>",$row->MSG)."
+									</div>
+									<span style='color:#aaa;font-size:6pt;'>".$this->Convertdate(103,$row->INSDT)." ".$this->Convertdate(108,$row->INSDT)."</span>
+								</div>
+							";
+						}else{
+							$html .= "
+								<div class='col-sm-12' align='left'>
+									<div align='left' style='word-break:break-all;max-width:90%;width:auto;padding-left:5px;border:0.1px solid #ddd;background-color:#ccc;border-radius: 0px 10px 10px 0px;'>
+										".str_replace("\n","<br/>",$row->MSG)."
+									</div>
+									<span style='color:#aaa;font-size:6pt;'>".$this->Convertdate(103,$row->INSDT)." ".$this->Convertdate(108,$row->INSDT)."</span>
+								</div>
+							";
+						}
+						
+						$line_msg = "\nผู้ใช้ :: ".$row->INSNM."\nสาขา :: ".$this->sess["branch"]."\ntime :: ".$row->INSDT."\nmsg :: ".$row->MSG."\nIP :: ".$row->IPAddress;
+						$data = array(
+							"message" => $line_msg,
+							// "imageThumbnail"=>$imagePath0240,
+							// "imageFullsize"=>$imagePath1024,
+							// "stickerPackageId"=>2,
+							// "stickerId"=>30,
+						);
+						$this->MMAIN->send_notify_line("EunckUbLbY1NbdLNtraStoomzRMhjhq6VfFtYVFnCgk",$data);
+						
+						
+						$lastLoad = $row->INSDT;
+					}
+				}
+				
+				$this->response["html"] = $html;
+				$this->response["lastLoad"] = $lastLoad;
+				echo json_encode($this->response);
+			}
+		}
+	}
+	
 }
 
 

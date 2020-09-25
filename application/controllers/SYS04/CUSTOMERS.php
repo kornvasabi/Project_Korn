@@ -17,6 +17,8 @@ class CUSTOMERS extends MY_Controller {
                 $this->sess[$key] = $value;
             }
 		}
+		$this->config_db['database'] = $this->sess["db"];
+		$this->connect_db = $this->load->database($this->config_db,true);
 	}
 	function index(){
 		$claim = $this->MLogin->getclaim(uri_string());
@@ -56,6 +58,7 @@ class CUSTOMERS extends MY_Controller {
 							</div>
 						</div>
 						<div id='setgroupResult' class='col-sm-12 tab1' style='height:calc(100vh - 197px);overflow:auto;background-color:#;'></div>
+						<!--div><img src='http://192.168.0.213/Senior/HC2S/CUSTOMERS/Picture/1929900456999.jpg' class='rounded' alt='' style='width:100%;height:300px;'></div-->
 					</div>		
 				</div>
 			</div>
@@ -93,19 +96,19 @@ class CUSTOMERS extends MY_Controller {
 				select replace(STUFF(
 					(
 						select '๛' 
-						+' '+ CONVERT(nvarchar(20),CC.ADDRNO)
-						+'. '+'บ้านเลขที่ '+ convert(nvarchar(20),CC.ADDR1) 
-						+' '+'ซอย '+ convert(nvarchar(20),CC.SOI)
-						+' '+'ถนน '+ convert(nvarchar(20),CC.ADDR2)
-						+' '+'หมู่บ้าน '+ CONVERT(nvarchar(20),CC.MOOBAN)
-						+' '+'ตำบล '+ convert(nvarchar(20),CC.TUMB)
-						+' '+'อำเภอ '+ convert(nvarchar(20),B.AUMPDES)
-						+' '+'จังหวัด '+ convert(nvarchar(20),C.PROVDES)
-						+' '+'รหัสไปรษณีย์ '+ CONVERT(nvarchar(20),CC.ZIP)
-						+' '+'เบอร์โทร '+ CONVERT(nvarchar(20),CC.TELP)
-						from {$this->MAuth->getdb('CUSTADDR')} CC left join {$this->MAuth->getdb('SETAUMP')} B on 
-						CC.AUMPCOD = B.AUMPCOD 
-						left join {$this->MAuth->getdb('SETPROV')} C on CC.PROVCOD=C.PROVCOD
+							+' '+ CONVERT(nvarchar(20),isnull(CC.ADDRNO,''))
+							+'. '+'บ้านเลขที่ '+ convert(nvarchar(20),isnull(CC.ADDR1,'')) 
+							+' '+'ซอย '+ convert(nvarchar(20),isnull(CC.SOI,''))
+							+' '+'ถนน '+ convert(nvarchar(20),isnull(CC.ADDR2,''))
+							+' '+'หมู่บ้าน '+ CONVERT(nvarchar(20),isnull(CC.MOOBAN,''))
+							+' '+'ตำบล '+ convert(nvarchar(20),isnull(CC.TUMB,''))
+							+' '+'อำเภอ '+ convert(nvarchar(20),isnull(B.AUMPDES,''))
+							+' '+'จังหวัด '+ convert(nvarchar(20),isnull(C.PROVDES,''))
+							+' '+'รหัสไปรษณีย์ '+ CONVERT(nvarchar(20),isnull(CC.ZIP,''))
+							+' '+'เบอร์โทร '+ CONVERT(nvarchar(20),isnull(CC.TELP,''))
+						from {$this->MAuth->getdb('CUSTADDR')} CC 
+						left join {$this->MAuth->getdb('SETAUMP')} B on CC.AUMPCOD = B.AUMPCOD 
+						left join {$this->MAuth->getdb('SETPROV')} C on CC.PROVCOD = C.PROVCOD
 						where A.CUSCOD = CC.CUSCOD FOR XML path('') 
 					),1, 1, ''
 				),'๛','<br>')as ADDR,CUSCOD,SNAM+NAME1+' '+NAME2 as CUSNAME
@@ -117,11 +120,13 @@ class CUSTOMERS extends MY_Controller {
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
+		/*
 		if(!$query){
 			$response["error"] = true;
 			$response["msg"] = "ผิดพลาด กรุณาติดต่อฝ่ายไอที";
 			echo json_encode ($response); exit;
 		}
+		*/
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
@@ -247,6 +252,7 @@ class CUSTOMERS extends MY_Controller {
 		$CUSCOD = $_POST["CUSCOD"];
 		$EVENT  = $_POST['EVENT'];
 		$arrs 	= array();
+		$arrs['LOCAT']      = $this->sess["branch"]; 
 		$arrs['CUSCOD']     = "Auto Genarate";
 		$arrs['GROUP1']     = "";
 		$arrs['GRADE']      = "";
@@ -264,19 +270,32 @@ class CUSTOMERS extends MY_Controller {
 		$arrs['NATION']     = "";
 		$arrs['OCCUP']      = "";
 		$arrs['OFFIC']      = "";
-		$arrs['MAXCRED']    = "";
-		$arrs['MREVENU']    = "";
-		$arrs['YREVENU']    = "";
+		$arrs['MAXCRED']    = "0.00";
+		$arrs['MREVENU']    = "0.00";
+		$arrs['YREVENU']    = "0.00";
 		$arrs['MOBILENO']   = "";
 		$arrs['EMAIL1']     = "";
 		$arrs['ADDRNO1']	= "";
 		$arrs['ADDRNO2']    = "";
 		$arrs['ADDRNO3']    = "";
 		$arrs['MEMOADD']   	= "";
+		$arrs['PICT1']      = "";
+		$arrs['FILEPIC']    = "";
+				
 		$sql = "
-			select CUSCOD,SNAM,NAME1,NAME2,NICKNM,BIRTHDT,IDCARD,IDNO,ISSUBY,ISSUDT,EXPDT
-			,datediff(month,BIRTHDT,getdate())/12 as AGE,NATION,OCCUP,OFFIC,MAXCRED,MREVENU
-			,YREVENU,MOBILENO,EMAIL1,ADDRNO,ADDRNO2,ADDRNO3,MEMO1
+			declare @locat varchar(20) = (
+				select LOCATCD from {$this->MAuth->getdb('INVLOCAT')} 
+				where SHORTL = LEFT('".$CUSCOD."',1)
+			);
+			declare @filePath varchar(250) = (
+				select filePath from {$this->MAuth->getdb('config_fileupload')}
+				where ftpstatus='Y' and ftpfolder like 'Senior/%/CUSTOMERS/Picture' 
+				and refno='".$this->sess["db"]."'
+			);
+			select @locat as LOCAT,CUSCOD,SNAM,NAME1,NAME2,NICKNM,BIRTHDT,IDCARD,IDNO,ISSUBY
+				,ISSUDT,EXPDT,datediff(month,BIRTHDT,getdate())/12 as AGE,NATION,OCCUP,OFFIC
+				,MAXCRED,MREVENU,YREVENU,MOBILENO,EMAIL1,ADDRNO,ADDRNO2,ADDRNO3,MEMO1,PICT1
+				,isnull(@filePath+PICT1,'(none)') FILEPIC
 			from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD = '".$CUSCOD."'
 		";
 		//echo $sql; exit;
@@ -284,6 +303,7 @@ class CUSTOMERS extends MY_Controller {
         $query = $this->db->query($sql);
 		if($query->row()){
 			foreach($query->result() as $row){
+				$arrs['LOCAT']      = $row->LOCAT;
 				$arrs['CUSCOD']     = $row->CUSCOD;
 				$arrs['SNAM']		= $row->SNAM;
 				$arrs['NAME1']      = $row->NAME1;
@@ -308,6 +328,8 @@ class CUSTOMERS extends MY_Controller {
 				$arrs['ADDRNO2']    = $row->ADDRNO2;
 				$arrs['ADDRNO3']    = $row->ADDRNO3;
 				$arrs['MEMOADD']    = $row->MEMO1;
+				$arrs['PICT1']      = $row->PICT1;
+				$arrs['FILEPIC']    = $row->FILEPIC;
 			}
 		}
 		//echo $arrs['ADDRNO1']; exit;
@@ -346,11 +368,18 @@ class CUSTOMERS extends MY_Controller {
 		}
 		*/
 		$sqlD = "
-			select A.CUSCOD,A.ADDRNO,A.ADDR1,(select house from ".$this->sess["db"].".dbo.FN_JD_REPLACEADDR(ADDR1)) as HOUSE
-			,(select swine from ".$this->sess["db"].".dbo.FN_JD_REPLACEADDR(ADDR1)) as SWIN,A.ADDR2,A.TUMB
-			,A.AUMPCOD,A.PROVCOD,A.ZIP,A.TELP,A.MEMO1,A.ACPDT
-			,A.USERID,A.PICT1,A.MOOBAN,A.SOI,B.PROVCOD,B.AUMPCOD,B.AUMPDES
-			,C.PROVCOD,C.PROVDES from {$this->MAuth->getdb('CUSTADDR')} A
+			declare @filePath varchar(250) = (
+				select filePath from {$this->MAuth->getdb('config_fileupload')}
+				where ftpstatus='Y' and ftpfolder like 'Senior/%/CUSTOMERS/Map'
+				and refno='".$this->sess["db"]."'
+			);
+		
+			select A.CUSCOD,A.ADDRNO,A.ADDR1,(select house from HIC2SHORTL.dbo.FN_JD_REPLACEADDR(ADDR1)) as HOUSE
+				,(select swine from HIC2SHORTL.dbo.FN_JD_REPLACEADDR(ADDR1)) as SWIN,A.ADDR2,A.TUMB
+				,A.AUMPCOD,A.PROVCOD,A.ZIP,A.TELP,A.MEMO1,A.ACPDT
+				,A.USERID,A.PICT1,A.MOOBAN,A.SOI,B.PROVCOD,B.AUMPCOD,B.AUMPDES
+				,C.PROVCOD,C.PROVDES,isnull(@filePath+PICT1,'(none)') FILEPIC  
+			from {$this->MAuth->getdb('CUSTADDR')} A
 			left join {$this->MAuth->getdb('SETAUMP')} B on A.AUMPCOD=B.AUMPCOD 
 			left join {$this->MAuth->getdb('SETPROV')} C on B.PROVCOD=C.PROVCOD
 			where CUSCOD='".$CUSCOD."'
@@ -381,7 +410,9 @@ class CUSTOMERS extends MY_Controller {
 							TELP    = '".str_replace(chr(0),'',$row->TELP)."'
 							MEMO1   = '".str_replace(chr(0),'',$row->MEMO1)."'
 							SWIN	= '".str_replace(chr(0),'',$row->SWIN)."'
-							>แก้ไข</button>
+							IMGMAPNM= '".str_replace(chr(0),'',$row->PICT1)."'
+							CANIMG  = '".str_replace(chr(0),'',$row->FILEPIC)."'
+						>แก้ไข</button>
 						</td>
 						<td>".str_replace(chr(0),'',$row->ADDRNO)."</td>
 						<td>
@@ -397,6 +428,7 @@ class CUSTOMERS extends MY_Controller {
 						</td>
 						<td>".str_replace(chr(0),'',$row->TELP)."</td>
 						<td>".str_replace(chr(0),'',$row->MEMO1)."</td>
+						<td><img id='cuspic_map' src='".($row->PICT1 == "" ? '../public/images/noimg.jpg':$row->FILEPIC)."' class='rounded' alt='' style='width:100%;height:100px;'></td>
 						<td>
 							<button class='btnDelAddrTable btn btn-sm btn-danger fa fa-trash'>ลบ</button>
 						</td>
@@ -409,211 +441,262 @@ class CUSTOMERS extends MY_Controller {
 		}
 		//".($arrs['IDCARD'] == 'บัตรประชาชน' ? "selected":"")."
 		$html ="
-			<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
-					<div class='col-sm-4'>
-						สาขา
-						<select id='add_locat' class='form-control input-sm'>
-							<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>
-						</select>
-					</div>
-				</div>
-			</div>
-			<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
-					<div class='col-sm-4'>
-						รหัสลูกค้า
-						<input type='text' class='form-control input-sm' id='CUSCOD' value='{$arrs['CUSCOD']}' readonly>
-					</div>
-					<div class='col-sm-4'>
-						กลุ่มลูกค้า
-						<select type='text' class='form-control' id='GROUP1'>
-						{$arrs['GROUP1']}
-						</select>
-					</div>
-					<div class='col-sm-4'>
-						เกรด
-						<select type='text' class='form-control' id='GRADE'>
-						{$arrs['GRADE']}
-						</select>
-					</div>
-				</div>
-			</div>
-			<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
-					<div class='col-sm-4'>
-						คำนำหน้า
-						<select type='text' class='form-control' id='SNAM'>
-							<option value='".$arrs['SNAM']."'>".$arrs['SNAM']."</option>
-						</select>
-					</div>
-					<div class='col-sm-4'>
-						ชื่อ
-						<input type='text' class='form-control input-sm checkvalue' id='NAME1' value='{$arrs['NAME1']}'>
-					</div>
-					<div class='col-sm-4'>
-						นามสกุล
-						<input type='text' class='form-control input-sm checkvalue' id='NAME2' value='{$arrs['NAME2']}'>
-					</div>
-				</div>
-			</div>
-			<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
-					<div class='col-sm-4'>
-						ชื่อเล่น
-						<input type='text' class='form-control input-sm checkvalue' id='NICKNM' value='{$arrs['NICKNM']}'>
-					</div>
-					<div class='col-sm-4'>
-						วัน/เดือน/ปี เกิด
-						<input type='text' id='BIRTHDT' class='form-control input-sm' placeholder='วว/ดด/ปป' data-provide='datepicker' data-date-language='th-th' value='".$this->dateselectshow($arrs['BIRTHDT'])."'>
-					</div>
-					<div class='col-sm-4'>
-						ประเภทบัตรประจำตัว
-						<select type='text' class='form-control input-sm' id='IDCARD' >
-							<option></option>
-							<option value='บัตรประชาชน' ".($arrs['IDCARD'] == 'บัตรประชาชน' ? "selected":"").">บัตรประชาชน</option>
-							<option value='บัตรข้าราชการ/รัฐวิสาหกิจ' ".($arrs['IDCARD'] == 'บัตรข้าราชการ/รัฐวิสาหกิจ' ? "selected":"").">บัตรข้าราชการ/รัฐวิสาหกิจ</option>
-							<option value='ทะเบียนการค้า' ".($arrs['IDCARD'] == 'ทะเบียนการค้า' ? "selected":"").">ทะเบียนการค้า</option>
-							<option value='บัตรต่างด้าว' ".($arrs['IDCARD'] == 'บัตรต่างด้าว' ? "selected":"").">บัตรต่างด้าว</option>
-							<option value='ไม่ระบุ' ".($arrs['IDCARD'] == 'ไม่ระบุ' ? "selected":"").">ไม่ระบุ</option>
-							<option value='อื่นๆ' ".($arrs['IDCARD'] == 'อื่นๆ' ? "selected":"").">อื่นๆ</option>
-						</select>
-					</div>
-				</div>
-			</div>
-			<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
-					<div class='col-sm-4'>
-						เลขที่
-						<input type='text' maxlength='13' class='form-control input-sm checkvalue' id='IDNO' value='{$arrs['IDNO']}'>
-					</div>
-					<div class='col-sm-4'>
-						ออกโดย
-						<input type='text' class='form-control input-sm checkvalue' id='ISSUBY' value='{$arrs['ISSUBY']}'>
-					</div>
-					<div class='col-sm-4'>
-						วัน/เดือน/ปี ที่ออกบัตร
-						<input type='text' id='ISSUDT' class='form-control input-sm' placeholder='วว/ดด/ปป' data-provide='datepicker' data-date-language='th-th' value='".$this->dateselectshow($arrs['ISSUDT'])."'>
-					</div>    
-				</div>
-			</div>
-			<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
-					<div class='col-sm-4'>
-						วัน/เดือน/ปี บัตรหมดอายุ
-						<input type='text' id='EXPDT' class='form-control input-sm' placeholder='วว/ดด/ปป' data-provide='datepicker' data-date-language='th-th' value='".$this->dateselectshow($arrs['EXPDT'])."'>
-					</div>
-					<div class='col-sm-4'>
-						อายุ
-						<input type='text' class='form-control input-sm checkvalue' id='AGE' value='{$arrs['AGE']}'>
-					</div>
-					<div class='col-sm-4'>
-						สัญชาติ
-						<select type='text' class='form-control input-sm' id='NATION' >
-							<option></option>
-							<option value='ไทย' ".($arrs['NATION'] == 'ไทย' ? "selected":"").">ไทย</option>
-							<option value='จีน' ".($arrs['NATION'] == 'จีน' ? "selected":"").">จีน</option>
-							<option value='ลาว' ".($arrs['NATION'] == 'ลาว' ? "selected":"").">ลาว</option>
-							<option value='เขมร' ".($arrs['NATION'] == 'เขมร' ? "selected":"").">เขมร</option>
-							<option value='มาเลเซีย' ".($arrs['NATION'] == 'มาเลเซีย' ? "selected":"").">มาเลเซีย</option>
-							<option value='พม่า' ".($arrs['NATION'] == 'พม่า' ? "selected":"").">พม่า</option>
-						</select>
-					</div>
-				</div>
-			</div>
-			<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
-					<div class='col-sm-4'>
-						อาชีพ
-						<input type='text' class='form-control input-sm checkvalue' id='OCCUP' value='{$arrs['OCCUP']}'>
-					</div>
-					<div class='col-sm-4'>
-						สถานที่ทำงาน
-						<input type='text' class='form-control input-sm checkvalue' id='OFFIC' value='{$arrs['OFFIC']}'>
-					</div>
-					<div class='col-sm-4'>
-						วงเงินเครดิต
-						<input type='text' class='form-control input-sm checkvalue' id='MAXCRED' value='{$arrs['MAXCRED']}'>
-					</div>
-				</div>
-			</div>
-			<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
-					<div class='col-sm-4'>
-						รายได้ต่อเดือน
-						<input type='text' class='form-control input-sm checkvalue' id='MREVENU' value='{$arrs['MREVENU']}'>
+			<div class='row' style='border:1px dotted #aaa;background-color:#7fb3d5;'>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							สาขา
+							<select id='add_locat' class='form-control input-sm'>
+								<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>
+							</select>
 						</div>
-					<div class='col-sm-4'>
-						รายได้พิเศษต่อปี  
-						<input type='text' class='form-control input-sm checkvalue' id='YREVENU' value='{$arrs['YREVENU']}'>
-					</div>
-					<div class='col-sm-4'>
-						เบอร์โทร
-						<input type='text' maxlength='10' class='form-control input-sm checkvalue' id='MOBILENO' maxlength='10' value='{$arrs['MOBILENO']}'>
 					</div>
 				</div>
-			</div>
-			<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
-					<div class='col-sm-4'>
-						อีเมล์
-						<input type='email' class='form-control input-sm checkvalue' id='EMAIL1' value='{$arrs['EMAIL1']}'><br>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							รหัสลูกค้า
+							<input type='text' class='form-control input-sm' id='CUSCOD' value='{$arrs['CUSCOD']}' readonly>
+						</div>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							กลุ่มลูกค้า
+							<select type='text' class='form-control' id='GROUP1'>
+							{$arrs['GROUP1']}
+							</select>
+						</div>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							เกรด
+							<select type='text' class='form-control' id='GRADE'>
+							{$arrs['GRADE']}
+							</select>
+						</div>
 					</div>
 				</div>
-			</div>
-			<div class='col-sm-10 col-sm-offset-1'>
-				<h3 class='text-primary'>เพิ่มที่อยู่ลูกค้า</h3>
-				<div class='row' style='border:1px dotted #aaa; height:100%;overflow:auto;'>
-					<table id = 'data-table-address' class='col-sm-12 display table table-striped table-bordered table-hover' cellspacing='0' width='100%'>
-						<thead>
-							<tr>
-								<th><center>#</center></th>
-								<th>ลำดับ</th>
-								<th>ที่อยู่</th>
-								<th>เบอร์ติดต่อ</th>
-								<th>หมายเหตุ</th>
-								<th>ลบ</th>
-							</tr>
-						</thead>
-						<tbody id='tableaddr'>
-							".$tbody."
-						</tbody>
-						<tfoot>
-							<tr>
-								<td colspan='6'>
-									<button id='btnAddAddressFirst' class='btn btn-sm btn-cyan btn-block fa fa-plus-square'>เพิ่มที่อยู่</button>
-								</td>	
-							</tr>
-						</tfoot>
-					</table>
-					<div class='col-sm-4'>
-						ที่อยู่ตามทะเบียนบ้าน
-						<select type='text' class='form-control' id='addrno1'>
-							
-							".$addrno1."
-						</select>
-					</div>
-					<div class='col-sm-4'>
-						ที่อยู่ปัจจุบัน
-						<select type='text' class='form-control' id='addrno2'>
-							
-							".$addrno2."
-						</select>
-					</div>
-					<div class='col-sm-4'>
-						ที่อยู่ที่อยู่ที่ส่งจดหมาย
-						<select type='text' class='form-control' id='addrno3'>
-							
-							".$addrno3."
-						</select>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							คำนำหน้า
+							<select type='text' class='form-control' id='SNAM'>
+								<option value='".$arrs['SNAM']."'>".$arrs['SNAM']."</option>
+							</select>
+						</div>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							ชื่อ
+							<input type='text' class='form-control input-sm checkvalue' id='NAME1' value='{$arrs['NAME1']}'>
+						</div>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							นามสกุล
+							<input type='text' class='form-control input-sm checkvalue' id='NAME2' value='{$arrs['NAME2']}'>
+						</div>
 					</div>
 				</div>
-			</div>
-			<div class='col-sm-10 col-sm-offset-1'>
-				<div class='row'>
-					<div class='col-sm-6'>
-						หมายเหตุ
-						<textarea class='form-control' id='MEMOADD'}'>{$arrs['MEMOADD']}</textarea>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							ชื่อเล่น
+							<input type='text' class='form-control input-sm checkvalue' id='NICKNM' value='{$arrs['NICKNM']}'>
+						</div>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							วัน/เดือน/ปี เกิด
+							<input type='text' id='BIRTHDT' class='form-control input-sm' placeholder='วว/ดด/ปป' data-provide='datepicker' data-date-language='th-th' value='".$this->dateselectshow($arrs['BIRTHDT'])."'>
+						</div>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							ประเภทบัตรประจำตัว
+							<select type='text' class='form-control input-sm' id='IDCARD' >
+								<option></option>
+								<option value='บัตรประชาชน' ".($arrs['IDCARD'] == 'บัตรประชาชน' ? "selected":"").">บัตรประชาชน</option>
+								<option value='บัตรข้าราชการ/รัฐวิสาหกิจ' ".($arrs['IDCARD'] == 'บัตรข้าราชการ/รัฐวิสาหกิจ' ? "selected":"").">บัตรข้าราชการ/รัฐวิสาหกิจ</option>
+								<option value='ทะเบียนการค้า' ".($arrs['IDCARD'] == 'ทะเบียนการค้า' ? "selected":"").">ทะเบียนการค้า</option>
+								<option value='บัตรต่างด้าว' ".($arrs['IDCARD'] == 'บัตรต่างด้าว' ? "selected":"").">บัตรต่างด้าว</option>
+								<option value='ไม่ระบุ' ".($arrs['IDCARD'] == 'ไม่ระบุ' ? "selected":"").">ไม่ระบุ</option>
+								<option value='อื่นๆ' ".($arrs['IDCARD'] == 'อื่นๆ' ? "selected":"").">อื่นๆ</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							เลขที่
+							<input type='text' maxlength='13' class='form-control input-sm checkvalue' id='IDNO' value='{$arrs['IDNO']}'>
+						</div>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							ออกโดย
+							<input type='text' class='form-control input-sm checkvalue' id='ISSUBY' value='{$arrs['ISSUBY']}'>
+						</div>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							วัน/เดือน/ปี ที่ออกบัตร
+							<input type='text' id='ISSUDT' class='form-control input-sm' placeholder='วว/ดด/ปป' data-provide='datepicker' data-date-language='th-th' value='".$this->dateselectshow($arrs['ISSUDT'])."'>
+						</div>    
+					</div>
+				</div>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							วัน/เดือน/ปี บัตรหมดอายุ
+							<input type='text' id='EXPDT' class='form-control input-sm' placeholder='วว/ดด/ปป' data-provide='datepicker' data-date-language='th-th' value='".$this->dateselectshow($arrs['EXPDT'])."'>
+						</div>
+						<div class='col-sm-4'>
+							อายุ
+							<input type='text' class='form-control input-sm checkvalue' id='AGE' value='{$arrs['AGE']}' disabled>
+						</div>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							สัญชาติ
+							<select type='text' class='form-control input-sm' id='NATION' >
+								<option></option>
+								<option value='ไทย' ".($arrs['NATION'] == 'ไทย' ? "selected":"").">ไทย</option>
+								<option value='จีน' ".($arrs['NATION'] == 'จีน' ? "selected":"").">จีน</option>
+								<option value='ลาว' ".($arrs['NATION'] == 'ลาว' ? "selected":"").">ลาว</option>
+								<option value='เขมร' ".($arrs['NATION'] == 'เขมร' ? "selected":"").">เขมร</option>
+								<option value='มาเลเซีย' ".($arrs['NATION'] == 'มาเลเซีย' ? "selected":"").">มาเลเซีย</option>
+								<option value='พม่า' ".($arrs['NATION'] == 'พม่า' ? "selected":"").">พม่า</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							อาชีพ
+							<input type='text' class='form-control input-sm checkvalue' id='OCCUP' value='{$arrs['OCCUP']}'>
+						</div>
+						<div class='col-sm-4'>
+							สถานที่ทำงาน
+							<input type='text' class='form-control input-sm checkvalue' id='OFFIC' value='{$arrs['OFFIC']}'>
+						</div>
+						<div class='col-sm-4'>
+							วงเงินเครดิต
+							<input type='text' class='form-control input-sm checkvalue' id='MAXCRED' value='{$arrs['MAXCRED']}'>
+						</div>
+					</div>
+				</div>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							รายได้ต่อเดือน
+							<input type='text' class='form-control input-sm checkvalue' id='MREVENU' value='{$arrs['MREVENU']}'>
+							</div>
+						<div class='col-sm-4'>
+							รายได้พิเศษต่อปี  
+							<input type='text' class='form-control input-sm checkvalue' id='YREVENU' value='{$arrs['YREVENU']}'>
+						</div>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							เบอร์โทร
+							<input type='text' maxlength='10' class='form-control input-sm checkvalue' id='MOBILENO' maxlength='10' value='{$arrs['MOBILENO']}'>
+						</div>
+					</div>
+				</div>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							อีเมล์
+							<input type='email' class='form-control input-sm checkvalue' id='EMAIL1' value='{$arrs['EMAIL1']}'><br>
+						</div>
+					</div>
+				</div>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<h3 class='text-primary'>เพิ่มที่อยู่ลูกค้า</h3>
+					<div class='row' style='border:1px dotted #aaa; height:100%;overflow:auto;'>
+						<table id = 'data-table-address' class='col-sm-12 display table table-striped table-bordered table-hover' cellspacing='0' width='100%'>
+							<thead>
+								<tr>
+									<th><center>#</center></th>
+									<th>ลำดับ</th>
+									<th>ที่อยู่</th>
+									<th>เบอร์ติดต่อ</th>
+									<th>หมายเหตุ</th>
+									<th>รูปแผนที่</th>
+									<th>ลบ</th>
+								</tr>
+							</thead>
+							<tbody id='tableaddr'>
+								".$tbody."
+							</tbody>
+							<tfoot>
+								<tr>
+									<td colspan='7'>
+										<button id='btnAddAddressFirst' class='btn btn-sm btn-cyan btn-block fa fa-plus-square'>เพิ่มที่อยู่</button>
+									</td>	
+								</tr>
+							</tfoot>
+						</table>
+					</div>
+				</div>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							ที่อยู่ตามทะเบียนบ้าน
+							<select type='text' class='form-control' id='addrno1'>
+								".$addrno1."
+							</select>
+						</div>
+						<div class='col-sm-4'>
+							ที่อยู่ปัจจุบัน
+							<select type='text' class='form-control' id='addrno2'>
+								".$addrno2."
+							</select>
+						</div>
+						<div class='col-sm-4'>
+							ที่อยู่ที่อยู่ที่ส่งจดหมาย
+							<select type='text' class='form-control' id='addrno3'>
+								".$addrno3."
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class='col-sm-10 col-sm-offset-1' style='height:20px;'></div>
+				
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							<div class='text-center'>
+							  <img id='cuspic_img' src='' class='rounded' alt='' style='width:100%;height:300px;'>
+							</div>
+						</div>
+						<div id='MEMO_2' class='col-sm-8'>					
+							หมายเหตุ
+							<textarea class='form-control' id='MEMOADD'>{$arrs['MEMOADD']}</textarea>
+						</div>
+					</div>
+				</div>
+				<div class='col-sm-10 col-sm-offset-1'>
+					<div class='row'>
+						<div class='col-sm-4'>
+							<span class='text-red'>*</span>
+							แนบรูปลูกค้า
+							<div class='input-group'>
+								<input type='text' id='cuspic_picture' class='form-control input-sm' readonly=''
+									value='".$arrs['PICT1']."'
+									data-toggle='tooltip'
+									data-placement='top'
+									data-html='true'
+									data-original-title=''	
+									style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+								<span id='cuspic_picture_form' data-tags='cuspic_' class='kb-upload-an input-group-addon btn-default text-info'>
+									<span class='glyphicon glyphicon-picture'></span>
+								</span>
+							</div>
+						</div>
+						<div id='MEMO_1' class='col-sm-8'>					
+							หมายเหตุ
+							<textarea class='form-control' id='MEMOADD'>{$arrs['MEMOADD']}</textarea>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -644,9 +727,33 @@ class CUSTOMERS extends MY_Controller {
 				<div class='col-sm-12'>&emsp;</div>
 			";
 		}
-        $response = array("html"=>$html);
+        $response = array("html"=>$html,"filepic"=>($arrs["PICT1"] == "" ? "(none)":$arrs['FILEPIC']));
         echo json_encode($response);
 	}
+	function picture_receipt(){
+		$file 		= $_FILES["myfile"];
+		$tags 		= $_POST["tags"];
+		
+		$fileName   = explode(".",$_FILES["myfile"]["name"]);
+		
+		if($_POST["tags"] == "cuspic_"){
+			$fileName = $file['name'];
+		}else if($_POST["tags"] == "cusmap_"){
+			$fileName = $file['name'];
+		}
+	
+		$targetFile  = $file["tmp_name"];	
+		$size		 = GetimageSize($targetFile);
+		$width		 = 200;
+		$height	  	 = round($width*$size[1]/$size[0]);
+		
+		$path = $targetFile;
+		$type = pathinfo($path, PATHINFO_EXTENSION);
+		$data = file_get_contents($path);
+		$base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+		echo json_encode(array("source"=>$base64,"name"=>$fileName));
+	}
+	
 	function getAge(){
 		$response = array();
 		$BIRTHDT = $this->Convertdate(1,$_POST['BIRTHDT']);
@@ -679,18 +786,22 @@ class CUSTOMERS extends MY_Controller {
         $arrs["TELP"] 	  = (!isset($_POST["TELP"])?    "":$_POST["TELP"]);
         $arrs["MEMO1"] 	  = (!isset($_POST["MEMO1"])?   "":$_POST["MEMO1"]);
 		
+		$arrs["IMGMAPNM"] = (!isset($_POST["IMGMAPNM"]) ? "":$_POST["IMGMAPNM"]);
+		$arrs["IMGMAP"]   = (!isset($_POST["IMGMAP"]) ?   "":$_POST["IMGMAP"]);
+		
 		$arrs['ACTION']   = $_POST['ACTION'];
 		
 		$DIS ="";
 		if($arrs["ADDRNO"] !== ""){
 			$DIS = "disabled";
 		}
+		$html = "";
 		$html ="
 			<div class='col-sm-10 col-sm-offset-1'>
 				<div class='row'>
 					<div class='col-sm-12'>
 						ลำดับ
-						<input type='number' class='form-control' id='ADDRNO' value='".$arrs["ADDRNO"]."' ".$DIS.">
+						<input type='number' class='form-control' id='ADDRNO' value='".$arrs["ADDRNO"]."' ".$DIS." disabled>
 					</div>
 					<div class='col-sm-12'>
 						บ้านเลขที่
@@ -742,6 +853,22 @@ class CUSTOMERS extends MY_Controller {
 						หมายเหตุ
 						<textarea class='form-control' rows='2' cols='30' id='MEMO1' value='".$arrs["MEMO1"]."'>".$arrs["MEMO1"]."</textarea><br>
 					</div>
+					<div class='col-sm-12'>
+						แนบรูปลูกค้า
+						<div class='input-group'>
+							<input type='text' id='cusmap_picture' class='form-control input-sm' readonly=''
+								value='".$arrs["IMGMAPNM"]."'
+								source_map='".$arrs["IMGMAP"]."'
+								data-toggle='tooltip'
+								data-placement='top'
+								data-html='true'
+								data-original-title=''	
+								style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+							<span id='cusmap_picture_form' data-tags='cusmap_' class='kb-upload-map input-group-addon btn-default text-info'>
+								<span class='glyphicon glyphicon-picture'></span>
+							</span>
+						</div>
+					</div>
 				</div>
 			</div>
 		";
@@ -749,9 +876,11 @@ class CUSTOMERS extends MY_Controller {
 			$html .="
 				<div class='row col-sm-12'>
 					<div class='col-sm-6'>
+						<br>
 						<button id='btnAddTableHtml' class='btn btn-block btn-primary fa fa-check-square-o'>เพิ่ม</button><br>					
 					</div>
 					<div class='col-sm-6'>
+						<br>
 						<button id='btnWACloseAdd' class='btn btn-block btn-danger fa fa-remove'>ยกเลิก</button><br>
 					</div>
 				</div>
@@ -760,9 +889,11 @@ class CUSTOMERS extends MY_Controller {
 			$html .="
 				<div class='row col-sm-12'>
 					<div class='col-sm-6'>
+						<br>
 						<button id='btneditTableHtml' class='btn btn-block btn-warning fa fa-edit'>แก้ไข</button><br>					
 					</div>
 					<div class='col-sm-6'>
+						<br>
 						<button id='btnWAClose' class='btn btn-block btn-danger fa fa-remove'>ยกเลิก</button><br>
 					</div>
 				</div>
@@ -788,6 +919,9 @@ class CUSTOMERS extends MY_Controller {
         $arrs["ZIP"] 	 = $_POST["ZIP"];
         $arrs["TELP"] 	 = $_POST["TELP"];
         $arrs["MEMO1"] 	 = $_POST["MEMO1"];
+		$arrs["IMGMAPNM"]= (isset($_POST["IMGMAPNM"]) ? $_POST["IMGMAPNM"]:"");
+		$arrs["IMGMAP"]  = (isset($_POST["IMGMAP"]) ? $_POST["IMGMAP"]:"");
+		$arrs["CANIMG"]  = (isset($_POST["CANIMG"]) ? $_POST["CANIMG"]:"");
 		
 		if($arrs['ADDRNO'] ==""){
 			$response["error"] = true;
@@ -799,28 +933,6 @@ class CUSTOMERS extends MY_Controller {
 			$response["msg"] = "กรุณากรอกบ้านเลขที่ก่อนครับ";
 			echo json_encode($response); exit;
 		}
-		/*if($arrs['SWIN'] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณกรอกเลขที่หมู่บ้านเป็นตัวเลขก่อนครับ";
-			echo json_encode ($response); exit;
-		}
-		*/
-		/*if($arrs['SOI'] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกซอย : ไม่ระบุโปรดใส่เครื่องหมาย -";
-			echo json_encode($response); exit;
-		}
-		if($arrs['ADDR2'] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณกรอกถนน : ไม่ระบุโปรดใส่เครื่องหมาย -";
-			echo json_encode ($response); exit;
-		}
-		if($arrs['MOOBAN'] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกชื่อหมู่บ้านก่อนครับ";
-			echo json_encode($response); exit;
-		}
-		*/
 		if($arrs['TUMB'] ==""){
 			$response["error"] = true;
 			$response["msg"] = "กรุณกรอกตำบลก่อนครับครับ";
@@ -847,83 +959,13 @@ class CUSTOMERS extends MY_Controller {
 			$response["msg"] = "กรุณกรอกเบอร์โทรศัพท์ก่อนครับ";
 			echo json_encode ($response); exit;
 		}
-        $address = "";
-        if($arrs["ADDR1"] != ""){
-			$address .= "บ้านเลขที่ ".$arrs["ADDR1"];
-        }
-		if($arrs["SWIN"] !=""){
-			$address .= "หมู่ที่".$arrs["SWIN"];
+		/*
+		if($arrs['IMGMAP'] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณแนบภาพแผนที่ก่อนครับ";
+			echo json_encode ($response); exit;
 		}
-        if($arrs["SOI"] != ""){
-			$address .= " ซอย ".$arrs["SOI"];
-        }
-        if($arrs["ADDR2"] != ""){
-			$address .= " ถนน ".$arrs["ADDR2"];
-        }
-        if($arrs["MOOBAN"] != ""){
-			$address .= " หมู่บ้าน ".$arrs["MOOBAN"];
-        }
-        if($arrs["TUMB"] != ""){
-			$address .= " ตำบล".$arrs["TUMB"];
-        }
-        if($arrs["AUMPDES"] != ""){
-			$address .= " อำเภอ".$arrs["AUMPDES"];
-        }
-        if($arrs["PROVDES"] != ""){
-			$address .= " จังหวัด".$arrs["PROVDES"];
-        }
-        if($arrs["ZIP"] != ""){
-			$address .= " รหัสไปรษณีย์ ".$arrs["ZIP"];
-        }
-        $tbody = "
-            <tr>
-				<td>
-                    <button class='btnEditAddrTable btn btn-sm btn-warning fa fa-edit' 
-                        ADDRNO='".$arrs["ADDRNO"]."'
-                        ADDR1='".$arrs["ADDR1"]."'
-                        SOI='".$arrs["SOI"]."'
-                        ADDR2='".$arrs["ADDR2"]."'
-                        MOOBAN='".$arrs["MOOBAN"]."'
-                        TUMB='".$arrs["TUMB"]."'
-                        AUMPCOD='".$arrs["AUMPCOD"]."'
-                        PROVCOD='".$arrs["PROVCOD"]."'
-                        AUMPDES='".$arrs["AUMPDES"]."'
-                        PROVDES='".$arrs["PROVDES"]."'
-                        ZIP='".$arrs["ZIP"]."'
-                        TELP='".$arrs["TELP"]."'
-                        MEMO1='".$arrs["MEMO1"]."'
-						SWIN='".$arrs["SWIN"]."'
-					>แก้ไข</button>
-                </td>
-                <td>".$arrs["ADDRNO"]."</td>
-                <td>".$address."</td>
-                <td>".$arrs["TELP"]."</td>
-                <td>".$arrs["MEMO1"]."</td>
-                <td>
-                    <button ADDRNO='".$arrs["ADDRNO"]."' class='btnDelAddrTable btn btn-sm btn-danger fa fa-trash'>ลบ</button>
-                </td>
-            </tr>
-            ";	
-        $response = array("tbody"=>$tbody);
-        echo json_encode($response);
-	}
-	function SetAddr_TableHtml_Cancel(){
-		$response = array('error'=>false,'msg'=>'');
-		$arrs = array(); 
-		$arrs["ADDRNO"]  = $_POST["ADDRNO"];
-        $arrs["ADDR1"]   = $_POST["ADDR1"];
-		$arrs["SWIN"]	 = $_POST["SWIN"];
-        $arrs["SOI"] 	 = $_POST["SOI"];
-        $arrs["ADDR2"] 	 = $_POST["ADDR2"];
-        $arrs["MOOBAN"]  = $_POST["MOOBAN"];
-        $arrs["TUMB"] 	 = $_POST["TUMB"];
-        $arrs["AUMPCOD"] = $_POST["AUMPCOD"];
-        $arrs["PROVCOD"] = $_POST["PROVCOD"];
-        $arrs["AUMPDES"] = $_POST["AUMPDES"];
-        $arrs["PROVDES"] = $_POST["PROVDES"];
-        $arrs["ZIP"] 	 = $_POST["ZIP"];
-        $arrs["TELP"] 	 = $_POST["TELP"];
-        $arrs["MEMO1"] 	 = $_POST["MEMO1"];
+		*/
 		
         $address = "";
         if($arrs["ADDR1"] != ""){
@@ -971,12 +1013,16 @@ class CUSTOMERS extends MY_Controller {
                         TELP='".$arrs["TELP"]."'
                         MEMO1='".$arrs["MEMO1"]."'
 						SWIN='".$arrs["SWIN"]."'
+						IMGMAP='".$arrs["IMGMAP"]."'
+						IMGMAPNM='".$arrs["IMGMAPNM"]."'
+						CANIMG  = '".$arrs["CANIMG"]."'
 					>แก้ไข</button>
                 </td>
                 <td>".$arrs["ADDRNO"]."</td>
                 <td>".$address."</td>
                 <td>".$arrs["TELP"]."</td>
                 <td>".$arrs["MEMO1"]."</td>
+				<td><img id='cuspic_map' src='".($arrs["IMGMAP"] == "" ? $arrs["CANIMG"]:$arrs["IMGMAP"])."' class='rounded' alt='' style='width:100%;height:100px;'></td>
                 <td>
                     <button ADDRNO='".$arrs["ADDRNO"]."' class='btnDelAddrTable btn btn-sm btn-danger fa fa-trash'>ลบ</button>
                 </td>
@@ -984,6 +1030,340 @@ class CUSTOMERS extends MY_Controller {
             ";	
         $response = array("tbody"=>$tbody);
         echo json_encode($response);
+	}
+	function SetAddr_TableHtml_Cancel(){
+		$response = array('error'=>false,'msg'=>'');
+		$arrs = array(); 
+		$arrs["ADDRNO"]  = $_POST["ADDRNO"];
+        $arrs["ADDR1"]   = $_POST["ADDR1"];
+		$arrs["SWIN"]	 = $_POST["SWIN"];
+        $arrs["SOI"] 	 = $_POST["SOI"];
+        $arrs["ADDR2"] 	 = $_POST["ADDR2"];
+        $arrs["MOOBAN"]  = $_POST["MOOBAN"];
+        $arrs["TUMB"] 	 = $_POST["TUMB"];
+        $arrs["AUMPCOD"] = $_POST["AUMPCOD"];
+        $arrs["PROVCOD"] = $_POST["PROVCOD"];
+        $arrs["AUMPDES"] = $_POST["AUMPDES"];
+        $arrs["PROVDES"] = $_POST["PROVDES"];
+        $arrs["ZIP"] 	 = $_POST["ZIP"];
+        $arrs["TELP"] 	 = $_POST["TELP"];
+        $arrs["MEMO1"] 	 = $_POST["MEMO1"];
+		$arrs["IMGMAPNM"]= (isset($_POST["IMGMAPNM"]) ? $_POST["IMGMAPNM"]:"");
+		$arrs["IMGMAP"]  = (isset($_POST["IMGMAP"]) ? $_POST["IMGMAP"]:"");
+		$arrs["CANIMG"]  = (isset($_POST["CANIMG"]) ? $_POST["CANIMG"]:"");
+		
+        $address = "";
+        if($arrs["ADDR1"] != ""){
+			$address .= "บ้านเลขที่ ".$arrs["ADDR1"];
+        }
+		if($arrs["SWIN"] !=""){
+			$address .= "หมู่ที่".$arrs["SWIN"];
+		}
+        if($arrs["SOI"] != ""){
+			$address .= " ซอย ".$arrs["SOI"];
+        }
+        if($arrs["ADDR2"] != ""){
+			$address .= " ถนน ".$arrs["ADDR2"];
+        }
+        if($arrs["MOOBAN"] != ""){
+			$address .= " หมู่บ้าน ".$arrs["MOOBAN"];
+        }
+        if($arrs["TUMB"] != ""){
+			$address .= " ตำบล".$arrs["TUMB"];
+        }
+        if($arrs["AUMPDES"] != ""){
+			$address .= " อำเภอ".$arrs["AUMPDES"];
+        }
+        if($arrs["PROVDES"] != ""){
+			$address .= " จังหวัด".$arrs["PROVDES"];
+        }
+        if($arrs["ZIP"] != ""){
+			$address .= " รหัสไปรษณีย์ ".$arrs["ZIP"];
+        }
+        $tbody = "
+            <tr>
+				<td>
+                    <button class='btnEditAddrTable btn btn-sm btn-warning fa fa-edit' 
+                        ADDRNO='".$arrs["ADDRNO"]."'
+                        ADDR1='".$arrs["ADDR1"]."'
+                        SOI='".$arrs["SOI"]."'
+                        ADDR2='".$arrs["ADDR2"]."'
+                        MOOBAN='".$arrs["MOOBAN"]."'
+                        TUMB='".$arrs["TUMB"]."'
+                        AUMPCOD='".$arrs["AUMPCOD"]."'
+                        PROVCOD='".$arrs["PROVCOD"]."'
+                        AUMPDES='".$arrs["AUMPDES"]."'
+                        PROVDES='".$arrs["PROVDES"]."'
+                        ZIP='".$arrs["ZIP"]."'
+                        TELP='".$arrs["TELP"]."'
+                        MEMO1='".$arrs["MEMO1"]."'
+						SWIN='".$arrs["SWIN"]."'
+						IMGMAP='".$arrs["IMGMAP"]."'
+						IMGMAPNM='".$arrs["IMGMAPNM"]."'
+						CANIMG  = '".$arrs["CANIMG"]."'
+					>แก้ไข</button>
+                </td>
+                <td>".$arrs["ADDRNO"]."</td>
+                <td>".$address."</td>
+                <td>".$arrs["TELP"]."</td>
+                <td>".$arrs["MEMO1"]."</td>
+				<td><img id='cuspic_map' src='".($arrs["IMGMAP"] == "" ? $arrs["CANIMG"]:$arrs["IMGMAP"])."' class='rounded' alt='' style='width:100%;height:100px;'></td>
+                <td>
+                    <button ADDRNO='".$arrs["ADDRNO"]."' class='btnDelAddrTable btn btn-sm btn-danger fa fa-trash'>ลบ</button>
+                </td>
+            </tr>
+            ";	
+        $response = array("tbody"=>$tbody);
+        echo json_encode($response);
+	}
+	function checksave($arrs){
+		if(isset($_POST['ADDR'])){}else{
+			$response["error"] = true;
+			$response["msg"] = "คุณยังไม่เพิ่มที่อยู่ลูกค้า กรุณาเพิ่มที่อยู่ลูกค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["GROUP1"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกข้อมูลกลุ่มลูกค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["GRADE"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกข้อมูลเกรดลูกค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["SNAM"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกคำนำหน้าชื่อลูกค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["NAME1"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกชื่อลูกค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["NAME2"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกนามสกุลลูกค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["NICKNM"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกชื่อเล่นลูกค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["BIRTHDT"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกวันเดือนปีเกิดก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["IDCARD"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกประเภทบัตรก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["IDNO"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกเลขที่บัตรประชาชนให้ถูกต้องด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["ISSUBY"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกสถานที่ออกบัตรก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["ISSUDT"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกวันเดือนปีที่ออกบัตรก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["EXPDT"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกวันเดือนปีหมดอายุบัตรก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["NATION"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกสัญชาติก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["OCCUP"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกอาชีพก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["MREVENU"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกรายได้ต่อเดือนด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["YREVENU"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลรายได้ต่อปีด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["MOBILENO"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณากรอกข้อมูลเบอร์โทรศัพท์ก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["ADDRNO"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกลำดับที่อยู่ตามทะเบียนบ้านด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["ADDRNO2"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกลำดับที่อยู่ปัจจุบันด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["ADDRNO3"] ==""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาเลือกลำดับที่อยู่ส่งจดหมายด้วยครับ";
+			echo json_encode($response); exit;
+		}
+		/*
+		if($arrs["name"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาแนบภาพลูกค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		*/
+	}
+	function save_img_cuscod($piccusName,$arrs){
+		//echo $piccusName; exit;
+		if($piccusName != ""){
+			$sql = "
+				select ftpserver, ftpuser, ftppass, ftpfolder, filePath
+				from {$this->MAuth->getdb('config_fileupload')}
+				where ftpstatus='Y' and ftpfolder like 'Senior/%/CUSTOMERS/Picture' 
+				and refno='".$this->sess["db"]."'
+			";
+			$query = $this->connect_db->query($sql);
+			
+			$ftp_server 	= "";
+			$ftp_userName 	= "";
+			$ftp_userPass 	= "";
+			
+			$arrsResult =  array();
+			if($query->row()){
+				foreach($query->result() as $row){
+					foreach($row as $key => $val){
+						$arrsResult[$key] = $val;
+					}
+				}
+			}
+			//print_r($arrsResult); exit;
+			
+			$ftp_server   = $arrsResult['ftpserver'];
+			$ftp_userName = $arrsResult['ftpuser'];
+			$ftp_userPass = $arrsResult['ftppass'];
+			
+			$conn_id      = ftp_connect($ftp_server);
+			$login_result = ftp_login($conn_id, $ftp_userName, $ftp_userPass);
+			ftp_chdir($conn_id,$arrsResult['ftpfolder']);
+			
+			if((!$conn_id) || (!$login_result)){
+				$response["error"] = true;
+				$response["msg"][] = "FTP connection has failed!<br/>Attempted to connect to server for user {$ftp_userName}";
+				echo json_encode($response); exit;
+			}
+			
+			$img  = $arrs["tmp"];
+			$img  = str_replace('data:image/tmp;base64,', '', $img);
+			$img  = str_replace(' ', '+', $img);
+			$data = base64_decode($img);
+			
+			// Initializing new session 
+			$ch = curl_init("http://".$ftp_server.'/'.$arrsResult['ftpfolder'].'/'.$piccusName); 
+			// Request method is set 
+			curl_setopt($ch, CURLOPT_NOBODY, true); 
+			// Executing cURL session 
+			curl_exec($ch); 
+			// Getting information about HTTP Code 
+			$retcode = curl_getinfo($ch, CURLINFO_HTTP_CODE); 				  
+			// Testing for 200
+			
+			if($retcode == 200) {
+				ftp_delete($conn_id, '/'.$arrsResult['ftpfolder'].'/'.$piccusName);
+			}
+			//echo $piccusName; exit;
+			
+			//file_put_contents()
+			file_put_contents('ftp://'.$ftp_userName.':'.$ftp_userPass.'@'.$ftp_server.'/'.$arrsResult['ftpfolder'].'/'.$piccusName, $data);
+			
+			ftp_close($conn_id);
+		}
+	}
+	function save_img_addrmap($picMap){
+		//print_r($picMap); exit;
+		$sizemap = count($picMap["tmp"]);
+		$picmapName = ""; $picsource ="";
+		for($i=0;$i<$sizemap;$i++){
+			$checkup = "";
+			$checkup = (isset($picMap["tmp"][$i]) ? $picMap["tmp"][$i]:"");
+			if($checkup != ""){	
+				$picmapName = $picMap["name"][$i];
+				$picsource  = $picMap["tmp"][$i];
+				$sql = "
+					select ftpserver, ftpuser, ftppass, ftpfolder, filePath 
+					from {$this->MAuth->getdb('config_fileupload')}
+					where ftpstatus='Y' and ftpfolder like 'Senior/%/CUSTOMERS/Map' 
+					and refno='".$this->sess["db"]."'
+				";
+				$query = $this->connect_db->query($sql);
+				
+				$ftp_server 	= "";
+				$ftp_userName 	= "";
+				$ftp_userPass 	= "";
+				
+				$arrsResult =  array();
+				if($query->row()){
+					foreach($query->result() as $row){
+						foreach($row as $key => $val){
+							$arrsResult[$key] = $val;
+						}
+					}
+				}
+				$ftp_server   = $arrsResult['ftpserver'];
+				$ftp_userName = $arrsResult['ftpuser'];
+				$ftp_userPass = $arrsResult['ftppass'];	
+				
+				$conn_id      = ftp_connect($ftp_server);
+				$login_result = ftp_login($conn_id, $ftp_userName, $ftp_userPass);
+				ftp_chdir($conn_id,$arrsResult['ftpfolder']);
+				
+				if((!$conn_id) || (!$login_result)){
+					$response["error"] = true;
+					$response["msg"][] = "FTP connection has failed!<br/>Attempted to connect to server for user {$ftp_userName}";
+					echo json_encode($response); exit;
+				}
+				
+				$img  = $picsource;
+				$img  = str_replace('data:image/tmp;base64,', '', $img);
+				$img  = str_replace(' ', '+', $img);
+				$data = base64_decode($img);
+				
+				// Initializing new session 
+				$ch = curl_init("http://".$ftp_server.'/'.$arrsResult['ftpfolder'].'/'.$picmapName); 
+				// Request method is set 
+				curl_setopt($ch, CURLOPT_NOBODY, true); 
+				// Executing cURL session 
+				curl_exec($ch); 
+				// Getting information about HTTP Code 
+				$retcode = curl_getinfo($ch, CURLINFO_HTTP_CODE); 				  
+				// Testing for 200
+				
+				if($retcode == 200) {
+					ftp_delete($conn_id, '/'.$arrsResult['ftpfolder'].'/'.$picmapName);
+				}
+				//echo $picmapName; exit;
+				
+				file_put_contents('ftp://'.$ftp_userName.':'.$ftp_userPass.'@'.$ftp_server.'/'.$arrsResult['ftpfolder'].'/'.$picmapName, $data);
+				
+				ftp_close($conn_id);
+			}
+		}
 	}
 	function save(){
 		$response = array('error'=>false,'msg'=>'');
@@ -1020,200 +1400,101 @@ class CUSTOMERS extends MY_Controller {
 		if($arrs["MREVENU"] == ""){ $arrs["MREVENU"] = "0.00"; }else{ $arrs["MREVENU"] = str_replace(",","",$arrs["MREVENU"]); } 
 		if($arrs["YREVENU"] == ""){ $arrs["YREVENU"] = "0.00"; }else{ $arrs["YREVENU"] = str_replace(",","",$arrs["YREVENU"]); }
 		
+		//ที่อยู่ลูกค้า >= 1
+		$ADDR     			 = (isset($_POST["ADDR"]) ? $_POST["ADDR"]:"");
 		$arrs['action']		 = $_POST["action"];	
+		//print_r($ADDR); exit;
 		
-		if(isset($_POST['ADDR'])){}else{
-			$tablehtml = "K";
-			$response = array("tablehtml"=>$tablehtml);
-			echo json_encode ($response); exit;
-		}
-		$ADDR     			 = $_POST["ADDR"];
-		//print_r ($ADDR); exit;
-		if($arrs["GROUP1"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["GRADE"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["SNAM"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["NAME1"] == ""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["NAME2"] == ""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["NICKNM"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["BIRTHDT"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["ADDRNO"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["IDCARD"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["IDNO"] == ""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["ISSUBY"] == ""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["ISSUDT"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["EXPDT"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["AGE"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["NATION"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["OCCUP"] == ""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["OFFIC"] == ""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["MAXCRED"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["MREVENU"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["YREVENU"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["MOBILENO"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		/*
-		if($arrs["EMAIL1"] == ""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		*/
-		if($arrs["ADDRNO2"] == ""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		if($arrs["ADDRNO3"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-			echo json_encode($response); exit;
-		}
-		/*if($arrs["MEMOADD"] ==""){
-			$response["error"] = true;
-			$response["msg"] = "กรุณากรอกข้อมูลให้ครบถ้วนด้วยครับ";
-		}*/
+		//รูปลูกค้า
+		$arrs['name'] = (isset($_POST["cuspic_picture_name"]) ? $_POST['cuspic_picture_name']:'');
+		$arrs['tmp']  = (isset($_POST["cuspic_picture"]) ? $_POST['cuspic_picture']:'');
 		
-		if($arrs["MAXCRED"] == ""){$arrs["MAXCRED"] = "0.00"; }else{ $arrs["MAXCRED"] = str_replace(",","",$arrs["MAXCRED"]);}
+		//เช็คบังคับคีย์ข้อมูล
+		$this->checksave($arrs);
 		
+		$piccusName = "";
+		if($arrs['name'] != ""){
+			if(isset($arrs["IDNO"])){
+				$ex = explode(".",$arrs["name"]);
+				$piccusName = $arrs["IDNO"].".".$ex[sizeof($ex)-1];
+			}else{
+				$piccusName = $arrs["name"];					
+			}	
+		}
+		//echo $arrs['tmp']; exit;
 		if($arrs['action'] == "add"){
-			$this->saveCustomerHistory($arrs,$ADDR);
-		}
-		else{
-			$this->updateCustomerHistory($arrs,$ADDR);
+			$this->saveCustomerHistory($arrs,$ADDR,$piccusName);
+		}else{
+			$this->updateCustomerHistory($arrs,$ADDR,$piccusName);
 		}
 	}
-	function saveCustomerHistory($arrs,$ADDR){
+	function saveCustomerHistory($arrs,$ADDR,$piccusName){
+		if($arrs["name"] == ""){
+			$response["error"] = true;
+			$response["msg"] = "กรุณาแนบภาพลูกค้าก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		
 		$SWIN = "";
 		$SWIN = "ม.";
 		$sql_addr = "";		//บันทึกที่อยู่ของลูกค้าเข้าฐานข้อมูล
-        $sizeArr = count($ADDR);
-        for($P=0; $P < $sizeArr; $P++){
-			$sql_addr .="
-				insert into {$this->MAuth->getdb('CUSTADDR')}(
-					[CUSCOD],[ADDRNO],[ADDR1],[ADDR2],[TUMB],[AUMPCOD],[PROVCOD]
-					,[ZIP],[TELP],[MEMO1],[ACPDT],[USERID],[PICT1],[MOOBAN],[SOI]
-				)values(
-					@CONTNO,'".$ADDR[$P][0]."','".$ADDR[$P][1]." ".$SWIN."".$ADDR[$P][11]."','".$ADDR[$P][3]."'
-					,'".$ADDR[$P][5]."','".$ADDR[$P][6]."','".$ADDR[$P][7]."','".$ADDR[$P][8]."'
-					,'".$ADDR[$P][9]."','".$ADDR[$P][10]."',null,null,null,'".$ADDR[$P][4]."'
-					,'".$ADDR[$P][2]."'
-				)
-			";
-        }
-		//print_r ($sql_addr); exit;
+		$picMap = array();
+		if($ADDR != ""){
+			$sizeArr = count($ADDR);
+			for($P=0; $P < $sizeArr; $P++){
+				$picmapName = "";				
+				if(isset($arrs["IDNO"])){
+					if($ADDR[$P][12] != ""){
+						$ex = explode(".",$ADDR[$P][12]);
+						$picmapName        = $arrs["IDNO"]."_".$ADDR[$P][0].".".$ex[sizeof($ex)-1];
+						$picMap["name"][]  = $arrs["IDNO"]."_".$ADDR[$P][0].".".$ex[sizeof($ex)-1];
+						$picMap["tmp"][]   = $ADDR[$P][13];
+					}
+				}
+				$sql_addr .="
+					insert into {$this->MAuth->getdb('CUSTADDR')}(
+						[CUSCOD],[ADDRNO],[ADDR1],[ADDR2],[TUMB],[AUMPCOD],[PROVCOD]
+						,[ZIP],[TELP],[MEMO1],[ACPDT],[USERID],[PICT1],[MOOBAN],[SOI]
+					)values(
+						@CUSCOD,'".$ADDR[$P][0]."','".$ADDR[$P][1]." ".$SWIN."".$ADDR[$P][11]."','".$ADDR[$P][3]."'
+						,'".$ADDR[$P][5]."','".$ADDR[$P][6]."','".$ADDR[$P][7]."','".$ADDR[$P][8]."'
+						,'".$ADDR[$P][9]."','".$ADDR[$P][10]."',null,null,'".$picmapName."','".$ADDR[$P][4]."'
+						,'".$ADDR[$P][2]."'
+					)
+				";
+			}
+		}
+		//$this->save_img_addrmap($picMap); exit;
+		//echo $sql_addr; exit;
 		$sql ="
 			if OBJECT_ID('tempdb..#custmastTemp') is not null drop table #custmastTemp;
 			create table #custmastTemp (id varchar(1),msg varchar(max));
 
 			begin tran custmastTran
 			begin try
-
-				/* @symbol = สัญลักษณ์แทนประเภทของเลขที่ นั้นๆ */
-				declare @symbol varchar(10) = (select H_MASTNO from {$this->MAuth->getdb('CONDPAY')}); 
-				/* @rec = รหัสพื้นฐาน */
-				declare @rec varchar(10) = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs['locat']."');
-				/* @RESVNO = รหัสที่จะใช้ */
-				declare @CONTNO varchar(12) = isnull((select MAX(CUSCOD) from {$this->MAuth->getdb('CUSTMAST')} where CUSCOD like ''+@rec+'%' collate thai_cs_as),@rec+'0000');
-				set @CONTNO = left(@CONTNO,8)+right(right(@CONTNO,4)+10001,4);
 				
-				set @symbol = (select H_TXMAST from {$this->MAuth->getdb('CONDPAY')});
-				set @rec = (select SHORTL+@symbol+'-'+right(left(convert(varchar(8),GETDATE(),112),6),4) from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs['locat']."');
+				/* @H_CUSCOD = สัญลักษณ์แทนประเภทของเลขที่ นั้นๆ */
+				declare @H_CUSCOD varchar(10) = (select H_CUSCOD from {$this->MAuth->getdb('CONDPAY')}); 
+				/* @SHORTL = รหัสพื้นฐาน */
+				declare @SHORTL varchar(10) = (
+					select SHORTL+@H_CUSCOD 
+					from {$this->MAuth->getdb('INVLOCAT')} where LOCATCD='".$arrs['locat']."'
+				);
 				
-				declare @TAXNO varchar(12) = isnull((select MAX(TAXNO) from {$this->MAuth->getdb('TAXTRAN')} where TAXNO like ''+@rec+'%' collate thai_cs_as),@rec+'0000');
-				declare @TAXDT datetime = (select convert(varchar(8),getdate(),112));
-				set @TAXNO = left(@TAXNO ,8)+right(right(@TAXNO ,4)+10001,4);
+				/* @CUSCOD = รหัสที่จะใช้ */
+				declare @CUSCOD varchar(12) = isnull((select MAX(CUSCOD) from {$this->MAuth->getdb('CUSTMAST')} 
+				where CUSCOD like ''+@SHORTL+'%' collate thai_cs_as),@SHORTL+'0000');
+				set @CUSCOD = left(@CUSCOD,8)+right(right(@CUSCOD,4)+10001,4);
 				
-				declare @isval int = isnull((select count(*) from {$this->MAuth->getdb('CUSTMAST')} where IDNO='".$arrs['IDNO']."'),0);
+				declare @isval int = isnull((
+					select count(*) from {$this->MAuth->getdb('CUSTMAST')} 
+					where IDNO='".$arrs['IDNO']."'
+				),0);
 				
-				declare @sircod varchar(2) = (select SIRCOD from {$this->MAuth->getdb('SIRNAM')} where SIRNAM = '".$arrs['SNAM']."');
-				
-				BEGIN
-					set @TAXNO = null;
-					set @TAXDT = null;
-				END
+				declare @sircod varchar(2) = (
+					select SIRCOD from {$this->MAuth->getdb('SIRNAM')} 
+					where SIRNAM = '".$arrs['SNAM']."'
+				);
 				
 				if(@isval = 0)
 				begin
@@ -1223,20 +1504,19 @@ class CUSTOMERS extends MY_Controller {
 						,[MINCOME],[YINCOME],[MAXCRED],[MREVENU],[YREVENU],[MEMBCOD],[MOBILENO],[APPVCODE],[SIRCOD]
 						,[CUSTTYPE],[ADDRNO2],[ADDRNO3],[EMAIL1],[EMAIL2]
 					)values(
-						@CONTNO,'".$arrs["GROUP1"]."','".$arrs['SNAM']."','".$arrs["NAME1"]."'
+						@CUSCOD,'".$arrs["GROUP1"]."','".$arrs['SNAM']."','".$arrs["NAME1"]."'
 						,'".$arrs["NAME2"]."','".$arrs["NICKNM"]."','".$arrs["BIRTHDT"]."','".$arrs['ADDRNO']."','".$arrs["IDCARD"]."'
 						,'".$arrs["IDNO"]."','".$arrs["ISSUBY"]."','".$arrs["ISSUDT"]."','".$arrs["EXPDT"]."','".$arrs["AGE"]."'
 						,'".$arrs['NATION']."','".$arrs['OCCUP']."','".$arrs['OFFIC']."',null,'".$arrs['GRADE']."',null
-						,'".$arrs['MEMOADD']."',null,null,null,null,'".$arrs['MAXCRED']."','".$arrs['MREVENU']."'
+						,'".$arrs['MEMOADD']."',null,'".$piccusName."',null,null,'".$arrs['MAXCRED']."','".$arrs['MREVENU']."'
 						,'".$arrs['YREVENU']."',null,'".$arrs['MOBILENO']."',null,@sircod,null,'".$arrs['ADDRNO2']."'
 						,'".$arrs['ADDRNO3']."','".$arrs['EMAIL1']."',null
 						);
 					".$sql_addr."	
 					
 					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
-					values ('".$this->sess["IDNo"]."','SYS04::บันทึกประวัติลูกค้า',@CONTNO+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+					values ('".$this->sess["IDNo"]."','SYS04::บันทึกประวัติลูกค้า',@CUSCOD+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				end
-				
 				else
 				begin
 					rollback tran custmastTran;
@@ -1244,7 +1524,7 @@ class CUSTOMERS extends MY_Controller {
 					return;
 				end	
 				
-				insert into #custmastTemp select 'Y' as id,'สำเร็จ บันทึกข้อมูลประวัติลูกค้าใหม่รหัสลูกค้าเลขที่ :: '+@CONTNO+' เรียบร้อยแล้ว' as msg;
+				insert into #custmastTemp select 'Y' as id,'สำเร็จ บันทึกข้อมูลประวัติลูกค้าใหม่รหัสลูกค้าเลขที่ :: '+@CUSCOD+' เรียบร้อยแล้ว' as msg;
 				commit tran custmastTran;
 			end try
 			begin catch
@@ -1262,6 +1542,10 @@ class CUSTOMERS extends MY_Controller {
 		$response = array();
 		if($query->row()){
 			foreach($query->result() as $row){
+				if($row->id == "Y"){
+					$this->save_img_cuscod($piccusName,$arrs);
+					$this->save_img_addrmap($picMap);
+				}
 				$response['stat'] = ($row->id == 'Y' ? true:false);
 				$response['msg'] = $row->msg;
 			}
@@ -1271,13 +1555,24 @@ class CUSTOMERS extends MY_Controller {
 		}
 		echo json_encode($response);
 	}
-	function updateCustomerHistory($arrs,$ADDR){
-		//echo $ADDR[0][1]; exit;
+	function updateCustomerHistory($arrs,$ADDR,$piccusName){
 		$SWIN = "";
 		$SWIN = "ม.";
 		$sql_addr = "";		//บันทึกที่อยู่ของลูกค้าเข้าฐานข้อมูล
+		$addrno = "";
+		$picMap = array();
         $sizeArr = count($ADDR);
         for($P=0; $P < $sizeArr; $P++){
+			$picmapName = "";				
+			if(isset($arrs["IDNO"])){
+				if($ADDR[$P][12] != ""){
+					$ex = explode(".",$ADDR[$P][12]);
+					$picmapName         = $arrs["IDNO"]."_".$ADDR[$P][0].".".$ex[sizeof($ex)-1];
+					$picMap["name"][]   = $arrs["IDNO"]."_".$ADDR[$P][0].".".$ex[sizeof($ex)-1];
+					$picMap["tmp"][]    = (isset($ADDR[$P][13]) ? $ADDR[$P][13]:"");
+				}
+			}
+			
 			$sql_addr .="
 				if exists (
 					select * from {$this->MAuth->getdb('CUSTADDR')} 
@@ -1292,6 +1587,7 @@ class CUSTOMERS extends MY_Controller {
 						,[PROVCOD]='".$ADDR[$P][7]."',[ZIP]='".$ADDR[$P][8]."'
 						,[TELP]='".$ADDR[$P][9]."',[MEMO1]='".$ADDR[$P][10]."'
 						,[MOOBAN]='".$ADDR[$P][4]."',[SOI]='".$ADDR[$P][2]."'
+						,[PICT1]='".$picmapName."'
 						WHERE [CUSCOD]='".$arrs['CUSCOD']."' and [ADDRNO]='".$ADDR[$P][0]."'
 					end
 				else	
@@ -1302,12 +1598,19 @@ class CUSTOMERS extends MY_Controller {
 					)values(
 						'".$arrs['CUSCOD']."','".$ADDR[$P][0]."','".$ADDR[$P][1]." ".$SWIN."".$ADDR[$P][11]."','".$ADDR[$P][3]."'
 						,'".$ADDR[$P][5]."','".$ADDR[$P][6]."','".$ADDR[$P][7]."','".$ADDR[$P][8]."'
-						,'".$ADDR[$P][9]."','".$ADDR[$P][10]."',null,null,null,'".$ADDR[$P][4]."'
+						,'".$ADDR[$P][9]."','".$ADDR[$P][10]."',null,null,'".$picmapName."','".$ADDR[$P][4]."'
 						,'".$ADDR[$P][2]."'
 						)
 					end	
 			";
+			if($addrno !== ""){
+				$addrno .= "','";
+			}
+			$addrno .=$ADDR[$P][0];
         }
+		//$this->save_img_addrmap($picMap); exit;
+		//print_r($picMap["name"]); exit;
+		
 		$sql ="
 			if OBJECT_ID('tempdb..#custmastTemp') is not null drop table #custmastTemp;
 			create table #custmastTemp (id varchar(1),msg varchar(max));
@@ -1322,16 +1625,22 @@ class CUSTOMERS extends MY_Controller {
 				where CUSCOD = '".$arrs['CUSCOD']."'
 			)
 			begin
-			update {$this->MAuth->getdb('CUSTMAST')}
-			set [CUSCOD]='".$arrs['CUSCOD']."',[GROUP1]='".$arrs['GROUP1']."',[SNAM]='".$arrs['SNAM']."',[NAME1]='".$arrs['NAME1']."'
-				,[NAME2]='".$arrs['NAME2']."',[NICKNM]='".$arrs['NICKNM']."',[BIRTHDT]='".$arrs['BIRTHDT']."',[ADDRNO]='".$arrs['ADDRNO']."',[IDCARD]='".$arrs['IDCARD']."'
-				,[IDNO]='".$arrs['IDNO']."',[ISSUBY]='".$arrs['ISSUBY']."',[ISSUDT]='".$arrs['ISSUDT']."',[EXPDT]='".$arrs['EXPDT']."',[AGE]='".$arrs['AGE']."'
-				,[NATION]='".$arrs['NATION']."',[OCCUP]='".$arrs['OCCUP']."',[OFFIC]='".$arrs['OFFIC']."',[GRADE]='".$arrs['GRADE']."'
-				,[MEMO1]='".$arrs['MEMOADD']."',[MAXCRED]='".$arrs['MAXCRED']."',[MREVENU]='".$arrs['MREVENU']."'
-				,[YREVENU]='".$arrs['YREVENU']."',[MOBILENO]='".$arrs['MOBILENO']."',[SIRCOD]= @sircod,[ADDRNO2]='".$arrs['ADDRNO2']."'
-				,[ADDRNO3]='".$arrs['ADDRNO3']."',[EMAIL1]='".$arrs['EMAIL1']."' WHERE [CUSCOD]='".$arrs['CUSCOD']."'
+				update {$this->MAuth->getdb('CUSTMAST')}
+				set [CUSCOD]='".$arrs['CUSCOD']."',[GROUP1]='".$arrs['GROUP1']."',[SNAM]='".$arrs['SNAM']."',[NAME1]='".$arrs['NAME1']."'
+					,[NAME2]='".$arrs['NAME2']."',[NICKNM]='".$arrs['NICKNM']."',[BIRTHDT]='".$arrs['BIRTHDT']."',[ADDRNO]='".$arrs['ADDRNO']."',[IDCARD]='".$arrs['IDCARD']."'
+					,[IDNO]='".$arrs['IDNO']."',[ISSUBY]='".$arrs['ISSUBY']."',[ISSUDT]='".$arrs['ISSUDT']."',[EXPDT]='".$arrs['EXPDT']."',[AGE]='".$arrs['AGE']."'
+					,[NATION]='".$arrs['NATION']."',[OCCUP]='".$arrs['OCCUP']."',[OFFIC]='".$arrs['OFFIC']."',[GRADE]='".$arrs['GRADE']."'
+					,[MEMO1]='".$arrs['MEMOADD']."',[MAXCRED]='".$arrs['MAXCRED']."',[MREVENU]='".$arrs['MREVENU']."'
+					,[YREVENU]='".$arrs['YREVENU']."',[MOBILENO]='".$arrs['MOBILENO']."',[SIRCOD]= @sircod,[ADDRNO2]='".$arrs['ADDRNO2']."'
+					,[ADDRNO3]='".$arrs['ADDRNO3']."',[EMAIL1]='".$arrs['EMAIL1']."',[PICT1] = '".$piccusName."' 
+				WHERE [CUSCOD]='".$arrs['CUSCOD']."'
 				
-			".$sql_addr."
+				".$sql_addr."
+				
+				/*delete address to update*/
+				
+				delete from {$this->MAuth->getdb('CUSTADDR')} 
+				where CUSCOD = '".$arrs['CUSCOD']."' and ADDRNO not in ('".$addrno."')
 			
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','SYS04::แก้ไขประวัติลูกค้า','".$arrs['CUSCOD']."'+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
@@ -1352,6 +1661,7 @@ class CUSTOMERS extends MY_Controller {
 			end catch
 		";
 		//echo $sql; exit;
+		
 		$this->db->query($sql);
 		$sql = "select * from #custmastTemp";
 		$query = $this->db->query($sql);
@@ -1359,6 +1669,12 @@ class CUSTOMERS extends MY_Controller {
 		$response = array();
 		if($query->row()){
 			foreach($query->result() as $row){
+				if($row->id == "Y"){
+					if($arrs['tmp'] != ""){
+						$this->save_img_cuscod($piccusName,$arrs);
+					}
+					$this->save_img_addrmap($picMap);
+				}
 				$response['stat'] = ($row->id == 'Y' ? true:false);
 				$response['msg'] = $row->msg;
 			}
@@ -1450,21 +1766,6 @@ class CUSTOMERS extends MY_Controller {
         }
         return $date;
     }
-	/*
-    function dateformatsql($date){
-        if($date!=""){
-            return substr($date, 6,4).substr($date, 3,2).(substr($date, 0,2)-543);
-        }
-        return $date;
-    }
-	
-    function dateselectedit($date){
-        if ($date!=""){
-            return substr($date,8,2.)."/".substr($date,5,2)."/".substr($date,0,4);
-        }
-        return $date;
-    }
-	*/
 	function SetTitle(){
 		$claim = $this->MLogin->getclaim(uri_string());
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }

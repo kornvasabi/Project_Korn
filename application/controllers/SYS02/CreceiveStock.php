@@ -28,8 +28,8 @@ class CreceiveStock extends MY_Controller {
 		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
 		
 		$html = "
-			<div class='tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
-				<div>
+			<div class='tab1' name='home' groupType='{$claim["groupType"]}' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}'>
+				<div class='row'>
 					<div class='col-sm-2'>	
 						<div class='form-group'>
 							เลขที่บิลโอน
@@ -60,12 +60,17 @@ class CreceiveStock extends MY_Controller {
 							</select>
 						</div>
 					</div>
-					<div class='col-sm-6'>	
-						<button id='btnt1search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
-					</div>
-					<div class='col-sm-6'>	
+				</div>
+				<div class='row'>
+					<div class='col-sm-3'>	
+						<button id='btnt1UploadStock' class='btn btn-warning btn-block'><span class='glyphicon glyphicon-pencil'> นำเข้า</span></button>
+					</div>					
+					<div class='col-sm-3'>	
 						<button id='btnt1receiveStock' class='btn btn-cyan btn-block'><span class='glyphicon glyphicon-pencil'> รับรถเข้าสต๊อค</span></button>
-					</div>
+					</div>					
+					<div class='col-sm-3 col-sm-offset-3'>	
+						<button id='btnt1search' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ค้นหา</span></button>
+					</div>					
 				</div>
 				<div class='col-sm-12'>
 					<div id='resultt1receiveStock'></div>
@@ -75,6 +80,88 @@ class CreceiveStock extends MY_Controller {
 		
 		$html.= "<script src='".base_url('public/js/SYS02/CreceiveStock.js')."'></script>";
 		echo $html;
+	}
+	
+	function FormUPLOAD(){
+		$html = "
+			<div class='row'>
+				<input type='button' id='form_import' class='btn btn-info btn-sm' style='width:100%;' value='ดาวน์โหลดฟอร์มนำเข้า'>
+			</div><hr>
+			<div class='row'>
+				<div id='form_std'></div>
+			</div>
+		";
+		
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	
+	function checkFileUpload(){
+		$this->load->library('excel');
+		
+		$file = $_FILES["myfile"]["tmp_name"];
+		
+		//read file from path
+		$objPHPExcel = PHPExcel_IOFactory::load($file);
+		
+		//X ตรวจสอบว่ามีกี่ sheet
+		//X $sheetCount = $objPHPExcel->getSheetCount();
+		//X จะดึงข้อมูลแค่ sheet 1 เท่านั้น
+		$sheetCount = 1; 
+		for($sheetIndex=0;$sheetIndex<$sheetCount;$sheetIndex++){
+			$objPHPExcel->setActiveSheetIndex($sheetIndex);
+			//get only the Cell Collection
+			$cell_collection = $objPHPExcel->getActiveSheet()->getCellCollection();
+			 
+			$arrs = array("now"=>1,"old"=>1); 
+			//extract to a PHP readable array format			
+			foreach ($cell_collection as $cell) {
+				$column = $objPHPExcel->getActiveSheet()->getCell($cell)->getColumn();
+				$row = $objPHPExcel->getActiveSheet()->getCell($cell)->getRow();
+				$data_value = $objPHPExcel->getActiveSheet()->getCell($cell)->getCalculatedValue();				
+				//echo $data_value; exit;
+				if($arrs["old"] == 1){
+					$arrs["now"] = 1;
+				}else if($arrs["old"] == $row){
+					$arrs["now"] = $arrs["now"];
+				}else{
+					$arrs["now"] += 1;
+				}
+				
+				$arr_data[$arrs["now"]][$column] = $data_value;
+				$arrs["old"] = $row;
+			}
+		}
+		
+		//$arrs = array("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC");
+		$arrs = array("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P");
+		$datasize = sizeof($arr_data);
+		for($i=1;$i<=$datasize;$i++){
+			foreach($arrs as $key => $val){
+				if(!isset($arr_data[$i][$val])){
+					$arr_data[$i][$val] = '';
+				}
+			}
+		}
+		
+		/*
+			// หา F ถัดไป กรณีตั้งไฟแนนท์
+			declare @strno varchar(20) = '4C9800-627788';
+			select @strno+'F'+cast(isnull((
+				select max(REPLACE(REPLACE(STRNO,@strno,''),'F',''))+1 STRNO from (
+					select STRNO from HIINCOME.dbo.INVTRAN
+					where STRNO like @strno+'%'
+					union
+					select STRNO from HIINCOME.dbo.HINVTRAN
+					where STRNO like @strno+'%'
+				) as data
+			),1) as varchar(5)) as nextF
+		*/
+		
+		//$this->response["error"] = true;
+		//$this->response["errorMassage"] = "ทดสอบ";
+		$this->response["data"] = $arr_data;
+		echo json_encode($this->response);
 	}
 	
 	function search(){
@@ -278,6 +365,111 @@ class CreceiveStock extends MY_Controller {
 	}
 	
 	function getfromReceived(){
+		$action = $_POST["action"];
+		$obj 	= ($_POST["obj"] == "" ? array():json_decode($_POST["obj"],true));
+		
+		$arrs = array(
+			"locat"=>$this->sess['branch'],
+			"recvdt"=>$this->today('today'),
+			"apcode"=>"",
+			"invno"=>"",
+			"invdt"=>"",
+			"credtm"=>"",
+			"duedt"=>"",
+			"fltax"=>"",
+			"memo1"=>"",
+			"data"=>""
+		);
+		
+		$sql = "
+			select VATRT from ".$this->MAuth->getdb('VATMAST')."
+			where getdate() between FRMDATE and TODATE
+		";
+		$query = $this->db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$arrs["vatrt"] = $row->VATRT;
+			}
+		}
+		
+		$sizeof = sizeof($obj);
+		if($sizeof > 7){
+			$arrs["locat"]	= $obj[1]["C"];
+			$arrs["recvdt"]	= $obj[1]["E"];
+			$arrs["apcode"]	= $obj[2]["C"];
+			$arrs["invno"]	= $obj[3]["C"];
+			$arrs["invdt"]	= $obj[3]["E"];
+			$arrs["credtm"]	= $obj[4]["C"];
+			$arrs["duedt"]	= $obj[4]["E"];
+			$arrs["fltax"]	= $obj[5]["C"];
+			$arrs["memo1"]	= $obj[5]["E"];
+			
+			for($i=8;$i<=$sizeof;$i++){
+				if($obj[$i]["G"] != ""){
+					$arrs["data"] .= "
+						<tr>
+							<td>
+								<i class='del_newcar btn btn-xs btn-danger glyphicon glyphicon-minus' 
+									type	 = '".$obj[$i]["B"]."'
+									model	 = '".$obj[$i]["C"]."'
+									baab	 = '".$obj[$i]["D"]."'
+									color	 = '".$obj[$i]["E"]."'
+									cc		 = '".$obj[$i]["F"]."'
+									strno	 = '".$obj[$i]["G"]."'
+									engno	 = '".$obj[$i]["H"]."'
+									keyno	 = ''
+									rvcode 	 = '".$this->sess["USERID"]."'
+									rvcodnam = '".$this->sess["name"]."'
+									rvlocat	 = '".$obj[1]["C"]."'
+									refno	 = ''
+									milert	 = '".$obj[$i]["L"]."'
+									stdprc	 = '".$obj[$i]["O"]."'
+									crcost	 = '".$obj[$i]["M"]."'
+									disct	 = '".$obj[$i]["N"]."'
+									netcost	 = '".$obj[$i]["M"]."'
+									vatrt	 = ''
+									crvat	 = ''
+									totcost	 = ''
+									gcode	 = ''
+									gdesc	 = ''
+									menuyr	 = ''
+									bonus	 = ''
+									stat	 = ''
+									statname = ''
+									memo1	 = '".$obj[$i]["P"]."'
+								style='cursor:pointer;'> ลบ  </i>
+							</td>
+							<td>{$obj[$i]["B"]}</td>
+							<td>{$obj[$i]["C"]}</td>
+							<td>{$obj[$i]["D"]}</td>
+							<td>{$obj[$i]["E"]}</td>
+							<td>{$obj[$i]["F"]}</td>
+							<td>{$obj[$i]["G"]}</td>
+							<td>{$obj[$i]["H"]}</td>
+							<td></td>
+							<td>".$this->sess["name"]." (".$this->sess["USERID"].")</td>
+							<td>{$obj[1]["C"]}</td>
+							<td></td>
+							<td>{$obj[$i]["L"]}</td>
+							<td>{$obj[$i]["O"]}</td>
+							<td>{$obj[$i]["M"]}</td>
+							<td>0</td>
+							<td>{$obj[$i]["M"]}</td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td>{$obj[$i]["J"]}</td>
+							<td>{$obj[$i]["K"]}</td>
+							<td></td>
+							<td>".($obj[$i]["I"] == "N"?"รถใหม่":"รถเก่า")."</td>
+							<td>{$obj[$i]["P"]}</td>
+						</tr>
+					";
+				}
+			}
+		}
+		
 		$html = "
 			<div class='row'>	
 				<div class='col-sm-2'>	
@@ -289,7 +481,7 @@ class CreceiveStock extends MY_Controller {
 				<div class='col-sm-2'>
 					<div class='form-group'>
 						วันที่รับรถ
-						<input type='text' id='fa_recvdt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่รับรถ' value='".$this->today('today')."'>
+						<input type='text' id='fa_recvdt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่รับรถ' value='{$arrs["recvdt"]}'>
 					</div>
 				</div>
 				
@@ -297,7 +489,7 @@ class CreceiveStock extends MY_Controller {
 					<div class='form-group'>
 						สาขาที่รับ
 						<select id='fa_locat' class='form-control input-sm' data-placeholder='ทำสัญญาขายที่สาขา'>
-							<option value='".$this->sess['branch']."'>".$this->sess['branch']."</option>
+							".$this->MMAIN->Option_get_locat($arrs["locat"])."
 						</select>
 					</div>
 				</div>
@@ -305,21 +497,23 @@ class CreceiveStock extends MY_Controller {
 				<div class='col-sm-2'>
 					<div class='form-group'>
 						เจ้าหนี้
-						<select id='fa_apmast' class='form-control input-sm' data-placeholder='เจ้าหนี้'></select>
+						<select id='fa_apmast' class='form-control input-sm' data-placeholder='เจ้าหนี้'>
+							".$this->MMAIN->Option_get_apmast($arrs["apcode"])."
+						</select>
 					</div>
 				</div>
 				
 				<div class='col-sm-2'>
 					<div class='form-group'>
 						เลขที่ใบส่งสินค้า
-						<input type='text' id='fa_invno' class='form-control input-sm' placeholder='เลขที่บิลรับรถ'>
+						<input type='text' id='fa_invno' class='form-control input-sm' placeholder='เลขที่ใบส่งสินค้า' value='{$arrs["invno"]}'>
 					</div>
 				</div>
 				
 				<div class='col-sm-2'>
 					<div class='form-group'>
 						วันที่ส่งสินค้า
-						<input type='text' id='fa_invdt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่รับรถ' value='".$this->today('today')."'>
+						<input type='text' id='fa_invdt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่ส่งสินค้า'  value='{$arrs["invdt"]}'>
 					</div>
 				</div>
 			</div>
@@ -339,32 +533,32 @@ class CreceiveStock extends MY_Controller {
 				<div class='col-sm-1'>
 					<div class='form-group'>
 						จำนวนเครดิต
-						<input type='text' id='fa_credtm' class='form-control input-sm' placeholder='เลขที่บิลรับรถ'>
+						<input type='text' id='fa_credtm' class='form-control input-sm' placeholder='จำนวนเครดิต' value='{$arrs["credtm"]}'>
 					</div>
 				</div>
 				<div class='col-sm-2'>
 					<div class='form-group'>
 						วันครบดิว
-						<input type='text' id='fa_duedt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่รับรถ' value='".$this->today('today')."'>
+						<input type='text' id='fa_duedt' class='form-control input-sm' data-provide='datepicker' data-date-language='th-th' placeholder='วันที่รับรถ'  value='{$arrs["duedt"]}'>
 					</div>
 				</div>
 				<div class='col-sm-2'>
 					<div class='form-group'>
 						คำอธิบายรายการ
-						<input type='text' id='fa_descp' class='form-control input-sm' placeholder='เลขที่บิลรับรถ'>
+						<input type='text' id='fa_descp' class='form-control input-sm' placeholder='คำอธิบายรายการ'>
 					</div>
 				</div>
 				<div class='col-sm-1'>
 					<div class='form-group'>
 						อัตราภาษี
-						<input type='text' id='fa_vatrt' class='form-control input-sm' placeholder='เลขที่บิลรับรถ'>
+						<input type='text' id='fa_vatrt' class='form-control input-sm' placeholder='อัตราภาษี' value='{$arrs["vatrt"]}' readonly>
 					</div>
 				</div>
 				<div class='col-sm-2'>
 					<div class='form-group'>
 						<br>
 						<div class='checkbox'>
-						  <label><input type='checkbox' id='fa_fltax' value=''> เป็นใบกำกับภาษียื่นเพิ่มเติม</label>
+							<label><input type='checkbox' id='fa_fltax' value='' ".($arrs["fltax"] == "Y" ? "checked":"")."> เป็นใบกำกับภาษียื่นเพิ่มเติม</label>
 						</div>
 					</div>
 				</div>
@@ -374,7 +568,7 @@ class CreceiveStock extends MY_Controller {
 				<div class='col-sm-12'>
 					<div class='form-group'>
 						หมายเหตุ
-						<textarea type='text' id='fa_memo1' class='form-control input-sm' placeholder='หมายเหตุ'  rows=4 style='resize:vertical;'></textarea>
+						<textarea type='text' id='fa_memo1' class='form-control input-sm' placeholder='หมายเหตุ'  rows=4 style='resize:vertical;'>{$arrs["memo1"]}</textarea>
 					</div>
 				</div>
 			</div>
@@ -417,26 +611,26 @@ class CreceiveStock extends MY_Controller {
 											<th>หมายเหตุ</th>
 										</tr>
 									</thead>
-									<tbody style='white-space: nowrap;'></tbody>
+									<tbody style='white-space: nowrap;'>{$arrs["data"]}</tbody>
 								</table>
 								
 							</div>
 								<div class='row' style='width:100%;padding-left:30px;background-color:#269da1;'>
 									<div style='float:left;height:100%;overflow:auto;' class='col-sm-8 col-sm-offset-2'>
 										<div class='form-group col-sm-4'>
-											<label class='jzfs10' for='aaaaaaa' style='color:#efff14;'>ต้นทุนรวม</label>
+											<label class='jzfs10' for='aaaaaaa' style='color:#efff14;'>มูลค่ารวม</label>
 											<input type='text' id='aaaaaaa' class='form-control input-sm text-right' value='' disabled>
 											<span id='error_add2_optcost' class='error text-danger jzError'></span>		
 										</div>
 										
 										<div class='form-group col-sm-4'>
-											<label class='jzfs10' for='aaa' style='color:#efff14;'>ต้นทุนรวม</label>
+											<label class='jzfs10' for='aaa' style='color:#efff14;'>ภาษีรวม</label>
 											<input type='text' id='aaa' class='form-control input-sm text-right' value='' disabled>
 											<span id='error_add2_optcost' class='error text-danger jzError'></span>		
 										</div>
 										
 										<div class='form-group col-sm-4'>
-											<label class='jzfs10' for='aaaa' style='color:#efff14;'>ราคาขาย</label>
+											<label class='jzfs10' for='aaaa' style='color:#efff14;'>ยอดรวมภาษี</label>
 											<input type='text' id='aaaa' class='form-control input-sm text-right' value='' disabled>
 											<span id='error_add2_optsell' class='error text-danger jzError'></span>		
 										</div>												
@@ -525,13 +719,17 @@ class CreceiveStock extends MY_Controller {
 				<div class='col-sm-2'>
 					<div class='form-group'>
 						ผู้รับรถ
-						<select id='fc_rvcode' class='form-control input-sm' data-placeholder='ผู้รับรถ'></select>
+						<select id='fc_rvcode' class='form-control input-sm' data-placeholder='ผู้รับรถ'>
+							".$this->MMAIN->Option_get_snusers($this->sess["USERID"])."
+						</select>
 					</div>
 				</div>
 				<div class='col-sm-2'>
 					<div class='form-group'>
 						สถานที่รับรถ
-						<select id='fc_rvlocat' class='form-control input-sm' data-placeholder='สถานที่รับรถ'></select>
+						<select id='fc_rvlocat' class='form-control input-sm' data-placeholder='สถานที่รับรถ'>
+							".$this->MMAIN->Option_get_locat($_POST["locat"])."
+						</select>
 					</div>
 				</div>
 				<div class='col-sm-2'>
@@ -1238,6 +1436,12 @@ class CreceiveStock extends MY_Controller {
 			<div class='pf' style='top:1005;left:520;'>ผู้รับสินค้า</div>
 		");		
 		$mpdf->Output();
+	}
+	
+	
+	function Save(){
+		$dataSTR 	= ($_POST["dataSTR"] == "" ? array():json_decode($_POST["dataSTR"],true));
+		print_r($dataSTR);
 	}
 }
 

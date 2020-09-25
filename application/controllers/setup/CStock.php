@@ -60,7 +60,7 @@ class CStock extends MY_Controller {
 			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
 		";
 	
-		$html.= "<script src='".base_url('public/js/setup/setgroup.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/setup/CStock/setgroup.js')."'></script>";
 		echo $html;
 	}
 	
@@ -161,14 +161,14 @@ class CStock extends MY_Controller {
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
 							รหัสกลุ่ม
-							<input type='text' id='t2gcode' class='form-control input-sm' value='".$data['GCODE']."'>
+							<input type='text' id='t2gcode' class='form-control input-sm' value='".$data['GCODE']."' maxlength=3>
 						</div>
 					</div>
 					
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
 							ชื่อกลุ่ม
-							<input type='text' id='t2gdesc' class='form-control input-sm' value='".$data['GDESC']."'>
+							<input type='text' id='t2gdesc' class='form-control input-sm' value='".$data['GDESC']."' maxlength=60>
 						</div>
 					</div>
 					
@@ -344,7 +344,7 @@ class CStock extends MY_Controller {
 			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
 		";
 	
-		$html.= "<script src='".base_url('public/js/setup/settype.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/setup/CStock/settype.js')."'></script>";
 		echo $html;
 	}
 	
@@ -429,8 +429,8 @@ class CStock extends MY_Controller {
 				<div style='height:calc(100vh - 165px);overflow:auto;'>
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
-							ยี่ห้อ
-							<input type='text' id='t2typecod' class='form-control input-sm' value='".$data['TYPECOD']."'>
+							<span class='text-red'>*</span> ยี่ห้อ
+							<input type='text' id='t2typecod' class='form-control input-sm' value='".$data['TYPECOD']."' maxlength=12>
 						</div>
 					</div>
 					
@@ -584,12 +584,24 @@ class CStock extends MY_Controller {
 						<input type='text' id='TYPECOD' class='form-control input-sm' placeholder='ยี่ห้อ'>
 					</div>
 				</div>
-				<div class='col-sm-6'>	
+				<div class='col-sm-2'>	
 					<div class='form-group'>
 						รุ่น
 						<input type='text' id='MODELCOD' class='form-control input-sm' placeholder='รุ่น'>	
 					</div>
-				</div>					
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						ขนาด
+						<input type='text' id='CC' class='form-control input-sm' placeholder='ขนาด'>	
+					</div>
+				</div>
+				<div class='col-sm-2'>	
+					<div class='form-group'>
+						ชื่อเรียก
+						<input type='text' id='MODELDESC' class='form-control input-sm' placeholder='ชื่อเรียก'>	
+					</div>
+				</div>
 				<div class='col-sm-2'>	
 					<div class='form-group'>
 						<br>
@@ -608,7 +620,7 @@ class CStock extends MY_Controller {
 			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
 		";
 	
-		$html.= "<script src='".base_url('public/js/setup/setmodel.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/setup/CStock/setmodel.js')."'></script>";
 		echo $html;
 	}
 	
@@ -616,19 +628,33 @@ class CStock extends MY_Controller {
 		$arrs = array();
 		$arrs['TYPECOD'] = !isset($_REQUEST['TYPECOD']) ? '' : $_REQUEST['TYPECOD'];
 		$arrs['MODELCOD'] = !isset($_REQUEST['MODELCOD']) ? '' : $_REQUEST['MODELCOD'];
+		$arrs['CC'] = !isset($_REQUEST['CC']) ? '' : $_REQUEST['CC'];
+		$arrs['MODELDESC'] = !isset($_REQUEST['MODELDESC']) ? '' : $_REQUEST['MODELDESC'];
 		
 		$cond = "";
 		if($arrs['TYPECOD'] != ''){
-			$cond .= " and TYPECOD like '%".$arrs['TYPECOD']."%'";
+			$cond .= " and a.TYPECOD like '%".$arrs['TYPECOD']."%'";
 		}
 		
 		if($arrs['MODELCOD'] != ''){
-			$cond .= " and MODELCOD like '%".$arrs['MODELCOD']."%'";
+			$cond .= " and a.MODELCOD like '%".$arrs['MODELCOD']."%'";
+		}
+		
+		if($arrs['CC'] != ''){
+			$cond .= " and a.CC like '%".$arrs['CC']."%'";
+		}
+		
+		if($arrs['MODELDESC'] != ''){
+			$cond .= " and b.MODELDESC like '%".$arrs['MODELDESC']."%'";
 		}
 		
 		$sql = "
-			select top 1000 * from {$this->MAuth->getdb('SETMODEL')}
+			select top 1000 a.TYPECOD,a.MODELCOD,a.CC,a.RCC
+				,a.MEMO1,b.MODELDESC,b.MODELTYPE
+			from {$this->MAuth->getdb('SETMODEL')} a 
+			left join {$this->MAuth->getdb('SETMODELDESC')} b on a.MDDID=b.MDDID
 			where 1=1 ".$cond."
+			order by a.TYPECOD,a.CC,a.MODELCOD
 		";
 		//echo $sql;exit;
 		$query = $this->db->query($sql);
@@ -642,6 +668,10 @@ class CStock extends MY_Controller {
 						<td class='getit' seq='".$NRow++."' TYPECOD='".str_replace(chr(0),'',$row->TYPECOD)."' MODELCOD='".str_replace(chr(0),'',$row->MODELCOD)."' style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
 						<td>".str_replace(chr(0),'',$row->TYPECOD)."</td>
 						<td>".str_replace(chr(0),'',$row->MODELCOD)."</td>
+						<td>".str_replace(chr(0),'',$row->CC)."</td>
+						<td>".str_replace(chr(0),'',$row->RCC)."</td>
+						<td>".str_replace(chr(0),'',$row->MODELDESC)."</td>
+						<td>".str_replace(chr(0),'',$row->MODELTYPE)."</td>
 						<td>".str_replace(chr(0),'',$row->MEMO1)."</td>
 					</tr>
 				";
@@ -653,12 +683,16 @@ class CStock extends MY_Controller {
 				<table id='data-table-example2' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
 					<thead>
 						<tr>
-							<th colspan='4'>แสดงข้อมูล 1,000 รายการแรก</th>							
+							<th colspan='8'>แสดงข้อมูล 1,000 รายการแรก</th>							
 						</tr>
 						<tr>
 							<th>#</th>
 							<th>ยี่ห้อ</th>
 							<th>รุ่น</th>
+							<th>ขนาด</th>
+							<th>ขนาดจริง</th>
+							<th>ชื่อเรียก</th>
+							<th>กลุ่ม</th>
 							<th>คำอธิบาย</th>							
 						</tr>
 					</thead>	
@@ -678,16 +712,20 @@ class CStock extends MY_Controller {
 		$arrs = array();
 		$arrs['TYPECOD'] = (!isset($_REQUEST['TYPECOD']) ? '' : $_REQUEST['TYPECOD']);
 		$arrs['MODELCOD'] = (!isset($_REQUEST['MODELCOD']) ? '' : $_REQUEST['MODELCOD']);
+		$arrs['MDDID'] = (!isset($_REQUEST['MDDID']) ? '' : $_REQUEST['MDDID']);
 		
 		$data = array(
 			'TYPECOD'=>'',
 			'MODELCOD'=>'',
+			'CC'=>'',
+			'RCC'=>'',
 			'MEMO1'=>'',
+			'MDDID'=>''
 		);
 		if($arrs['TYPECOD'] != '' and $arrs['MODELCOD'] != ''){
 			$sql = "
-				select * from {$this->MAuth->getdb('SETMODEL')}
-				where TYPECOD='".$arrs['TYPECOD']."' and MODELCOD='".$arrs['MODELCOD']."'
+				select a.* from {$this->MAuth->getdb('SETMODEL')} a 
+				where a.TYPECOD='".$arrs['TYPECOD']."' and a.MODELCOD='".$arrs['MODELCOD']."'
 			";
 			$query = $this->db->query($sql);
 			
@@ -695,7 +733,10 @@ class CStock extends MY_Controller {
 				foreach($query->result() as $row){
 					$data['TYPECOD'] 	= str_replace(chr(0),'',$row->TYPECOD);
 					$data['MODELCOD'] 	= str_replace(chr(0),'',$row->MODELCOD);
+					$data['CC'] 		= str_replace(chr(0),'',$row->CC);
+					$data['RCC'] 		= str_replace(chr(0),'',$row->RCC);
 					$data['MEMO1'] 		= str_replace(chr(0),'',$row->MEMO1);
+					$data['MDDID'] 		= str_replace(chr(0),'',$row->MDDID);
 				}
 			}
 		}
@@ -706,7 +747,7 @@ class CStock extends MY_Controller {
 				<div style='height:calc(100vh - 165px);overflow:auto;'>
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
-							ยี่ห้อ
+							<span class='text-red'>*</span> ยี่ห้อ
 							<select id='t2TYPECOD' class='form-control input-sm' data-placeholder='ยี่ห้อ'>
 								<option value='".$data['TYPECOD']."'>".$data['TYPECOD']."</option>
 							</select>
@@ -715,8 +756,31 @@ class CStock extends MY_Controller {
 					
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
-							รุ่น
-							<input type='text' id='t2MODEL' class='form-control input-sm' value='".$data['MODELCOD']."'>
+							<span class='text-red'>*</span> รุ่น
+							<input type='text' id='t2MODEL' class='form-control input-sm' model='".$data['MODELCOD']."' value='".$data['MODELCOD']."' maxlength=20>
+						</div>
+					</div>
+					
+					<div class='col-sm-4 col-sm-offset-4'>	
+						<div class='form-group'>
+							ขนาด
+							<input type='text' id='t2CC' class='form-control input-sm' value='".$data['CC']."'>
+						</div>
+					</div>
+					
+					<div class='col-sm-4 col-sm-offset-4'>	
+						<div class='form-group'>
+							ขนาดจริง
+							<input type='text' id='t2RCC' class='form-control input-sm' value='".$data['RCC']."'>
+						</div>
+					</div>
+					
+					<div class='col-sm-4 col-sm-offset-4'>	
+						<div class='form-group'>
+							ชื่อเรียก/กลุ่ม
+							<select id='t2MDDID' class='form-control' title='เลือก'  data-actions-box='true' data-size='8' data-live-search='true'>
+								".$this->MMAIN->Option_get_modeldesc($data['MDDID'])."
+							</select>
 						</div>
 					</div>
 					
@@ -746,9 +810,15 @@ class CStock extends MY_Controller {
 	public function modelSave(){
 		$arrs = array();
 		$arrs['TYPECOD'] = (!isset($_REQUEST['TYPECOD'])?'':$_REQUEST['TYPECOD']);
+		$arrs['OMODEL'] = (!isset($_REQUEST['OMODEL'])?'':$_REQUEST['OMODEL']);
 		$arrs['MODEL'] = (!isset($_REQUEST['MODEL'])?'':$_REQUEST['MODEL']);
+		$arrs['CC'] = (!isset($_REQUEST['CC'])?'null':($_REQUEST['CC'] == "" ? "null":$_REQUEST['CC']));
+		$arrs['RCC'] = (!isset($_REQUEST['RCC'])?'null':($_REQUEST['RCC'] == "" ? "null":$_REQUEST['RCC']));
 		$arrs['MEMO1'] = (!isset($_REQUEST['MEMO1'])?'':$_REQUEST['MEMO1']);
+		$arrs['MDDID'] = (!isset($_REQUEST['MDDID'])?'':$_REQUEST['MDDID']);
 		$arrs['action'] = (!isset($_REQUEST['action'])?'':$_REQUEST['action']);
+		
+		if($arrs['MDDID'] == "nouse" || $arrs['MDDID'] == ""){ $arrs['MDDID'] = "null"; }
 		
 		$data = "";
 		if($arrs['action'] == 'add'){
@@ -760,8 +830,8 @@ class CStock extends MY_Controller {
 				
 				if(@isval = 0)
 				begin 
-					insert into {$this->MAuth->getdb('SETMODEL')} (TYPECOD,MODELCOD,MEMO1)
-					select '".$arrs['TYPECOD']."','".$arrs['MODEL']."','".$arrs['MEMO1']."'
+					insert into {$this->MAuth->getdb('SETMODEL')} (TYPECOD,MODELCOD,CC,RCC,MDDID,MEMO1)
+					select '".$arrs['TYPECOD']."','".$arrs['MODEL']."',".$arrs['CC'].",".$arrs['RCC'].",".$arrs['MDDID'].",'".$arrs['MEMO1']."'
 					
 					insert into {$this->MAuth->getdb('hp_UserOperationLog')}(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 					values ('".$this->sess["IDNo"]."','รุ่นรถ เพิ่ม','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
@@ -775,11 +845,26 @@ class CStock extends MY_Controller {
 			";
 		}else{			
 			$data = "
-				update {$this->MAuth->getdb('SETMODEL')}
-				set TYPECOD='".$arrs['TYPECOD']."'
-					,MODELCOD='".$arrs['MODEL']."'
-					,MEMO1='".$arrs['MEMO1']."'
-				where TYPECOD='".$arrs['TYPECOD']."' and MODELCOD='".$arrs['MODEL']."'
+				if exists( 
+					select * from {$this->MAuth->getdb('SETMODEL')}
+					where TYPECOD='".$arrs['TYPECOD']."' and MODELCOD='".$arrs['MODEL']."' and '".$arrs['OMODEL']."'!='".$arrs['MODEL']."'
+				)
+				begin 
+					rollback tran tsc;
+					insert into #tempolary select 'N' as id,'ผิดพลาด : ไม่สามารถแก้ไขจากรุ่น ".$arrs["OMODEL"]." เป็นรุ่น ".$arrs["MODEL"]." ได้ เนื่องจากมีรุ่น  ".$arrs["MODEL"]."  อยู่แล้ว' as msg;
+					return;
+				end 
+				else 
+				begin 
+					update {$this->MAuth->getdb('SETMODEL')}
+					set TYPECOD='".$arrs['TYPECOD']."'
+						,MODELCOD='".$arrs['MODEL']."'
+						,CC=".$arrs['CC']."
+						,RCC=".$arrs['RCC']."
+						,MEMO1='".$arrs['MEMO1']."'
+						,MDDID=".$arrs['MDDID']."
+					where TYPECOD='".$arrs['TYPECOD']."' and MODELCOD='".$arrs['OMODEL']."'
+				end
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')}(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','รุ่นรถ แก้ไข','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
@@ -802,7 +887,7 @@ class CStock extends MY_Controller {
 				insert into #tempolary select 'N' as id,'Fail : '+ERROR_MESSAGE() as msg;
 			end catch
 		";
-		
+		//echo $sql; exit;
 		$this->db->query($sql);
 		$sql = "select * from #tempolary";
 		$query = $this->db->query($sql);
@@ -910,7 +995,7 @@ class CStock extends MY_Controller {
 			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
 		";
 	
-		$html.= "<script src='".base_url('public/js/setup/setbaab.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/setup/CStock/setbaab.js')."'></script>";
 		echo $html;
 	}
 	
@@ -1027,7 +1112,7 @@ class CStock extends MY_Controller {
 				<div style='height:calc(100vh - 165px);overflow:auto;'>
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
-							ยี่ห้อ
+							<span class='text-red'>*</span> ยี่ห้อ
 							<select id='t2TYPECOD' TYPECOD='".$data['TYPECOD']."' class='form-control input-sm' data-placeholder='ยี่ห้อ'>
 								<option value='".$data['TYPECOD']."'>".$data['TYPECOD']."</option>
 							</select>
@@ -1036,7 +1121,7 @@ class CStock extends MY_Controller {
 					
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
-							รุ่น
+							<span class='text-red'>*</span> รุ่น
 							<select id='t2MODEL' MODELCOD='".$data['MODELCOD']."' class='form-control input-sm' data-placeholder='รุ่น'>
 								<option value='".$data['MODELCOD']."'>".$data['MODELCOD']."</option>
 							</select>
@@ -1045,8 +1130,8 @@ class CStock extends MY_Controller {
 					
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
-							แบบ
-							<input type='text' id='t2BAAB' BAABCOD='".$data['BAABCOD']."' class='form-control input-sm' value='".$data['BAABCOD']."'>
+							<span class='text-red'>*</span> แบบ
+							<input type='text' id='t2BAAB' BAABCOD='".$data['BAABCOD']."' class='form-control input-sm' value='".$data['BAABCOD']."'  maxlength=20>
 						</div>
 					</div>
 					
@@ -1189,7 +1274,7 @@ class CStock extends MY_Controller {
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')}(userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','แบบรถ ลบ','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
 				
-				insert into #tempolary select 'Y' as id,'สำเร็จ ลบรุ่นรถ ".$arrs['MODEL_OLD']."  แบบ ".$arrs['BAAB_OLD']." แล้ว' as msg;
+				insert into #tempolary select 'Y' as id,'สำเร็จ ลบแบบ ".$arrs['BAAB_OLD']." ของรุ่นรถ ".$arrs['MODEL_OLD']."  แล้ว' as msg;
 				commit tran tsc;
 			end try
 			begin catch
@@ -1265,7 +1350,7 @@ class CStock extends MY_Controller {
 			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
 		";
 	
-		$html.= "<script src='".base_url('public/js/setup/setcolor.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/setup/CStock/setcolor.js')."'></script>";
 		echo $html;
 	}
 	
@@ -1394,7 +1479,7 @@ class CStock extends MY_Controller {
 				<div style='height:calc(100vh - 165px);overflow:auto;'>
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
-							ยี่ห้อ
+							<span class='text-red'>*</span> ยี่ห้อ
 							<select id='t2TYPECOD' TYPECOD='".$data['TYPECOD']."' class='form-control input-sm' data-placeholder='ยี่ห้อ'>
 								<option value='".$data['TYPECOD']."'>".$data['TYPECOD']."</option>
 							</select>
@@ -1403,7 +1488,7 @@ class CStock extends MY_Controller {
 					
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
-							รุ่น
+							<span class='text-red'>*</span> รุ่น
 							<select id='t2MODEL' MODELCOD='".$data['MODELCOD']."' class='form-control input-sm' data-placeholder='รุ่น'>
 								<option value='".$data['MODELCOD']."'>".$data['MODELCOD']."</option>
 							</select>
@@ -1412,7 +1497,7 @@ class CStock extends MY_Controller {
 					
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
-							แบบ
+							<span class='text-red'>*</span> แบบ
 							<select id='t2BAAB' BAABCOD='".$data['BAABCOD']."' class='form-control input-sm' data-placeholder='แบบ'>
 								<option value='".$data['BAABCOD']."'>".$data['BAABCOD']."</option>
 							</select>
@@ -1421,8 +1506,8 @@ class CStock extends MY_Controller {
 					
 					<div class='col-sm-4 col-sm-offset-4'>	
 						<div class='form-group'>
-							สี
-							<input type='text' id='t2COLOR' COLORCOD='".$data['COLORCOD']."' class='form-control input-sm' value='".$data['COLORCOD']."'>
+							<span class='text-red'>*</span> สี
+							<input type='text' id='t2COLOR' COLORCOD='".$data['COLORCOD']."' class='form-control input-sm' value='".$data['COLORCOD']."'  maxlength=20>
 						</div>
 					</div>
 					
@@ -1874,7 +1959,7 @@ class CStock extends MY_Controller {
 			<div id='tab2_main' class='col-sm-12 tab2' hidden style='height:calc(100vh - 130px);overflow:auto;background-color:#;'></div>
 		";
 	
-		$html.= "<script src='".base_url('public/js/setup/setmaxstock.js')."'></script>";
+		$html.= "<script src='".base_url('public/js/setup/CStock/setmaxstock.js')."'></script>";
 		echo $html;
 	}
 	
@@ -2240,8 +2325,422 @@ class CStock extends MY_Controller {
 		$response['msg'] = $msg;
 		echo json_encode($response); exit;
 	}
-	
-	
+	function accessory(){
+		/**KORN setup อุปกรณ์เสริม**/
+		//echo "เมนูนี้กำลังพัฒนาครับ"; exit;
+		$claim = $this->MLogin->getclaim(uri_string());
+		if($claim['m_access'] != "T"){ echo "<div align='center' style='color:red;font-size:16pt;width:100%;'>ขออภัย คุณยังไม่มีสิทธิเข้าใช้งานหน้านี้ครับ</div>"; exit; }
+		$html = "
+			<div class='k_tab1' name='home' locat='{$this->sess['branch']}' cin='{$claim['m_insert']}' cup='{$claim['m_update']}' cdel='{$claim['m_delete']}' clev='{$claim['level']}' today='".$this->today('today')."' style='height:calc(100vh - 132px);overflow:auto;background-color:white;'>
+				<div class='col-sm-12'>
+					<div class=' col-sm-2'>	
+						<div class='form-group'>
+							รหัสอุปกรณ์
+							<input type='text' id='OPTCODE' class='form-control input-sm' placeholder='รหัสอุปกรณ์' >
+						</div>
+					</div>
+					<div class='col-sm-3'>	
+						<div class='form-group'>
+							ชื่ออุปกรณ์
+							<input type='text' id='OPTNAME' class='form-control input-sm' placeholder='ชื่ออุปกรณ์' >
+						</div>
+					</div>
+					<div class='col-sm-3'>	
+						<div class='form-group'>
+							สาขา
+							<input type='text' id='LOCAT' class='form-control input-sm' value='".$this->sess["branch"]."'>
+						</div>
+					</div>
+					<div class='col-sm-2'>	
+						<div class='form-group'>
+							<br>
+							<button id='btnsearch' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'>ค้นหา</span></button>
+						</div>
+					</div>
+					<div class='col-sm-2'>	
+						<div class='form-group'>
+							<br>
+							<button id='btnadd' class='btn btn-cyan btn-block'><span class='glyphicon glyphicon-pencil'>เพิ่ม</span></button>
+						</div>
+					</div>
+				</div>
+				<div class='col-sm-12'>
+					<div id='setoptresult' class='col-sm-12 tab1' style='height:calc(100vh - 220px);overflow:auto;background-color:#;'></div>
+				</div>
+			</div>
+			
+		";
+		$html .="<script src='".base_url('public/js/setup/setAccessory.js')."'></script>";
+		echo $html;
+	}
+	function accessory_search(){
+		$arrs = array();
+		$arrs["OPTCODE"] = $_REQUEST["OPTCODE"];
+		$arrs["OPTNAME"] = $_REQUEST["OPTNAME"];
+		$arrs["LOCAT"]   = $_REQUEST["LOCAT"];
+		$cond = "";
+		if($arrs["OPTCODE"] != ""){
+			$cond .=" and OPTCODE like '".$arrs["OPTCODE"]."%'";
+		}
+		if($arrs["OPTNAME"] != ""){
+			$cond .=" and OPTNAME like '".$arrs["OPTNAME"]."%'";
+		}
+		if($arrs["LOCAT"] != ""){
+			$cond .=" and LOCAT like '".$arrs["LOCAT"]."%'";
+		}
+		
+		$sql = "
+			select  OPTCODE,OPTNAME,LOCAT,UNITPRC,ONHAND 
+			from {$this->MAuth->getdb('OPTMAST')} where 1=1
+			".$cond."
+		";
+		$query = $this->db->query($sql);
+		$html = "";
+		$NRow = 1;
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .="
+					<tr class='trow' seq='".$NRow."'>
+						<td class='getit' seq='".$NRow++."' 
+							OPTCODE = '".str_replace(chr(0),"",$row->OPTCODE)."' 
+							LOCAT   = '".str_replace(chr(0),"",$row->LOCAT)."'
+						style='width:50px;cursor:pointer;text-align:center;'><b>เลือก</b></td>
+						<td>".str_replace(chr(0),'',$row->OPTCODE)."</td>
+						<td>".str_replace(chr(0),'',$row->OPTNAME)."</td>
+						<td>".str_replace(chr(0),'',$row->LOCAT)."</td>
+						<td>".number_format($row->UNITPRC,2)."</td>
+						<td>".str_replace(chr(0),'',$row->ONHAND)."</td>
+					</tr>
+				";
+			}
+		}
+		//onmousedown='return false;'
+		$html = "
+			<div id='table-fixed-accessory' class='col-sm-12' style='height:100%;overflow:auto;background-color:#eee;'>
+				<table id='table-accessory' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%'>
+					<thead>
+						<!-- tr>
+							<th colspan='4' align='center'>
+								<span style='cursor:pointer;'>Excel</span>
+								<span style='cursor:pointer;'>PDF</span>
+							</th>
+						</tr -->
+						<tr>
+							<th>#</th>
+							<th>รหัสกลุ่ม</th>
+							<th>ชื่อกลุ่ม</th>
+							<th>สถานที่เก็บ</th>
+							<th>ราคา/หน่วย</th>
+							<th>จำนวนคงเหลือ</th>
+						</tr>
+					</thead>	
+					<tbody>
+						".$html."				
+					</tbody>
+				</table>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function accessory_formsetopt(){
+		$html = "
+			<div class='col-sm-12'>
+				<div class='row'>
+					<div class='col-sm-5'>
+						<div class='form-group'>
+							<span class='text-red'>*</span>
+							รหัสอุปกรณ์
+							<div class='input-group'>
+								<input type='text' class='form-control input-sm' id='add_optcode' value=''>
+								<span class='input-group-btn'>
+									<button id='btn_addopt' class='btn btn-primary btn-sm' type='button'>
+										<span class='glyphicon glyphicon-hand-up' aria-hidden='true'></span>
+									</button>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class='col-sm-7'>
+						ชื่ออุปกรณ์
+						<input type='text' class='form-control input-sm' id='add_optname' value=''>
+					</div>
+				</div>
+				<div class='row'>
+					<div class='col-sm-5'>
+						<span class='text-red'>*</span>
+						รหัสสถานที่เก็บ
+						<select type='text' class='form-control input-sm' id='add_locat'>
+						
+						</select>
+					</div>
+					<div class='col-sm-7'>
+						ชื่อสถานที่เก็บ
+						<input type='text' class='form-control input-sm' id='add_locatnm' readonly>
+					</div>
+				</div>
+				<div class='col-sm-12'>
+					<div class='row'>
+						<div class='col-sm-6'>
+							<br>
+							ราคาขาย/หน่วย (ไม่รวม Vat)
+						</div>
+						<div class='col-sm-6'>
+							<br>
+							<input class='form-control text-right jzAllowNumber' id='add_unitprc' placeholder='0.00'>
+						</div>
+					</div>
+				</div>	
+				<div class='col-sm-12'>
+					<div class='row'>
+						<div class='col-sm-6'>
+							<br>
+							ราคาทุน/หน่วย (ไม่รวม Vat)
+						</div>
+						<div class='col-sm-6'>
+							<br>
+							<input class='form-control text-right jzAllowNumber' id='add_unitcst' placeholder='0.00'>
+						</div>
+					</div>
+				</div>
+				<div class='col-sm-12'>
+					<div class='row'>
+						<div class='col-sm-6'>
+							<br>
+							สต๊อกคงเหลือ
+						</div>
+						<div class='col-sm-6'>
+							<br>
+							<input class='form-control text-right jzAllowNumber' id='add_onhand' placeholder='0.00'>
+						</div>
+					</div>
+				</div>
+				<div class='col-sm-12 text-right'>
+					<div class='row'>
+						<br><br>
+						<button id='btn_save' class='btn btn-xs btn-primary' style='width:100px;'><span class='glyphicon glyphicon-floppy-disk'> บันทึก</span></button>
+						<button id='btn_del' class='btn btn-xs btn-danger' style='width:100px;'><span class='glyphicon glyphicon-trash'> ลบ</span></button>
+					</div>
+				</div>
+			</div>
+		";
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	function accessory_loaddata(){
+		$response = array();
+		$optcode  = $_REQUEST["optcode"];
+		$locat    = $_REQUEST["locat"];
+		
+		$sql = "
+			select 
+				O.OPTCODE,O.OPTNAME,O.LOCAT,I.LOCATNM,O.UNITPRC
+				,O.UNITCST,O.ONHAND
+			from {$this->MAuth->getdb('OPTMAST')} O
+			left join {$this->MAuth->getdb('INVLOCAT')} I on O.LOCAT = I.LOCATCD
+			where O.OPTCODE = '".$optcode."' and O.LOCAT like '".$locat."%'
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["OPTCODE"] = str_replace(chr(0),"",$row->OPTCODE);
+				$response["OPTNAME"] = str_replace(chr(0),"",$row->OPTNAME);
+				$response["LOCAT"]   = str_replace(chr(0),"",$row->LOCAT);
+				$response["LOCATNM"] = str_replace(chr(0),"",$row->LOCATNM);
+				$response["UNITPRC"] = number_format($row->UNITPRC,2);
+				$response["UNITCST"] = number_format($row->UNITCST,2);
+				$response["ONHAND"]  = number_format($row->ONHAND,2);
+			}
+		}
+		echo json_encode($response);
+	}
+	function accessory_save(){
+		$arrs = array();
+		$arrs["OPTCODE"]  = (!isset($_REQUEST["OPTCODE"]) ? "":$_REQUEST["OPTCODE"]);
+		$arrs["OPTNAME"]  = (!isset($_REQUEST["OPTNAME"]) ? "":$_REQUEST["OPTNAME"]);
+		$arrs["LOCAT"]    = (!isset($_REQUEST["LOCAT"]) ? "":$_REQUEST["LOCAT"]);
+		$arrs["UNITPRC"]  = (!isset($_REQUEST["UNITPRC"]) ? "":$_REQUEST["UNITPRC"]);
+		$arrs["UNITCST"]  = (!isset($_REQUEST["UNITCST"]) ? "":$_REQUEST["UNITCST"]);
+		$arrs["ONHAND"]   = (!isset($_REQUEST["ONHAND"]) ? "":$_REQUEST["ONHAND"]);
+		$arrs["EVENT"]    = $_REQUEST["EVENT"];
+		
+		$response = array();
+		if($arrs["OPTCODE"] == ""){
+			$response["error"] = "N";
+			$response["msg"]   = "กรุณากรอกรหัสอุปกรณ์ก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["OPTNAME"] == ""){
+			$response["error"] = "N";
+			$response["msg"]   = "กรุณากรอกชื่ออุปกรณ์ก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["LOCAT"] == ""){
+			$response["error"] = "N";
+			$response["msg"]   = "กรุณาเลือกรหัสสถานที่เก็บก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["UNITPRC"] == ""){
+			$response["error"] = "N";
+			$response["msg"]   = "กรุณากรอกราคาขาย/หน่วย (ไม่รวม Vat)เป็นตัวเลขก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["UNITCST"] == ""){
+			$response["error"] = "N";
+			$response["msg"]   = "กรุณากรอกราคาทุน/หน่วย (ไม่รวม Vat)เป็นตัวเลขก่อนครับ";
+			echo json_encode($response); exit;
+		}
+		if($arrs["ONHAND"] == ""){
+			$arrs["ONHAND"] = 0;
+		}
+		
+		if($arrs["EVENT"] == "add"){
+			$sql = "
+				if OBJECT_ID('tempdb..#tempsaveopt') is not null drop table #tempsaveopt;
+				create table #tempsaveopt (id varchar(1),msg varchar(max));
+				begin tran saveopt
+				begin try
+					if not exists(
+						select * from {$this->MAuth->getdb('OPTMAST')} 
+						where OPTCODE = '".$arrs["OPTCODE"]."' and LOCAT = '".$arrs["LOCAT"]."'
+					)
+					begin
+						insert into {$this->MAuth->getdb('OPTMAST')} (
+							[OPTCODE],[LOCAT],[OPTNAME],[UNITPRC]
+							,[UNITCST],[ONHAND],[TAVGCST],[LDTMOVE]
+						)values(
+							'".$arrs["OPTCODE"]."','".$arrs["LOCAT"]."','".$arrs["OPTNAME"]."'
+							,".$arrs["UNITPRC"].",".$arrs["UNITCST"].",0,0,null
+						)
+						
+						insert into {$this->MAuth->getdb('hp_UserOperationLog')} (
+							userId,descriptions,postReq,dateTimeTried,ipAddress,functionName
+						)values (
+							'".$this->sess["IDNo"]."','SYS01::บันทึกรหัสอุปกรณ์เสริม'
+							,'".$arrs["OPTCODE"]."'+' ".str_replace("'","",var_export($_REQUEST, true))."'
+							,getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."'
+						);
+						insert into #tempsaveopt select 'Y' as id,'สำเร็จ บันทึก รหัสอุปกรณ์เสริม :: ".$arrs["OPTCODE"]." เรียบร้อยแล้ว' as msg;
+						commit tran saveopt;
+					end
+					else
+					begin
+						rollback tran saveopt;
+						insert into #tempsaveopt select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : รหัสอุปกรณ์ซ้ำกับของเดิม' as msg;
+						return;
+					end
+				end try
+				begin catch
+					rollback tran saveopt;
+					insert into #tempsaveopt select 'E' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+					return;
+				end catch
+			";	
+		}else{
+			$sql = "
+				if OBJECT_ID('tempdb..#tempsaveopt') is not null drop table #tempsaveopt;
+				create table #tempsaveopt (id varchar(1),msg varchar(max));
+				begin tran saveopt
+				begin try
+					begin
+						update {$this->MAuth->getdb('OPTMAST')} 
+						set OPTCODE = '".$arrs["OPTCODE"]."',OPTNAME = '".$arrs["OPTNAME"]."'
+							,LOCAT = '".$arrs["LOCAT"]."',UNITPRC = ".$arrs["UNITPRC"]."
+							,UNITCST = ".$arrs["UNITCST"].",ONHAND = ".$arrs["ONHAND"]."
+						where OPTCODE = '".$arrs["OPTCODE"]."' and LOCAT = '".$arrs["LOCAT"]."'	
+						
+						insert into {$this->MAuth->getdb('hp_UserOperationLog')} (
+							userId,descriptions,postReq,dateTimeTried,ipAddress,functionName
+						)values (
+							'".$this->sess["IDNo"]."','SYS01::แก้ไขรหัสอุปกรณ์เสริม'
+							,'".$arrs["OPTCODE"]."'+' ".str_replace("'","",var_export($_REQUEST, true))."'
+							,getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."'
+						);
+						insert into #tempsaveopt select 'Y' as id,'สำเร็จ แก้ไขรหัสอุปกรณ์เสริม :: ".$arrs["OPTCODE"]." เรียบร้อยแล้ว' as msg;
+						commit tran saveopt;
+					end
+				end try
+				begin catch
+					rollback tran saveopt;
+					insert into #tempsaveopt select 'E' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+					return;
+				end catch
+			";	
+		}
+		//echo $sql; exit;
+		$this->db->query($sql);
+		$sql = "select * from #tempsaveopt";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["error"] = $row->id;
+				$response["msg"]   = $row->msg;
+			}
+		}else{
+			$response["error"] = "E";
+			$response["msg"]   = "ผิดพลาด กรุณาติดต่อฝ่ายไอที";
+		}
+		echo json_encode($response);
+	}
+	function accessory_del(){
+		$arrs = array();
+		$arrs["OPTCODE"]  = (!isset($_REQUEST["OPTCODE"]) ? "":$_REQUEST["OPTCODE"]);
+		$arrs["LOCAT"]    = (!isset($_REQUEST["LOCAT"]) ? "":$_REQUEST["LOCAT"]);
+		
+		$sql = "
+			if OBJECT_ID('tempdb..#tempdelopt') is not null drop table #tempdelopt;
+			create table #tempdelopt (id varchar(1),msg varchar(max));
+			begin tran delopt
+			begin try
+				if not exists(
+					select * from {$this->MAuth->getdb('OPTMAST')} 
+					where OPTCODE = '".$arrs["OPTCODE"]."' and LOCAT = '".$arrs["LOCAT"]."' 
+					and ONHAND <> 0
+				)
+				begin
+					delete from {$this->MAuth->getdb('OPTMAST')}
+					where OPTCODE = '".$arrs["OPTCODE"]."' and LOCAT = '".$arrs["LOCAT"]."'
+					
+					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (
+						userId,descriptions,postReq,dateTimeTried,ipAddress,functionName
+					)values (
+						'".$this->sess["IDNo"]."','SYS01::ลบรหัสอุปกรณ์เสริม'
+						,'".$arrs["OPTCODE"]."'+' ".str_replace("'","",var_export($_REQUEST, true))."'
+						,getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."'
+					);
+					insert into #tempdelopt select 'Y' as id,'สำเร็จ ลบรหัสอุปกรณ์เสริม :: ".$arrs["OPTCODE"]." เรียบร้อยแล้ว' as msg;
+					commit tran delopt;
+				end
+				else
+				begin
+					rollback tran delopt;
+					insert into #tempdelopt select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : รหัสอุปกรณ์ถูกนำไปใช้แล้ว' as msg;
+					return;
+				end
+			end try
+			begin catch
+				rollback tran delopt;
+				insert into #tempdelopt select 'E' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				return;
+			end catch
+		";
+		//echo $sql; exit;
+		$this->db->query($sql);
+		
+		$sql = "select * from #tempdelopt";
+		$query = $this->db->query($sql);
+		if($query->row()){
+			foreach($query->result() as $row){
+				$response["error"] = $row->id;
+				$response["msg"]   = $row->msg;
+			}
+		}else{
+			$response["error"] = "E";
+			$response["msg"]   = "ผิดพลาด กรุณาติดต่อฝ่ายไอที";
+		}
+		echo json_encode($response);
+	}
 }
 
 

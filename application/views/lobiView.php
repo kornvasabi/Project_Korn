@@ -48,11 +48,51 @@
 		input[type="number"]:disabled {
 			background: #ccc;
 		}
+		
+		.chat {
+			padding-left: 10px;
+			position:fixed;
+			min-width:100px;
+			min-height:20px;
+			bottom:0px;
+			right:10px;
+			border-radius: 5px 5px 0px 0px;
+			background-color:#ddd;
+			box-shadow: -0px -2px 10px #888888;
+			z-index:5001;
+		}
+		
+		.chat:hover {
+			background-color:#ccc;
+			border-radius: 5px 5px 0px 0px;
+		}
+		
+		#chat-title-open {
+			cursor:pointer;
+		}
 	</style>
 </head>
 <!-- style='background: rgba(0, 0, 0, 0) url("../public/lobiadmin-master/version/1.0/ajax/img/bg/bg4.png") repeat scroll 0% 0%;' -->
 <body class='header-fixed menu-fixed ribbon-fixed' baseUrl='<?php echo $baseUrl; ?>'>
 	<nav class="navbar navbar-default navbar-header header">
+		<!-- div class="chat col-sm-2">
+			<div class="chat-title">
+				<div style="float:left;width:calc(100% - 50px);"><b>แจ้งปัญหา</b></div>
+				<div id="chat-title-open" class="glyphicon glyphicon-chevron-up" style="float:left;width:50px;" align="right"></div>
+			</div>			
+			<div class="chat-body" style="cursor:default;" hidden>
+				<div class="chat-details" lastLoad="" style="max-height:300px;height:300px;width:100%;background-color:#fff;overflow-y:scroll;">
+					<div class="col-sm-12" align="left">
+						<div align=left style="word-break:break-all;max-width:90%;width:auto;padding-left:5px;border:0.1px solid #ddd;background-color:#ccc;border-radius: 0px 10px 10px 0px;">
+							สวัสดีครับ ต้องการสอบถามข้อมูลด้านไหนครับ
+						</div>
+					</div>
+				</div>
+				<textarea id="textchat" rows="1" class="input-sm" style="width:80%;resize:none;float:left;"></textarea>
+				<button id="chatSendMSG" style="width:calc(20%);height:50px;float:left;">ส่ง</button>
+			</div>
+		</div -->
+				
 		<a class="navbar-brand" href="#">
 			<div class="navbar-brand-img"></div>
 			<!--<img src="img/logo/lobiadmin-logo-text-white-32.png" class="hidden-xs" alt="" />-->
@@ -111,10 +151,10 @@
 				<li class="dropdown">
 					<!-- a href="#" class="dropdown-toggle" data-toggle="dropdown">
 						<span class="glyphicon glyphicon-globe"></span>
-						<span id="notify_cnt" class="badge badge-danger badge-xs">0</span>
-					</a -->
+						<span id="notify_cnt" class="badge badge-danger badge-xs">5</span>
+					</a>
 					
-					<!-- div class="dropdown-menu dropdown-notifications notification-news border-1 animated-fast flipInX">
+					<div class="dropdown-menu dropdown-notifications notification-news border-1 animated-fast flipInX">
 						<div class="notifications-heading border-bottom-1 bg-white">
 							Notifications
 						</div>
@@ -379,6 +419,8 @@
 	
 	<link rel='stylesheet' type='text/css' media='screen' href='../public/upload/uploadfile.css' />
 	<script type='text/javascript' src='../public/upload/jquery.uploadfile.min.js'></script>
+	
+	<script type='text/javascript' src='../node_modules/signature_pad/dist/signature_pad.umd.js'></script>
 </body>
 <script>
 	var jbackdrop = '<div class="jbackdrop" style="position:fixed;z-index:4001;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,.5)"></div>';
@@ -869,5 +911,113 @@
 		
 		//setInterval(function(){ tables.columns.adjust().draw(); },250);
 	}
+	
+	
+	/*************************************************************************************************************
+													 CHAT	SOLUTION
+	**************************************************************************************************************/
+	var ObjloadChat = null;
+	//var loadChat = setInterval(function(){ fnLoadChat(); },3000);
+	
+	function fnLoadChat(){
+		var dataToPost = new Object();
+		dataToPost.lastLoad = $('.chat-details').attr('lastLoad');
+		
+		ObjloadChat = $.ajax({
+			url: '../CHomenew/chatLoad?d='+new Date(),
+			data: dataToPost,
+			type: 'POST',
+			dataType: 'json',
+			beforeSend: function(){ if(ObjloadChat !== null){ ObjloadChat.abort(); } },
+			success: function(data){
+				if(data.html != ''){
+					$('.chat-details').append(data.html);
+					$('.chat-details').attr('lastLoad',data.lastLoad);
+					
+					var objDiv = document.getElementsByClassName("chat-details")[0];
+					objDiv.scrollTop = objDiv.scrollHeight;
+					ObjloadChat = null;
+				} 
+				
+				$('.chat-body #textchat').focus();
+			}
+		});
+	}
+	
+	$('#chat-title-open').unbind('click');
+	$('#chat-title-open').click(function(){
+		if($(this).hasClass('glyphicon glyphicon-chevron-up')){
+			var objDiv = document.getElementsByClassName("chat-details")[0];
+			objDiv.scrollTop = objDiv.scrollHeight;
+			
+			$('#chat-title-open').removeClass('glyphicon glyphicon-chevron-up');
+			$('#chat-title-open').addClass('glyphicon glyphicon-chevron-down');
+			if($('.chat-body').is(":hidden")){
+				$('.chat-body').show(300);
+				$('.chat-body #textchat').focus();
+				
+				$('.chat-body #textchat').unbind('keyup');
+				$('.chat-body #textchat').keyup(function(e){
+					var $this = $(this);
+					if(e.keyCode === 13){
+						if($this.val() != ''){						
+							if (e.shiftKey){ fnChatSendMSG(); }
+						}
+					}
+				});
+				
+				/*
+					$('#textchat').focusout(function(){
+						$(function(e){
+							var clickedClass = e.target.className;
+							var clickedID = e.target.id;
+							
+							alert(clickedClass);					
+						});
+						
+						$('.chat-body').hide(300);
+						$('#chat-title-open').removeClass('glyphicon glyphicon-chevron-down');
+						$('#chat-title-open').addClass('glyphicon glyphicon-chevron-up');
+					});
+				*/
+			}else{
+				$('.chat-body').hide(300);
+			}
+		}else{
+			$('.chat-body').hide(300);
+			$('#chat-title-open').removeClass('glyphicon glyphicon-chevron-down');
+			$('#chat-title-open').addClass('glyphicon glyphicon-chevron-up');
+		}
+		
+		$('#chatSendMSG').unbind('click');
+		$('#chatSendMSG').click(function(){ fnChatSendMSG(); });
+		
+		function fnChatSendMSG(){
+			var dataToPost = new Object();
+			dataToPost.text = $('.chat-body #textchat').val();
+			dataToPost.lastLoad = $('.chat-details').attr('lastLoad');
+			
+			$('.chat-body #textchat').val('');
+			$.ajax({
+				url: '../CHomenew/chatSend',
+				data: dataToPost,
+				type: 'POST',
+				dataType: 'json',
+				success: function(data){
+					if(data.html != ''){
+						$('.chat-details').append(data.html);
+						$('.chat-details').attr('lastLoad',data.lastLoad);
+						
+						var objDiv = document.getElementsByClassName("chat-details")[0];
+						objDiv.scrollTop = objDiv.scrollHeight;
+						ObjloadChat = null;
+					}
+					
+					$('.chat-body #textchat').focus();
+				}
+			});
+		}
+	});
+	
 </script>
 </html>

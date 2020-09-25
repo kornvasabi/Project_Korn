@@ -111,9 +111,9 @@ class SYDProfitMoney extends MY_Controller {
 							</div>
 						</div>
 						<div class='col-sm-12' style='height:100px;'></div>
-						<div class='col-sm-4'>
+						<!--div class='col-sm-4'>
 							<button id='updateprofit' style='width:100%;' class='btn btn-primary btn-sm'><span class='fa fa-refresh'>ปรับปรุงดอกผล</span></button>
-						</div>
+						</div-->
 					</div>	
 				</div>
 			</div>

@@ -21,7 +21,7 @@ $('#btnaddform').click(function(){
 		dataType: 'json',
 		success: function(data){
 			Lobibox.window({
-				title: 'บันทึกรายการขายอุปกรณ์',
+				title: 'บันทึกรายการขายอุปกรณ์เสริม',
 				width: $(window).width(),
 				height: $(window).height(),
 				content: data.html,
@@ -106,7 +106,7 @@ function loadACS($param){
 		success: function(data){
 			$('#loadding').fadeOut(200);
 			Lobibox.window({
-				title: 'บันทึกรายการเช่าซื้อ',
+				title: 'แก้ไขรายการขายอุปกรณ์เสริม',
 				width: $(window).width(),
 				height: $(window).height(),
 				content: data.html,
@@ -290,6 +290,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 					content: data.html,
 					draggable: false,
 					closeOnEsc: true,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($this){
 						var kb_btnsearch = null;
 						$('#btn_search').click(function(){ fnResultCUSCOD(); });
@@ -334,6 +335,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 						}
 					},
 					beforeClose : function(){
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 						if(_insert == "T"){
 							$('#btn_save').attr('disabled',false);
 						}else{
@@ -394,16 +396,18 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 			dataType: 'json',
 			success: function(data) {
 				Lobibox.window({
-					title: 'ค้นหาอุปกรณ์เสริม',
+					title: 'เพิ่มอุปกรณ์เสริม',
 					width: 600,
 					height: 500,
 					draggable: true,
 					content: data.html,
 					closeOnEsc: true,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($this){
 						fn_formOPTCODE($this);
 					},
 					beforeClose: function(){
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 						$('#add_optcod').attr('disabled',false);
 						$('#btn_save').attr('disabled',false);
 						$('.accslist').attr('disabled',false);
@@ -424,7 +428,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 			title: 'ยืนยันการทำรายการ',
 			iconClass: false,
 			//closeButton: false,
-			msg: 'คุณต้องการบันทึกรายการขายอุปกรณ์เสริมหรือไม่',
+			msg: 'คุณต้องการบันทึกรายการขายอุปกรณ์เสริมหรือไม่ ?',
 			buttons: {
 				ok : {
 					'class': 'btn btn-primary glyphicon glyphicon-ok',
@@ -437,6 +441,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 					closeOnClick: true
 				},
 			},
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
 			callback: function(lobibox, type){
 				if (type === 'ok'){ fnSave($thisWindowAcs); }
 				
@@ -444,6 +449,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 				//$('#btn_delete').attr('disabled',false);
 			},
 			beforeClose: function(){
+				$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 				//$('#btn_save').attr('disabled',false);
 				//$('#btn_delete').attr('disabled',false);
 			}
@@ -495,7 +501,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 				title: 'ยืนยันการทำรายการ',
 				iconClass: false,
 				//closeButton: false,
-				msg: 'คุณต้องการลบรายการขายอุปกรณ์เสริมเลขที่ <span style="color:red;font-size:18pt;">'+cont+'</span>หรือไม่',
+				msg: 'คุณต้องการลบรายการขายอุปกรณ์เสริมเลขที่ <span style="color:red;font-size:18pt;">'+cont+'</span>หรือไม่ ?',
 				buttons: {
 					ok : {
 						'class': 'btn btn-primary glyphicon glyphicon-ok',
@@ -508,6 +514,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 						closeOnClick: true
 					},
 				},
+				onShow: function(lobibox){ $('body').append(jbackdrop); },
 				callback: function(lobibox, type){
 					if (type === 'ok'){ 
 						fnDelete($thisWindowAcs); 
@@ -517,6 +524,7 @@ function wizard($param,$dataLoad,$thisWindowAcs){
 					//$('#btn_delete').attr('disabled',false);
 				},
 				beforeClose: function(){
+					$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 					//$('#btn_save').attr('disabled',false);
 					//$('#btn_delete').attr('disabled',false);
 				}
@@ -739,7 +747,7 @@ function AddListTable($this){
 			tt_optprc  += parseFloat(accslist.attr('optprc'));
 			tt_vatrt   += parseFloat(accslist.attr('vatrt'));
 		});	
-		$('#sum_optptot').val(tt_optptot.toFixed(2)); //fn_toFixed ทศนิยม
+		$('#sum_optptot').val(tt_optptot.toFixed(2)); //toFixed ทศนิยม
 		$('#sum_optprc').val(tt_optprc.toFixed(2));
 		$('#sum_vatrt').val(tt_vatrt.toFixed(2));
 		
@@ -887,7 +895,7 @@ function fnSave($thisWindowAcs){
 				kb_fnSave.abort();
 			}
 		}
-		//,error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		,error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
 	});
 }
 var kb_fnDel = null;

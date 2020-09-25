@@ -394,7 +394,7 @@ class SYDProfitStale extends MY_Controller {
 							<th colspan='17' style='font-size:10pt;'>บริษัท ตั้งใจพัฒนายานยนต์ จำกัด</th>
 						</tr>
 						<tr>
-							<th colspan='17' style='font-size:9pt;'>รายงานกำไรตามดิว (SYD)</th>
+							<th colspan='17' style='font-size:9pt;'>รายงานดอกผลเช่าซื้อลูกหนี้ค้างรับ (SYD)</th>
 						</tr>
 						<tr>
 							<td style='text-align:center;' colspan='17'>

@@ -1,5 +1,5 @@
 /********************************************************
-             ______@04/03/2020______
+             ______@04.03.2020______
             / / _ _   _ _     __ 
            / // __ \ / __ \ / __ \
        _ _/ // /_/ // / / // /_/ /
@@ -8,12 +8,13 @@
                          /___ /
 ********************************************************/
 "use strict";
-var _groupType  = $('.tab1[name="home"]').attr('groupType');
+var _groupType = $('.tab1[name="home"]').attr('groupType');
 var _locat  = $('.tab1[name="home"]').attr('locat');
 var _insert = $('.tab1[name="home"]').attr('cin');
 var _update = $('.tab1[name="home"]').attr('cup');
 var _delete = $('.tab1[name="home"]').attr('cdel');
 var _level  = $('.tab1[name="home"]').attr('clev');
+var _dbgroup = $('.tab1[name="home"]').attr('dbgroup'); // ฐานหลัก
 
 var jdbtnt1search		  = null;
 var jdbtnt1revpayment	  = null;
@@ -24,15 +25,106 @@ var OBJadd_btnAlert 	  = null;
 var OBJadd_CONTNO_detail  = null;
 
 $(function(){
-	$("#sch_locatrecv").attr('disabled',(_level==1?false:true));
 	$("#sch_locatrecv").selectpicker();
 	if(_groupType != "OFF"){
 		$("#sch_locatrecv").empty().append('<option value="'+_locat+'" selected>'+_locat+'</option>');
-		$("#sch_locatrecv").attr('disabled',true).selectpicker('refresh');;
+		$("#sch_locatrecv").attr('disabled',true).selectpicker('refresh');
 	}else{
 		//$("#LOCAT").empty();
-		$("#sch_locatrecv").attr('disabled',false).selectpicker('refresh');;
+		$("#sch_locatrecv").attr('disabled',false).selectpicker('refresh');
 	}
+	
+	$('#sch_cuscod').click(function(){
+		$('#loadding').fadeIn(200);
+		
+		jd_add_cuscod = $.ajax({
+			url:'../Cselect2/getformCUSTOMER',
+			type: 'POST',
+			dataType: 'json',
+			success: function(data){
+				$('#sch_cuscod').attr('disabled',true);
+				
+				Lobibox.window({
+					title: 'FORM CUSTOMER',
+					//width: $(window).width(),
+					//height: $(window).height(),
+					content: data.html,
+					draggable: false,
+					closeOnEsc: false,
+					onShow: function(lobibox){ $('body').append(jbackdrop); },
+					shown: function($thisCUS){
+						var jd_cus_search = null;
+						$('#cus_fname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_lname').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_idno').keyup(function(e){ if(e.keyCode === 13){ fnResultCUSTOMER(); } });
+						$('#cus_search').click(function(){ fnResultCUSTOMER(); });
+						
+						function fnResultCUSTOMER(){
+							var data = new Object();
+							data.fname = $('#cus_fname').val();
+							data.lname = $('#cus_lname').val();
+							data.idno = $('#cus_idno').val();
+							
+							$('#loadding').fadeIn(200);
+							jd_cus_search = $.ajax({
+								url:'../Cselect2/getResultCUSTOMERALL',
+								data:data,
+								type: 'POST',
+								dataType: 'json',
+								success: function(data){
+									$('#cus_result').html(data.html);
+									
+									$('.CUSDetails').unbind('click');
+									$('.CUSDetails').click(function(){
+										var dtp = new Object();
+										dtp.cuscod  = $(this).attr('CUSCOD');
+										dtp.cusname = $(this).attr('CUSNAMES');
+										dtp.addrno  = $(this).attr('ADDRNO');
+										dtp.addrdes = $(this).attr('ADDRDES');
+										dtp.telp	= $(this).attr('telp');
+										
+										$('#sch_cuscod').attr('CUSCOD',dtp.cuscod);
+										$('#sch_cuscod').attr('telp',dtp.telp);
+										$('#sch_cuscod').attr('disabled',true);
+										$('#sch_cuscod').val(dtp.cusname);
+										
+										var newOption = new Option(dtp.addrdes, dtp.addrno, true, true);
+										$('#add_addrno').empty().append(newOption).trigger('change');	
+										
+										$thisCUS.destroy();
+									});
+									
+									$('#loadding').fadeOut(200);
+									jd_cus_search = null;
+								},
+								beforeSend: function(){
+									if(jd_cus_search !== null){ jd_cus_search.abort(); }
+								},
+								error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+							});
+						}
+					},
+					beforeClose : function(){
+						$('#sch_cuscod').attr('disabled',($('#sch_cuscod').attr('CUSCOD') == ""?false:true));
+						
+						$('.jbackdrop')[($('.jbackdrop').length)-1].remove(); 
+					}
+				});
+				
+				jd_add_cuscod = null;
+				$('#loadding').fadeOut(200);
+			},
+			beforeSend: function(){ if(jd_add_cuscod !== null){ jd_add_cuscod.abort(); } },
+			error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
+		});
+	});
+	
+	$('#sch_cuscod_removed').click(function(){
+		$('#sch_cuscod').val('');
+		$('#sch_cuscod').attr('CUSCOD','');
+		$('#sch_cuscod').attr('disabled',false);
+	});
+	
 });
 
 /*
@@ -79,12 +171,13 @@ $('#btnt1search').click(function(){
 	var dataToPost = new Object();
 	dataToPost.TMBILL = $('#sch_tmbill').val();
 	dataToPost.BILLNO = $('#sch_billno').val();
+	dataToPost.CONTNO = $('#sch_contno').val();
 	dataToPost.LOCATRECV = $('#sch_locatrecv').val();
 	dataToPost.CUSCOD = $('#sch_cuscod').attr('cuscod');
 	dataToPost.STMBILDT = $('#sch_stmbildt').val();
 	dataToPost.ETMBILDT = $('#sch_etmbildt').val();
 	
-	//fnSearch(dataToPost); 
+	fnSearch(dataToPost); 
 });
 
 function fnSearch(data){
@@ -114,7 +207,7 @@ function fnSearch(data){
 							var dataToPost = new Object();
 							dataToPost.action = 'EDIT';
 							dataToPost.TMBILL = $(this).attr('TMBILL');
-							fnForm(dataToPost); 
+							fnForm(dataToPost,null); 
 						});
 					}
 				}
@@ -131,10 +224,10 @@ function fnSearch(data){
 $('#btnt1revpayment').click(function(){ 
 	var dataToPost = new Object();
 	dataToPost.action = 'new';
-	fnForm(dataToPost); 
+	fnForm(dataToPost,null); 
 });
 
-function fnForm(data){
+function fnForm(data,$window){
 	$('#loadding').fadeIn(200);
 	jdbtnt1revpayment = $.ajax({
 		url:'../SYS06/RevPayment/get_form_received',
@@ -142,6 +235,8 @@ function fnForm(data){
 		type:'POST',
 		dataType:'json',
 		success: function(data){
+			if($window !== null){ $window.destroy(); }
+			
 			Lobibox.window({
 				title: 'แบบฟอร์มรับชำระ',
 				width: $(window).width(),
@@ -154,7 +249,7 @@ function fnForm(data){
 					$('#add_btnSave').attr('disabled',(_insert != 'T' ? true:false));
 					//มีสิทธิ์ยกเลิกบิลหรือไม่ (delete)
 					//alert(_delete);
-					$('#add_btnCalC').attr('disabled',(_delete != 'T' ? true:false));
+					$('#add_btnCanC').attr('disabled',(_delete != 'T' ? true:false));
 					
 					
 					fnFormPayments($this);
@@ -209,7 +304,7 @@ function fnFormPayments($window){
 		width: '100%'
 	});
 	
-	if(_level!=1){
+	if(_groupType != "OFF"){
 		$('#add_LOCATRECV').attr('disabled',true);
 	}
 	
@@ -308,7 +403,7 @@ function fnFormPayments($window){
 							
 							$('#loadding').fadeIn(200);
 							jd_cus_search = $.ajax({
-								url:'../Cselect2/getResultCUSTOMER',
+								url:'../Cselect2/getResultCUSTOMERALL',
 								data:data,
 								type: 'POST',
 								dataType: 'json',
@@ -322,8 +417,10 @@ function fnFormPayments($window){
 										dtp.cusname = $(this).attr('CUSNAMES');
 										dtp.addrno  = $(this).attr('ADDRNO');
 										dtp.addrdes = $(this).attr('ADDRDES');
+										dtp.telp	= $(this).attr('telp');
 										
 										$('#add_CUSCOD').attr('CUSCOD',dtp.cuscod);
+										$('#add_CUSCOD').attr('telp',dtp.telp);
 										$('#add_CUSCOD').attr('disabled',true);
 										$('#add_CUSCOD').val(dtp.cusname);
 										
@@ -400,6 +497,7 @@ function fnFormPayments($window){
 				msg: "รายการตัดสดชำระรวมกับรายการอื่นไม่ได้ครับ"
 			});
 		}else{
+			$('#loadding').fadeIn(200);
 			jd_add_payment = $.ajax({
 				url:'../SYS06/RevPayment/get_form_payment',
 				//data: data,
@@ -419,6 +517,7 @@ function fnFormPayments($window){
 						onShow: function(lobibox){ $('body').append(jbackdrop); },
 						shown: function($this){
 							fnFormPaymentsCONTNO($this);
+							$('#loadding').fadeOut(200);
 						},
 						beforeClose: function(){
 							$('#add_payment').attr('disabled',false);
@@ -461,6 +560,21 @@ function fnFormPaymentsCONTNO($thisWindow){
 				$('#add_PAYFOR').append('<option value="'+data[i]['id']+'">'+data[i]['text']+'</option>');
 			}
 		}
+	});
+	
+	$('#add_PAYFOR').on("select2:select",function(){
+		//alert($(this).find(':selected').val());
+		$('#add_CONTNO').val('');
+		$('#add_CONTNO').attr('cuscod','');
+		$('#add_CONTNO').attr('disabled',false);
+		
+		$('#add_PAYAMT').val('');
+		$('#add_DISCT').val('');
+		$('#add_PAYINT').val('');
+		$('#add_DSCINT').val('');
+		$('#add_NETPAY').val('');
+		
+		$('#btn_DATAPayment').attr('disabled',true);
 	});
 	
 	/*
@@ -567,7 +681,7 @@ function fnFormPaymentsCONTNO($thisWindow){
 													
 													$('#loadding').fadeIn(200);
 													jd_cus_search = $.ajax({
-														url:'../Cselect2/getResultCUSTOMER',
+														url:'../Cselect2/getResultCUSTOMERALL',
 														data:data,
 														type: 'POST',
 														dataType: 'json',
@@ -581,8 +695,10 @@ function fnFormPaymentsCONTNO($thisWindow){
 																dtp.cusname = $(this).attr('CUSNAMES');
 																dtp.addrno  = $(this).attr('ADDRNO');
 																dtp.addrdes = $(this).attr('ADDRDES');
-																
+																dtp.telp	= $(this).attr('telp');
+											
 																$('#cont_cus').attr('CUSCOD',dtp.cuscod);
+																$('#cont_cus').attr('telp',dtp.telp);
 																$('#cont_cus').attr('disabled',true);
 																$('#cont_cus').val(dtp.cusname);
 																
@@ -663,6 +779,7 @@ function fnFormPaymentsCONTNO($thisWindow){
 											var dtp = new Object();
 											dtp.cuscod  = $(this).attr('cuscod');
 											dtp.cusname = $(this).attr('cusname');
+											dtp.telp	= $(this).attr('telp');
 											dtp.contno  = $(this).attr('contno');
 											dtp.locat   = $(this).attr('locat');
 											dtp.total   = $(this).attr('total');
@@ -677,6 +794,21 @@ function fnFormPaymentsCONTNO($thisWindow){
 												type: 'POST',
 												dataType: 'json',
 												success: function(data){
+													if(data.error){
+														Lobibox.notify('warning', {
+															title: 'แจ้งเตือน',
+															size: 'mini',
+															closeOnClick: false,
+															delay: false,
+															pauseDelayOnHover: true,
+															continueDelayOnInactiveTab: false,
+															icon: true,
+															messageHeight: '90vh',
+															msg: data.errorMessage
+														});
+													}
+													
+													$('#add_CONTNO').attr("locat",data.LOCAT);
 													$('#add_PAYAMT').val(data.PAYAMT);
 													$('#add_DISCT').val(data.DISCT);
 													$('#add_PAYINT').val(data.PAYINT);
@@ -690,6 +822,7 @@ function fnFormPaymentsCONTNO($thisWindow){
 											if(dtp.error == ''){
 												$('#add_CUSCOD').val(dtp.cusname);
 												$('#add_CUSCOD').attr('cuscod',dtp.cuscod);
+												$('#add_CUSCOD').attr('telp',dtp.telp);
 												$('#add_CUSCOD').attr('disabled',true);
 												$('#add_CONTNO').val(dtp.contno);
 												$('#add_CONTNO').attr('locat',dtp.locat);
@@ -754,6 +887,7 @@ function fnFormPaymentsCONTNO($thisWindow){
 		var dataToPost = new Object();
 		dataToPost.CONTNO = $('#add_CONTNO').val();
 		dataToPost.LOCAT  = $('#add_CONTNO').attr('locat');
+		dataToPost.TMBILDT  = $('#add_TMBILDT').val();
 		
 		fn_OutstandingBalance(dataToPost);
 	});
@@ -772,6 +906,7 @@ function fnFormPaymentsCONTNO($thisWindow){
 		if(table_payments.length == 0){
 			$('#add_CUSCOD').val('');
 			$('#add_CUSCOD').attr('cuscod','');
+			$('#add_CUSCOD').attr('telp','');
 			$('#add_CUSCOD').attr('disabled',false);
 		}
 	});
@@ -786,6 +921,7 @@ function fnFormPaymentsCONTNO($thisWindow){
 		dataToPost.DSCINT = $('#add_DSCINT').val();
 		dataToPost.NETPAY = $('#add_NETPAY').val();
 		
+		$('#loadding').fadeIn(200);
 		OBJbtn_DATACalc = $.ajax({
 			url:'../SYS06/RevPayment/getDataCalC',
 			data: dataToPost,
@@ -820,6 +956,8 @@ function fnFormPaymentsCONTNO($thisWindow){
 					$('.lobibox-notify').remove();
 					$('#btn_DATAPayment').attr('disabled',false);
 				}
+				
+				$('#loadding').fadeOut(200);
 			}
 		});
 	});
@@ -876,6 +1014,29 @@ function fnFormPaymentsCONTNO($thisWindow){
 				msg: WARNING
 			});
 		}else{
+			if(_dbgroup == "HIINCOME"){
+				var LOCATRECV = $('#add_LOCATRECV').find(':selected').val();
+				var LOCATPAY = $('#add_CONTNO').attr('LOCAT');
+				var PAYFOR = $('#add_PAYFOR').find(':selected').val();
+				
+				var ARRAY_PAYFOR = ['001','002','006','007','008','102','188','190','199'];
+				if(LOCATRECV != LOCATPAY && ARRAY_PAYFOR.indexOf(PAYFOR) != -1 ){
+					//alert('รับชำระต่างสาขา ต้องเปลี่ยนวิธีชำระเงินเป็น 14 ฝากผ่อน');
+					$('#add_PAYTYP').val('14').trigger('change');
+					Lobibox.notify('info', {
+						title: 'แจ้งเตือน',
+						size: 'mini',
+						closeOnClick: false,
+						delay: false,
+						pauseDelayOnHover: true,
+						continueDelayOnInactiveTab: false,
+						icon: true,
+						messageHeight: '90vh',
+						msg: 'รับชำระต่างสาขา เปลี่ยนวิธีชำระเงินเป็น 14 รับฝากผ่อนแล้ว'
+					});
+				}
+			}
+			
 			var table_payments = $('#dataTable_ARMGAR');
 			var row = '';
 			row += '<td><button class="del_payment btn btn-xs btn-danger glyphicon glyphicon-trash" opt_payfor="'+PAYFOR+'" opt_contno="'+CONTNO+'" opt_payamt="'+PAYAMT+'" opt_disct="'+DISCT+'" opt_payint="'+PAYINT+'" opt_dscint="'+DSCINT+'" opt_netpay="'+NETPAY+'" style="cursor:pointer;"> ลบ </button></td>'
@@ -1052,6 +1213,17 @@ function fnFormPaymentsAction($window){
 					closeOnEsc: false,
 					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($this){
+						$('.trnopay3').hover(function(){
+							$(this).css({
+								'cursor':'pointer'
+								,'background-color':'yellow'
+							});
+						},function(){
+							$(this).css({
+								'cursor':'pointer'
+								,'background-color':'#fff'
+							});
+						});
 						
 						OBJadd_btnARPAY = null;
 					},
@@ -1094,62 +1266,118 @@ function fnFormPaymentsAction($window){
 	});
 	
 	$('#add_btnSave').click(function(){
-		var dataToPost = new Object();
-		dataToPost.TMBILL 	 = $('#add_TMBILL').val();
-		dataToPost.TMBILDT 	 = $('#add_TMBILDT').val();
-		dataToPost.LOCATRECV = $('#add_LOCATRECV').val();
-		dataToPost.PAYTYP	 = $('#add_PAYTYP').val();
-		dataToPost.CUSCOD	 = $('#add_CUSCOD').attr('CUSCOD');
-		dataToPost.REFNO	 = $('#add_REFNO').val();
-		dataToPost.CHQNO	 = $('#add_CHQNO').val();
-		dataToPost.CHQDT	 = $('#add_CHQDT').val();
-		dataToPost.CHQAMT	 = $('#add_CHQAMT').val();
-		dataToPost.CHQBK	 = $('#add_CHQBK').val();
-		dataToPost.CHQBR	 = $('#add_CHQBR').val();
-		dataToPost.BILLNO	 = $('#add_BILLNO').val();
-		dataToPost.BILLDT	 = $('#add_BILLDT').val();
-		
-		var data_payment = new Array();
-		$('.del_payment').each(function(){
-			var data_paymentByOne = new Object();
-			data_paymentByOne.opt_payfor = ($(this).attr('opt_payfor'));
-			data_paymentByOne.opt_contno = ($(this).attr('opt_contno'));
-			data_paymentByOne.opt_payamt = ($(this).attr('opt_payamt'));
-			data_paymentByOne.opt_disct  = ($(this).attr('opt_disct'));
-			data_paymentByOne.opt_payint = ($(this).attr('opt_payint'));
-			data_paymentByOne.opt_dscint = ($(this).attr('opt_dscint'));
-			data_paymentByOne.opt_netpay = ($(this).attr('opt_netpay'));
-			data_payment.push(data_paymentByOne);
-		});
-		
-		dataToPost.data_payment = (data_payment.length == 0 ? new Array():JSON.stringify(data_payment));
-		
-		$('#loadding').fadeIn(200);
-		OBJadd_btnSave = $.ajax({
-			url:'../SYS06/RevPayment/SavePayments',
-			data: dataToPost,
-			type: 'POST',
-			dataType: 'json',
-			beforeSend: function(){ if(OBJadd_btnSave !== null){ OBJadd_btnSave.abort(); }},
-			success: function(data){ 
-				Lobibox.notify((data.error?"warning":"success"), {
-					title: 'แจ้งเตือน',
-					size: 'mini',
+		var TELP = (typeof $('#add_CUSCOD').attr('telp') === "undefined"?"":$('#add_CUSCOD').attr('telp'));
+		Lobibox.confirm({
+			title: 'ยืนยันการทำรายการ',
+			draggable: true,
+			iconClass: false,
+			closeOnEsc: false,
+			closeButton: false,
+			msg: '<span class="text-blue">ยืนยันเบอร์ติดต่อลูกค้า :: '+TELP+'<br><input type="checkbox" name="change_telp"> <b class="text-red">เปลี่ยนแปลงเบอร์ติดต่อ</b><br><input type="text" id="change_telp" class="jzAllowNumber" disabled maxlength=10>',
+			buttons: {
+				ok : {
+					'class': 'btn btn-primary glyphicon glyphicon-ok',
+					text: ' ยืนยัน รับชำระเงิน',
 					closeOnClick: false,
-					delay: 5000,
-					pauseDelayOnHover: true,
-					continueDelayOnInactiveTab: false,
-					icon: true,
-					messageHeight: '90vh',
-					msg: data.errorMessage
-				});
-				
-				OBJadd_btnSave = null; 
-				$('#loadding').fadeOut(200);
+				},
+				cancel : {
+					'class': 'btn btn-danger glyphicon glyphicon-remove',
+					text: ' ไว้ทีหลัง',
+					closeOnClick: true
+				},
 			},
-			beforeClose : function(){ $('.jbackdrop')[($('.jbackdrop').length)-1].remove(); }
+			onShow: function(lobibox){ $('body').append(jbackdrop); },
+			shown: function($this){
+				$('input[name=change_telp]').click(function(){
+					if($(this).is(':checked')){
+						$('#change_telp').attr('disabled',false);
+						$('#change_telp').val('');
+						$('#change_telp').focus();
+					}else{
+						$('#change_telp').val('');
+						$('#change_telp').attr('disabled',true);
+					}
+				});
+			},
+			callback: function(lobibox, type){
+				var $lobiboxConfirm = lobibox;
+				
+				if (type === 'ok'){
+					var dataToPost = new Object();
+					dataToPost.TMBILL 	 = $('#add_TMBILL').val();
+					dataToPost.TMBILDT 	 = $('#add_TMBILDT').val();
+					dataToPost.LOCATRECV = $('#add_LOCATRECV').val();
+					dataToPost.PAYTYP	 = $('#add_PAYTYP').val();
+					dataToPost.CUSCOD	 = $('#add_CUSCOD').attr('CUSCOD');
+					dataToPost.TELPChange = ($('input[name=change_telp]').is(':checked')?"Y":"N");
+					dataToPost.TELP		 = $('#change_telp').val();
+					dataToPost.REFNO	 = $('#add_REFNO').val();
+					dataToPost.CHQNO	 = $('#add_CHQNO').val();
+					dataToPost.CHQDT	 = $('#add_CHQDT').val();
+					dataToPost.CHQAMT	 = $('#add_CHQAMT').val();
+					dataToPost.CHQBK	 = $('#add_CHQBK').val();
+					dataToPost.CHQBR	 = $('#add_CHQBR').val();
+					dataToPost.BILLNO	 = $('#add_BILLNO').val();
+					dataToPost.BILLDT	 = $('#add_BILLDT').val();
+					
+					
+					var data_payment = new Array();
+					$('.del_payment').each(function(){
+						var data_paymentByOne = new Object();
+						data_paymentByOne.opt_payfor = ($(this).attr('opt_payfor'));
+						data_paymentByOne.opt_contno = ($(this).attr('opt_contno'));
+						data_paymentByOne.opt_payamt = ($(this).attr('opt_payamt'));
+						data_paymentByOne.opt_disct  = ($(this).attr('opt_disct'));
+						data_paymentByOne.opt_payint = ($(this).attr('opt_payint'));
+						data_paymentByOne.opt_dscint = ($(this).attr('opt_dscint'));
+						data_paymentByOne.opt_netpay = ($(this).attr('opt_netpay'));
+						data_payment.push(data_paymentByOne);
+					});
+					
+					dataToPost.data_payment = (data_payment.length == 0 ? new Array():JSON.stringify(data_payment));
+					
+					$('#loadding').fadeIn(200);
+					OBJadd_btnSave = $.ajax({
+						url:'../SYS06/RevPayment/SavePayments',
+						data: dataToPost,
+						type: 'POST',
+						dataType: 'json',
+						beforeSend: function(){ if(OBJadd_btnSave !== null){ OBJadd_btnSave.abort(); }},
+						success: function(data){ 
+							Lobibox.notify((data.error?"warning":"success"), {
+								title: 'แจ้งเตือน',
+								size: 'mini',
+								closeOnClick: false,
+								delay: false,
+								pauseDelayOnHover: true,
+								continueDelayOnInactiveTab: false,
+								icon: true,
+								messageHeight: '90vh',
+								msg: data.errorMessage
+							});
+							
+							// รับชำระสำเร็จ ให้ไปโหลดรายการมาแสดง
+							if(!data.error){
+								$window.destroy();
+								var dataToPost = new Object();
+								dataToPost.action = 'EDIT';
+								dataToPost.TMBILL = data.contno;
+								//fnForm(dataToPost,$window); 
+								lobibox.destroy();
+								$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
+							}
+							
+							OBJadd_btnSave = null; 
+							$('#loadding').fadeOut(200);
+						},
+						beforeClose : function(){ $('.jbackdrop')[($('.jbackdrop').length)-1].remove(); }
+					});
+				}else{
+					$('#loadding').fadeOut(200);
+					$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
+				}
+			}
 		});
-		//$window.destroy();
 	});
 	
 	var OBJadd_btnCanC = null;
@@ -1173,10 +1401,20 @@ function fnFormPaymentsAction($window){
 				beforeSend: function(){ if(OBJadd_btnCanC !== null){ OBJadd_btnCanC.abort(); }},
 				success: function(data){
 					if(data.error){
-						console.log(data.errorMessage);
+						Lobibox.notify('warning', {
+							title: 'แจ้งเตือน',
+							size: 'mini',
+							closeOnClick: false,
+							delay: false,
+							pauseDelayOnHover: true,
+							continueDelayOnInactiveTab: false,
+							icon: true,
+							messageHeight: '90vh',
+							msg: data.errorMessage
+						});
 					}else{
-						var _formData = "<div class='col-sm-2 form-group'>เลขที่สัญญา<input type='text' readonly class='form-control' value='"+data.CONTNO+"'></div>";
-						_formData += "<div class='col-sm-2 form-group'>รหัสลูกค้า<input type='text' readonly class='form-control' value='"+data.CUSCOD+"'></div>";
+						var _formData = "<div class='col-sm-2 form-group'>เลขที่สัญญา<input type='text' id='cancelnopay_contno' readonly class='form-control' value='"+data.CONTNO+"'></div>";
+						_formData += "<div class='col-sm-2 form-group'>รหัสลูกค้า<input type='text' id='cancelnopay_cuscod' readonly class='form-control' value='"+data.CUSCOD+"'></div>";
 						_formData += "<div class='col-sm-3 form-group'>ชื่อลูกค้า<input type='text' readonly class='form-control' value='"+data.CUSNAME+"'></div>";
 						_formData += "<div class='col-sm-2 form-group'>สาขาสัญญา<input type='text' readonly class='form-control' value='"+data.LOCAT+"'></div>";
 						_formData += "<div class='col-sm-3 form-group'>เลขตัวถัง<input type='text' readonly class='form-control' value='"+data.STRNO+"'></div>";
@@ -1184,8 +1422,8 @@ function fnFormPaymentsAction($window){
 						var _formNopayH = "<tr><th></th><th>เลขที่บิล</th><th>วันที่รับชำระ</th><th>ชำระค่า</th><th>สถานะ</th><th>วันที่ยกเลิก</th><th>ยอดตัดลูกหนี้</th><th>ส่วนลด</th><th>เบี้ยปรับ</th><th>ส่วนลดเบี้ยปรับ</th><th>ยอดสุทธิ</th><th>ชำระโดย</th><th>TAXNO</th><th>F_PAR</th><th>F_PAY</th><th>L_PAR</th><th>L_PAY</th></tr>";
 						var _formNopay = "";
 						for(var i=0;i<data["BILL"].length;i++){
-							_formNopay += "<tr class='"+(data["BILL"][i]["FLAG"]=="C"?"text-red":"")+"'>";
-							_formNopay += "<td><input type='radio' class='cc_bill' name='nopay' TMBILL='"+data["BILL"][i]["TMBILL"]+"' "+(data["BILL"][i]["TMBILL"] == data["thisTMBILL"] ? "checked":"")+"></td>";
+							_formNopay += "<tr class='trbill "+(data["BILL"][i]["FLAG"]=="C"?"text-red":"")+"' TMBILL='"+data["BILL"][i]["TMBILL"]+"'>";
+							_formNopay += "<td><input type='radio' class='cc_bill' name='nopay' TMBILL='"+data["BILL"][i]["TMBILL"]+"'  FLAG='"+data["BILL"][i]["FLAG"]+"'   "+(data["BILL"][i]["TMBILL"] == data["thisTMBILL"] ? "checked":"")+"></td>";
 							_formNopay += "<td>"+data["BILL"][i]["TMBILL"]+"</td>";
 							_formNopay += "<td>"+data["BILL"][i]["TMBILDT"]+"</td>";
 							_formNopay += "<td>"+data["BILL"][i]["PAYFOR"]+"</td>";
@@ -1205,10 +1443,10 @@ function fnFormPaymentsAction($window){
 							_formNopay += "</tr>";							
 						}
 						
-						var _formAction = "<div class='col-sm-2 col-sm-offset-8'><button id='' class='btn-block btn-sm btn-primary'>ตาราง</button></div>";
+						var _formAction = "<div class='col-sm-2 col-sm-offset-8'><button id='add_btnARPAYCheck' class='btn-block btn-sm btn-primary'>ตาราง</button></div>";
 						_formAction += "<div class='col-sm-2'><button id='add_btnCanCNopay' class='btn-block btn-sm btn-danger'>ยกเลิกการรับชำระ</button></div>";
 						var _form = "<div class='col-sm-10 col-sm-offset-1'>"+_formData+"</div>";
-						_form += "<div class='col-sm-12' style='height:calc(100vh - 200px);overflow:scroll;'><table class='table table-bordered'>"+_formNopayH+_formNopay+"</table></div>";
+						_form += "<div class='col-sm-12' style='height:calc(100vh - 200px);overflow:auto;'><table id='table_payments_data' class='table table-bordered'><thead>"+_formNopayH+'</thead><tbody>'+_formNopay+"</tbody></table></div>";
 						_form += "<div class='col-sm-12'>"+_formAction+"</div>";
 						
 						Lobibox.window({
@@ -1220,11 +1458,124 @@ function fnFormPaymentsAction($window){
 							closeOnEsc: false,
 							onShow: function(lobibox){ $('body').append(jbackdrop); },
 							shown: function($this){
+								fn_datatables('table_payments_data',2,280);
+								
+								$('input[name=nopay]').each(function(){
+									if($(this).attr('flag') == 'C'){
+										$(this).attr('disabled',true);
+										$(this).parent().parent().css({ 'color':'red' });
+									}
+								});
+								
+								$('.trbill').hover(function(){
+									$(this).css({
+										'cursor':'pointer'
+										,'background-color':'yellow'
+									});
+								},function(){
+									$(this).css({
+										'cursor':'pointer'
+										,'background-color':'#fff'
+									});
+								});
+								
+								$('.trbill').click(function(){
+									var $this_trbill = $(this);
+									//$('input[name=nopay][TMBILL='+$this_trbill.attr('TMBILL')+']').prop("checked", true);
+									$('input[name=nopay]').each(function(){
+										var $this_redio = $(this);
+										if($this_trbill.attr('TMBILL') == $this_redio.attr('TMBILL') && $this_redio.attr('flag') != 'C'){
+											$this_redio.prop("checked", true);
+										}
+									});
+								})
+								
 								$('#add_btnCanCNopay').click(function(){
 									var dataToPost = new Object();
 									dataToPost.TMBILL = $('input[name=nopay]:checked').attr('TMBILL');
 									dataToPost.action = 'nopay';
 									fn_confirm_cancel_payments(dataToPost);
+								});
+								
+								
+								$('#add_btnARPAYCheck').click(function(){
+									var dataToPost = new Object();
+									dataToPost.CONTNO = $('#cancelnopay_contno').val();
+									
+									$('#loadding').fadeIn(200);
+									$.ajax({
+										url:'../SYS06/RevPayment/getNOPAY',
+										data: dataToPost,
+										type: 'POST',
+										dataType: 'json',
+										//beforeSend: function(){ if(OBJadd_btnCanC !== null){ OBJadd_btnCanC.abort(); }},
+										success: function(data){
+											if(data.error){
+												Lobibox.notify('warning', {
+													title: 'แจ้งเตือน',
+													size: 'mini',
+													closeOnClick: false,
+													delay: false,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data.errorMessage
+												});
+											}else{
+												_formNopayH = "<tr><th>งวดที่</th><th>ดิวเดต</th><th>จำนวน</th><th>ภาษี(%)</th><th>จำนวนมูลค่า</th><th>จำนวนภาษี</th><th>วันชำระ</th><th>จำนวนชำระ</th><th>#วันล่าช้า</th><th>#จ่ายล่วงหน้า</th><th>ใบกำกับภาษี</th><th>วันที่ใบกำกับภาษี</th><th>เลขที่สัญญา</th><th>สาขา</th></tr>";	
+												_formNopay = "";
+												for(var i=0;i<data["data"].length;i++){
+													_formNopay += "<tr class='trnopay'>";
+													_formNopay += "<td>"+data["data"][i]["NOPAY"]+"</td>";
+													_formNopay += "<td>"+data["data"][i]["DDATE"]+"</td>";
+													_formNopay += "<td class='text-right'>"+data["data"][i]["DAMT"]+"</td>";
+													_formNopay += "<td class='text-right'>"+data["data"][i]["VATRT"]+"</td>";
+													_formNopay += "<td class='text-right'>"+data["data"][i]["N_DAMT"]+"</td>";
+													_formNopay += "<td class='text-right'>"+data["data"][i]["V_DAMT"]+"</td>";
+													
+													_formNopay += "<td>"+data["data"][i]["DATE1"]+"</td>";
+													_formNopay += "<td class='text-right'>"+data["data"][i]["PAYMENT"]+"</td>";
+													_formNopay += "<td class='text-right'>"+data["data"][i]["DELAY"]+"</td>";
+													_formNopay += "<td class='text-right'>"+data["data"][i]["ADVDUE"]+"</td>";
+													_formNopay += "<td>"+data["data"][i]["TAXINV"]+"</td>";
+													_formNopay += "<td>"+data["data"][i]["TAXDT"]+"</td>";
+													_formNopay += "<td>"+data["data"][i]["CONTNO"]+"</td>";
+													_formNopay += "<td>"+data["data"][i]["LOCAT"]+"</td>";
+													_formNopay += "</tr>";							
+												}
+												
+												_form = "<div class='col-sm-12' style='height:calc(100vh - 70px);overflow:auto;'><table id='table_nopay' class='table table-bordered'><thead>"+_formNopayH+'</thead><tbody>'+_formNopay+"</tbody></table></div>";
+												Lobibox.window({
+													title: 'ตารางสัญญา',
+													width: $(window).width(),
+													height: $(window).height(),
+													content: _form,
+													draggable: false,
+													closeOnEsc: false,
+													onShow: function(lobibox){ $('body').append(jbackdrop); },
+													shown: function($this){
+														fn_datatables('table_nopay',2,150);
+														
+														$('.trnopay').hover(function(){
+															$(this).css({
+																'cursor':'pointer'
+																,'background-color':'yellow'
+															});
+														},function(){
+															$(this).css({
+																'cursor':'pointer'
+																,'background-color':'#fff'
+															});
+														});
+													},
+													beforeClose : function(){ $('.jbackdrop')[($('.jbackdrop').length)-1].remove(); }
+												});
+											}
+											
+											$('#loadding').fadeOut(200);
+										}
+									});
 								});
 							},
 							beforeClose : function(){ $('.jbackdrop')[($('.jbackdrop').length)-1].remove(); }
@@ -1277,12 +1628,12 @@ function fnFormPaymentsAction($window){
 			iconClass: false,
 			closeOnEsc: false,
 			closeButton: false,
-			msg: '<span class="text-red">*** กรณียกเลิกบิลรับชำระแล้ว ไม่สามารถนำกลับมาได้อีก</span><br>ยืนยันการทำรายการ ?',
+			msg: '<span class="text-red">*** กรณียกเลิกบิลรับชำระแล้ว ไม่สามารถนำกลับมาได้อีก</span><br>สาเหตุ<select id="topicid"></select><br>อธิบาย<textarea id="comments" class="col-sm-12" style="resize:vertical;"></textarea><br>ยืนยันการทำรายการ ?',
 			buttons: {
 				ok : {
 					'class': 'btn btn-danger glyphicon glyphicon-ok',
 					text: ' ยืนยัน ยกเลิกบิลรับชำระ',
-					closeOnClick: true,
+					closeOnClick: false,
 				},
 				cancel : {
 					'class': 'btn btn-default glyphicon glyphicon-remove',
@@ -1291,35 +1642,108 @@ function fnFormPaymentsAction($window){
 				},
 			},
 			onShow: function(lobibox){ $('body').append(jbackdrop); },
-			//shown: function($this){ $('body').append(jbackdrop); },
-			callback: function(lobibox, type){
-				if (type === 'ok'){
-					$('#loadding').fadeIn(200);
-					OBJadd_btnCanC = $.ajax({
-						url:'../SYS06/RevPayment/CanCPayments',
-						data: $dataToPost,
-						type: 'POST',
-						dataType: 'json',
-						beforeSend: function(){ if(OBJadd_btnCanC !== null){ OBJadd_btnCanC.abort(); }},
-						success: function(data){ 
-							Lobibox.notify((data.error?"warning":"success"), {
-								title: 'แจ้งเตือน',
-								size: 'mini',
-								closeOnClick: false,
-								delay: false,
-								pauseDelayOnHover: true,
-								continueDelayOnInactiveTab: false,
-								icon: true,
-								messageHeight: '90vh',
-								msg: data.errorMessage
-							});
+			shown: function($this){ 
+				$('#topicid').select2({
+					placeholder: 'เลือก',
+					ajax: {
+						url: '../Cselect2/getBILLForCancel',
+						data: function (params) {
+							var dataToPost = new Object();
+							dataToPost.now = (typeof $('#add_PAYTYP').find(':selected').val() === 'undefined' ? '': $('#add_PAYTYP').find(':selected').val());
+							dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
 							
-							OBJadd_btnCanC = null
-							$('#loadding').fadeOut(200);
-						}
-					});
+							return dataToPost;				
+						},
+						dataType: 'json',
+						delay: 1000,
+						processResults: function (data) {
+							return {
+								results: data
+							};
+						},
+						cache: true
+					},
+					allowClear: false,
+					multiple: false,
+					dropdownParent: $(".tab1"),
+					//disabled: true,
+					//theme: 'classic',
+					width: '100%'
+				});
+			},
+			callback: function(lobibox, type){
+				var $lobiboxConfirm = lobibox;
+				
+				if (type === 'ok'){
+					var $topicid = (typeof $('#topicid').find(':selected').val() === "undefined" ? "":$('#topicid').find(':selected').val());
+					var $comments = $('#comments').val();
 					
-					$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
+					if($topicid == ""){
+						Lobibox.notify("warning", {
+							title: 'แจ้งเตือน',
+							size: 'mini',
+							closeOnClick: false,
+							delay: false,
+							pauseDelayOnHover: true,
+							continueDelayOnInactiveTab: false,
+							icon: true,
+							messageHeight: '90vh',
+							msg: "โปรดเลือกสาเหตุการยกเลิกบิลก่อนครับ"
+						});
+					}else if($comments == ""){
+						Lobibox.notify("warning", {
+							title: 'แจ้งเตือน',
+							size: 'mini',
+							closeOnClick: false,
+							delay: false,
+							pauseDelayOnHover: true,
+							continueDelayOnInactiveTab: false,
+							icon: true,
+							messageHeight: '90vh',
+							msg: "โปรดระบุคำอธิบาย การยกเลิกบิลด้วยครับ"
+						});
+					}else{
+						$dataToPost.topicid = $topicid;
+						$dataToPost.comments = $comments;
+						
+						$('#loadding').fadeIn(200);
+						OBJadd_btnCanC = $.ajax({
+							url:'../SYS06/RevPayment/CanCPayments',
+							data: $dataToPost,
+							type: 'POST',
+							dataType: 'json',
+							beforeSend: function(){ if(OBJadd_btnCanC !== null){ OBJadd_btnCanC.abort(); }},
+							success: function(data){ 
+								Lobibox.notify((data.error?"warning":"success"), {
+									title: 'แจ้งเตือน',
+									size: 'mini',
+									closeOnClick: false,
+									delay: false,
+									pauseDelayOnHover: true,
+									continueDelayOnInactiveTab: false,
+									icon: true,
+									messageHeight: '90vh',
+									msg: data.errorMessage
+								});
+								
+								if(!data.error){
+									$('input[name=nopay]').each(function(){
+										if($(this).attr('TMBILL') == $dataToPost.TMBILL){ $(this).attr('flag','C'); }
+										if($(this).attr('flag') == 'C'){
+											$(this).attr('disabled',true);
+											$(this).parent().parent().css({ 'color':'red' });
+										}
+									});
+								}
+								
+								$lobiboxConfirm.destroy();
+								
+								OBJadd_btnCanC = null
+								$('#loadding').fadeOut(200);
+								$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
+							}
+						});
+					}
 				}else{
 					$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
 				}
@@ -1350,6 +1774,10 @@ function fnFormPaymentsAction($window){
 					closeOnEsc: false,
 					onShow: function(lobibox){ $('body').append(jbackdrop); },
 					shown: function($this){
+						if(_groupType == "BR"){
+							$('input[name=print_type][for="bl"]').prop('checked',true);
+							$('input[name=print_type]').prop('disabled',true);
+						}
 						
 						$('#print_screen').click(function(){
 							var dataToPost = new Object();
@@ -1360,6 +1788,7 @@ function fnFormPaymentsAction($window){
 							dataToPost.PRINTFOR  = $('input[name=print_type]:checked').val();
 							dataToPost.PRINTADDR = $('input[name=print_addr]:checked').val();
 							
+							$('#loadding').fadeIn(200);
 							OBJprint_screen = $.ajax({
 								url:'../SYS06/RevPayment/tmbillPDF',
 								data: dataToPost,
@@ -1379,30 +1808,64 @@ function fnFormPaymentsAction($window){
 										shown: function($this){
 											$('#div_print_tm').css({'background-image': 'url("../public/images/watermark.png")'})
 											$('#print_tm').click(function(){
-												$('#print_tm').attr('disabled',true);
-												$('#div_print_tm').css({'background-image': ''});
-												var divToPrint = document.getElementById('div_print_tm'); // เลือก div id ที่เราต้องการพิมพ์
-												$('#div_print_tm').css({'background-image': 'url("../public/images/watermark.png")'})
-												var html =  '<html>'+
-															'<head>'+
-																'<!-- link href="../public/css/print.css" rel="stylesheet" type="text/css" -->'+
-															'</head>'+
-																'<body onload="window.print(); window.close();" style="width:'+(OS == "Windows XP"?76:74)+'mm;height:auto;font-size:10pt;padding:'+(OS == "Windows XP"?0:10)+'px;">' + divToPrint.innerHTML + '</body>'+
-																'<style> @page  {margin:'+(OS == "Windows XP"?0:10)+';size:portrait;zoom:100%;MozTransform:scale(1.0);} .borderTB { border-top:0.1px solid black;border-bottom:1px solid black; } </style>'+
-															'</html>';
-												var popupWin = window.open("","_blank","directories=no,titlebar=no,toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no,width=320,height=20,left=0,top=0");
-												popupWin.document.open();
-												popupWin.document.write(html); //โหลด print.css ให้ทำงานก่อนสั่งพิมพ์
-												popupWin.document.close();
-												
-												popupWin.onafterprint = function(){
-													$.ajax({
-														url:'../SYS06/RevPayment/Append2Assessment',
-														data:{'code':$('#print_tm').attr('code'),'tmbill':$('#print_tmbill').val(),'print_type':$('input[name=print_type]:checked').val()},
-														type:'POST'
-													});
-												}
+												Lobibox.confirm({
+													title: 'ยืนยันการทำรายการ',
+													draggable: true,
+													iconClass: false,
+													closeOnEsc: false,
+													closeButton: false,
+													msg: 'หากยืนยันแล้ว จะไม่สามารถปริ้นบิลได้อีก',
+													buttons: {
+														ok : {
+															'class': 'btn btn-primary glyphicon glyphicon-ok',
+															text: ' ยืนยันการทำรายการ',
+															closeOnClick: false,
+														},
+														cancel : {
+															'class': 'btn btn-danger glyphicon glyphicon-remove',
+															text: ' ยกเลิก',
+															closeOnClick: true
+														},
+													},
+													onShow: function(lobibox){ $('body').append(jbackdrop); },
+													//shown: function($this){ $('body').append(jbackdrop); },
+													callback: function(lobibox, type){
+														var confirm_lobibox = lobibox;
+														
+														if (type === 'ok'){
+															$('#print_tm').attr('disabled',true);
+															$('#div_print_tm').css({'background-image': ''});
+															var divToPrint = document.getElementById('div_print_tm'); // เลือก div id ที่เราต้องการพิมพ์
+															$('#div_print_tm').css({'background-image': 'url("../public/images/watermark.png")'})
+															var html =  '<html>'+
+																		'<head>'+
+																			'<!-- link href="../public/css/print.css" rel="stylesheet" type="text/css" -->'+
+																		'</head>'+
+																			'<body onload="window.print(); window.close();" style="width:'+(OS == "Windows XP"?76:74)+'mm;height:auto;font-size:10pt;padding:'+(OS == "Windows XP"?0:10)+'px;">' + divToPrint.innerHTML + '</body>'+
+																			'<style> @page  {margin:'+(OS == "Windows XP"?0:10)+';size:portrait;zoom:100%;MozTransform:scale(1.0);} .borderTB { border-top:0.1px solid black;border-bottom:1px solid black; } </style>'+
+																		'</html>';
+															var popupWin = window.open("","_blank","directories=no,titlebar=no,toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=no,width=320,height=20,left=0,top=0");
+															popupWin.document.open();
+															popupWin.document.write(html); //โหลด print.css ให้ทำงานก่อนสั่งพิมพ์
+															popupWin.document.close();
+															
+															popupWin.onafterprint = function(){
+																$.ajax({
+																	url:'../SYS06/RevPayment/Append2Assessment',
+																	data:{'code':$('#print_tm').attr('code'),'tmbill':$('#print_tmbill').val(),'print_type':$('input[name=print_type]:checked').val()},
+																	type:'POST'
+																});
+															}
+															
+															confirm_lobibox.destroy();
+														}
+														
+														$('.jbackdrop')[($('.jbackdrop').length)-1].remove();
+													}
+												});
 											});
+											
+											$('#loadding').fadeOut(200);
 										},
 										beforeClose : function(){ $('.jbackdrop')[($('.jbackdrop').length)-1].remove(); }
 									});	
@@ -1642,6 +2105,7 @@ function AlertMessage($CONTNO,$SHOW){
 
 function fn_OutstandingBalance(dataToPost){
 	$('#loadding').fadeIn(200);
+	
 	OBJadd_CONTNO_detail = $.ajax({
 		url:'../SYS06/RevPayment/getOutstandingBalance',
 		data: dataToPost,

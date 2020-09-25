@@ -10,59 +10,75 @@ var _delete = $('.k_tab1[name="home"]').attr('cdel');
 var _level  = $('.k_tab1[name="home"]').attr('clev');
 var _today  = $('.k_tab1[name="home"]').attr('today');
 $(function(){
-	$('#CONTNO').select2({
-		placeholder: 'เลือก',
-		ajax: {
-			url: '../Cselect2K/getCONTNO_RP',
-			data: function (params){
-				dataToPost = new Object();
-				dataToPost.q = (typeof params.term === 'undefined' ? '' : params.term);
-				
-				return dataToPost;
-			},
+	$('#btnaddcont').click(function(){
+		$('#loadding').fadeIn(200);
+		$.ajax({
+			url:'../Cselect2K/getfromCONTNO',
+			type: 'POST',
 			dataType: 'json',
-			delay: 1000,
-			processResults: function (data){
-				return {
-					results: data
-				};
-			},
-			cache: true
-		},
-		allowClear: true,
-		multiple: false,
-		dropdownParent: $(".k_tab1"),
-		//disabled: true,
-		//theme: 'classic',
-		width: '100%'
-	});
-});
-
-$('#CONTNO').change(function(){
-	getcontno();
-});
-var contnodetail = null;
-function getcontno(){
-	dataToPost = new Object();
-	dataToPost.CONTNO = $('#CONTNO').val();
-	//alert(dataToPost.BIRTHDT);
-	contnodetail = $.ajax({
-		url: '../SYS06/ReportCardDT/getCONTNO_D', 
-		data: dataToPost,
-		type: 'POST',
-		dataType: 'json',
-		success: function(data){
-			$('#LOCAT').val(data.LOCAT);
-			$('#CUSNAME').val(data.CUSNAME);
-			contnodetail = null;
-		},
-		beforeSend: function(){
-			if(contnodetail !== null){
-				contnodetail.abort();
+			success: function(data){
+				Lobibox.window({
+					title: 'FORM SEARCH',
+					//width: $(window).width(),
+					//height: $(window).height(),
+					content: data.html,
+					draggable: false,
+					closeOnEsc: true,
+					shown: function($this){
+						$('#loadding').fadeOut(200);
+						var kb_cont_search = null;
+						$('#cont_search').click(function(){ fnResultCONTNO(); });
+						function fnResultCONTNO(){
+							dataToPost = new Object();
+							dataToPost.s_contno = $('#s_contno').val();
+							dataToPost.s_name1  = $('#s_name1').val();
+							dataToPost.s_name2  = $('#s_name2').val();
+							$('#loadding').fadeIn(200);
+							kb_cont_search = $.ajax({
+								url:'../Cselect2K/getResultCONTNO',
+								data:dataToPost,
+								type: 'POST',
+								dataType: 'json',
+								success: function(data){
+									$('#loadding').fadeOut(200);
+									$('#cont_result').html(data.html);
+									
+									$('.getit').hover(function(){
+										$(this).css({'background-color':'#a9a9f9'});
+										$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':'#a9f9f9'});
+									},function(){
+										$(this).css({'background-color':''});
+										$('.trow[seq='+$(this).attr('seq')+']').css({'background-color':''});
+									});
+									
+									$('.getit').unbind('click');
+									$('.getit').click(function(){
+										cln = new Object();
+										cln.contno  = $(this).attr('CONTNO');
+										cln.locat   = $(this).attr('LOCAT');
+										cln.cusname = $(this).attr('CUSNAME');
+										$('#CONTNO').val(cln.contno);
+										$('#LOCAT').val(cln.locat);
+										$('#CUSNAME').val(cln.cusname);
+										
+										$this.destroy();
+									});
+									kb_cont_search = null;
+								},
+								beforeSend: function(){
+									if(kb_cont_search !== null){ kb_cont_search.abort(); }
+								}
+							});
+						}
+					},
+					beforeClose : function(){
+						
+					}
+				});
 			}
-		}
+		});
 	});
-}
+});
 $('#btnreportCardDT').click(function(){
 	printReport();
 });
@@ -73,6 +89,8 @@ function printReport(){
 		show1 = "SYD";
 	}else if($('#STR').is(":checked")){
 		show1 = "STR";
+	}else if($('#EFF').is(":checked")){
+		show1 = "EFF";
 	}
 	
 	var show2 = null;
@@ -82,7 +100,7 @@ function printReport(){
 		show2 = "N";
 	}
 	dataToPost = new Object();
-	dataToPost.CONTNO = (typeof $('#CONTNO').find(':selected').val() === 'undefined' ? '':$('#CONTNO').find(':selected').val());
+	dataToPost.CONTNO    = $('#CONTNO').val();
 	dataToPost.LOCAT	 = $('#LOCAT').val();
 	dataToPost.show1	 = show1;
 	dataToPost.show2     = show2;

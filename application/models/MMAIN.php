@@ -75,6 +75,33 @@ class MMAIN extends CI_Model {
 		return $opt;
 	}
 	
+	public function Option_get_modeldesc($selected){
+		$opt = "<option value='nouse' selected>เลือก</option>";
+		if(isset($selected)){
+			$sql = "
+				select MDDID,MODELDESC+'::'+MODELTYPE as MODELDESC from {$this->MAuth->getdb('SETMODELDESC')}				
+				order by MDDID
+			";
+			//echo $sql; exit;
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$MDDID = str_replace(chr(0),"",$row->MDDID);
+					$MODELDESC = str_replace(chr(0),"",$row->MODELDESC);
+					
+					$opt .= "
+						<option value='{$MDDID}' ".($MDDID == $selected ? "selected":"").">
+							{$MODELDESC}
+						</option>
+					";
+				}
+			}
+		}
+		
+		return $opt;
+	}
+	
 	public function Option_get_baab($selected){
 		$opt = "";
 		if(isset($selected["model"])){
@@ -254,6 +281,89 @@ class MMAIN extends CI_Model {
 		
 		return $opt;
 	}
+	
+	public function Option_get_apmast($selected){
+		$opt = "<option value='nouse' selected>เลือก</option>";
+		if(isset($selected)){
+			$sql = "
+				select APCODE,'('+APCODE+') '+APNAME as APNAME from {$this->MAuth->getdb('APMAST')}
+				order by APCODE
+			";
+			//echo $sql; exit;
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$APCODE = str_replace(chr(0),"",$row->APCODE);
+					$APNAME = str_replace(chr(0),"",$row->APNAME);
+					
+					$opt .= "
+						<option value='{$APCODE}' ".($APCODE == $selected ? "selected":"").">
+							{$APNAME}
+						</option>
+					";
+				}
+			}
+		}
+		
+		return $opt;
+	}
+	
+	public function Option_get_snusers($selected){
+		$opt = "<option value='nouse' selected>เลือก</option>";
+		if(isset($selected)){
+			$sql = "
+				select USERID,USERNAME+' ('+USERID+')' as USERNAME from {$this->MAuth->getdb('PASSWRD')}
+				order by USERID
+			";
+			//echo $sql; exit;
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$USERID = str_replace(chr(0),"",$row->USERID);
+					$USERNAME = str_replace(chr(0),"",$row->USERNAME);
+					
+					$opt .= "
+						<option value='{$USERID}' ".($USERID == $selected ? "selected":"").">
+							{$USERNAME}
+						</option>
+					";
+				}
+			}
+		}
+		
+		return $opt;
+	}
+	
+	public function Option_get_APDoubleBillTP($selected){
+		$opt = "<option value='nouse' selected>เลือก</option>";
+		//echo $selected; exit;
+		if(isset($selected)){
+			$sql = "
+				select TOPICID,'('+cast(TOPICID as varchar)+') '+TOPICName TOPICName from {$this->MAuth->getdb('JD_APDoubleBillTP')}
+				order by TOPICID
+			";
+			//echo $sql; exit;
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					$TOPICID = str_replace(chr(0),"",$row->TOPICID);
+					$TOPICName = str_replace(chr(0),"",$row->TOPICName);
+					
+					$opt .= "
+						<option value='{$TOPICID}' ".($TOPICID == $selected ? "selected":"").">
+							{$TOPICName}
+						</option>
+					";
+				}
+			}
+		}
+		
+		return $opt;
+	}
+	
 	
 	public function getCALDSC($CONTNO){
 		$sql = "

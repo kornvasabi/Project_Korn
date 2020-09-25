@@ -367,12 +367,22 @@ class Cselect2 extends MY_Controller {
 		$STAT = (!isset($_REQUEST["STAT"]) ? "N" : $_REQUEST["STAT"]);
 		
 		$sql = "
-			select top 100 MODELCOD from {$this->MAuth->getdb('SETMODEL')}
+			select top 100 MODELCOD,CC from {$this->MAuth->getdb('SETMODEL')}
 			where TYPECOD='".$TYPECOD."' and MODELCOD like '%".$dataSearch."%' collate thai_ci_as 
 				and MODELCOD collate thai_ci_as in (
-					select distinct a.MODEL from {$this->MAuth->getdb('STDVehicles')} a
+					select distinct a.MODEL collate thai_ci_as from {$this->MAuth->getdb('STDVehicles')} a
 					left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
-					where b.STAT='{$STAT}'
+					where b.STAT='{$STAT}' and a.STDTYPE='model'
+					
+					union 
+					
+					select a.MODELCOD collate thai_ci_as from {$this->MAuth->getdb('SETMODEL')} a 
+					left join {$this->MAuth->getdb('SETMODELDESC')} b on a.MDDID=b.MDDID
+					where b.MODELDESC collate thai_ci_as  in (
+						select distinct a.MODEL from {$this->MAuth->getdb('STDVehicles')} a
+						left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
+						where b.STAT='{$STAT}' and a.STDTYPE='desc'
+					)
 				)
 			order by MODELCOD
 		"; 
@@ -384,7 +394,7 @@ class Cselect2 extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				//$json[] = ['id'=>$row->MODELCOD, 'text'=>$row->MODELCOD];
-				$json[] = array('id'=>str_replace(chr(0),"",$row->MODELCOD), 'text'=>str_replace(chr(0),"",$row->MODELCOD));
+				$json[] = array('id'=>str_replace(chr(0),"",$row->MODELCOD), 'text'=>str_replace(chr(0),"",$row->MODELCOD) ,'CC' => str_replace(chr(0),"",$row->CC));
 			}
 		}
 		
@@ -762,6 +772,7 @@ class Cselect2 extends MY_Controller {
 					select count(*) r from {$this->MAuth->getdb('ARANALYZE')} 
 					where ANSTAT not in ('N','C') and STRNO='{$row->STRNO}'
 				";
+				//echo $sql; exit;
 				$query = $this->db->query($sql);
 				$row_check = $query->row();
 				
@@ -899,7 +910,7 @@ class Cselect2 extends MY_Controller {
 			union
 			select top 20 OPTCODE,case when OPTCODE = '' then '(ว่าง)' else '('+OPTCODE+') '+OPTNAME end as OPTNAME 
 			from {$this->MAuth->getdb('OPTMAST')}
-			where 1=1 and '('+OPTCODE+') '+OPTNAME like '".$dataSearch."%' collate Thai_CI_AS  and LOCAT='".$locat."'
+			where 1=1 and '('+OPTCODE+') '+OPTNAME like '%".$dataSearch."%' collate Thai_CI_AS  and LOCAT='".$locat."'
 			order by OPTCODE
 		";
 		//echo $sql; exit;
@@ -992,7 +1003,7 @@ class Cselect2 extends MY_Controller {
 		$sql = "
 			select 'F'+SaleNo as SaleNo from DBFREE.dbo.SPSale a 
 			left join DBFREE.dbo.Customer b on a.CustID=b.CustID
-			where cast(left(a.SaleDate,4)-543 as varchar(4))+CAST(replace(right(a.SaleDate,5),'/','') as varchar(4))='".$sdate."'
+			where cast(left(a.SaleDate,4)-543 as varchar(4))+CAST(replace(right(a.SaleDate,5),'/','') as varchar(4))>='".$sdate."'
 				and a.BranchNo='".$row->free."' 
 				and a.SaleNo = '".$dataNow."' 
 				and a.SaleStatus collate thai_ci_as in ('paid','Approved') 
@@ -1000,7 +1011,7 @@ class Cselect2 extends MY_Controller {
 			union 
 			select 'F'+SaleNo as SaleNo from DBFREE.dbo.SPSale a
 			left join DBFREE.dbo.Customer b on a.CustID=b.CustID
-			where cast(left(a.SaleDate,4)-543 as varchar(4))+CAST(replace(right(a.SaleDate,5),'/','') as varchar(4))='".$sdate."'
+			where cast(left(a.SaleDate,4)-543 as varchar(4))+CAST(replace(right(a.SaleDate,5),'/','') as varchar(4))>='".$sdate."'
 				and a.BranchNo='".$row->free."' 
 				and a.SaleNo like '%".$dataSearch."%' 
 				and a.SaleStatus collate thai_ci_as in ('paid','Approved') 
@@ -1009,7 +1020,7 @@ class Cselect2 extends MY_Controller {
 			union 
 			select 'S'+SaleNo as SaleNo from DBSPS.dbo.SPSale a
 			left join DBSPS.dbo.Customer b on a.CustID=b.CustID
-			where cast(left(a.SaleDate,4)-543 as varchar(4))+CAST(replace(right(a.SaleDate,5),'/','') as varchar(4))='".$sdate."'
+			where cast(left(a.SaleDate,4)-543 as varchar(4))+CAST(replace(right(a.SaleDate,5),'/','') as varchar(4))>='".$sdate."'
 				and a.BranchNo='".$row->free."' 
 				and a.SaleNo like '%".$dataSearch."%' 
 				and a.SaleStatus collate thai_ci_as in ('paid','Approved') 
@@ -1045,7 +1056,8 @@ class Cselect2 extends MY_Controller {
 				select ID,ANSTAT
 				from {$this->MAuth->getdb('ARANALYZE')}
 				where 1=1 and ID like '%".$dataSearch."%' collate Thai_CI_AS 
-					and LOCAT='".$locat."' and isnull(CONTNO,'')=''
+					and LOCAT='".$locat."' 
+					and isnull(CONTNO,'')=''
 			) as a
 			order by ID
 		";
@@ -1115,7 +1127,7 @@ class Cselect2 extends MY_Controller {
 				</div>
 				<div class='col-sm-4'>
 					<div class='form-group'>
-						หมายเลขบัตร
+						บัตร ปชช./รหัสลูกค้า
 						<input type='text' id='cus_idno' class='form-control' maxlength='20'>
 					</div>
 				</div>
@@ -1193,6 +1205,99 @@ class Cselect2 extends MY_Controller {
 								ADDRNO='".$row->ADDRNO."' 
 								ADDRDES='".$row->ADDRDES."' 
 								style='cursor:pointer;".($row->GRADESTAT == 'INUSE' ? "color:#ddd;":"")."'> เลือก  </i>
+						</td>
+						<td style='vertical-align:middle;'>".$row->CUSCOD."</td>
+						<td style='vertical-align:middle;'>".$row->CUSNAME."</td>
+						<td style='vertical-align:middle;'>".$row->GRADE."</td>
+					</tr>
+				";
+			}
+		}
+		
+		$html = "
+			<div>
+				<table class='table'>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>รหัสลูกค้า</th>
+							<th>ชื่อ-สกุล</th>
+							<th>เกรด</th>
+						</tr>
+					</thead>
+					<tbody>
+						".$html."
+					</tbody>
+				</table>
+			</div>
+		";
+		
+		$response = array("html"=>$html);
+		echo json_encode($response);
+	}
+	
+	function getResultCUSTOMERALL(){
+		$fname = $_POST['fname'];
+		$lname = $_POST['lname'];
+		$idno  = $_POST['idno'];
+		$allow_risk  = (isset($_POST['allow_risk']) ? $_POST['allow_risk']:'N');
+		
+		$cuscod = array();
+		$cuscod[] = (isset($_POST['cuscod']) ? $_POST['cuscod']:'');
+		$cuscod[] = (isset($_POST['is1_cuscod']) ? $_POST['is1_cuscod']:'');
+		$cuscod[] = (isset($_POST['is2_cuscod']) ? $_POST['is2_cuscod']:'');
+		$cuscod[] = (isset($_POST['is3_cuscod']) ? $_POST['is3_cuscod']:'');
+		
+		$cond = "";
+		if($fname != ""){
+			$cond .= " and a.NAME1 like '%".$fname."%'";
+		}
+		if($lname != ""){
+			$cond .= " and a.NAME2 like '%".$lname."%'";
+		}
+		if($idno != ""){
+			$cond .= " and (a.IDNo like '%".$idno."%' or a.CUSCOD like '%".$idno."%')";
+		}
+		
+		$sql = "
+			select top 100 a.CUSCOD,a.SNAM+a.NAME1+' '+a.NAME2 as CUSNAME,a.GRADE
+				,case when a.GRADE in ('F','FF') then 'F' 
+					when a.GRADE not in (select GRDCOD from {$this->MAuth->getdb('SETGRADCUS')}) then 'F'
+					else '' end GRADESTAT
+				,a.SNAM+a.NAME1+' '+a.NAME2+' ('+a.CUSCOD+')'+'-'+a.GRADE as CUSNAMES
+				,1 as ADDRNO
+				,(
+					select '('+aa.ADDRNO+') '+aa.ADDR1+' '+aa.ADDR2+' ต.'+aa.TUMB
+						+' อ.'+bb.AUMPDES+' จ.'+cc.PROVDES+' '+aa.ZIP as ADDRNODetails 			
+					from {$this->MAuth->getdb('CUSTADDR')} aa
+					left join {$this->MAuth->getdb('SETAUMP')} bb on aa.AUMPCOD=bb.AUMPCOD
+					left join {$this->MAuth->getdb('SETPROV')} cc on bb.PROVCOD=cc.PROVCOD
+					where aa.CUSCOD=a.CUSCOD and aa.ADDRNO=1
+				) as ADDRDES
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=a.CUSCOD and sa.ADDRNO=a.ADDRNO) as TELP
+			from {$this->MAuth->getdb('CUSTMAST')} a 
+			where 1=1 ".$cond."
+			order by a.NAME1,a.NAME2
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$html .= "
+					<tr>
+						<td style='width:40px;'>
+							<i class='
+								CUSDetails
+								btn-warning
+								btn btn-xs glyphicon glyphicon-zoom-in' 
+								CUSCOD='".$row->CUSCOD."'
+								CUSNAMES='".$row->CUSNAMES."' 
+								ADDRNO='".$row->ADDRNO."' 
+								ADDRDES='".$row->ADDRDES."' 
+								TELP='".$row->TELP."'
+								style='cursor:pointer;'> เลือก  </i>
 						</td>
 						<td style='vertical-align:middle;'>".$row->CUSCOD."</td>
 						<td style='vertical-align:middle;'>".$row->CUSNAME."</td>
@@ -1332,6 +1437,7 @@ class Cselect2 extends MY_Controller {
 				,A.STRNO,A.SDATE,A.TOTPRC
 				,A.SMPAY,A.SMCHQ,A.TOTPRC-A.SMPAY-A.SMCHQ AS BALANCE
 				,A.CREDTM,A.DUEDT,A.RESVNO,A.SALCOD  
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=A.CUSCOD and sa.ADDRNO=A.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('ARCRED')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD 
 			WHERE 1=1 AND A.TOTPRC>A.SMPAY AND A.CUSCOD like @CUSCOD and A.CONTNO like @CONTNO
@@ -1350,6 +1456,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod  ='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp	='".$row->TELP."'
 								total	='".str_replace(",","",(number_format($row->BALANCE,2)))."'
 								error	=''
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -1411,14 +1518,16 @@ class Cselect2 extends MY_Controller {
 				,A.NDAWN+A.VATDWN AS TOTDWN
 				,A.PAYDWN,A.TOTDWN-A.PAYDWN AS BALDWN
 				,A.NPAYRES+A.VATPRES AS PAYRES,A.BILLCOLL  
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=B.CUSCOD and sa.ADDRNO=B.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('ARMAST')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD
-			WHERE 1=1 AND A.TOTPRC>A.SMPAY 
+			WHERE 1=1 AND A.TOTPRC > isnull(A.SMPAY,0)
 				AND A.CUSCOD like @CUSCOD 
 				and A.CONTNO like @CONTNO
 				and A.TOTDWN-A.PAYDWN > 0
 			ORDER BY B.NAME1 
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$html = "";
@@ -1432,6 +1541,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod	='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp	='".$row->TELP."' 
 								total	='".str_replace(",","",(number_format($row->BALDWN,2)))."'
 								error	=''
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -1500,6 +1610,7 @@ class Cselect2 extends MY_Controller {
 				,A.NFINAN+A.VATFIN AS TOTFINC,A.PAYFIN
 				,A.NFINAN+A.VATFIN-A.PAYFIN AS BALFINC
 				,A.SDATE,A.STRNO,A.FINCOD 
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=B.CUSCOD and sa.ADDRNO=B.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('ARFINC')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD 
 			WHERE 1=1 AND A.TOTPRC>A.SMPAY AND A.CUSCOD like @CUSCOD and A.CONTNO like @CONTNO
@@ -1518,6 +1629,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod	='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp 	='".$row->TELP."' 
 								total	='".str_replace(",","",(number_format($row->BALDWN,2)))."'
 								error	=''
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -1590,6 +1702,7 @@ class Cselect2 extends MY_Controller {
 				,A.NFINAN+A.VATFIN AS TOTFINC,A.PAYFIN
 				,A.NFINAN+A.VATFIN-A.PAYFIN AS BALFINC
 				,A.SDATE,A.STRNO,A.FINCOD 
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=B.CUSCOD and sa.ADDRNO=B.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('ARFINC')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD 
 			WHERE 1=1 AND A.TOTPRC>A.SMPAY AND A.CUSCOD like @CUSCOD and A.CONTNO like @CONTNO
@@ -1608,6 +1721,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod	='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp 	='".$row->TELP."' 
 								total	='".str_replace(",","",(number_format($row->BALFINC,2)))."'
 								error	=''
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -1674,6 +1788,7 @@ class Cselect2 extends MY_Controller {
 				,B.SNAM+B.NAME1+' '+B.NAME2 as CUSNAME
 				,A.SDATE,A.OPTPTOT,A.SMPAY, A.SMCHQ
 				,A.OPTPTOT-A.SMPAY-A.SMCHQ AS BALANCE
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=B.CUSCOD and sa.ADDRNO=B.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('AROPTMST')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD 
 			WHERE 1=1 AND A.OPTPTOT>A.SMPAY AND A.CUSCOD like @CUSCOD and A.CONTNO like @CONTNO
@@ -1692,6 +1807,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod	='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp 	='".$row->TELP."' 
 								total	='".str_replace(",","",(number_format($row->BALANCE,2)))."'
 								error	=''
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -1746,6 +1862,7 @@ class Cselect2 extends MY_Controller {
 				,A.PAYDWN,A.TOTDWN-A.PAYDWN AS BALDWN
 				,A.NPAYRES+A.VATPRES AS PAYRES,A.BILLCOLL  
 				,A.CONTSTAT,C.CONTDESC
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=B.CUSCOD and sa.ADDRNO=B.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('ARMAST')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD 
 			left join {$this->MAuth->getdb('TYPCONT')} C on A.CONTSTAT=C.CONTTYP
@@ -1769,6 +1886,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod  ='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp 	='".$row->TELP."' 
 								total   ='".str_replace(",","",(number_format($row->BALANCE,2)))."'
 								error   ='".$error."'
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -1837,6 +1955,7 @@ class Cselect2 extends MY_Controller {
 				,A.PAYDWN,A.TOTDWN-A.PAYDWN AS BALDWN
 				,A.NPAYRES+A.VATPRES AS PAYRES,A.BILLCOLL  
 				,A.CONTSTAT,C.CONTDESC
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=B.CUSCOD and sa.ADDRNO=B.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('ARMAST')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD
 			left join {$this->MAuth->getdb('TYPCONT')} C on A.CONTSTAT=C.CONTTYP
@@ -1859,6 +1978,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod  ='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp 	='".$row->TELP."' 
 								total   ='".str_replace(",","",(number_format($row->BALANCE,2)))."'
 								error   ='".$error."'
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -1924,6 +2044,7 @@ class Cselect2 extends MY_Controller {
 				,B.SNAM+B.NAME1+' '+B.NAME2 as CUSNAME
 				,A.RESVDT,A.RESPAY,A.SMPAY,A.SMCHQ
 				,A.RESPAY-A.SMPAY-A.SMCHQ AS BALANCE
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=B.CUSCOD and sa.ADDRNO=B.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('ARRESV')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD  
 			WHERE 1=1 AND A.RESPAY>A.SMPAY AND A.CUSCOD like @CUSCOD and A.RESVNO like @CONTNO
@@ -1943,6 +2064,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod	='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp 	='".$row->TELP."' 
 								total	='".str_replace(",","",(number_format($row->BALANCE,2)))."'
 								error	=''
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -1995,6 +2117,7 @@ class Cselect2 extends MY_Controller {
 				,B.SNAM+B.NAME1+' '+B.NAME2 as CUSNAME
 				,A.SDATE,A.TOTPRC,A.SMPAY,A.SMCHQ
 				,A.TOTPRC-A.SMPAY-A.SMCHQ AS BALANCE
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=B.CUSCOD and sa.ADDRNO=B.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('AR_INVOI')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD 
 			WHERE 1=1 AND A.TOTPRC>A.SMPAY AND A.CUSCOD like @CUSCOD and A.CONTNO like @CONTNO
@@ -2013,6 +2136,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod	='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp 	='".$row->TELP."' 
 								total	='".str_replace(",","",(number_format($row->BALANCE,2)))."'
 								error	=''
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -2069,6 +2193,7 @@ class Cselect2 extends MY_Controller {
 				,A.NFINAN+A.VATFIN AS TOTFINC,A.PAYFIN
 				,A.NFINAN+A.VATFIN-A.PAYFIN AS BALFINC
 				,A.SDATE,A.STRNO,A.FINCOD 
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=B.CUSCOD and sa.ADDRNO=B.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('ARFINC')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD 
 			WHERE 1=1 AND A.TOTPRC>A.SMPAY AND A.CUSCOD like @CUSCOD and A.CONTNO like @CONTNO
@@ -2087,6 +2212,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod	='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp 	='".$row->TELP."' 
 								total	='".str_replace(",","",(number_format($row->BALANCE,2)))."'
 								error	=''
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -2146,7 +2272,7 @@ class Cselect2 extends MY_Controller {
 		$sql = "
 			declare @CUSCOD varchar(13) = '{$CUSCOD}%';
 			declare @CONTNO varchar(13) = '{$CONTNO}%';
-			declare @PAYFOR varchar(13) = '{$PAYFOR}%';
+			declare @PAYFOR varchar(13) = '{$PAYFOR}';
 			
 			SELECT top 100 A.ARCONT as CONTNO
 				,A.LOCAT
@@ -2154,6 +2280,7 @@ class Cselect2 extends MY_Controller {
 				,B.SNAM+B.NAME1+' '+B.NAME2 as CUSNAME
 				,A.PAYFOR,A.ARDATE,A.PAYAMT,A.SMPAY
 				,A.SMCHQ,A.PAYAMT-A.SMPAY-A.SMCHQ AS BALANCE
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=B.CUSCOD and sa.ADDRNO=B.ADDRNO) as TELP
 			FROM {$this->MAuth->getdb('AROTHR')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD 
 			WHERE 1=1 AND A.PAYAMT>A.SMPAY 
@@ -2162,6 +2289,7 @@ class Cselect2 extends MY_Controller {
 				and A.PAYFOR = @PAYFOR
 			ORDER BY A.ARCONT,A.LOCAT
 		";
+		//echo $sql; exit;
 		$query = $this->db->query($sql);
 		
 		$html = "";
@@ -2175,6 +2303,7 @@ class Cselect2 extends MY_Controller {
 								locat   ='".$row->LOCAT."' 
 								cuscod	='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp 	='".$row->TELP."' 
 								total	='".str_replace(",","",(number_format($row->BALANCE,2)))."'
 								error	=''
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -2219,8 +2348,9 @@ class Cselect2 extends MY_Controller {
 	private function getResultCONTNOOTherCustomers($CUSCOD,$CONTNO,$PAYFOR){
 		$sql = "
 			select CUSCOD,SNAM+NAME1+' '+NAME2 as CUSNAME 
-			from {$this->MAuth->getdb('CUSTMAST')}
-			where CUSCOD='{$CUSCOD}'
+				,(select sa.TELP from {$this->MAuth->getdb('CUSTADDR')} sa where sa.CUSCOD=a.CUSCOD and sa.ADDRNO=a.ADDRNO) as TELP
+			from {$this->MAuth->getdb('CUSTMAST')} a
+			where a.CUSCOD='{$CUSCOD}'
 		";
 		//echo $sql; exit;
 		$query = $this->db->query($sql);
@@ -2236,6 +2366,7 @@ class Cselect2 extends MY_Controller {
 								locat   =''
 								cuscod	='".$row->CUSCOD."' 
 								cusname ='".$row->CUSNAME."' 
+								telp ='".$row->TELP."' 
 								total	='0'
 								error	=''
 								style='cursor:pointer;padding:3px;'> เลือก </button>
@@ -2339,6 +2470,33 @@ class Cselect2 extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$json[] = ['id'=>str_replace(chr(0),'',$row->PROVCOD), 'text'=>str_replace(chr(0),'',$row->PROVDES)];
+			}
+		}
+		
+		echo json_encode($json);
+	}
+	
+	function getBILLForCancel(){
+		$sess = $this->session->userdata('cbjsess001');
+		$dataSearch = trim($_REQUEST['q']);
+		$dataNow = (!isset($_REQUEST["now"]) ? "" : $_REQUEST["now"]);
+		
+		$sql = "
+			select TOPICID,'('+cast(TOPICID as varchar)+') '+TOPICName as TOPICName from {$this->MAuth->getdb('JD_BILLTP')}
+			where 1=1 and TOPICID='".$dataNow."' collate Thai_CI_AS
+				
+			union
+			select top 20 TOPICID,'('+cast(TOPICID as varchar)+') '+TOPICName as TOPICName from {$this->MAuth->getdb('JD_BILLTP')}
+			where 1=1 and '('+cast(TOPICID as varchar)+') '+TOPICName like '%".$dataSearch."%' collate Thai_CI_AS 
+			order by TOPICID
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		if($query->row()){
+			foreach($query->result() as $row){
+				$json[] = ['id'=>str_replace(chr(0),'',$row->TOPICID), 'text'=>str_replace(chr(0),'',$row->TOPICName)];
 			}
 		}
 		

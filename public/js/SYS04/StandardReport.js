@@ -122,7 +122,7 @@ function fn_SearchReport(){
 			}else{
 				$('#TableResultStandard').html(data.html);
 				fn_datatables('table-standard',1,250);
-				$('.dataTables_scrollBody').css({'height':'calc(-420px + 100vh)'});
+				$('.dataTables_scrollBody').css({'height':'calc(-500px + 100vh)'});
 				fn_DetailCalculate();
 			}
 			searchreport = null;	

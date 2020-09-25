@@ -117,7 +117,8 @@ class SYDDeptorPay extends MY_Controller {
 				,A.V_UPAY,A.TOTPRC,A.T_NOPAY,A.TOT_UPAY,A.TCSHPRC,A.TOTDWN,A.TKANG,A.NPROFIT,A.TOTPRES
 				,A.VATPRES,A.NPAYRES,convert(varchar(8),A.FDATE,112) as FDATE,convert(varchar(8),A.LDATE,112) as LDATE
 				,A.T_LUPAY,A.VKANG,convert(varchar(8),A.SDATE,112) as SDATE,C.CRCOST,C.NETCOST,C.CRVAT,C.TOTCOST 
-			from {$this->MAuth->getdb('ARMAST')} A,{$this->MAuth->getdb('CUSTMAST')} B,{$this->MAuth->getdb('INVTRAN')} C 
+			from {$this->MAuth->getdb('ARMAST')} A
+			,{$this->MAuth->getdb('CUSTMAST')} B,{$this->MAuth->getdb('INVTRAN')} C 
 			where A.CUSCOD = B.CUSCOD and A.STRNO = C.STRNO and A.CONTNO like '".$CONTNO."%'
 			AND A.LOCAT like '".$LOCAT."%' and A.TOTPRC > 0	
 		";
