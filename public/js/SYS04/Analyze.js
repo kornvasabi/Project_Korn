@@ -179,7 +179,7 @@ function fn_search(JDbtnt1search){
 			if(_ismobile == "yes"){
 				fn_datatables('table-Analyze',1,0);
 			}else{
-				$('[data-toggle="tooltip"]').tooltip();
+				// $('[data-toggle="tooltip"]').tooltip(); //ใช้ colorbox แทนแล้ว
 				$('#table-Analyze').on('draw.dt',function(){ redraw(); });
 				fn_datatables('table-Analyze',1,235);
 			}
@@ -196,74 +196,193 @@ function fn_search(JDbtnt1search){
 				$(".ansend").click(function(){
 					var dataToPost = new Object();
 					dataToPost.ANID = $(this).attr('ANID');
-								
-					Lobibox.confirm({
-						title: 'ยืนยันการทำรายการ',
-						draggable: true,
-						iconClass: false,
-						closeOnEsc: false,
-						closeButton: false,
-						msg: 'ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อเลขที่ '+dataToPost.ANID,
-						buttons: {
-							ok : {
-								'class': 'btn btn-primary glyphicon glyphicon-ok',
-								text: ' ยืนยันการทำรายการ',
-								closeOnClick: false,
+					dataToPost.ISFinance = $(this).attr('ISFinance');
+					
+					var obj = new Object();
+					if(dataToPost.ISFinance == "Y"){
+						Lobibox.confirm({
+							title: 'ยืนยันการทำรายการ',
+							draggable: true,
+							iconClass: false,
+							closeOnEsc: false,
+							closeButton: false,
+							msg: 'ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อเลขที่ '+dataToPost.ANID,
+							buttons: {
+								ok : {
+									'class': 'btn btn-primary glyphicon glyphicon-ok',
+									text: ' ส่งฝ่ายวิเคราะห์',
+									closeOnClick: false,
+								},
+								sell : {
+									'class': 'btn btn-info glyphicon glyphicon-ok',
+									text: ' ไม่ส่งวิเคราะห์',
+									closeOnClick: true
+								},
+								cancel : {
+									'class': 'btn btn-danger glyphicon glyphicon-remove',
+									text: ' ยกเลิก',
+									closeOnClick: true
+								},
 							},
-							cancel : {
-								'class': 'btn btn-danger glyphicon glyphicon-remove',
-								text: ' ยกเลิก',
-								closeOnClick: true
-							},
-						},
-						shown: function($this){},
-						callback: function(lobibox, type){
-							if (type === 'ok'){
-								$('#loadding').fadeIn(500);
-								JDansend = $.ajax({
-									url:'../SYS04/Analyze/Send_Analyze',
-									data: dataToPost,
-									type: 'POST',
-									dataType: 'json',
-									success: function(data){
-										
-										if(data.error){
-											Lobibox.notify('warning', {
-												title: 'แจ้งเตือน',
-												size: 'mini',
-												closeOnClick: false,
-												delay: 5000,
-												pauseDelayOnHover: true,
-												continueDelayOnInactiveTab: false,
-												icon: true,
-												messageHeight: '90vh',
-												msg: data["msg"][0]
-											});
-										}else{
-											Lobibox.notify('success', {
-												title: 'แจ้งเตือน',
-												size: 'mini',
-												closeOnClick: false,
-												delay: 5000,
-												pauseDelayOnHover: true,
-												continueDelayOnInactiveTab: false,
-												icon: true,
-												messageHeight: '90vh',
-												msg: data["msg"][0]
-											});
+							shown: function($this){},
+							callback: function(lobibox, type){
+								if (type === 'ok'){
+									$('#loadding').fadeIn(500);
+									JDansend = $.ajax({
+										url:'../SYS04/Analyze/Send_Analyze',
+										data: dataToPost,
+										type: 'POST',
+										dataType: 'json',
+										success: function(data){
+											if(data.error){
+												Lobibox.notify('warning', {
+													title: 'แจ้งเตือน',
+													size: 'mini',
+													closeOnClick: false,
+													delay: 5000,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data["msg"][0]
+												});
+											}else{
+												Lobibox.notify('success', {
+													title: 'แจ้งเตือน',
+													size: 'mini',
+													closeOnClick: false,
+													delay: 5000,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data["msg"][0]
+												});
+												
+												fn_search(JDbtnt1search);
+											}
 											
-											fn_search(JDbtnt1search);
-										}
-										
-										JDansend = null;
-										$('#loadding').fadeOut(500);
-										lobibox.destroy();
-									},
-									beforeSend:function(){ if(JDansend !== null){ JDansend.abort(); } }
-								});
+											JDansend = null;
+											$('#loadding').fadeOut(500);
+											lobibox.destroy();
+										},
+										beforeSend:function(){ if(JDansend !== null){ JDansend.abort(); } }
+									});
+								}else if (type === 'sell'){ 
+									$('#loadding').fadeIn(500);
+									JDansend = $.ajax({
+										url:'../SYS04/Analyze/CANTSend_Analyze',
+										data: dataToPost,
+										type: 'POST',
+										dataType: 'json',
+										success: function(data){
+											if(data.error){
+												Lobibox.notify('warning', {
+													title: 'แจ้งเตือน',
+													size: 'mini',
+													closeOnClick: false,
+													delay: 5000,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data["msg"][0]
+												});
+											}else{
+												Lobibox.notify('success', {
+													title: 'แจ้งเตือน',
+													size: 'mini',
+													closeOnClick: false,
+													delay: 5000,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data["msg"][0]
+												});
+												
+												fn_search(JDbtnt1search);
+											}
+											
+											JDansend = null;
+											$('#loadding').fadeOut(500);
+											lobibox.destroy();
+										},
+										beforeSend:function(){ if(JDansend !== null){ JDansend.abort(); } }
+									});
+								}
 							}
-						}
-					});	
+						});	
+					}else{
+						Lobibox.confirm({
+							title: 'ยืนยันการทำรายการ',
+							draggable: true,
+							iconClass: false,
+							closeOnEsc: false,
+							closeButton: false,
+							msg: 'ส่งคำร้องขออนุมัติใบวิเคราะห์สินเชื่อเลขที่ '+dataToPost.ANID,
+							buttons: {
+								ok : {
+									'class': 'btn btn-primary glyphicon glyphicon-ok',
+									text: ' ส่งฝ่ายวิเคราะห์',
+									closeOnClick: false,
+								},
+								cancel : {
+									'class': 'btn btn-danger glyphicon glyphicon-remove',
+									text: ' ยกเลิก',
+									closeOnClick: true
+								},
+							},
+							shown: function($this){},
+							callback: function(lobibox, type){
+								if (type === 'ok'){
+									$('#loadding').fadeIn(500);
+									JDansend = $.ajax({
+										url:'../SYS04/Analyze/Send_Analyze',
+										data: dataToPost,
+										type: 'POST',
+										dataType: 'json',
+										success: function(data){
+											
+											if(data.error){
+												Lobibox.notify('warning', {
+													title: 'แจ้งเตือน',
+													size: 'mini',
+													closeOnClick: false,
+													delay: 5000,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data["msg"][0]
+												});
+											}else{
+												Lobibox.notify('success', {
+													title: 'แจ้งเตือน',
+													size: 'mini',
+													closeOnClick: false,
+													delay: 5000,
+													pauseDelayOnHover: true,
+													continueDelayOnInactiveTab: false,
+													icon: true,
+													messageHeight: '90vh',
+													msg: data["msg"][0]
+												});
+												
+												fn_search(JDbtnt1search);
+											}
+											
+											JDansend = null;
+											$('#loadding').fadeOut(500);
+											lobibox.destroy();
+										},
+										beforeSend:function(){ if(JDansend !== null){ JDansend.abort(); } }
+									});
+								}
+							}
+						});
+					}
+					
 				});
 				
 				var JDandetail_edit = null;
@@ -354,6 +473,23 @@ function fn_search(JDbtnt1search){
 											 });
 											 
 											WINDOW_DETAILS.destroy();
+										});
+										
+										$('.as-show').click(function(){
+											var tp = $(this).attr('topic');
+											$('.as-image-show[topic='+tp+']').colorbox({
+												rel: tp ,
+												opacity: 0.7,
+												maxWidth:'1000px',
+												maxHeight:'700px',
+												title:function(){
+													return $(this).find('img').attr('titles')
+												},
+												href:function(){
+													return $(this).find('img').attr('src')
+												},
+												photo:true
+											});
 										});
 									}
 								});
@@ -636,14 +772,14 @@ function fn_loadFormAnalyze($_data){
 							$('#cuscod_removed').attr('disabled',(_level == 1 ? false:true));
 							$('#acticod').attr('disabled',true).trigger('change');
 							
-							if($_data["RESVNO"] != ""){
-								mbcs = true;
-							}
+							if($_data["RESVNO"] != ""){ mbcs = true; }
 						}
 						$('#resvno').attr('disabled',false).trigger('change');
 						$('#resvAmt').val($_data['RESVAMT']);
 						var newOption = new Option($_data["STRNO"], $_data["STRNO"], true, true);
 						$('#strno').empty().append(newOption).attr('disabled',mbcs).trigger('change');
+						
+						if($_data["STRNO"] != ""){ mbcs = true; }
 						var newOption = new Option($_data["MODEL"], $_data["MODEL"], true, true);
 						$('#model').empty().append(newOption).attr('disabled',mbcs).trigger('change');
 						var newOption = new Option($_data["BAAB"], $_data["BAAB"], true, true);
@@ -655,7 +791,7 @@ function fn_loadFormAnalyze($_data){
 						var newOption = new Option($_data["GCODE"], $_data["GCODE"], true, true);
 						$('#gcode').empty().append(newOption).attr('disabled',mbcs).trigger('change');
 						
-						//$('#gcode').val($_data['GCODE']).attr('disabled',mbcs).trigger('change');
+						$('#manuyr').val($_data['MANUYR']);
 						$('#sdateold').val($_data['SDATE']);
 						$('#ydate').val($_data['YDATE']);
 						$('#price_add').val($_data['PRICE_ADD']).attr('disabled',true);
@@ -668,11 +804,11 @@ function fn_loadFormAnalyze($_data){
 						if($_data["ISFinance"] == "Y"){
 							$('#checknotfn').show();
 							$('#calstdfn').attr({'checked':true,'disabled':true});
-							$('#toggleFinance').show();
+							$('.toggleFinance').show();
 							$('#price').attr('disabled',false);
 						}else{
 							$('#calstdfn').attr('checked',false);
-							$('#toggleFinance').hide();
+							$('.toggleFinance').hide();
 						}
 						
 						$('#interatert').val($_data['INTEREST_RT']).attr('disabled',true);
@@ -726,10 +862,12 @@ function fn_loadFormAnalyze($_data){
 								var picture_msg = $_data['REF'+i+'']["filePath"];
 								if($_data['REF'+i+'']["filePath"] != "(none)"){
 									picture_msg = '<image style="width:'+widpic+'px;height:auto;" src="'+$_data['REF'+i+'']["filePath"]+'?'+Math.random()+'"/>';
+									$('.as-image-show[topic='+$('#'+tags+'picture').attr('topic')+']').attr('href',$_data['REF'+i+'']["filePath"]+'?'+Math.random());
 								}
 								$('#'+tags+'picture').val("");
 								$('#'+tags+'picture').attr('source','');
 								$('#'+tags+'picture').attr('data-original-title',picture_msg);
+								$('#'+tags+'picture_show').attr('src',($_data['REF'+i+'']["filePath"]!="(none)"?$_data['REF'+i+'']["filePath"]:"../public/images/noImg.jpg"));
 							}
 							
 							if($_data['REF1']["CUSCOD"] == "cannot"){
@@ -761,29 +899,40 @@ function fn_loadFormAnalyze($_data){
 						var picture_msg = $_data['EVIDENCE'];
 						if($_data['EVIDENCE'] != "(none)"){
 							picture_msg = '<image style="width:'+widpic+'px;height:auto;" src="'+$_data['EVIDENCE']+'?'+Math.random()+'"/>';
+							$('.as-image-show[topic='+$('#'+tags+'picture').attr('topic')+']').attr('href',$_data['EVIDENCE']+'?'+Math.random());
 						}						
 						$('#analyze_picture').val("");
 						$('#analyze_picture').attr('source','');
 						$('#analyze_picture').attr('data-original-title',picture_msg);
+						$('#analyze_picture_show').attr('src',($_data['EVIDENCE']!="(none)"?$_data['EVIDENCE']:"../public/images/noImg.jpg"));
 						
 						var widpic = ($('#approve_picture').width());						
 						var picture_msg = $_data['APPROVE_IMG'];
 						if($_data['APPROVE_IMG'] != "(none)"){
 							picture_msg = '<image style="width:'+widpic+'px;height:auto;" src="'+$_data['APPROVE_IMG']+'?'+Math.random()+'"/>';
+							$('.as-image-show[topic='+$('#'+tags+'picture').attr('topic')+']').attr('href',$_data['APPROVE_IMG']+'?'+Math.random());
 						}						
 						$('#approve_picture').val("");
 						$('#approve_picture').attr('source','');
 						$('#approve_picture').attr('data-original-title',picture_msg);
+						$('#approve_picture_show').attr('src',($_data['APPROVE_IMG']!="(none)"?$_data['APPROVE_IMG']:"../public/images/noImg.jpg"));
 						
-						var widpic = ($('#approve_picture').width());						
-						var picture_msg = $_data['CAR_IMG'];
-						if($_data['CAR_IMG'] != "(none)"){
-							picture_msg = '<image style="width:'+widpic+'px;height:auto;" src="'+$_data['CAR_IMG']+'"/>';
-						}						
-						$('#carpic_picture').val("");
-						$('#carpic_picture').attr('source','');
-						$('#carpic_picture').attr('data-original-title',picture_msg);
-						
+						for(var ishow=1;ishow <= 10;ishow++){
+							var widpic = ($('#carpic'+ishow+'_picture').width());						
+							var picture_msg = "(none)";
+							if(typeof $_data['carpic'][ishow] === "undefined"){
+								picture_msg = "(none)";
+							}else if($_data['carpic'][ishow] != "(none)"){
+								picture_msg = ($_data['carpic'][ishow] == '' ? "#":$_data['carpic'][ishow]);
+								picture_msg = '<image style="width:'+widpic+'px;height:auto;" src="'+$_data['carpic'][ishow]+'"/>';
+								$('.as-image-show[topic='+$('#'+tags+'picture').attr('topic')+']').attr('href',($_data['carpic'][ishow] == '' ? "#":$_data['carpic'][ishow]));
+							}
+							
+							$('#carpic'+ishow+'_picture').val("");
+							$('#carpic'+ishow+'_picture').attr('source','');
+							$('#carpic'+ishow+'_picture').attr('data-original-title',picture_msg);
+							$('#carpic'+ishow+'_picture_show').attr('src',($_data['carpic'][ishow]!="(none)"?$_data['carpic'][ishow]:"../public/images/noImg.jpg"));
+						}
 					}
 					
 					if ($('#anid').val() == "Auto Genarate"){
@@ -795,6 +944,23 @@ function fn_loadFormAnalyze($_data){
 						$('#deleted').attr('disabled',(_delete == "T" ? false:true));
 						if(_locat != $('#locat').find(':selected').val() && _level != 1){ $("#save").attr('disabled',true); }
 					}
+					
+					$('.as-show').click(function(){
+						var tp = $(this).attr('topic');
+						$('.as-image-show[topic='+tp+']').colorbox({
+							rel: tp ,
+							opacity: 0.7,
+							maxWidth:'1000px',
+							maxHeight:'700px',
+							title:function(){
+								return $(this).find('img').attr('titles')
+							},
+							href:function(){
+								return $(this).find('img').attr('src')
+							},
+							photo:true
+						});
+					});
 				},
 				beforeClose : function(){
 					$('#btnt1search').attr('disabled',false);
@@ -855,10 +1021,10 @@ function fn_checkstd($this){
 				$('#price_add').val('').attr("disabled",true);
 				if($('#calstdfn').is(':checked')){
 					$('#price').attr('disabled',false);
-					$('#toggleFinance').fadeIn(200);
+					$('.toggleFinance').fadeIn(200);
 				}else{
 					$('#price').val('').attr("disabled",true);
-					$('#toggleFinance').fadeOut(200);
+					$('.toggleFinance').fadeOut(200);
 				}
 				//$('#price').val('').attr("disabled",true);
 				$('#price').attr("stdid","");
@@ -892,10 +1058,10 @@ function fn_checkstd($this){
 				//ไฟแนนท์ไหม
 				if($('#calstdfn').is(':checked')){
 					$('#price').attr("disabled",false);
-					$('#toggleFinance').fadeIn(200);
+					$('.toggleFinance').fadeIn(200);
 				}else{
 					$('#price').attr("disabled",true);
-					$('#toggleFinance').fadeOut(200);
+					$('.toggleFinance').fadeOut(200);
 				}
 				
 				$('#price').attr("stdid",data.stdid);
@@ -1273,6 +1439,7 @@ function fnload($thisForm){
 					var newOption = new Option(data["html"]["GDESC"], data["html"]["GCODE"], true, true);
 					$('#gcode').attr('disabled',true);
 					$('#gcode').empty().append(newOption).trigger('change');
+					$('#manuyr').val(data["html"]["MANUYR"]);
 				}
 				
 				JDresvno = null;
@@ -1375,6 +1542,7 @@ function fnload($thisForm){
 				dataToPost.BAAB  = (typeof $("#baab").find(":selected").val() === "undefined" ? "" : $("#baab").find(":selected").val());
 				dataToPost.COLOR = (typeof $("#color").find(":selected").val() === "undefined" ? "" : $("#color").find(":selected").val());
 				dataToPost.STAT  = (typeof $("#stat").find(":selected").val() === "undefined" ? "" : $("#stat").find(":selected").val());
+				dataToPost.ANID  = $("#anid").val();
 				
 				return dataToPost;				
 			},
@@ -1395,104 +1563,6 @@ function fnload($thisForm){
 		width: '100%'
 	});
 	
-	/*
-	var JDstrno = null;
-	$('#strno').on("select2:select",function(){
-		var dataToPost = new Object();
-		dataToPost.dwnAmt 	  = $('#dwnAmt').val();
-		dataToPost.nopay 	  = $('#nopay').val();
-		dataToPost.createDate = $('#createDate').val();
-		dataToPost.strno 	  = (typeof $(this).find(':selected').val() === "undefined" ? "" : $(this).find(':selected').val());
-		dataToPost.acticod	  = (typeof $("#acticod").find(':selected').val() === "undefined" ? "ALL" : $("#acticod").find(':selected').val());
-		
-		if(dataToPost.strno != ""){
-			$('#loadding').fadeIn(0);
-			JDstrno = $.ajax({
-				url:'../SYS04/Analyze/dataSTR',
-				data: dataToPost,
-				type: 'POST',
-				dataType: 'json',
-				success: function(data){
-					if(data.error){
-						resvnull(); // เคลียร์รายการ
-						Lobibox.notify('warning', {
-							title: 'แจ้งเตือน',
-							size: 'mini',
-							closeOnClick: false,
-							delay: 10000,
-							pauseDelayOnHover: true,
-							continueDelayOnInactiveTab: false,
-							icon: true,
-							messageHeight: '90vh',
-							msg: data.msg
-						});
-					}else{
-						if($("#locat").find(':selected').val() == data.html["LOCAT"]){
-							var newOption = new Option(data.html["MODEL"], data.html["MODEL"], true, true);
-							$('#model').empty().append(newOption).trigger('change');
-							var newOption = new Option(data.html["BAAB"], data.html["BAAB"], true, true);
-							$('#baab').empty().append(newOption).trigger('change');
-							var newOption = new Option(data.html["COLOR"], data.html["COLOR"], true, true);
-							$('#color').empty().append(newOption).trigger('change');
-							$("#stat").val(data.html["STATEN"]).trigger('change');
-							$("#sdateold").val((typeof data.html["SDATE"] === 'undefined' ? "": data.html["SDATE"]));
-							$("#ydate").val((typeof data.html["YDATE"] === 'undefined' ? "": data.html["YDATE"]));
-							$('#price_add').val(data.html["PRICE_ADD"]);
-							$('#price').val(data.html["PRICE"]);
-							$('#price').attr("stdid",data.html["STDID"]);
-							$('#price').attr("subid",data.html["SUBID"]);
-							$('#price').attr("shcid",data.html["SHCID"]);
-							$('#interatert').val(data.html["interest_rate"]);
-							
-							if(typeof data.html["STRNO"] === 'undefined'){
-								$('#model').attr("disabled",false).trigger('change');
-								$('#baab').attr("disabled",false).trigger('change');
-								$('#color').attr("disabled",false).trigger('change');					
-								$('#price_add').attr("disabled",false);
-								$('#price').attr("disabled",false);
-								$('#price').attr("stdid","");
-								$('#price').attr("subid","");
-								$('#price').attr("shcid","");
-								$('#interatert').attr("disabled",false);
-								$("#stat").attr("disabled",false);
-							}else{
-								$('#model').attr("disabled",true).trigger('change');
-								$('#baab').attr("disabled",true).trigger('change');
-								$('#color').attr("disabled",true).trigger('change');
-								$('#price_add').attr("disabled",true);
-								$('#price').attr("disabled",true);
-								$('#interatert').attr("disabled",true);
-								$("#stat").attr("disabled",true);
-							}					
-						}else{
-							$('#resvno').val(null).trigger('change');
-							Lobibox.notify('warning', {
-								title: 'แจ้งเตือน',
-								size: 'mini',
-								closeOnClick: false,
-								delay: 5000,
-								pauseDelayOnHover: true,
-								continueDelayOnInactiveTab: false,
-								icon: true,
-								messageHeight: '90vh',
-								msg: "ผิดพลาด รถอยู่ที่สาขา ["+data.html["LOCAT"]+"] ไม่สามารถคีย์ขายที่สาขา [" +$("#locat").find(':selected').val()+"] ได้ครับ"
-							});
-						}
-					}
-					
-					JDstrno = null;
-					$('#loadding').fadeOut(0);
-				},
-				beforeSend: function(){
-					if(JDstrno !== null){
-						JDstrno.abort();
-					}
-				},
-				error: function(jqXHR, exception){ fnAjaxERROR(jqXHR,exception); }
-			});
-		}
-	});
-	*/
 	var JDstrno = null;
 	$('#strno').on("select2:select",function(){
 		var dataToPost = new Object();
@@ -1532,6 +1602,7 @@ function fnload($thisForm){
 					var newOption = new Option(data["html"]["GCODE"], data["html"]["GCODE"], true, true);
 					$('#gcode').attr('disabled',true);
 					$('#gcode').empty().append(newOption).trigger('change');
+					$('#manuyr').val(data["html"]["MANUYR"]);
 				}
 				
 				JDstrno = null;
@@ -1541,35 +1612,16 @@ function fnload($thisForm){
 		});
 	});	
 	
-	/*
-	$('#strno').on("select2:unselect",function(){
-		$('#model').empty().trigger('change');
-		$('#baab').empty().trigger('change');
-		$('#color').empty().trigger('change');
-		$("#stat").val("");
-		$("#sdateold").val("");
-		$("#ydate").val("");
-		$('#price').val("");
-		$('#price').attr("stdid","");
-		$('#price').attr("subid","");
-		$('#interatert').val("");
-		
-		$('#model').attr("disabled",false).trigger('change');
-		$('#baab').attr("disabled",false).trigger('change');
-		$('#color').attr("disabled",false).trigger('change');
-		$('#price').attr("disabled",false);
-		$('#interatert').attr("disabled",false);
-		$('#stat').attr("disabled",false);
-	});	
-	*/
 	$('#strno').on("select2:unselect",function(){
 		var resvno = (typeof $('#resvno').find(':selected').val() === 'undefined' ? '':$('#resvno').find(':selected').val());
 		if(resvno == ''){
 			$('#model').empty().attr("disabled",false).trigger('change');
 			$('#baab').empty().attr("disabled",false).trigger('change');
 			$('#color').empty().attr("disabled",false).trigger('change');
-			$("#stat").val("").attr("disabled",false);
+			//$("#stat").val("").attr("disabled",false);
+			$("#stat").attr("disabled",false);
 			$('#gcode').empty().attr("disabled",false).trigger('change');
+			$('#manuyr').val("");
 		}
 	});	
 	
@@ -1695,11 +1747,11 @@ function fnload($thisForm){
 				});
 			}else{
 				$('#price').attr('disabled',false).focus();
-				$('#toggleFinance').fadeIn(200);
+				$('.toggleFinance').fadeIn(200);
 			}
 		}else{
 			$('#price').val('').attr('disabled',true);
-			$('#toggleFinance').fadeOut(200);
+			$('.toggleFinance').fadeOut(200);
 		}
 	});
 	
@@ -1834,6 +1886,7 @@ function fnload($thisForm){
 		dataToPost.baab 		= (typeof $('#baab').find(':selected').val() === 'undefined' ? '' : $('#baab').find(':selected').val());
 		dataToPost.color 		= (typeof $('#color').find(':selected').val() === 'undefined' ? '' : $('#color').find(':selected').val());
 		dataToPost.stat			= $('#stat').val();
+		dataToPost.gcode		= (typeof $('#gcode').find(':selected').val() === 'undefined' ? '' : $('#gcode').find(':selected').val());
 		dataToPost.sdateold		= $('#sdateold').val();
 		dataToPost.ydate		= $('#ydate').val();
 		dataToPost.price		= $('#price').val();
@@ -1853,9 +1906,20 @@ function fnload($thisForm){
 		dataToPost.coupon		= $('#inc_coupon').find(':selected').val();
 		
 		dataToPost.is_finance	= ($('#calstdfn').is(':checked') ? "Y":"N");
+		
+		var data = new Array();
+		for(let go=1;go<=10;go++){
+			var data1 = new Array();
+			data1.push($('#carpic'+go+'_picture').val());
+			data1.push($('#carpic'+go+'_picture').attr('source'));
+			
+			data.push(data1);
+		}
+		dataToPost.carpic	= data;
+		/*
 		dataToPost.carpic_name	= $('#carpic_picture').val();
 		dataToPost.carpic		= $('#carpic_picture').attr('source');
-		
+		*/
 		
 		dataToPost.cuscod 		= $('#cuscod').attr('cuscod');
 		dataToPost.idno			= $('#idno').val();
@@ -2184,7 +2248,7 @@ function fnload($thisForm){
 }
 
 function fn_select2_multiples(){
-	$('[data-toggle="tooltip"]').tooltip();
+	// $('[data-toggle="tooltip"]').tooltip(); //ใช้ colorbox แทนแล้ว
 	/*20200203*/
 	$('.select2_addrno').select2({
 		placeholder: 'เลือก',
@@ -2450,6 +2514,7 @@ function fn_select2_multiples(){
 													$('#'+tags+'picture').val("");
 													$('#'+tags+'picture').attr('source','');
 													$('#'+tags+'picture').attr('data-original-title',picture_msg);
+													$('#'+tags+'picture_show').attr('src',(data.html["filePath"]!="(none)"?data.html["filePath"]:"../public/images/noImg.jpg"));
 												
 												},
 												beforeSend: function(){ if(JDfn_getdata_customers !== null){ JDfn_getdata_customers.abort(); } },
@@ -2524,13 +2589,16 @@ function fn_select2_multiples(){
 		$('#'+tags+'picture').val();
 		$('#'+tags+'picture').attr('source','');
 		$('#'+tags+'picture').attr('data-original-title','(none)');
+		$('#'+tags+'picture_show').attr('src','../public/images/noImg.jpg');
 	});
 	
 	
 	$('.jd-upload-an').click(function(){
 		//$('[data-toggle="tooltip"]').tooltip();
-		var tags = $(this).attr('data-tags');
-		var widpic = ($('#'+tags+'picture').width());
+		var tags 	 = $(this).attr('data-tags');
+		var tagsName = $(this).attr('data-tags-name');
+		var widpic	 = ($('#'+tags+'picture').width());
+		
 		if($('#'+tags+'cuscod').attr('cuscod') == ""){
 			Lobibox.notify('warning', {
 				title: 'แจ้งเตือน',
@@ -2565,7 +2633,8 @@ function fn_select2_multiples(){
 						,dynamicFormData: function(){
 							var data = { 
 								IDNO 	: $('#'+tags+'idno').val(),
-								tags	: tags
+								tags	: tags,
+								tagsName : tagsName
 							}
 							return data;
 						}
@@ -2587,6 +2656,10 @@ function fn_select2_multiples(){
 							$('#'+tags+'picture').val(json["name"]);
 							$('#'+tags+'picture').attr('source',json["source"]);
 							$('#'+tags+'picture').attr('data-original-title','<image style="width:'+widpic+'px;height:auto;" src="'+json["source"]+'"/>');
+							
+							if ( $("*").is("#"+tags+"picture_show") ) {
+								$("#"+tags+"picture_show").attr('src',json["source"]);
+							}
 							
 							$this.destroy();
 						}

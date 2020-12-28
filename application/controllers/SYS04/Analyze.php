@@ -268,7 +268,6 @@ class Analyze extends MY_Controller {
 			}
 		}
 			
-		
 		$sql = "
 			select ".($cond == "" ? "top 20":"")." * from (
 				select a.ID,(
@@ -285,9 +284,12 @@ class Analyze extends MY_Controller {
 					,case when a.ANSTAT='I' then 'สร้างคำร้อง' 
 						when a.ANSTAT='P' then 'รออนุมัติ' 
 						when a.ANSTAT='PP' then 'ตรวจสอบคำร้อง' 
-						--when a.ANSTAT='A' then 'อนุมัติ' 
+						
 						when a.ANSTAT='A' and isnull(a.CONTNO,'') = '' then 'อนุมัติ' 
 						when a.ANSTAT='A' and isnull(a.CONTNO,'') != '' then 'ขายแล้ว' 
+						
+						when a.ANSTAT='FA' and isnull(a.CONTNO,'') = '' then 'ไม่ส่งวิเคราะห์' 
+						when a.ANSTAT='FA' and isnull(a.CONTNO,'') != '' then 'ขายแล้ว ไม่ส่งวิเคราะห์' 
 						
 						when a.ANSTAT='N' then 'ไม่อนุมัติ' 
 						when a.ANSTAT='C' then 'ยกเลิก'  end as ANSTATDESC
@@ -300,6 +302,7 @@ class Analyze extends MY_Controller {
 							and USERID='{$this->sess["USERID"]}'
 							and dblocat='{$this->sess["db"]}'
 					 ) as groupCode
+					,a.ISFinance
 				from {$this->MAuth->getdb('ARANALYZE')} a 
 				left join {$this->MAuth->getdb('ARANALYZEAPPR')} c on a.ID=c.ID collate thai_cs_as
 				where 1=1 ".$cond."
@@ -330,6 +333,7 @@ class Analyze extends MY_Controller {
 						<button {$disabled} class='andetail btn btn-xs btn-success glyphicon glyphicon-zoom-in'
 							ANID='".$row->ID."'  
 							FOR='EDIT'
+							ISFinance='".$row->ISFinance."'
 							data-toggle='tooltip'
 							data-placement='top'
 							data-html='true'
@@ -337,6 +341,7 @@ class Analyze extends MY_Controller {
 							style='cursor:pointer;'></button>
 						<button class='ansend btn btn-xs btn-primary glyphicon glyphicon-ok' 
 							ANID='".$row->ID."' 
+							ISFinance='".$row->ISFinance."'
 							data-toggle='tooltip'
 							data-placement='top'
 							data-html='true'
@@ -344,6 +349,7 @@ class Analyze extends MY_Controller {
 							style='cursor:pointer;'></button>
 						<button class='andetail_edit btn btn-xs btn-warning glyphicon glyphicon-edit' 
 							ANID='".$row->ID."' 
+							ISFinance='".$row->ISFinance."'
 							data-toggle='tooltip'
 							data-placement='top'
 							data-html='true'
@@ -357,6 +363,7 @@ class Analyze extends MY_Controller {
 					$button = "
 						<button {$disabled} class='andetail btn btn-xs btn-info glyphicon glyphicon-zoom-in'
 							ANID='".$row->ID."'
+							ISFinance='".$row->ISFinance."'
 							FOR='VIEW'
 							data-toggle='tooltip'
 							data-placement='top'
@@ -365,6 +372,7 @@ class Analyze extends MY_Controller {
 							style='cursor:pointer;'></button>
 						<button {$disabled} class='ansend btn btn-xs btn-primary glyphicon glyphicon-ok' 
 							ANID='".$row->ID."' 
+							ISFinance='".$row->ISFinance."'
 							data-toggle='tooltip'
 							data-placement='top'
 							data-html='true'
@@ -372,6 +380,7 @@ class Analyze extends MY_Controller {
 							style='cursor:pointer;'></button>
 						<button {$disabled} class='andetail_edit btn btn-xs btn-warning glyphicon glyphicon-edit' 
 							ANID='".$row->ID."' 
+							ISFinance='".$row->ISFinance."'
 							data-toggle='tooltip'
 							data-placement='top'
 							data-html='true'
@@ -640,6 +649,8 @@ class Analyze extends MY_Controller {
 				,case when a.ANSTAT='I' then 'รออนุมัติ' 
 					when a.ANSTAT='A' and isnull(a.CONTNO,'') != '' then 'ขายแล้ว' 
 					when a.ANSTAT='A' and isnull(a.CONTNO,'') = '' then 'อนุมัติ' 
+					when a.ANSTAT='FA' and isnull(a.CONTNO,'') != '' then 'ขายแล้ว ไม่ส่งวิเคราะห์' 
+					when a.ANSTAT='FA' and isnull(a.CONTNO,'') = '' then 'ไม่ส่งวิเคราะห์' 
 					when a.ANSTAT='N' then 'ไม่อนุมัติ' 
 					when a.ANSTAT='C' then 'ยกเลิก'  end as ANSTATDESC
 				,a.STDID
@@ -662,19 +673,25 @@ class Analyze extends MY_Controller {
 				,isnull(c.NOPAY,0) as ANOPAY
 				,isnull(c.INTEREST_RT,0) as AINTERESTRT
 				,isnull(c.OPTCODE,'') as OPTCODE
-				,e.INSURANCE as INSURANCE
-				,c.INSURANCE as AINSURANCE
+				,isnull(e.INSURANCE,0) as INSURANCE
+				,isnull(c.INSURANCE,0) as AINSURANCE
 				,isnull(c.COMMENTS,0) as ACOMMENTS
 				,a.ACTICOD
-				,e.TRANSFERS,e.REGIST,e.ACT,e.COUPON
+				,isnull(e.TRANSFERS,0) as TRANSFERS
+				,isnull(e.REGIST,0) as REGIST
+				,isnull(e.ACT,0) as ACT
+				,isnull(e.COUPON,0) as COUPON
 			from {$this->MAuth->getdb('ARANALYZE')} a
 			left join {$this->MAuth->getdb('ARANALYZEDATA')} b on a.ID=b.ID
 			left join {$this->MAuth->getdb('ARANALYZEAPPR')} c on a.ID=c.ID collate thai_cs_as
 			left join {$this->MAuth->getdb('JD_SETCOLOR')} d on a.MODEL=d.MODELCOD collate thai_cs_as
 				and a.BAAB=d.BAABCOD collate thai_cs_as
 				and a.COLOR=d.COLORCOD collate thai_cs_as
-			left join {$this->MAuth->getdb('STDVehiclesDown')} e on e.STDID=a.STDID and e.SUBID=a.SUBID and a.DWN between e.DOWNS and e.DOWNE
-			where a.ID=@anid
+			left join {$this->MAuth->getdb('STDVehiclesDown')} e on e.STDID=a.STDID 
+				and e.SUBID=a.SUBID 
+				and a.DWN between e.DOWNS and e.DOWNE
+				and ((a.STAT!='N' and a.PRICE between e.PRICE2 and e.PRICE3) or (a.STAT='N'))
+			where a.ID=@anid 
 		";
 		//echo $sql; exit;
 		$query = $this->connect_db->query($sql);
@@ -881,7 +898,10 @@ class Analyze extends MY_Controller {
 				,a.RESVAMT as M_RESVAMT,a.DWN as M_DWN
 				,a.INSURANCE_TYP,a.DWN_INSURANCE as M_DWN_INSURANCE,a.NOPAY
 				,a.STRNO,a.MODEL+' ('+a.BAAB+')' as MODEL,a.BAAB,a.COLOR
-				,case when a.STAT='N' then 'รถใหม่' else 'รถเก่า' end as STAT
+				,case when a.ISFinance = 'Y' then 'F' else a.STAT end STAT
+				,case when a.STAT='N' then 'รถใหม่' when a.STAT='O' and a.ISFinance!='Y' then 'รถมือสอง' else 'รถไฟแนนท์' end as STATDESC
+				,a.GCODE
+				,(select MANUYR from {$this->MAuth->getdb('INVTRAN')} sa where sa.STRNO=a.STRNO collate thai_cs_as) as MANUYR
 				,CONVERT(varchar(8),a.SDATE,112) as SDATE
 				,CONVERT(varchar(8),a.YDATE,112) as YDATE
 				,a.PRICE as M_PRICE
@@ -926,6 +946,9 @@ class Analyze extends MY_Controller {
 							$arrs[$key] = $this->Convertdate(2,$val); 
 							break;
 						case 'SDATE': 
+							$arrs[$key] = $this->Convertdate(2,$val); 
+							break;
+						case 'YDATE': 
 							$arrs[$key] = $this->Convertdate(2,$val); 
 							break;
 						case 'APPDT': 
@@ -1015,6 +1038,24 @@ class Analyze extends MY_Controller {
 		}
 		
 		$sql = "
+			declare @filePath varchar(250) = (
+				select filePath from {$this->MAuth->getdb('config_fileupload')}
+				where refno = '{$this->sess["db"]}' and ftpfolder like 'Senior/%/ANALYZE/Picfn' and ftpstatus = 'Y'
+			);
+			
+			select ID,Item,@filePath+ItemName+'.'+ItemType as filePath
+			from {$this->MAuth->getdb('ARANALYZECARPic')} 
+			where ID='{$ANID}'
+		";
+		$query = $this->connect_db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["carpic"][$row->Item] = $row->filePath."?d=".date('Ymd_his');
+			}
+		}
+		
+		$sql = "
 			select a.EMP,isnull('คุณ'+b.firstName+' '+b.lastName,a.EMP) as EMPNAME,a.EMPTEL
 				,a.MNG,isnull('คุณ'+c.firstName+' '+c.lastName,a.MNG) as MNGNAME,a.MNGTEL
 				,z.APPRBY as APPROVE,'คุณ'+d.firstName+' '+d.lastName as APPROVENAME,z.APPRTEL as APPROVETEL
@@ -1091,8 +1132,8 @@ class Analyze extends MY_Controller {
 						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
 								<div class='col-sm-4'><b>เลขตัวถัง :: </b> ".$arrs["STRNO"]."</div>
-								<div class='col-sm-4'><b>สถานะรถ :: </b> ".$arrs["STAT"]."</div>
-								<div class='col-sm-4'></div>
+								<div class='col-sm-4'><b>สถานะรถ :: </b> ".$arrs["STATDESC"]."</div>
+								<div class='col-sm-4'><b>ปีผลิต :: </b> ".$arrs["MANUYR"]."</div>
 							</td>
 						</tr>
 						<!-- tr style='background-color:#1fecff;' -->
@@ -1156,11 +1197,42 @@ class Analyze extends MY_Controller {
 									</tr>
 									<tr>
 										<td></td>
+										<td>
+											<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+												<span class='as-image-show' href='../public/images/noImg.jpg' topic='cuspic_picture'>
+													<img id='' class='as-show' src='".(!isset($arrs["filePath"][0])?"../public/images/noImg.jpg": ($arrs["filePath"][0] == "(none)" ? "../public/images/noImg.jpg":$arrs["filePath"][0]."?r=".rand()))."' style='max-height:120px;cursor:zoom-in;' topic='cuspic_picture' titles='ผู้เช่าซื้อ'>
+												</span>
+											</div>
+										</td>
+										<td>
+											<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+												<span class='as-image-show' href='../public/images/noImg.jpg' topic='cuspic_picture'>
+													<img id='' class='as-show' src='".(!isset($arrs["filePath"][1])?"../public/images/noImg.jpg": ($arrs["filePath"][1] == "(none)" ? "../public/images/noImg.jpg":$arrs["filePath"][1]."?r=".rand()))."' style='max-height:120px;cursor:zoom-in;' topic='cuspic_picture' titles='ผู้ค้ำประกัน 1'>
+												</span>
+											</div>
+										</td>
+										<td>
+											<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+												<span class='as-image-show' href='../public/images/noImg.jpg' topic='cuspic_picture'>
+													<img id='' class='as-show' src='".(!isset($arrs["filePath"][2])?"../public/images/noImg.jpg": ($arrs["filePath"][2] == "(none)" ? "../public/images/noImg.jpg":$arrs["filePath"][2]."?r=".rand()))."' style='max-height:120px;cursor:zoom-in;' topic='cuspic_picture' titles='ผู้ค้ำประกัน 2'>
+												</span>
+											</div>
+										</td>
+										<td>
+											<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+												<span class='as-image-show' href='../public/images/noImg.jpg' topic='cuspic_picture'>
+													<img id='' class='as-show' src='".(!isset($arrs["filePath"][3])?"../public/images/noImg.jpg": ($arrs["filePath"][3] == "(none)" ? "../public/images/noImg.jpg":$arrs["filePath"][3]."?r=".rand()))."' style='max-height:120px;cursor:zoom-in;' topic='cuspic_picture' titles='ผู้ยินยอม'>
+												</span>
+											</div>
+										</td>
+									</tr>
+									<!-- tr>
+										<td></td>
 										<td>".(!isset($arrs["filePath"][0])?"": ($arrs["filePath"][0] == "(none)" ? "(none)":"<image src='".$arrs["filePath"][0]."?r=".rand()."' style='width:180px;height:auto;'>"))."</td>
 										<td>".(!isset($arrs["filePath"][1])?"": ($arrs["filePath"][1] == "(none)" ? "(none)":"<image src='".$arrs["filePath"][1]."?r=".rand()."' style='width:180px;height:auto;'>"))."</td>
 										<td>".(!isset($arrs["filePath"][2])?"": ($arrs["filePath"][2] == "(none)" ? "(none)":"<image src='".$arrs["filePath"][2]."?r=".rand()."' style='width:180px;height:auto;'>"))."</td>
 										<td>".(!isset($arrs["filePath"][3])?"": ($arrs["filePath"][3] == "(none)" ? "(none)":"<image src='".$arrs["filePath"][3]."?r=".rand()."' style='width:180px;height:auto;'>"))."</td>
-									</tr>									
+									</tr -->
 									<tr>
 										<th style='text-align:right;padding-right:20px;'>ชื่อ-สกุล</th>
 										<td style='".$csscus0."'>".(isset($arrs["CUSNAME"][0]) ? $arrs["CUSNAME"][0]:'')."</td>
@@ -1345,6 +1417,142 @@ class Analyze extends MY_Controller {
 							</td>
 						</tr>
 						
+						<tr ".($arrs["STAT"] == "F" ? "":"hidden")." style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
+							<td class='text-red'>
+								<div class='col-sm-10 col-sm-offset-1'>
+									<h3>รูปประกอบ ขออนุมัติตั้งไฟแนนท์</h3>
+								</div>	
+							</td>
+						</tr>
+						<tr ".($arrs["STAT"] == "F" ? "":"hidden")." style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
+							<td>
+								<div class='col-sm-2 col-sm-offset-1'>
+									<div class='form-group'>
+										<!-- span class='text-red'>*</span -->
+										1 รูปรถด้านหน้า 
+										<div class='form-control' style='max-height:100px;height:100px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+												<img id='' class='as-show' src='".(isset($data["carpic"][1]) ? $data["carpic"][1]."?r=".rand() : "../public/images/noImg.jpg?r=".rand())."' 
+													style='max-height:90px;cursor:zoom-in;' topic='carpic_picture' titles='1 รูปรถด้านหน้า '>
+											</span>
+										</div>
+									</div>
+								</div>
+								<div class='col-sm-2'>
+									<div class='form-group'>
+										<!-- span class='text-red'>*</span -->
+										2 รูปรถด้านหลัง 
+										<div class='form-control' style='max-height:100px;height:100px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+												<img id='' class='as-show' src='".(isset($data["carpic"][2]) ? $data["carpic"][2]."?r=".rand() : "../public/images/noImg.jpg?r=".rand())."' 
+													style='max-height:90px;cursor:zoom-in;' topic='carpic_picture' titles='2 รูปรถด้านหลัง  '>
+											</span>
+										</div>
+									</div>
+								</div>
+								<div class='col-sm-2'>
+									<div class='form-group'>
+										<!-- span class='text-red'>*</span -->
+										3 รูปรถข้างซ้าย 
+										<div class='form-control' style='max-height:100px;height:100px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+												<img id='' class='as-show' src='".(isset($data["carpic"][3]) ? $data["carpic"][3]."?r=".rand() : "../public/images/noImg.jpg?r=".rand())."' 
+													style='max-height:90px;cursor:zoom-in;' topic='carpic_picture' titles='3 รูปรถข้างซ้าย '>
+											</span>
+										</div>
+									</div>
+								</div>
+								<div class='col-sm-2'>
+									<div class='form-group'>
+										<!-- span class='text-red'>*</span -->
+										4 รูปรถข้างขวา
+										<div class='form-control' style='max-height:100px;height:100px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+												<img id='' class='as-show' src='".(isset($data["carpic"][4]) ? $data["carpic"][4]."?r=".rand() : "../public/images/noImg.jpg?r=".rand())."' 
+													style='max-height:90px;cursor:zoom-in;' topic='carpic_picture' titles='4 รูปรถข้างขวา'>
+											</span>
+										</div>
+									</div>
+								</div>
+								<div class='col-sm-2'>
+									<div class='form-group'>
+										<!-- span class='text-red'>*</span -->
+										5 รูปรถคู่กับคนซื้อและคนค้ำ 
+										<div class='form-control' style='max-height:100px;height:100px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+												<img id='' class='as-show' src='".(isset($data["carpic"][5]) ? $data["carpic"][5]."?r=".rand() : "../public/images/noImg.jpg?r=".rand())."' 
+													style='max-height:90px;cursor:zoom-in;' topic='carpic_picture' titles='5 รูปรถคู่กับคนซื้อและคนค้ำ '>
+											</span>
+										</div>
+									</div>
+								</div>
+							</td>		
+						</tr>
+						<tr ".($arrs["STAT"] == "F" ? "":"hidden")." style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
+							<td>
+								<div class='col-sm-2 col-sm-offset-1'>
+									<div class='form-group'>
+										<!-- span class='text-red'>*</span -->
+										6 รูปเลขตัวถัง 
+										<div class='form-control' style='max-height:100px;height:100px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+												<img id='' class='as-show' src='".(isset($data["carpic"][6]) ? $data["carpic"][6]."?r=".rand() : "../public/images/noImg.jpg?r=".rand())."' 
+													style='max-height:90px;cursor:zoom-in;' topic='carpic_picture' titles='6 รูปเลขตัวถัง '>
+											</span>
+										</div>
+									</div>
+								</div>
+								<div class='col-sm-2'>
+									<div class='form-group'>
+										<!-- span class='text-red'>*</span -->
+										7 รูปเลขเครื่อง 
+										<div class='form-control' style='max-height:100px;height:100px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+												<img id='' class='as-show' src='".(isset($data["carpic"][7]) ? $data["carpic"][7]."?r=".rand() : "../public/images/noImg.jpg?r=".rand())."' 
+													style='max-height:90px;cursor:zoom-in;' topic='carpic_picture' titles='7 รูปเลขเครื่อง '>
+											</span>
+										</div>
+									</div>
+								</div>
+								<div class='col-sm-2'>
+									<div class='form-group'>
+										<!-- span class='text-red'>*</span -->
+										รูปประกอบ 1
+										<div class='form-control' style='max-height:100px;height:100px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+												<img id='' class='as-show' src='".(isset($data["carpic"][8]) ? $data["carpic"][8]."?r=".rand() : "../public/images/noImg.jpg?r=".rand())."'
+													style='max-height:90px;cursor:zoom-in;' topic='carpic_picture' titles='รูปประกอบ 1'>
+											</span>
+										</div>
+									</div>
+								</div>
+								<div class='col-sm-2'>
+									<div class='form-group'>
+										<!-- span class='text-red'>*</span -->
+										รูปประกอบ 2
+										<div class='form-control' style='max-height:100px;height:100px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+												<img id='' class='as-show' src='".(isset($data["carpic"][9]) ? $data["carpic"][9]."?r=".rand() : "../public/images/noImg.jpg?r=".rand())."' 
+													style='max-height:90px;cursor:zoom-in;' topic='carpic_picture' titles='รูปประกอบ 2'>
+											</span>
+										</div>
+									</div>
+								</div>
+								<div class='col-sm-2'>
+									<div class='form-group'>
+										<!-- span class='text-red'>*</span -->
+										รูปประกอบ 3
+										<div class='form-control' style='max-height:100px;height:100px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+												<img id='' class='as-show' src='".(isset($data["carpic"][10]) ? $data["carpic"][10]."?r=".rand() : "../public/images/noImg.jpg?r=".rand())."' 
+													style='max-height:90px;cursor:zoom-in;' topic='carpic_picture' titles='รูปประกอบ 3'>
+											</span>
+										</div>
+									</div>
+								</div>
+							</td>		
+						</tr>
+						
 						<!-- tr style='background-color:#1fecff;' -->
 						<tr style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>
 							<td>
@@ -1373,13 +1581,23 @@ class Analyze extends MY_Controller {
 								<div class='col-sm-6'>
 									<div class='form-group'>
 										ภาพประกอบ
-										".(!isset($arrs["filePathEVIDENCE"])?"": ($arrs["filePathEVIDENCE"] == "(none)" ? "(none)":"<image src='".$arrs["filePathEVIDENCE"]."' class='form-control' style='width:180px;height:auto;'>"))."								
+										<div class='form-control' style='max-height:160px;height:160px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='app_picture'>
+												<img id='' class='as-show' src='".(!isset($arrs["filePathEVIDENCE"])?"../public/images/noImg.jpg": ($arrs["filePathEVIDENCE"] == "(none)" ? "../public/images/noImg.jpg":$arrs["filePathEVIDENCE"]."?r=".rand()))."'
+													style='max-height:150px;cursor:zoom-in;' topic='app_picture' titles='ภาพประกอบ'>
+											</span>
+										</div>
 									</div>
 								</div>
 								<div class='col-sm-6'>
 									<div class='form-group'>
 										ภาพอนุมัติ
-										".(!isset($arrs["filePathAPPROVE_IMG"])?"": ($arrs["filePathAPPROVE_IMG"] == "(none)" ? "(none)":"<image src='".$arrs["filePathAPPROVE_IMG"]."' class='form-control' style='width:180px;height:auto;'>"))."
+										<div class='form-control' style='max-height:160px;height:160px;' align='center'>
+											<span class='as-image-show' href='../public/images/noImg.jpg' topic='app_picture'>
+												<img id='' class='as-show' src='".(!isset($arrs["filePathAPPROVE_IMG"])?"../public/images/noImg.jpg": ($arrs["filePathAPPROVE_IMG"] == "(none)" ? "../public/images/noImg.jpg":$arrs["filePathAPPROVE_IMG"]."?r=".rand()))."'
+													style='max-height:150px;cursor:zoom-in;' topic='app_picture' titles='ภาพอนุมัติ'>
+											</span>
+										</div>
 									</div>	
 								</div>
 							</td>
@@ -1587,7 +1805,15 @@ class Analyze extends MY_Controller {
 							</div>
 						</div>
 						
-						<div class='col-sm-2 col-sm-offset-2'>	
+						<div class='col-sm-2'>	
+							<div class='form-group'>
+								<!-- span class='text-red'>*</span -->
+								ปีผลิต
+								<input type='text' id='manuyr' class='form-control input-sm' value='' disabled>
+							</div>
+						</div>
+						
+						<div class='col-sm-2 '>	
 							<div class='form-group'>
 								คูปองส่วนลด
 								<input type='text' id='discount' class='form-control input-sm' value=''>
@@ -1691,6 +1917,7 @@ class Analyze extends MY_Controller {
 							</div>
 						</div>
 					</div>
+					
 					<div class='row'>	
 						<div class='col-sm-2 col-sm-offset-1'>	
 							<div class='form-group'>
@@ -1702,19 +1929,227 @@ class Analyze extends MY_Controller {
 								</select>
 							</div>
 						</div>
-						
-						<div id='toggleFinance' class='col-sm-2 col-sm-offset-6' hidden>	
+					</div>
+					
+					<div class='row'>		
+						<div id='toggleFinance' class='toggleFinance col-sm-2 col-sm-offset-1' hidden>	
 							<div class='form-group'>
 								<span class='text-red'>*</span>
-								รูปรถ								
+								1 รูปรถด้านหน้า
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+										<img id='carpic1_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='carpic_picture' titles='1 รูปรถด้านหน้า'>
+									</span>
+								</div>
 								<div class='input-group'>
-									<input type='text' id='carpic_picture' class='form-control input-sm' readonly='' 
+									<input type='text' id='carpic1_picture' class='form-control input-sm' readonly='' 
 										data-toggle='tooltip'
 										data-placement='top'
 										data-html='true'
 										data-original-title=''										
 										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
-									<span id='picture_form' data-tags='carpic_' class='jd-upload-an input-group-addon btn-default text-info'>
+									<span id='picture_form' data-tags='carpic1_' data-tags-name='รูปรถด้านหน้า' class='jd-upload-an input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+							</div>
+						</div>
+						
+						<div id='toggleFinance' class='toggleFinance col-sm-2' hidden>
+							<div class='form-group'>
+								<span class='text-red'>*</span>
+								2 รูปรถด้านหลัง
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+										<img id='carpic2_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='carpic_picture' titles='2 รูปรถด้านหลัง'>
+									</span>
+								</div>
+								<div class='input-group'>
+									<input type='text' id='carpic2_picture' class='form-control input-sm' readonly='' 
+										data-toggle='tooltip'
+										data-placement='top'
+										data-html='true'
+										data-original-title=''										
+										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' data-tags='carpic2_' data-tags-name='รูปรถด้านหลัง' class='jd-upload-an input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div id='toggleFinance' class='toggleFinance col-sm-2' hidden>	
+							<div class='form-group'>
+								<span class='text-red'>*</span>
+								3 รูปรถข้างซ้าย
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+										<img id='carpic3_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='carpic_picture' titles='3 รูปรถข้างซ้าย'>
+									</span>
+								</div>
+								<div class='input-group'>
+									<input type='text' id='carpic3_picture' class='form-control input-sm' readonly='' 
+										data-toggle='tooltip'
+										data-placement='top'
+										data-html='true'
+										data-original-title=''										
+										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' data-tags='carpic3_' data-tags-name='รูปรถข้างซ้าย' class='jd-upload-an input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div id='toggleFinance' class='toggleFinance col-sm-2' hidden>	
+							<div class='form-group'>
+								<span class='text-red'>*</span>
+								4 รูปรถข้างขวา
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+										<img id='carpic4_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='carpic_picture' titles='4 รูปรถข้างขวา'>
+									</span>
+								</div>
+								<div class='input-group'>
+									<input type='text' id='carpic4_picture' class='form-control input-sm' readonly='' 
+										data-toggle='tooltip'
+										data-placement='top'
+										data-html='true'
+										data-original-title=''										
+										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' data-tags='carpic4_' data-tags-name='รูปรถข้างขวา' class='jd-upload-an input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div id='toggleFinance' class='toggleFinance col-sm-2' hidden>	
+							<div class='form-group'>
+								<span class='text-red'>*</span>
+								5 รูปรถคู่กับคนซื้อและคนค้ำ
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+										<img id='carpic5_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='carpic_picture' titles='5 รูปรถคู่กับคนซื้อและคนค้ำ'>
+									</span>
+								</div>
+								<div class='input-group'>
+									<input type='text' id='carpic5_picture' class='form-control input-sm' readonly='' 
+										data-toggle='tooltip'
+										data-placement='top'
+										data-html='true'
+										data-original-title=''										
+										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' data-tags='carpic5_' data-tags-name='รูปรถคู่กับคนซื้อและคนค้ำ' class='jd-upload-an input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class='row'>		
+						<div id='toggleFinance' class='toggleFinance col-sm-2 col-sm-offset-1' hidden>	
+							<div class='form-group'>
+								<span class='text-red'>*</span>
+								6 รูปเลขตัวถัง
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+										<img id='carpic6_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='carpic_picture' titles='6 รูปเลขตัวถัง'>
+									</span>
+								</div>
+								<div class='input-group'>
+									<input type='text' id='carpic6_picture' class='form-control input-sm' readonly='' 
+										data-toggle='tooltip'
+										data-placement='top'
+										data-html='true'
+										data-original-title=''										
+										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' data-tags='carpic6_' data-tags-name='รูปเลขตัวถัง' class='jd-upload-an input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div id='toggleFinance' class='toggleFinance col-sm-2' hidden>	
+							<div class='form-group'>
+								<span class='text-red'>*</span>
+								7 รูปเลขเครื่อง
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+										<img id='carpic7_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='carpic_picture' titles='7 รูปเลขเครื่อง'>
+									</span>
+								</div>
+								<div class='input-group'>
+									<input type='text' id='carpic7_picture' class='form-control input-sm' readonly='' 
+										data-toggle='tooltip'
+										data-placement='top'
+										data-html='true'
+										data-original-title=''										
+										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' data-tags='carpic7_' data-tags-name='รูปเลขเครื่อง' class='jd-upload-an input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div id='toggleFinance' class='toggleFinance col-sm-2' hidden>	
+							<div class='form-group'>
+								<!-- span class='text-red'>*</span -->
+								รูปประกอบ 1
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+										<img id='carpic8_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='carpic_picture' titles='รูปประกอบ 1'>
+									</span>
+								</div>
+								<div class='input-group'>
+									<input type='text' id='carpic8_picture' class='form-control input-sm' readonly='' 
+										data-toggle='tooltip'
+										data-placement='top'
+										data-html='true'
+										data-original-title=''										
+										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' data-tags='carpic8_' data-tags-name='รูปประกอบ_1' class='jd-upload-an input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div id='toggleFinance' class='toggleFinance col-sm-2' hidden>	
+							<div class='form-group'>
+								<!-- span class='text-red'>*</span -->
+								รูปประกอบ 2
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+										<img id='carpic9_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='carpic_picture' titles='รูปประกอบ 2'>
+									</span>
+								</div>
+								<div class='input-group'>
+									<input type='text' id='carpic9_picture' class='form-control input-sm' readonly='' 
+										data-toggle='tooltip'
+										data-placement='top'
+										data-html='true'
+										data-original-title=''										
+										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' data-tags='carpic9_' data-tags-name='รูปประกอบ_2' class='jd-upload-an input-group-addon btn-default text-info'>
+										<span class='glyphicon glyphicon-picture'></span>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div id='toggleFinance' class='toggleFinance col-sm-2' hidden>	
+							<div class='form-group'>
+								<!-- span class='text-red'>*</span -->
+								รูปประกอบ 3
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='carpic_picture'>
+										<img id='carpic10_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='carpic_picture' titles='รูปประกอบ 3'>
+									</span>
+								</div>
+								<div class='input-group'>
+									<input type='text' id='carpic10_picture' class='form-control input-sm' readonly='' 
+										data-toggle='tooltip'
+										data-placement='top'
+										data-html='true'
+										data-original-title=''										
+										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
+									<span id='picture_form' data-tags='carpic10_' data-tags-name='รูปประกอบ_3' class='jd-upload-an input-group-addon btn-default text-info'>
 										<span class='glyphicon glyphicon-picture'></span>
 									</span>
 								</div>
@@ -1845,71 +2280,82 @@ class Analyze extends MY_Controller {
 							</div>
 						</div>
 					</div>
+					
 					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-1'>	
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								เบอร์ติดต่อที่ทำงาน 
-								<input type='text' id='careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+						<div class='col-sm-8 col-sm-offset-1'>
+							<div class='row'>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										เบอร์ติดต่อที่ทำงาน 
+										<input type='text' id='careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										รายได้/เดือน  
+										<input type='number' id='income' class='form-control input-sm jzAllowNumber' maxlength=13>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
+										<input type='text' id='hostName' class='form-control input-sm' maxlength=100>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										เลข ปชช.(เจ้าบ้าน)
+										<input type='text' id='hostIDNo' class='form-control input-sm' maxlength=13>
+									</div>
+								</div>
 							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								รายได้/เดือน  
-								<input type='number' id='income' class='form-control input-sm jzAllowNumber' maxlength=13>
+							<div class='row'>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										เบอร์ติดต่อที่ (เจ้าบ้าน)
+										<input type='text' id='hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										ความสัมพันธ์กับเจ้าบ้าน
+										<input type='text' id='hostRelation' class='form-control input-sm' maxlength=30>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										ความสัมพันธ์กับพนักงาน
+										<select id='empRelation' data-jd-tags='' class='select2_empRelation form-control input-sm select2'></select>	
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										บุคคลอ้างอิง
+										<input type='text' id='reference' class='form-control input-sm' maxlength=100>
+									</div>
+								</div>
 							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
-								<input type='text' id='hostName' class='form-control input-sm' maxlength=100>
+							<div class='row'>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										เบอร์บุคคลอ้างอิง
+										<input type='text' id='referencetel' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
 							</div>
-						</div>
-						<div class='col-sm-3'>
+						</div>	
+						<div class='col-sm-2'>
 							<div class='form-group'>
-								เลข ปชช.(เจ้าบ้าน)
-								<input type='text' id='hostIDNo' class='form-control input-sm' maxlength=13>
-							</div>
-						</div>
-					</div>
-					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-1'>	
-							<div class='form-group'>
-								เบอร์ติดต่อที่ (เจ้าบ้าน)
-								<input type='text' id='hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								ความสัมพันธ์กับเจ้าบ้าน
-								<input type='text' id='hostRelation' class='form-control input-sm' maxlength=30>
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								ความสัมพันธ์กับพนักงาน
-								<select id='empRelation' data-jd-tags='' class='select2_empRelation form-control input-sm select2'></select>	
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								บุคคลอ้างอิง
-								<input type='text' id='reference' class='form-control input-sm' maxlength=100>
-							</div>
-						</div>
-						
-						<div class='col-sm-2 col-sm-offset-1'>
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								เบอร์บุคคลอ้างอิง
-								<input type='text' id='referencetel' class='form-control input-sm jzAllowNumber' maxlength=10>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								แนบรูป
+								รูปลูกค้า
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='picture'>
+										<img id='picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='picture' titles='รูปลูกค้า'>
+									</span>
+								</div>
 								<div class='input-group'>
 									<input type='text' id='picture' class='form-control input-sm' readonly='' 
 										data-toggle='tooltip'
@@ -1917,12 +2363,12 @@ class Analyze extends MY_Controller {
 										data-html='true'
 										data-original-title=''										
 										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
-									<span id='picture_form' data-tags='' class='jd-upload-an input-group-addon btn-default text-info'>
+									<span id='picture_form' data-tags='' data-tags-name='รูปลูกค้า' class='jd-upload-an input-group-addon btn-default text-info'>
 										<span class='glyphicon glyphicon-picture'></span>
 									</span>
 								</div>
 							</div>
-						</div>
+						</div>	
 					</div>
 				</div>
 			</div>
@@ -2050,78 +2496,90 @@ class Analyze extends MY_Controller {
 							</div>
 						</div>
 					</div>
+					
 					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-1'>	
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								เบอร์ติดต่อที่ทำงาน
-								<input type='text' id='is1_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+						<div class='col-sm-8 col-sm-offset-1'>
+							<div class='row'>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										เบอร์ติดต่อที่ทำงาน
+										<input type='text' id='is1_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										รายได้/เดือน
+										<input type='number' id='is1_income' class='form-control input-sm jzAllowNumber' maxlength=13>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
+										<input type='text' id='is1_hostName' class='form-control input-sm' maxlength=100>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										เลข ปชช.(เจ้าบ้าน)
+										<input type='text' id='is1_hostIDNo' class='form-control input-sm' maxlength=13>
+									</div>
+								</div>
 							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								รายได้/เดือน
-								<input type='number' id='is1_income' class='form-control input-sm jzAllowNumber' maxlength=13>
+							<div class='row'>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										เบอร์ติดต่อที่ (เจ้าบ้าน)
+										<input type='text' id='is1_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										ความสัมพันธ์กับเจ้าบ้าน
+										<input type='text' id='is1_hostRelation' class='form-control input-sm' maxlength=30>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										ความสัมพันธ์กับพนักงาน
+										<select id='is1_empRelation' data-jd-tags='is1_' class='select2_empRelation form-control input-sm select2'></select>	
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										บุคคลอ้างอิง
+										<input type='text' id='is1_reference' class='form-control input-sm' maxlength=100>
+									</div>
+								</div>
 							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
-								<input type='text' id='is1_hostName' class='form-control input-sm' maxlength=100>
+							<div class='row'>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										เบอร์บุคคลอ้างอิง
+										<input type='text' id='is1_referencetel' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										ความสัมพันธ์กับผู้เช่าซื้อ
+										<input type='text' id='is1_cusRelation' class='form-control input-sm' maxlength=30>
+									</div>
+								</div>
 							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								เลข ปชช.(เจ้าบ้าน)
-								<input type='text' id='is1_hostIDNo' class='form-control input-sm' maxlength=13>
-							</div>
-						</div>
-					</div>
-					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-1'>	
-							<div class='form-group'>
-								เบอร์ติดต่อที่ (เจ้าบ้าน)
-								<input type='text' id='is1_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								ความสัมพันธ์กับเจ้าบ้าน
-								<input type='text' id='is1_hostRelation' class='form-control input-sm' maxlength=30>
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								ความสัมพันธ์กับพนักงาน
-								<select id='is1_empRelation' data-jd-tags='is1_' class='select2_empRelation form-control input-sm select2'></select>	
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								บุคคลอ้างอิง
-								<input type='text' id='is1_reference' class='form-control input-sm' maxlength=100>
-							</div>
-						</div>
-						
-						<div class='col-sm-2 col-sm-offset-1'>
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								เบอร์บุคคลอ้างอิง
-								<input type='text' id='is1_referencetel' class='form-control input-sm jzAllowNumber' maxlength=10>
-							</div>
-						</div>
+						</div>	
 						<div class='col-sm-2'>
 							<div class='form-group'>
-								<span class='text-red'>*</span>
-								ความสัมพันธ์กับผู้เช่าซื้อ
-								<input type='text' id='is1_cusRelation' class='form-control input-sm' maxlength=30>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								แนบรูป
+								รูปคนค้ำที่ 1
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='is1_picture'>
+										<img id='is1_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='is1_picture' titles='รูปคนค้ำที่ 1'>
+									</span>
+								</div>
+								
 								<div class='input-group'>
 									<input type='text' id='is1_picture' class='form-control input-sm' readonly='' 
 										data-toggle='tooltip'
@@ -2129,7 +2587,7 @@ class Analyze extends MY_Controller {
 										data-html='true'
 										data-original-title=''	
 										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
-									<span id='is1_picture_form' data-tags='is1_' class='jd-upload-an input-group-addon btn-default text-info'>
+									<span id='is1_picture_form' data-tags='is1_' data-tags-name='รูปคนค้ำที่_1'  class='jd-upload-an input-group-addon btn-default text-info'>
 										<span class='glyphicon glyphicon-picture'></span>
 									</span>
 								</div>
@@ -2260,78 +2718,90 @@ class Analyze extends MY_Controller {
 							</div>
 						</div>
 					</div>
+					
 					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-1'>	
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								เบอร์ติดต่อที่ทำงาน
-								<input type='text' id='is2_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+						<div class='col-sm-8 col-sm-offset-1'>
+							<div class='row'>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										เบอร์ติดต่อที่ทำงาน
+										<input type='text' id='is2_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										รายได้/เดือน
+										<input type='number' id='is2_income' class='form-control input-sm jzAllowNumber' maxlength=13>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
+										<input type='text' id='is2_hostName' class='form-control input-sm' maxlength=100>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										เลข ปชช.(เจ้าบ้าน)
+										<input type='text' id='is2_hostIDNo' class='form-control input-sm' maxlength=13>
+									</div>
+								</div>
 							</div>
-						</div>
+							<div class='row'>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										เบอร์ติดต่อที่ (เจ้าบ้าน)
+										<input type='text' id='is2_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										ความสัมพันธ์กับเจ้าบ้าน
+										<input type='text' id='is2_hostRelation' class='form-control input-sm' maxlength=30>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										ความสัมพันธ์กับพนักงาน
+										<select id='is2_empRelation' data-jd-tags='is2_' class='select2_empRelation form-control input-sm select2'></select>	
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										บุคคลอ้างอิง
+										<input type='text' id='is2_reference' class='form-control input-sm' maxlength=100>
+									</div>
+								</div>
+							</div>
+							<div class='row'>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										เบอร์บุคคลอ้างอิง
+										<input type='text' id='is2_referencetel' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										ความสัมพันธ์กับผู้เช่าซื้อ
+										<input type='text' id='is2_cusRelation' class='form-control input-sm' maxlength=30>
+									</div>
+								</div>
+							</div>
+						</div>	
 						<div class='col-sm-2'>	
 							<div class='form-group'>
-								<span class='text-red'>*</span>
-								รายได้/เดือน
-								<input type='number' id='is2_income' class='form-control input-sm jzAllowNumber' maxlength=13>
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
-								<input type='text' id='is2_hostName' class='form-control input-sm' maxlength=100>
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								เลข ปชช.(เจ้าบ้าน)
-								<input type='text' id='is2_hostIDNo' class='form-control input-sm' maxlength=13>
-							</div>
-						</div>
-					</div>
-					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-1'>	
-							<div class='form-group'>
-								เบอร์ติดต่อที่ (เจ้าบ้าน)
-								<input type='text' id='is2_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								ความสัมพันธ์กับเจ้าบ้าน
-								<input type='text' id='is2_hostRelation' class='form-control input-sm' maxlength=30>
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								ความสัมพันธ์กับพนักงาน
-								<select id='is2_empRelation' data-jd-tags='is2_' class='select2_empRelation form-control input-sm select2'></select>	
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								บุคคลอ้างอิง
-								<input type='text' id='is2_reference' class='form-control input-sm' maxlength=100>
-							</div>
-						</div>
-						
-						<div class='col-sm-2 col-sm-offset-1'>
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								เบอร์บุคคลอ้างอิง
-								<input type='text' id='is2_referencetel' class='form-control input-sm jzAllowNumber' maxlength=10>
-							</div>
-						</div>
-						<div class='col-sm-2'>
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								ความสัมพันธ์กับผู้เช่าซื้อ
-								<input type='text' id='is2_cusRelation' class='form-control input-sm' maxlength=30>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								แนบรูป
+								รูปคนค้ำที่ 2
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='is2_picture'>
+										<img id='is2_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='is2_picture' titles='รูปคนค้ำที่ 2'>
+									</span>
+								</div>
+								
 								<div class='input-group'>
 									<input type='text' id='is2_picture' class='form-control input-sm' readonly=''
 										data-toggle='tooltip'
@@ -2339,7 +2809,7 @@ class Analyze extends MY_Controller {
 										data-html='true'
 										data-original-title=''	
 										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
-									<span id='is2_picture_form' data-tags='is2_' class='jd-upload-an input-group-addon btn-default text-info'>
+									<span id='is2_picture_form' data-tags='is2_' data-tags-name='รูปคนค้ำที่_2' class='jd-upload-an input-group-addon btn-default text-info'>
 										<span class='glyphicon glyphicon-picture'></span>
 									</span>
 								</div>
@@ -2471,78 +2941,89 @@ class Analyze extends MY_Controller {
 							</div>
 						</div>
 					</div>
+					
 					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-1'>	
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								เบอร์ติดต่อที่ทำงาน
-								<input type='text' id='is3_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+						<div class='col-sm-8 col-sm-offset-1'>
+							<div class='row'>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										เบอร์ติดต่อที่ทำงาน
+										<input type='text' id='is3_careerPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										รายได้/เดือน
+										<input type='number' id='is3_income' class='form-control input-sm jzAllowNumber' maxlength=13>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
+										<input type='text' id='is3_hostName' class='form-control input-sm' maxlength=100>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										เลข ปชช.(เจ้าบ้าน)
+										<input type='text' id='is3_hostIDNo' class='form-control input-sm' maxlength=13>
+									</div>
+								</div>
+							</div>
+							<div class='row'>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										เบอร์ติดต่อที่ (เจ้าบ้าน)
+										<input type='text' id='is3_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>	
+									<div class='form-group'>
+										ความสัมพันธ์กับเจ้าบ้าน
+										<input type='text' id='is3_hostRelation' class='form-control input-sm' maxlength=30>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										ความสัมพันธ์กับพนักงาน
+										<select id='is3_empRelation' data-jd-tags='is3_' class='select2_empRelation form-control input-sm select2'></select>	
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										บุคคลอ้างอิง
+										<input type='text' id='is3_reference' class='form-control input-sm' maxlength=100>
+									</div>							
+								</div>
+							</div>
+							<div class='row'>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										เบอร์บุคคลอ้างอิง
+										<input type='text' id='is3_referencetel' class='form-control input-sm jzAllowNumber' maxlength=10>
+									</div>
+								</div>
+								<div class='col-sm-3'>
+									<div class='form-group'>
+										<span class='text-red'>*</span>
+										ความสัมพันธ์กับผู้เช่าซื้อ
+										<input type='text' id='is3_cusRelation' class='form-control input-sm' maxlength=30>
+									</div>
+								</div>
 							</div>
 						</div>
 						<div class='col-sm-2'>	
 							<div class='form-group'>
-								<span class='text-red'>*</span>
-								รายได้/เดือน
-								<input type='number' id='is3_income' class='form-control input-sm jzAllowNumber' maxlength=13>
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								ชื่อ-สกุล (เจ้าบ้านตาม ทบ.บ้าน)
-								<input type='text' id='is3_hostName' class='form-control input-sm' maxlength=100>
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								เลข ปชช.(เจ้าบ้าน)
-								<input type='text' id='is3_hostIDNo' class='form-control input-sm' maxlength=13>
-							</div>
-						</div>
-					</div>
-					<div class='row'>
-						<div class='col-sm-2 col-sm-offset-1'>	
-							<div class='form-group'>
-								เบอร์ติดต่อที่ (เจ้าบ้าน)
-								<input type='text' id='is3_hostPhone' class='form-control input-sm jzAllowNumber' maxlength=10>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								ความสัมพันธ์กับเจ้าบ้าน
-								<input type='text' id='is3_hostRelation' class='form-control input-sm' maxlength=30>
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								ความสัมพันธ์กับพนักงาน
-								<select id='is3_empRelation' data-jd-tags='is3_' class='select2_empRelation form-control input-sm select2'></select>	
-							</div>
-						</div>
-						<div class='col-sm-3'>
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								บุคคลอ้างอิง
-								<input type='text' id='is3_reference' class='form-control input-sm' maxlength=100>
-							</div>							
-						</div>
-						
-						<div class='col-sm-2 col-sm-offset-1'>
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								เบอร์บุคคลอ้างอิง
-								<input type='text' id='is3_referencetel' class='form-control input-sm jzAllowNumber' maxlength=10>
-							</div>
-						</div>
-						<div class='col-sm-2'>
-							<div class='form-group'>
-								<span class='text-red'>*</span>
-								ความสัมพันธ์กับผู้เช่าซื้อ
-								<input type='text' id='is3_cusRelation' class='form-control input-sm' maxlength=30>
-							</div>
-						</div>
-						<div class='col-sm-2'>	
-							<div class='form-group'>
-								แนบรูป
+								รูปผู้ยินยอม
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='is3_picture'>
+										<img id='is3_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='is3_picture' titles='รูปผู้ยินยอม'>
+									</span>
+								</div>
 								<div class='input-group'>
 									<input type='text' id='is3_picture' class='form-control input-sm' readonly=''
 										data-toggle='tooltip'
@@ -2550,7 +3031,7 @@ class Analyze extends MY_Controller {
 										data-html='true'
 										data-original-title=''	
 										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
-									<span id='is3_picture_form' data-tags='is3_' class='jd-upload-an input-group-addon btn-default text-info'>
+									<span id='is3_picture_form' data-tags='is3_' data-tags-name='รูปคนค้ำที่_3' class='jd-upload-an input-group-addon btn-default text-info'>
 										<span class='glyphicon glyphicon-picture'></span>
 									</span>
 								</div>
@@ -2606,6 +3087,11 @@ class Analyze extends MY_Controller {
 						<div class='col-sm-2 col-sm-offset-1'>	
 							<div class='form-group'>
 								รูปประกอบ
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='analyze_picture'>
+										<img id='analyze_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='analyze_picture' titles='รูปประกอบ'>
+									</span>
+								</div>
 								<div class='input-group'>
 									<input type='text' id='analyze_picture' class='form-control input-sm' readonly=''
 										data-toggle='tooltip'
@@ -2613,7 +3099,7 @@ class Analyze extends MY_Controller {
 										data-html='true'
 										data-original-title=''	
 										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
-									<span id='analyze_picture_form' data-tags='analyze_' class='jd-upload-an input-group-addon btn-default text-info'>
+									<span id='analyze_picture_form' data-tags='analyze_' data-tags-name='รูปประกอบ' class='jd-upload-an input-group-addon btn-default text-info'>
 										<span class='glyphicon glyphicon-picture'></span>
 									</span>
 								</div>
@@ -2621,7 +3107,12 @@ class Analyze extends MY_Controller {
 						</div>
 						<div class='col-sm-2'>
 							<div class='form-group'>
-								แนบรูปรายการขออนุมัติ
+								รูปรายการขออนุมัติ
+								<div class='form-control' style='max-height:130px;height:130px;' align='center'>
+									<span class='as-image-show' href='../public/images/noImg.jpg' topic='approve_picture'>
+										<img id='approve_picture_show' class='as-show' src='../public/images/noImg.jpg' style='max-height:120px;cursor:zoom-in;' topic='approve_picture' titles='รูปรายการขออนุมัติ'>
+									</span>
+								</div>
 								<div class='input-group'>
 									<input type='text' id='approve_picture' class='form-control input-sm' readonly=''
 										data-toggle='tooltip'
@@ -2629,7 +3120,7 @@ class Analyze extends MY_Controller {
 										data-html='true'
 										data-original-title=''	
 										style='background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); cursor: default;'>
-									<span id='approve_picture_form' data-tags='approve_' class='jd-upload-an input-group-addon btn-default text-info'>
+									<span id='approve_picture_form' data-tags='approve_' data-tags-name='รูปรายการขออนุมัติ' class='jd-upload-an input-group-addon btn-default text-info'>
 										<span class='glyphicon glyphicon-picture'></span>
 									</span>
 								</div>
@@ -3094,7 +3585,7 @@ class Analyze extends MY_Controller {
 				,a.RESPAY - (isnull(a.SMPAY,0) + isnull(a.SMCHQ,0)) as BALANCE
 				,isnull(b.ACTICOD,'') as ACTICOD
 				,(select '('+aa.ACTICOD+') '+aa.ACTIDES from {$this->MAuth->getdb('SETACTI')} aa where aa.ACTICOD=b.ACTICOD collate thai_cs_as) as ACTIDES
-				,a.PRICE,b.STDID,b.SUBID,b.SHCID
+				,a.PRICE,b.STDID,b.SUBID,b.SHCID,b.MANUYR
 			from {$this->MAuth->getdb('ARRESV')} a
 			left join {$this->MAuth->getdb('ARRESVOTH')} b on a.RESVNO=b.RESVNO collate thai_cs_as
 			where a.RESVNO='{$resvno}'
@@ -3116,6 +3607,7 @@ class Analyze extends MY_Controller {
 				$data["ACTIDES"] = $row->ACTIDES;
 				$data["GCODE"] 	 = $row->GCODE;
 				$data["GDESC"] 	 = $row->GDESC;
+				$data["MANUYR"]  = $row->MANUYR;
 				
 				$data["error"] 	 = false;
 				
@@ -3137,7 +3629,7 @@ class Analyze extends MY_Controller {
 		$strno = $_POST["strno"];
 		
 		$sql = "
-			select STRNO,MODEL,BAAB,COLOR,STAT,GCODE from {$this->MAuth->getdb('INVTRAN')}
+			select STRNO,MODEL,BAAB,COLOR,STAT,GCODE,MANUYR from {$this->MAuth->getdb('INVTRAN')}
 			where STRNO='".$strno."' 
 		";
 		$query = $this->connect_db->query($sql);
@@ -3151,6 +3643,7 @@ class Analyze extends MY_Controller {
 				$data["COLOR"] = $row->COLOR;
 				$data["STAT"]  = $row->STAT;
 				$data["GCODE"] = $row->GCODE;
+				$data["MANUYR"] = $row->MANUYR;
 				$data["error"] = false;
 			}
 		}else{
@@ -3345,115 +3838,208 @@ class Analyze extends MY_Controller {
 	*/
 		
 	function save_picture($picture){
-		//print_r($picture); exit;
-		//$LOCAT = @$_POST["locat"];
+		
 		foreach($picture as $key => $arrs){
-			if($arrs["name"] != ""){
-				if(isset($arrs["anid"])){
-					$ex = explode(".",$arrs["name"]);
-					if($ex[0] == "ภาพประกอบ"){
-						$arrs["target"] = "EVIDENCE";
-						$picture_name = md5($arrs["anid"])."_1.".$ex[sizeof($ex)-1];
-					}else if($ex[0] == "ภาพอนุมัติ"){
-						$arrs["target"] = "APPROVE_IMG";
-						$picture_name = md5($arrs["anid"])."_2.".$ex[sizeof($ex)-1];
-					}else if($ex[0] == "รูปรถ"){
-						$arrs["target"] = "CAR_IMG";
-						$picture_name = md5($arrs["anid"])."_3.".$ex[sizeof($ex)-1];
-					}
-				}else{
-					$picture_name = $arrs["name"];					
-				}
-				//echo $picture_name ; exit;
+			$ex = ($key == 6 ? "":explode(".",$arrs["name"]));
+			switch($key){				
+				case 4: 
+					$sql = "
+						select ftpserver, ftpuser, ftppass, ftpfolder, filePath
+						from {$this->MAuth->getdb('config_fileupload')}
+						where refno='".$this->sess["db"]."' and ftpstatus='Y' and ftpfolder like 'Senior/%/ANALYZE'
+					";
+					$arrs["target"] = "EVIDENCE";
+					$img_name = md5($arrs["anid"])."_1.".$ex[sizeof($ex)-1];
+					break;
+				case 5: 
+					$sql = "
+						select ftpserver, ftpuser, ftppass, ftpfolder, filePath
+						from {$this->MAuth->getdb('config_fileupload')}
+						where refno='".$this->sess["db"]."' and ftpstatus='Y' and ftpfolder like 'Senior/%/ANALYZE'
+					";
+					$arrs["target"] = "APPROVE_IMG";
+					$img_name = md5($arrs["anid"])."_2.".$ex[sizeof($ex)-1];
+					break;
+				case 6: 
+					//print_r($arrs); exit;
+					
+					$size = sizeof($arrs["tmp"]);
+					
+					for($i=0;$i<$size;$i++){
+						if($arrs["tmp"][$i][0] != ""){
+							$ex = explode(".",$arrs["tmp"][$i][0]);
+							$sql = "
+								select ftpserver, ftpuser, ftppass, ftpfolder, filePath
+								from {$this->MAuth->getdb('config_fileupload')}
+								where refno='".$this->sess["db"]."' and ftpstatus='Y' and ftpfolder like 'Senior/%/ANALYZE/Picfn'
+							";
+							$img_name = md5($arrs["anid"])."_".($i+1).".".$ex[sizeof($ex)-1];
+							
+							$query = $this->connect_db->query($sql);
 				
-				$cond = "";
-				if($arrs["desc"] == "person"){
-					$cond .= " and ftpfolder like 'Senior/%/CUSTOMERS/Picture'";
-				}else{
-					$cond .= " and ftpfolder like 'Senior/%/ANALYZE'";
-				}
-				
-				$sql = "
-					select ftpserver, ftpuser, ftppass, ftpfolder, filePath
-					from {$this->MAuth->getdb('config_fileupload')}
-					where refno='".$this->sess["db"]."' and ftpstatus='Y' ".$cond."
-				";
-				//echo $sql; exit;
-				$query = $this->connect_db->query($sql);
-				
-				$ftp_server 	= "";
-				$ftp_user_name 	= "";
-				$ftp_user_pass 	= "";
-				
-				$arrsResult =  array();
-				if($query->row()){
-					foreach($query->result() as $row){
-						foreach($row as $key => $val){
-							$arrsResult[$key] = $val;
+							$ftpAuthentication =  array();
+							if($query->row()){
+								foreach($query->result() as $row){
+									foreach($row as $key => $val){
+										$ftpAuthentication[$key] = $val;
+									}
+								}
+							}
+							
+							$img  = $arrs["tmp"][$i][1];
+							$img  = str_replace('data:image/tmp;base64,', '', $img);
+							$img  = str_replace(' ', '+', $img);
+							$img_data = base64_decode($img);
+							
+							
+							if($this->uploadFTP($ftpAuthentication,$img_name,$img_data)){
+								$sql = "
+									if not exists (
+										select * from {$this->MAuth->getdb('ARANALYZECARPic')}
+										where ID='{$arrs["anid"]}' and Item='".($i+1)."'
+									)
+									begin 
+										insert into {$this->MAuth->getdb('ARANALYZECARPic')} (ID,Item,ItemName,ItemType,INSBY,INSDT)
+										select '{$arrs["anid"]}','".($i+1)."','".md5($arrs["anid"])."_".($i+1)."','".$ex[sizeof($ex)-1]."'
+											,'".$this->sess["IDNo"]."',GETDATE();
+									end else begin
+										update {$this->MAuth->getdb('ARANALYZECARPic')}
+										set ItemName='".md5($arrs["anid"])."_".($i+1)."'
+											,ItemType='".$ex[sizeof($ex)-1]."'
+											,INSBY='".$this->sess["IDNo"]."'
+											,INSDT=getdate()
+										where ID='{$arrs["anid"]}' and Item='".($i+1)."'
+									end
+								";
+								
+								if(!$this->db->query($sql)){
+									$error = $this->db->error();
+									$this->db->trans_rollback();
+									
+									$errorMsg = $error["code"]."<br>".str_replace("[Microsoft][ODBC Driver 13 for SQL Server][SQL Server]","",$error["message"]);
+									$errorMsg.= "<br>";
+									echo $errorMsg; exit;
+									
+									$this->response["error"] = true;
+									$this->response["errorMessage"] = $errorMsg;
+									echo json_encode($this->response); exit;
+								}
+							}
 						}
 					}
-				}
-				
-				$ftp_server 	= $arrsResult['ftpserver'];
-				$ftp_user_name 	= $arrsResult['ftpuser'];
-				$ftp_user_pass 	= $arrsResult['ftppass'];
-				
-				$conn_id 		= ftp_connect($ftp_server);		
-				$login_result 	= ftp_login($conn_id, $ftp_user_name, $ftp_user_pass); 
-				ftp_chdir($conn_id,$arrsResult['ftpfolder']);
-				
-				if ((!$conn_id) || (!$login_result)) {
-					$response["error"] = true;
-					$response["msg"][] = "FTP connection has failed!<br/>Attempted to connect to server for user {$ftp_user_name}";
-					echo json_encode($response); exit;
-				}
-				
-				$img  = $arrs["tmp"];
-				$img  = str_replace('data:image/tmp;base64,', '', $img);
-				$img  = str_replace(' ', '+', $img);
-				$data = base64_decode($img);
-				//if($arrs["desc"] == "person"){ echo $img; exit; }
-				
-				
-				// Initializing new session 
-				$ch = curl_init("http://".$ftp_server.'/'.$arrsResult['ftpfolder'].'/'.$picture_name); 
-				// Request method is set 
-				curl_setopt($ch, CURLOPT_NOBODY, true); 
-				// Executing cURL session 
-				curl_exec($ch); 
-				// Getting information about HTTP Code 
-				$retcode = curl_getinfo($ch, CURLINFO_HTTP_CODE); 				  
-				// Testing for 200
-				if($retcode == 200) {
-					ftp_delete($conn_id, '/'.$arrsResult['ftpfolder'].'/'.$picture_name);
-				}
-				
-				if(file_put_contents('ftp://'.$ftp_user_name.':'.$ftp_user_pass.'@'.$ftp_server.'/'.$arrsResult['ftpfolder'].'/'.$picture_name, $data)){
-					if ($arrs["desc"] == "carpic"){
-						$sql = "
-							update {$this->MAuth->getdb('ARANALYZE')}
-							set ISCarImg='{$picture_name}'
-							where ID='{$arrs["anid"]}'
-						";
-					}else if(isset($arrs["anid"])){
-						$sql = "
-							update {$this->MAuth->getdb('ARANALYZEDATA')}
-							set {$arrs["target"]}='{$picture_name}'
-							where ID='{$arrs["anid"]}'
-						";
-					}else{
-						$sql = "
-							update {$this->MAuth->getdb('CUSTMAST')} 
-							set PICT1='{$picture_name}'
-							where CUSCOD='{$arrs["cuscod"]}'
-						";
+					break;
+				default: 
+					$sql = "
+						select ftpserver, ftpuser, ftppass, ftpfolder, filePath
+						from {$this->MAuth->getdb('config_fileupload')}
+						where refno='".$this->sess["db"]."' and ftpstatus='Y' and ftpfolder like 'Senior/%/CUSTOMERS/Picture'
+					";
+					$img_name = $arrs["name"]; 
+					break;
+			}
+			
+			
+			if(isset($arrs["name"])){
+				if($arrs["name"] != "" and $key != 6){
+					$query = $this->connect_db->query($sql);
+					
+					$ftpAuthentication =  array();
+					if($query->row()){
+						foreach($query->result() as $row){
+							foreach($row as $key => $val){
+								$ftpAuthentication[$key] = $val;
+							}
+						}
 					}
-					$this->connect_db->query($sql);					
+					
+					$img  = $arrs["tmp"];
+					$img  = str_replace('data:image/tmp;base64,', '', $img);
+					$img  = str_replace(' ', '+', $img);
+					$img_data = base64_decode($img);
+					
+					
+					if($this->uploadFTP($ftpAuthentication,$img_name,$img_data)){
+						if(isset($arrs["anid"])){
+							$sql = "
+								update {$this->MAuth->getdb('ARANALYZEDATA')}
+								set {$arrs["target"]}='{$img_name}'
+								where ID='{$arrs["anid"]}'
+							";
+						}else{
+							$sql = "
+								update {$this->MAuth->getdb('CUSTMAST')} 
+								set PICT1='{$img_name}'
+								where CUSCOD='{$arrs["cuscod"]}'
+							";
+						}
+						//echo $sql; exit;
+						$this->connect_db->query($sql);		
+					}
 				}
-				
-				ftp_close($conn_id);			
 			}
 		}
+	}
+	
+	function uploadFTP($ftpAuthentication,$img_name,$img_data){
+		$ftp_server 	= $ftpAuthentication['ftpserver'];
+		$ftp_user_name 	= $ftpAuthentication['ftpuser'];
+		$ftp_user_pass 	= $ftpAuthentication['ftppass'];
+		$ftp_folder 	= $ftpAuthentication['ftpfolder'];
+		
+		$conn_id 		= ftp_connect($ftp_server);		
+		$login_result 	= ftp_login($conn_id, $ftp_user_name, $ftp_user_pass); 
+		ftp_chdir($conn_id,$ftp_folder);
+		
+		if ((!$conn_id) || (!$login_result)) {
+			$response["error"] = true;
+			$response["msg"][] = "FTP connection has failed!<br/>Attempted to connect to server for user {$ftp_user_name}";
+			echo json_encode($response); exit;
+		}
+		
+		// Initializing new session 
+		$ch = curl_init("http://".$ftp_server.'/'.$ftp_folder.'/'.$img_name); 
+		// Request method is set 
+		curl_setopt($ch, CURLOPT_NOBODY, true); 
+		// Executing cURL session 
+		curl_exec($ch); 
+		// Getting information about HTTP Code 
+		$retcode = curl_getinfo($ch, CURLINFO_HTTP_CODE); 				  
+		// Testing for 200
+		if($retcode == 200) {
+			ftp_delete($conn_id, '/'.$ftp_folder.'/'.$img_name);
+		}
+		
+		if(file_put_contents('ftp://'.$ftp_user_name.':'.$ftp_user_pass.'@'.$ftp_server.'/'.$ftp_folder.'/'.$img_name, $img_data)){
+			/*
+			if ($arrs["desc"] == "carpic"){
+				$sql = "
+					update {$this->MAuth->getdb('ARANALYZE')}
+					set ISCarImg='{$img_name}'
+					where ID='{$arrs["anid"]}'
+				";
+			}else if(isset($arrs["anid"])){
+				$sql = "
+					update {$this->MAuth->getdb('ARANALYZEDATA')}
+					set {$arrs["target"]}='{$img_name}'
+					where ID='{$arrs["anid"]}'
+				";
+			}else{
+				$sql = "
+					update {$this->MAuth->getdb('CUSTMAST')} 
+					set PICT1='{$img_name}'
+					where CUSCOD='{$arrs["cuscod"]}'
+				";
+			}
+			//echo $sql; exit;
+			$this->connect_db->query($sql);					
+			*/
+			
+			return true;
+			
+			ftp_close($conn_id);
+		}
+		
+		ftp_close($conn_id);	
 	}
 	
 	function save(){
@@ -3473,6 +4059,7 @@ class Analyze extends MY_Controller {
 		$arrs["baab"] 		= "'".$_POST["baab"]."'";
 		$arrs["color"] 		= "'".$_POST["color"]."'";
 		$arrs["stat"] 		= "'".$_POST["stat"]."'";
+		$arrs["gcode"] 		= $_POST["gcode"] == "" ? "null":"'".$_POST["gcode"]."'";
 		$arrs["sdateold"] 	= ($_POST["sdateold"] == "" ? "NULL":"'".$this->Convertdate(1,$_POST["sdateold"])."'");
 		$arrs["ydate"] 		= ($_POST["ydate"] == "" ? "NULL":"'".$this->Convertdate(1,$_POST["ydate"])."'");
 		$arrs["price"] 		= "'".$_POST["price"]."'";
@@ -3630,11 +4217,12 @@ class Analyze extends MY_Controller {
 		$picture[5]["desc"] = "approve";
 		
 		$picture[6]["tmp"] 	= (isset($_POST["carpic"])?$_POST["carpic"]:'');
-		$picture[6]["name"] = (isset($_POST["carpic_name"])?$_POST["carpic_name"]:'');
+		//$picture[6]["name"] = (isset($_POST["carpic_name"])?$_POST["carpic_name"]:'');
 		$picture[6]["cuscod"] = "";
 		$picture[6]["anid"] = "";
 		$picture[6]["desc"] = "carpic";
 		
+		//print_r($_POST["carpic"]); exit;
 		//exit;
 		// ทดสอบ upload รูป
 		//$this->save_picture($picture); exit;
@@ -3680,13 +4268,13 @@ class Analyze extends MY_Controller {
 					insert into {$this->MAuth->getdb('ARANALYZE')} (
 						ID,LOCAT,ACTICOD,RESVNO,RESVAMT,DWN,INSURANCE_TYP,DWN_INSURANCE,INTEREST_RT,NOPAY,STRNO,MODEL
 						,BAAB,COLOR,STAT,SDATE,YDATE,PRICE,PRICE_ADD,PRICE_DIS,ANSTAT,STDID,SUBID,SHCID,INSBY,INSDT
-						,CALTRANS,CALREGIST,CALACT,CALCOUPON,ISFinance
+						,CALTRANS,CALREGIST,CALACT,CALCOUPON,ISFinance,GCODE
 					) 
 					select @ANID,".$arrs["locat"].",".$arrs["acticod"].",".$arrs["resvno"].",".$arrs["resvAmt"].",".$arrs["dwnAmt"].",".$arrs["insuranceType"]."
 						,".$arrs["insuranceAmt"].",".$arrs["interatert"].",".$arrs["nopay"].",".$arrs["strno"].",".$arrs["model"]."
 						,".$arrs["baab"].",".$arrs["color"].",".$arrs["stat"].",".$arrs["sdateold"].",".$arrs["ydate"]."
 						,".$arrs["price"].",".$arrs["price_add"].",".$arrs["price_dis"].",'I',".$arrs["stdid"].",".$arrs["subid"].",".$arrs["shcid"].",'".$this->sess["IDNo"]."',getdate()
-						,".$arrs["trans"].",".$arrs["regist"].",".$arrs["act"].",".$arrs["coupon"].",".$arrs["is_finance"].";
+						,".$arrs["trans"].",".$arrs["regist"].",".$arrs["act"].",".$arrs["coupon"].",".$arrs["is_finance"].",".$arrs["gcode"].";
 					
 					insert into {$this->MAuth->getdb('ARANALYZEREF')} (
 						ID,CUSCOD,CUSTYPE,CUSSTAT,CUSBABY,ADDRNO,ADDRDOCNO,SOCAILSECURITY,CAREER,CAREERADDR,
@@ -3837,7 +4425,7 @@ class Analyze extends MY_Controller {
 					declare @ANID_CHECK varchar(12) = isnull((
 						select ID from {$this->MAuth->getdb('ARANALYZE')} 
 						where RESVNO!='' and RESVNO=isnull(".$arrs["resvno"].",'') collate thai_cs_as 
-							and ANSTAT != 'C' and ID != @ANID collate thai_cs_as 
+							and ANSTAT not in ('C','N') and ID != @ANID collate thai_cs_as 
 					),'');
 					if(@ANID_CHECK != '')
 					begin
@@ -3858,6 +4446,7 @@ class Analyze extends MY_Controller {
 							,BAAB=".$arrs["baab"]."
 							,COLOR=".$arrs["color"]."
 							,STAT=".$arrs["stat"]."
+							,GCODE=".$arrs["gcode"]."
 							,SDATE=".$arrs["sdateold"]."
 							,YDATE=".$arrs["ydate"]."
 							,STDID=".$arrs["stdid"]."
@@ -4535,24 +5124,50 @@ class Analyze extends MY_Controller {
 		}
 		
 		// ตรวจสอบตั้งไฟแนนท์ ต้องแนบรูปรถด้วย
-		$carpic_picture = (isset($_POST["carpic"])?$_POST["carpic"]:'');
+		//$carpic_picture = (isset($_POST["carpic"])?$_POST["carpic"]:'');
 		//echo $carpic_picture; exit;
-		if($_POST["is_finance"] == "Y" && $carpic_picture == ""){
+		if($_POST["is_finance"] == "Y"){
+			$ARFNCase = array(
+				"1 รูปรถด้านหน้า",
+				"2 รูปรถด้านหลัง",
+				"3 รูปรถข้างซ้าย",
+				"4 รูปรถข้างขวา",
+				"5 รูปรถคู่กับคนซื้อและคนค้ำ",
+				"6 รูปเลขตัวถัง",
+				"7 รูปเลขเครื่อง"
+			);
 			if($_POST["anid"] == "Auto Genarate"){
-				$response["error"] = true; 
-				$response["msg"][] = "ตั้งไฟแนนท์ ต้องแนบรูปรถด้วยครับ";
+				//กรณีไฟแนนท์ ตรวจสอบรูป
+				//$size = sizeof($_POST["carpic"]);
+				for($i=0;$i < 6;$i++){
+					if($_POST["carpic"][$i][0] == ""){						
+						$response["error"] = true; 
+						$response["msg"][] = "ตั้งไฟแนนท์ ต้องแนบรูปลำดับที่ ".($ARFNCase[$i])." ด้วยครับ";
+					}
+				}
 			}else{
-				$sql = "
-					select ISCarImg from {$this->MAuth->getdb('ARANALYZE')}
-					where ID='{$_POST["anid"]}'
-				";
-				$query = $this->connect_db->query($sql);
-				
-				if($query->row()){
-					foreach($query->result() as $row){
-						if($row->ISCarImg == ""){
-							$response["error"] = true; 
-							$response["msg"][] = "ตั้งไฟแนนท์ ต้องแนบรูปรถด้วยครับ";
+				for($i=0;$i <= 6;$i++){
+					if($_POST["carpic"][$i][0] == ""){						
+						$sql = "
+							if exists (
+								select * from {$this->MAuth->getdb('ARANALYZECARPic')}
+								where ID='{$_POST["anid"]}' and Item='".($i+1)."'
+							) 
+							begin
+								select 'yes' as result
+							end else begin 
+								select 'no' as result
+							end
+						";
+						$query = $this->connect_db->query($sql);
+						
+						if($query->row()){
+							foreach($query->result() as $row){
+								if($row->result == "no"){
+									$response["error"] = true; 
+									$response["msg"][] = "ตั้งไฟแนนท์ ต้องแนบรูปลำดับที่ ".($ARFNCase[$i])." ด้วยครับ";
+								}
+							}
 						}
 					}
 				}
@@ -4581,9 +5196,15 @@ class Analyze extends MY_Controller {
 					update {$this->MAuth->getdb('ARANALYZE')} 
 					set ANSTAT='P'
 					where ID='{$anid}'
-				end 
-				else 
-				begin
+				end else if exists (
+					select * from {$this->MAuth->getdb('ARANALYZE')} 
+					where ID='{$anid}' and ANSTAT='FA' and isnull(CONTNO,'')=''
+				)
+				begin 
+					update {$this->MAuth->getdb('ARANALYZE')} 
+					set ANSTAT='P'
+					where ID='{$anid}'
+				end else begin
 					rollback tran upd;
 					insert into #transaction select 'y' as error,'' as id,'ผิดพลาด ส่งคำร้องไม่สำเร็จ เนื่องจากสถานะใบวิเคราะห์สินเชื่อ เลขที่ ".$anid." ไม่ได้อยู่ในสถานะสร้างคำร้อง' as msg,@locat;
 					return;
@@ -4669,6 +5290,69 @@ class Analyze extends MY_Controller {
 		echo json_encode($response); exit;
 	}
 	
+	function CANTSend_Analyze(){
+		$anid = $_POST["ANID"];
+		
+		$sql = "
+			if object_id('tempdb..#transaction') is not null drop table #transaction;
+			create table #transaction (error varchar(1),id varchar(12),msg varchar(max),locat varchar(5));
+			
+			declare @locat varchar(5) = (select LOCAT from {$this->MAuth->getdb('ARANALYZE')} where ID='{$anid}');
+			
+			begin tran upd
+			begin try
+				if exists (
+					select * from {$this->MAuth->getdb('ARANALYZE')} 
+					where ID='{$anid}' and ANSTAT in ('I','P')
+				)
+				begin
+					update {$this->MAuth->getdb('ARANALYZE')} 
+					set ANSTAT='FA'
+					where ID='{$anid}'
+				end 
+				else 
+				begin
+					rollback tran upd;
+					insert into #transaction select 'y' as error,'' as id,'ผิดพลาด ไม่สามารถทำรายการได้ เนื่องจากสถานะใบวิเคราะห์สินเชื่อ เลขที่ ".$anid." ไม่ได้อยู่ในสถานะสร้างคำร้อง' as msg,@locat;
+					return;
+				end
+				
+				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
+				values ('".$this->sess["IDNo"]."','SYS04::ทำรายการไม่ส่งฝ่ายวิเคราะห์ เลขที่ ".$anid."','".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+				
+				insert into #transaction select 'n' as error,'".$anid."' as id,'เลขที่ใบวิเคราะห์สินเชื่อ ".$anid."<br>พร้อมบันทึกขายแล้ว' as msg,@locat;
+				commit tran upd;
+			end try
+			begin catch
+				rollback tran upd;
+				insert into #transaction select 'y' as error,'' as id,ERROR_MESSAGE() as msg,@locat;
+			end catch
+		";
+		$this->connect_db->query($sql);
+		
+		$sql 	= "select * from #transaction";   
+		$query 	= $this->connect_db->query($sql);
+		
+		$stat 	= true;
+		$msg  	= '';
+		$ARANALYZE_ID  = '';
+		
+		if($query->row()) {
+			foreach ($query->result() as $row) {
+				$stat = ($row->error == "y" ? true : false);
+				$ARANALYZE_ID = $row->id;
+				$msg = $row->msg;
+			}
+		}
+		
+		$response = array();
+		$response['error'] = $stat;
+		$response['msg'][] = $msg;
+		$response['ARANALYZE_ID'] = $ARANALYZE_ID;
+		
+		echo json_encode($response); exit;
+	}
+	
 	function Edit_Analyze(){
 		$anid = $_POST["ANID"]; 
 		
@@ -4692,15 +5376,24 @@ class Analyze extends MY_Controller {
 			begin try
 				if exists (
 					select * from {$this->MAuth->getdb('ARANALYZE')} 
-					where ID=@ANID and ANSTAT in ('I','P')
+					where ID=@ANID and ANSTAT in ('I','P','FA') and isnull(CONTNO,'')=''
 				)
 				begin
 					update {$this->MAuth->getdb('ARANALYZE')} 
 					set ANSTAT='I'
 					where ID=@ANID
-				end 
-				else 
-				begin
+				end else if exists (
+					select * from {$this->MAuth->getdb('ARANALYZE')} 
+					where ID=@ANID and ANSTAT in ('FA') and isnull(CONTNO,'')!=''
+				)
+				begin 
+					rollback tran upd;
+					insert into #transaction select 'y' as error
+						,'' as id
+						,'ผิดพลาด ดึงคำร้องไม่สำเร็จ <br>เนื่องจากสถานะใบวิเคราะห์สินเชื่อ เลขที่ '+@ANID+' <br>ถูกดึงไปคีย์ขายแล้ว' as msg
+						,'','';
+					return;
+				end else begin
 					rollback tran upd;
 					insert into #transaction select 'y' as error
 						,'' as id
@@ -4809,7 +5502,7 @@ class Analyze extends MY_Controller {
 				set @APPROVE = (
 					select b.APPROVE from {$this->MAuth->getdb('ARANALYZE')} a
 					left join {$this->MAuth->getdb('STDVehiclesDown')} b on a.STDID=b.STDID and a.SUBID=b.SUBID 
-						and a.PRICE between b.PRICES and b.PRICEE
+						and a.PRICE between b.PRICE2 and b.PRICE3
 						and a.DWN between b.DOWNS and b.DOWNE
 					where ID='{$anid}' and b.ACTIVE='yes'
 				);
@@ -4819,7 +5512,7 @@ class Analyze extends MY_Controller {
 				set @APPROVE = (
 					select b.APPROVE from {$this->MAuth->getdb('ARANALYZE')} a
 					left join {$this->MAuth->getdb('STDVehiclesDown')} b on a.STDID=b.STDID and a.SUBID=b.SUBID 	
-						and a.PRICE between b.PRICES and b.PRICEE
+						and a.PRICE between b.PRICE2 and b.PRICE3
 						and a.NOPAY between b.DOWNS and b.DOWNE
 					where ID='{$anid}' and b.ACTIVE='yes'
 				);
@@ -4832,6 +5525,7 @@ class Analyze extends MY_Controller {
 				,a.CALTRANS,a.CALREGIST,a.CALACT,a.CALCOUPON
 				,a.NOPAY
 				,a.RESVNO,a.RESVAMT,a.STRNO,a.MODEL,a.BAAB,a.COLOR,a.STAT,a.GCODE
+				,(select top 1 MANUYR from {$this->MAuth->getdb('INVTRAN')} sa where sa.STRNO=a.STRNO collate thai_cs_as) as MANUYR
 				,a.SDATE,a.YDATE,a.ISFinance
 				,a.STDID,a.SUBID,a.SHCID
 				,a.PRICE_ADD,a.PRICE,a.INTEREST_RT
@@ -4845,7 +5539,7 @@ class Analyze extends MY_Controller {
 				,c.APPRTEL as APPROVETEL
 				,isnull(@filePath+b.EVIDENCE,'(none)') as EVIDENCE
 				,isnull(@filePath+b.APPROVE_IMG,'(none)') as APPROVE_IMG
-				,isnull(@filePath+a.ISCarImg,'(none)') as CAR_IMG
+				-- ,isnull(@filePath+a.ISCarImg,'(none)') as CAR_IMG
 				,b.BRCOMMENT as COMMENT
 				,@APPROVE as DOWNAPPR
 			from {$this->MAuth->getdb('ARANALYZE')} a
@@ -4872,6 +5566,24 @@ class Analyze extends MY_Controller {
 						default: $data[$key] = $val; break;
 					}
 				}
+			}
+		}
+		
+		$sql = "
+			declare @filePath varchar(250) = (
+				select filePath from {$this->MAuth->getdb('config_fileupload')}
+				where refno = '{$this->sess["db"]}' and ftpfolder like 'Senior/%/ANALYZE/Picfn' and ftpstatus = 'Y'
+			);
+			
+			select ID,Item,@filePath+ItemName+'.'+ItemType as filePath
+			from {$this->MAuth->getdb('ARANALYZECARPic')} 
+			where ID='{$anid}'
+		";
+		$query = $this->connect_db->query($sql);
+		
+		if($query->row()){
+			foreach($query->result() as $row){
+				$data["carpic"][$row->Item] = $row->filePath."?d=".date('Ymd_his');
 			}
 		}
 		
@@ -5099,7 +5811,7 @@ class Analyze extends MY_Controller {
 				) else (
 					select INSURANCE from {$this->MAuth->getdb('STDVehiclesDown')} sa
 					where sa.STDID=a.STDID and sa.SUBID=a.SUBID 
-						and a.price between sa.PRICES and sa.PRICEE
+						and a.price between sa.PRICE2 and sa.PRICE3
 						and a.DWN between sa.DOWNS and sa.DOWNE
 				) end as INSURANCE	
 			from {$this->MAuth->getdb('ARANALYZE')} a
@@ -5387,8 +6099,26 @@ class Analyze extends MY_Controller {
 	function picture_receipt(){
 		$file 		= $_FILES["myfile"];
 		$tags 		= $_POST["tags"];
+		$tagsName	= $_POST["tagsName"];
 		
+		//echo $tagsName; exit;
 		$fileName   = explode(".",$_FILES["myfile"]["name"]);
+		switch($tags){
+			case 'carpic1_':
+			case 'carpic2_':
+			case 'carpic3_':
+			case 'carpic4_':
+			case 'carpic5_':
+			case 'carpic6_':
+			case 'carpic7_':
+			case 'carpic8_':
+			case 'carpic9_':
+			case 'carpic10_':
+			case 'analyze_':
+			case 'approve_': $fileName = $tagsName.'.'.$fileName[sizeof($fileName)-1]; break;
+			default: $fileName = $_POST["IDNO"].'.'.$fileName[sizeof($fileName)-1]; break;
+		}
+		/*
 		if($_POST["tags"] == "analyze_"){
 			$fileName = "ภาพประกอบ".'.'.$fileName[sizeof($fileName)-1];
 		}else if($_POST["tags"] == "approve_"){
@@ -5398,6 +6128,7 @@ class Analyze extends MY_Controller {
 		}else{
 			$fileName = $_POST["IDNO"].'.'.$fileName[sizeof($fileName)-1];			
 		}
+		*/
 		
 		$targetFile  = $file["tmp_name"];		
 		$size		 = GetimageSize($targetFile);
@@ -5506,6 +6237,34 @@ class Analyze extends MY_Controller {
 			$response["error"] = true;
 			$response["msg"] = "ตั้งไฟแนนท์โปรดระบุเลขตัวถังด้วยครับ";
 			echo json_encode($response); exit;
+		}
+		
+		if($data["ISF"] == "Y"){
+			$sql = "
+				declare @MANUYR int = (
+					select MANUYR from {$this->MAuth->getdb('INVTRAN')} 
+					where STRNO='".$data["STRNO"]."'
+				);
+				
+				select @MANUYR as MANUYR,* from {$this->MAuth->getdb('STDFNCONTPAY')} 
+				where @MANUYR between isnull(FYEAR,1901) and isnull(TYEAR,YEAR(getdate()))
+			";
+			$query = $this->db->query($sql);
+			
+			if($query->row()){
+				foreach($query->result() as $row){
+					if($data["nopay"] < $row->FNOPAY){
+						$response["error"] = true;
+						$response["msg"] = "ตั้งไฟแนนท์ จำนวนงวดต่ำกว่าสแตนดาร์ดครับ<br>รถปี {$row->MANUYR} จำนวนงวดตามสแตนดาร์ด {$row->FNOPAY} ถึง {$row->TNOPAY} งวดครับ";
+						echo json_encode($response); exit;
+					}
+					if($data["nopay"] > $row->TNOPAY){
+						$response["error"] = true;
+						$response["msg"] = "ตั้งไฟแนนท์ จำนวนงวดสูงกว่าสแตนดาร์ดครับ<br>รถปี {$row->MANUYR} จำนวนงวดตามสแตนดาร์ด {$row->FNOPAY} ถึง {$row->TNOPAY} งวดครับ";
+						echo json_encode($response); exit;
+					}
+				}
+			}
 		}
 		
 		if($data["ISF"] == "Y" and $data["STAT"] == "O"){ $data["STAT"] = "F"; }

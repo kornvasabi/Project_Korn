@@ -133,10 +133,12 @@ class MDATA extends CI_Model {
 						declare @SELLFOR varchar(1) = '".$data["SELLFOR"]."';
 							
 						select STDID,SUBID,'' as SHCID
-							,case when '".$data["ACTICOD"]."' in ('37','38') then PRICES else PRICE end PRICE
+							,case when '".$data["ACTICOD"]."' in ('37','38') then PRICE3 else PRICE2 end PRICE
 							,0 as PRICE_ADD
 							,@PRICE_SPECIAL as PRICE_SPC
 							,null as Borrowed
+							,NULL as SDATE
+							,NULL as YDATE
 						from {$this->MAuth->getdb('STDVehiclesPRICE')}
 						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
 					";
@@ -152,16 +154,33 @@ class MDATA extends CI_Model {
 							where STRNO=@STRNO
 								and '".$data["DT"]."' between StartDT and isnull(EndDT,'".$data["DT"]."')
 						);
+						
 						/* มีสัญญาเดิมอยู่หรือไม่ */
-						declare @CONTNO varchar(12) = '".(isset($data["CONTNO"])?$data["CONTNO"]:'')."';
+						declare @CONTNO varchar(12);
+						declare @daysy int ;
+						declare @sdate datetime;
+						declare @ydate datetime;
+						
+						select @CONTNO=CONTNO 
+							,@daysy=datediff(D,SDATE,YDATE)
+							,@sdate=SDATE
+							,@ydate=YDATE
+						from (
+							select ROW_NUMBER() over(partition by STRNO order by STRNO,sdate desc) r,* 
+							from {$this->MAuth->getdb('ARHOLD')} 
+							where STRNO=@STRNO
+						) as data
+						where r=1
+						
 						/* ตรวจสอบสัญญาว่าเป็นการขายรถเก่า/ใหม่ หากเป็นรถใหม่ จะมีสแตนกดาร์ดเพิ่มราคารถ */
 						declare @STAT varchar(1)  = (case when @CONTNO = '' 
 							then 'O' else (select STAT from {$this->MAuth->getdb('HINVTRAN')} where CONTNO=@CONTNO) end);
+						
 						/*สแตนดาร์ดเพิ่มราคารถ*/
 						declare @price_add decimal(18,2) = (
 							select price_add from {$this->MAuth->getdb('config_addpricesale')}
 							where getdate() between event_st and isnull(event_ed,getdate()) 
-								and '".(isset($data["CONTNO"])?$data["daysy"]:'')."' between in_sday and in_eday
+								and @daysy between in_sday and in_eday
 						);
 						
 						select '{$row->STDID}' as STDID
@@ -174,6 +193,8 @@ class MDATA extends CI_Model {
 								else 0 end as PRICE_ADD
 							,@PRICE_SPECIAL as PRICE_SPC
 							,null as Borrowed
+							,convert(varchar(8),@sdate,112) as SDATE
+							,convert(varchar(8),@ydate,112) as YDATE
 						from {$this->MAuth->getdb('STDSHCAR')} a
 						left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
 						left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
@@ -184,6 +205,7 @@ class MDATA extends CI_Model {
 							and (case when c.COLOR = 'ALL' then '".$row->COLOR."' else c.COLOR end) = '".$row->COLOR."' collate thai_cs_as 
 							and (case when d.LOCAT = 'ALL' then '".$row->LOCAT."' else d.LOCAT end) = '".$row->LOCAT."' collate thai_cs_as
 							and a.GCODE='".$data["GCODE"]."'
+							and a.MANUYR=(select MANUYR from {$this->MAuth->getdb('INVTRAN')} where STRNO=@STRNO )
 					";
 				}else if($row->STAT == "F"){
 					// เช็คข้อมูล ว่าก่อนปิดบัญชีค้างชำระกี่งวด
@@ -201,6 +223,8 @@ class MDATA extends CI_Model {
 							,0 as PRICE_ADD
 							,null as PRICE_SPC
 							,b.PRICE as Borrowed --วงเงิน
+							,NULL as SDATE
+							,NULL as YDATE
 						from {$this->MAuth->getdb('STDFNCAR')} a
 						left join {$this->MAuth->getdb('STDFNCARDetails')} b on a.FNCID=b.FNCID
 						left join {$this->MAuth->getdb('STDFNCARColors')} c on a.FNCID=c.FNCID
@@ -237,6 +261,9 @@ class MDATA extends CI_Model {
 							$response["price"] = $row2->PRICE;
 							$response["price_add"] = $row2->PRICE_ADD;
 							$response["price_spc"] = $row2->PRICE_SPC;
+							
+							$response["sdate"] = $this->Convertdate(2,$row2->SDATE);
+							$response["ydate"] = $this->Convertdate(2,$row2->YDATE);
 						}
 					}
 				}else{
@@ -277,7 +304,7 @@ class MDATA extends CI_Model {
 			$sql = "
 				select INSURANCEPAY from {$this->MAuth->getdb('STDVehiclesDown')} 
 				where STDID='{$data["STDID"]}' and SUBID='{$data["SUBID"]}' 
-					and {$response["price"]} between PRICES and PRICEE
+					and {$response["price"]} between PRICE2 and PRICE3
 					and {$data["dwnAmt"]} between DOWNS and DOWNE
 					and ACTIVE='yes'
 			";			
@@ -285,7 +312,7 @@ class MDATA extends CI_Model {
 			$sql = "
 				select INSURANCEPAY from {$this->MAuth->getdb('STDVehiclesDown')} 
 				where STDID='".$data["STDID"]."' and SUBID='".$data["SUBID"]."' 
-					and '".$data["PRICE"]."' between PRICES and isnull(PRICEE,'".$data["PRICE"]."')
+					and '".$data["PRICE"]."' between PRICE2 and isnull(PRICE3,'".$data["PRICE"]."')
 					and '".$data["nopay"]."' between DOWNS and isnull(DOWNE,'".$data["dwnAmt"]."')
 					and ACTIVE='yes'	
 			";			
@@ -311,14 +338,14 @@ class MDATA extends CI_Model {
 				select * from {$this->MAuth->getdb('STDVehiclesDown')} a
 				where STDID='".$data["STDID"]."' 
 					and SUBID='".$data["SUBID"]."' and '".$data["dwnAmt"]."' between DOWNS and isnull(DOWNE,'".$data["dwnAmt"]."')
-					and '".$data["PRICE"]."' between PRICES and isnull(PRICEE,'".$data["PRICE"]."')
+					and '".$data["PRICE"]."' between PRICE2 and isnull(PRICE3,'".$data["PRICE"]."')
 					and ACTIVE='yes'
 			";
 		}else if($data["STAT"] == "O"){
 			$sql = "
 				select * from {$this->MAuth->getdb('STDVehiclesDown')} a
 				where STDID='".$data["STDID"]."' and SUBID='".$data["SUBID"]."' 
-					and '".$data["PRICE"]."' between PRICES and isnull(PRICEE,'".$data["PRICE"]."')
+					and '".$data["PRICE"]."' between PRICE2 and isnull(PRICE3,'".$data["PRICE"]."')
 					and '".$data["dwnAmt"]."' between DOWNS and isnull(DOWNE,'".$data["dwnAmt"]."')
 					and ACTIVE='yes'
 			";
@@ -326,7 +353,7 @@ class MDATA extends CI_Model {
 			$sql = "
 				select * from {$this->MAuth->getdb('STDVehiclesDown')} a
 				where STDID='".$data["STDID"]."' and SUBID='".$data["SUBID"]."' 
-					and '".$data["PRICE"]."' between PRICES and isnull(PRICEE,'".$data["PRICE"]."')
+					and '".$data["PRICE"]."' between PRICE2 and isnull(PRICE3,'".$data["PRICE"]."')
 					and '".$data["nopay"]."' between DOWNS and isnull(DOWNE,'".$data["dwnAmt"]."')
 					and ACTIVE='yes'
 			";
@@ -381,7 +408,7 @@ class MDATA extends CI_Model {
 				,isnull(c.MREVENU,0) as MREVENU
 				,g.ACTICOD
 				,'('+g.ACTICOD+') '+h.ACTIDES collate thai_cs_as as ACTIDES
-				,case when i.price is null then a.PRICE else i.price end as price
+				,case when i.PRICE2 is null then a.PRICE else i.PRICE2 end as price
 				,isnull(cast(g.STDID as varchar),'') as STDID
 				,isnull(cast(g.SUBID as varchar),'') as SUBID
 				,isnull(cast(g.SHCID as varchar),'') as SHCID
@@ -475,9 +502,12 @@ class MDATA extends CI_Model {
 							declare @SELLFOR varchar(1) = '".$data["SELLFOR"]."';
 							
 							select STDID,SUBID,'' as SHCID
-								,case when '".$data["ACTICOD"]."' in ('37','38') then PRICES else PRICE end PRICE
+								,case when '".$data["ACTICOD"]."' in ('37','38') then PRICE3 else PRICE2 end PRICE
 								,0 as PRICE_ADD 
 								,@PRICE_SPECIAL as PRICE_SPC
+								
+								,NULL as SDATE
+								,NULL as YDATE
 							from {$this->MAuth->getdb('STDVehiclesPRICE')}
 							where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
 						";
@@ -489,7 +519,23 @@ class MDATA extends CI_Model {
 								where STRNO='".$data["STRNO"]."' and '".$data["DT"]."' between StartDT and isnull(EndDT,'".$data["DT"]."')
 							);
 							/* มีสัญญาเดิมอยู่หรือไม่ */
-							declare @CONTNO varchar(12) = '".$data["CONTNO"]."';
+							-- declare @CONTNO varchar(12) = '".$data["CONTNO"]."';
+							declare @CONTNO varchar(12);
+							declare @daysy int ;
+							declare @sdate datetime;
+							declare @ydate datetime;
+							
+							select @CONTNO=CONTNO 
+								,@daysy=datediff(D,SDATE,YDATE)
+								,@sdate=SDATE
+								,@ydate=YDATE
+							from (
+								select ROW_NUMBER() over(partition by STRNO order by STRNO,sdate desc) r,* 
+								from {$this->MAuth->getdb('ARHOLD')} 
+								where STRNO='".$data["STRNO"]."'
+							) as data
+							where r=1
+							
 							/* ตรวจสอบสัญญาว่าเป็นการขายรถเก่า/ใหม่ หากเป็นรถใหม่ จะมีสแตนกดาร์ดเพิ่มราคารถ */
 							declare @STAT varchar(1)  = (
 								case when @CONTNO = '' 
@@ -505,7 +551,7 @@ class MDATA extends CI_Model {
 							declare @price_add decimal(18,2) = (
 								select price_add from {$this->MAuth->getdb('config_addpricesale')}
 								where getdate() between event_st and isnull(event_ed,getdate()) 
-									and '".$data["daysy"]."' between in_sday and in_eday
+									and @daysy between in_sday and in_eday
 							);
 							
 							select '{$row->STDID}' as STDID
@@ -517,6 +563,9 @@ class MDATA extends CI_Model {
 									then (case when @price_add is null then 0 else @price_add end) 
 									else 0 end as PRICE_ADD
 								,@PRICE_SPECIAL as PRICE_SPC
+								
+								,convert(varchar(8),@sdate,112) as SDATE
+								,convert(varchar(8),@ydate,112) as YDATE
 							from {$this->MAuth->getdb('STDSHCAR')} a
 							left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
 							left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
@@ -527,6 +576,7 @@ class MDATA extends CI_Model {
 								and (case when c.COLOR = 'ALL' then '".$row->COLOR."' else c.COLOR end) = '".$row->COLOR."' collate thai_cs_as 
 								and (case when d.LOCAT = 'ALL' then '".$row->LOCAT."' else d.LOCAT end) = '".$row->LOCAT."' collate thai_cs_as
 								and a.GCODE='".$data["GCODE"]."'
+								and a.MANUYR=(select MANUYR from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$data["STRNO"]."')
 						";
 					}else if($row->STAT == "F"){
 						$response["error"] = true;
@@ -543,14 +593,40 @@ class MDATA extends CI_Model {
 							$response["price"] = $row->PRICE;
 							$response["price_add"] = $row->PRICE_ADD;
 							$response["price_spc"] = $row->PRICE_SPC;
+							
+							$response["sdate"] = $this->Convertdate(2,$row->SDATE);
+							$response["ydate"] = $this->Convertdate(2,$row->YDATE);
 						}
-					}					
+					}else{
+						$response["error"] = true;
+						$response["msg"] = "
+							ผิดพลาด ไม่พบราคาในสแตนดาร์ด (J1)<br>โปรดติดต่อฝ่ายเช่าซื้อ/ฝ่ายวิเคราะห์ เพื่อกำหนดราคาขายก่อนครับ<br><br>
+							รุ่น :: ".$data["MODEL"]."<br>
+							แบบ :: ".$data["BAAB"]."<br>
+							สี :: ".$data["COLOR"]."<br>
+							สถานะรถ :: ".$data["STAT"]."<br>
+							กิจกรรมการขาย :: ".$data["ACTICOD"]."<br>
+							วันที่ขออนุมัติ :: ".$this->Convertdate(2,$data["DT"])."
+						";
+						echo json_encode($response); exit;
+					}
 				}
-						
-				$sql = "
-					select INSURANCEPAY from {$this->MAuth->getdb('STDVehiclesDown')} 
-					where STDID='{$response["stdid"]}' and SUBID='{$response["subid"]}' and ACTIVE='yes'
-				";
+				
+				if($data["STAT"] == "N"){
+					$sql = "
+						select INSURANCEPAY from {$this->MAuth->getdb('STDVehiclesDown')} 
+						where STDID='{$response["stdid"]}' and SUBID='{$response["subid"]}' and ACTIVE='yes'
+					";
+				}else if($data["STAT"] == "O"){
+					$sql = "
+						select INSURANCEPAY from {$this->MAuth->getdb('STDVehiclesDown')} 
+						where STDID='{$response["stdid"]}' and SUBID='{$response["subid"]}' 
+							and ".($response["price"] < 0 ?$response["price_spc"]:$response["price"])." between PRICES and PRICEE
+							and {$data["dwnAmt"]} between DOWNS and DOWNE
+							and ACTIVE='yes'
+					";			
+				}
+				//echo $sql; exit;
 				$query = $this->connect_db->query($sql);
 				
 				$html = "";
@@ -566,14 +642,25 @@ class MDATA extends CI_Model {
 					}
 				}
 				
-				//print_r($response); exit;
-				$sql = "
-					select * from {$this->MAuth->getdb('STDVehiclesDown')}
-					where STDID='{$response["stdid"]}' and SUBID='{$response["subid"]}' 
-						and '{$data["dwnAmt"]}' between DOWNS and DOWNE
-						and '".$response["price"]."' between PRICES and isnull(PRICEE,'".$response["price"]."')
-				";
-				//echo $sql; exit;
+				if($data["STAT"] == "N"){
+					$sql = "
+						select * from {$this->MAuth->getdb('STDVehiclesDown')}
+						where STDID='{$response["stdid"]}' and SUBID='{$response["subid"]}' 
+							and '{$data["dwnAmt"]}' between DOWNS and isnull(DOWNE,{$data["dwnAmt"]})
+							--and '".$response["price"]."' between PRICE2 and isnull(PRICE3,'".$response["price"]."')
+							and ACTIVE='yes'
+					";
+				}else if($data["STAT"] == "O"){
+					$sql = "
+						select * from {$this->MAuth->getdb('STDVehiclesDown')} a
+						where STDID='{$response["stdid"]}'
+							and SUBID='{$response["subid"]}' 
+							and {$data["dwnAmt"]} between DOWNS and isnull(DOWNE,{$data["dwnAmt"]})
+							and ".($response["price"] < 0 ?$response["price_spc"]:$response["price"])." 
+								between PRICE2 and isnull(PRICE3,".($response["price"] < 0 ?$response["price_spc"]:$response["price"]).")							
+							and ACTIVE='yes'
+					";
+				}
 				$query = $this->db->query($sql);
 				
 				if($query->row()){

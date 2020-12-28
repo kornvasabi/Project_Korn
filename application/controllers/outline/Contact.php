@@ -20,8 +20,9 @@ class Contact extends MY_Controller {
 	function index(){
 		//print_r(get_headers(base_url())); exit;
 		//header('Access-Control-Allow-Origin: http://localhost:98');		
-		header('Access-Control-Allow-Origin: http://192.168.0.2:89'); // อนุญาติให้ server .2 เข้าถึงเมนู
-		header('Access-Control-Allow-Methods: GET');
+		//header('Access-Control-Allow-Origin: http://192.168.0.2:89'); // อนุญาติให้ server .2 เข้าถึงเมนู
+		header('Access-Control-Allow-Origin: *'); 
+		header('Access-Control-Allow-Methods: GET,POST');
 		header("Access-Control-Allow-Headers: X-Requested-With");
 		header('Access-Control-Max-Age: 1000');
 		header('Content-Type: application/json');

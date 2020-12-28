@@ -923,7 +923,7 @@ class Sell extends MY_Controller {
 						);
 						
 						select STDID,SUBID,0 as SHCID
-							,isnull(@PRICE_SPECIAL,PRICE) as PRICE
+							,isnull(@PRICE_SPECIAL,PRICE1) as PRICE
 							,0 as PRICE_ADD 
 						from {$this->MAuth->getdb('STDVehiclesPRICE')}
 						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."'
@@ -951,7 +951,8 @@ class Sell extends MY_Controller {
 						
 							,isnull(@PRICE_SPECIAL,b.OPRICE) as PRICE
 							,case when @STAT = 'N'
-								then (case when @price_add is null then 0 else @price_add end) else 0 end as PRICE_ADD
+								then (case when @price_add is null then 0 
+								else @price_add end) else 0 end as PRICE_ADD
 						from {$this->MAuth->getdb('STDSHCAR')} a
 						left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
 						left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
@@ -962,6 +963,7 @@ class Sell extends MY_Controller {
 							and (case when c.COLOR = 'ALL' then '".$row->COLOR."' else c.COLOR end) = '".$row->COLOR."' collate thai_cs_as 
 							and (case when d.LOCAT = 'ALL' then '".$row->LOCAT."' else d.LOCAT end) = '".$row->LOCAT."' collate thai_cs_as
 							and a.GCODE='".$data["GCODE"]."'
+							and a.MANUYR=(select MANUYR from {$this->MAuth->getdb('INVTRAN')} where STRNO='".$strno."')
 					";
 				}
 				//echo $sql; exit;
@@ -1375,7 +1377,7 @@ class Sell extends MY_Controller {
 				
 				if ((select count(*) from {$this->MAuth->getdb('INVTRAN')}
 					 where STRNO = '".$arrs["strno"]."' and FLAG='D' and SDATE is null and isnull(CONTNO,'')=''
-						and ((CURSTAT = 'R' and RESVNO='".$arrs["resvno"]."') or (CURSTAT is null and RESVNO is null))
+						and ((CURSTAT = 'R' and RESVNO='".$arrs["resvno"]."') or (isnull(CURSTAT,'')='' and isnull(RESVNO,'')=''))
 					) > 0 )
 				begin
 					insert into {$this->MAuth->getdb('ARCRED')} (

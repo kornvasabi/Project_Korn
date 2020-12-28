@@ -583,8 +583,8 @@ class StandardReport extends MY_Controller {
 				,b.EVENTStart,b.EVENTEnd
 				,case when b.EVENTEnd > GETDATE() then 'สามารถใช้โปรนี้ได้' else 'ไม่สามารถใช้โปรโมชั่นนี้ได้' end as GETDATEADD
 				,b.STDNAME,b.STDDESC
-				,c.PRICE
-				,c.PRICES
+				,c.PRICE2
+				,c.PRICE3
 				,d.DOWNS
 				,d.DOWNE
 				,d.INTERESTRT
@@ -601,7 +601,8 @@ class StandardReport extends MY_Controller {
 			from {$this->MAuth->getdb('STDVehicles')} a
 			left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID = b.STDID
 			left join {$this->MAuth->getdb('STDVehiclesPRICE')} c on b.STDID = c.STDID and b.SUBID = c.SUBID
-			left join {$this->MAuth->getdb('STDVehiclesDown')} d on c.STDID = d.STDID and c.SUBID = d.SUBID and c.PRICE=d.PRICES and c.PRICES=d.PRICEE	
+			left join {$this->MAuth->getdb('STDVehiclesDown')} d on c.STDID = d.STDID and c.SUBID = d.SUBID 
+				and c.PRICE2=d.PRICE2 and c.PRICE3=d.PRICE3	
 			where a.STDID = '{$STDID}' and b.SUBID='{$SUBID}'
 			and ".$DOWN." between d.DOWNS and d.DOWNE
 		";
@@ -612,7 +613,7 @@ class StandardReport extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$price = ""; $statusdown = ""; $eventcolor = "";
-				$price = $row->PRICE + $row->TOTAL;
+				$price = $row->PRICE2 + $row->TOTAL;
 				if($row->APPROVEDESC == "ต้องขออนุมัติ"){
 					$statusdown ="text-danger";
 				}else{
@@ -732,7 +733,7 @@ class StandardReport extends MY_Controller {
 	}
 	function search_price($STDID,$SUBID){
 		$sql = "
-			select c.PRICE
+			select c.PRICE2
 			from {$this->MAuth->getdb('STDVehicles')} a
 			left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID = b.STDID
 			left join {$this->MAuth->getdb('STDVehiclesPRICE')} c on b.STDID = c.STDID and b.SUBID = c.SUBID
@@ -743,7 +744,7 @@ class StandardReport extends MY_Controller {
 		$html = "";
 		if($query->row()){
 			foreach($query->result() as $row){
-				$html .= number_format($row->PRICE,2);
+				$html .= number_format($row->PRICE2,2);
 			}
 		}
 		return $html;
@@ -765,8 +766,8 @@ class StandardReport extends MY_Controller {
 			select top 1 a.STDID,b.SUBID,a.MODEL 
 				,b.EVENTStart,b.EVENTEnd
 				,b.STDNAME,b.STDDESC
-				,c.PRICE
-				,c.PRICES
+				,c.PRICE2
+				,c.PRICE3
 				,d.DOWNS
 				,d.DOWNE
 				,d.INTERESTRT
@@ -783,7 +784,8 @@ class StandardReport extends MY_Controller {
 			from {$this->MAuth->getdb('STDVehicles')} a
 			left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID = b.STDID
 			left join {$this->MAuth->getdb('STDVehiclesPRICE')} c on b.STDID = c.STDID and b.SUBID = c.SUBID
-			left join {$this->MAuth->getdb('STDVehiclesDown')} d on c.STDID = d.STDID and c.SUBID = d.SUBID and c.PRICE=d.PRICES and c.PRICES=d.PRICEE	
+			left join {$this->MAuth->getdb('STDVehiclesDown')} d on c.STDID = d.STDID and c.SUBID = d.SUBID 
+				and c.PRICE2=d.PRICE2 and c.PRICE3=d.PRICE3
 			where a.STDID = '{$STDID}' and b.SUBID='{$SUBID}'
 			and ".$DOWN." between d.DOWNS and d.DOWNE
 		";
@@ -794,7 +796,7 @@ class StandardReport extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$price = ""; $pricesother = "";
-				$price = $row->PRICE/* + $row->TOTAL*/;
+				$price = $row->PRICE2/* + $row->TOTAL*/;
 				
 				$sql2 = "
 					select * 
@@ -1027,8 +1029,8 @@ class StandardReport extends MY_Controller {
 			select top 1 a.STDID,b.SUBID,a.MODEL 
 				,b.EVENTStart,b.EVENTEnd
 				,b.STDNAME,b.STDDESC
-				,c.PRICE
-				,c.PRICES
+				,c.PRICE2
+				,c.PRICE3
 				,d.DOWNS
 				,d.DOWNE
 				,d.INTERESTRT
@@ -1045,7 +1047,8 @@ class StandardReport extends MY_Controller {
 			from {$this->MAuth->getdb('STDVehicles')} a
 			left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID = b.STDID
 			left join {$this->MAuth->getdb('STDVehiclesPRICE')} c on b.STDID = c.STDID and b.SUBID = c.SUBID
-			left join {$this->MAuth->getdb('STDVehiclesDown')} d on c.STDID = d.STDID and c.SUBID = d.SUBID and c.PRICE=d.PRICES and c.PRICES=d.PRICEE	
+			left join {$this->MAuth->getdb('STDVehiclesDown')} d on c.STDID = d.STDID and c.SUBID = d.SUBID 
+				and c.PRICE2=d.PRICE2 and c.PRICE3=d.PRICE3	
 			where a.STDID = '".$stdid."' and b.SUBID='".$subid."'
 			and ".$DOWN." between d.DOWNS and d.DOWNE
 		";
@@ -1056,7 +1059,7 @@ class StandardReport extends MY_Controller {
 		if($query->row()){
 			foreach($query->result() as $row){
 				$price = ""; $pay = "";
-				$price = $row->PRICE;
+				$price = $row->PRICE2;
 				$sql2 = "
 					select * 
 						,cast((INTERAST_RATE / 12) as decimal(18,2)) as INTERAST_RATE_MONTH

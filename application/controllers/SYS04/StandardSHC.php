@@ -276,8 +276,8 @@ class StandardSHC extends MY_Controller {
 						FROM {$this->MAuth->getdb('STDSHCARColors')} cc 
 						where a.ID=cc.ID FOR xml path('')
 					 ), 1, 1, '') as COLOR
-					,a.MANUYR,a.GCODE
-					,'('+c.GCODE+') '+c.GDESC as GDESC
+					,a.MANUYR
+					,a.GCODE,c.GDESC
 					,STUFF((
 						SELECT ',' + CONVERT(NVARCHAR(20), dd.LOCAT) 
 						FROM {$this->MAuth->getdb('STDSHCARLocats')} dd 
@@ -288,7 +288,7 @@ class StandardSHC extends MY_Controller {
 				from {$this->MAuth->getdb('STDSHCAR')} a
 				left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID and b.ACTIVE='Yes'
 				left join {$this->MAuth->getdb('SETGROUP')} c on a.GCODE=c.GCODE collate thai_cs_as
-				where a.ACTIVE='Yes'
+				where a.ACTIVE='Yes' and b.ACTIVE='Yes'
 			) as data
 			where 1=1 {$cond}
 			order by ID
@@ -312,7 +312,7 @@ class StandardSHC extends MY_Controller {
 						<td><div style='max-height:150px;overflow:auto;'>".str_replace(",","<br>",$row->COLOR)."</div></td>
 						<td><div style='max-height:150px;overflow:auto;'>".str_replace(",","<br>",$row->LOCAT)."</div></td>
 						<td>".$row->MANUYR."</td>
-						<td>".$row->GDESC."</td>
+						<td>".$row->GCODE." ".$row->GDESC."</td>
 						<td align='right'>".number_format($row->NPRICE,2)."</td>
 						<td align='right'>".number_format($row->OPRICE,2)."</td>
 					</tr>

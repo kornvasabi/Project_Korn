@@ -1116,7 +1116,7 @@ class CUSTOMERS extends MY_Controller {
         $response = array("tbody"=>$tbody);
         echo json_encode($response);
 	}
-	function checksave($arrs){
+	function checksave($arrs,$ADDR){
 		if(isset($_POST['ADDR'])){}else{
 			$response["error"] = true;
 			$response["msg"] = "คุณยังไม่เพิ่มที่อยู่ลูกค้า กรุณาเพิ่มที่อยู่ลูกค้าก่อนครับ";
@@ -1222,13 +1222,19 @@ class CUSTOMERS extends MY_Controller {
 			$response["msg"] = "กรุณาเลือกลำดับที่อยู่ส่งจดหมายด้วยครับ";
 			echo json_encode($response); exit;
 		}
-		/*
 		if($arrs["name"] == ""){
 			$response["error"] = true;
 			$response["msg"] = "กรุณาแนบภาพลูกค้าก่อนครับ";
 			echo json_encode($response); exit;
 		}
-		*/
+		$sizeaddr = sizeof($ADDR);
+		for($i=0;$i<$sizeaddr;$i++){
+			if($ADDR[$i][12] == ""){
+				$response["error"] = true;
+				$response["msg"] = "กรุณาแนบภาพแผนที่อยู่ลูกค้า ที่อยู่ลูกค้าลำดับที่ {$ADDR[$i][0]} ก่อนครับ";
+				echo json_encode($response); exit;
+			}
+		}
 	}
 	function save_img_cuscod($piccusName,$arrs){
 		//echo $piccusName; exit;
@@ -1409,8 +1415,8 @@ class CUSTOMERS extends MY_Controller {
 		$arrs['name'] = (isset($_POST["cuspic_picture_name"]) ? $_POST['cuspic_picture_name']:'');
 		$arrs['tmp']  = (isset($_POST["cuspic_picture"]) ? $_POST['cuspic_picture']:'');
 		
-		//เช็คบังคับคีย์ข้อมูล
-		$this->checksave($arrs);
+		//เช็คบังคับกรอกหรือเลือกข้อมูล
+		$this->checksave($arrs,$ADDR);
 		
 		$piccusName = "";
 		if($arrs['name'] != ""){
@@ -1689,11 +1695,13 @@ class CUSTOMERS extends MY_Controller {
 		$sql ="
 			if object_id('tempdb..#temp') is not null drop table #temp;
 			select ROW_NUMBER() over(order by _table) r,* into #temp from (
-				select a.name as _table,b.name as _column from ".$this->sess["db"].".sys.tables a
+				select '".$this->sess["db"]."'+'.dbo.'+a.name as _table,b.name as _column 
+				from ".$this->sess["db"].".sys.tables a
 				left join ".$this->sess["db"].".sys.columns b on a.object_id=b.object_id
 			) a
-			where a._column='CUSCOD' and a._table not in ('CUSTMAST','CUSTADDR')
-
+			where a._column='CUSCOD' and a._table not in (
+				''+'".$this->sess["db"]."'+'.dbo.'+'CUSTMAST',''+'".$this->sess["db"]."'+'.dbo.'+'CUSTADDR'
+			)
 			declare @CUSCODDEL varchar(12) = '".$CUSCOD."';
 			declare @started int = 1;
 			declare @sizeof int = (select COUNT(*) from #temp);
@@ -1702,22 +1710,17 @@ class CUSTOMERS extends MY_Controller {
 			while @started <= @sizeof
 			begin 
 				declare @table varchar(max) = (select _table from #temp where r=@started);
-				
 				insert into #has
 				exec(N'
 					select count(*) from '+@table+'
 					where CUSCOD='''+@CUSCODDEL+'''	
 				');
-				
 				set @started = @started+1;
 			end
-			
 			create table #custmastTemp (id varchar(1),msg varchar(max));
-
 			begin tran custmastTran
 			begin try
-			
-				if((select SUM(total) from #has)>0)
+				if((select SUM(total) from #has) > 0)
 				begin
 					rollback tran custmastTran;
 					insert into #custmastTemp select 'N' as id,'ไม่สามารถลบประวัติลูกค้ารหัส : ".$CUSCOD." เพราะได้นำไปใช้งานแล้ว' as msg;
@@ -1731,15 +1734,15 @@ class CUSTOMERS extends MY_Controller {
 					
 					insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 					values ('".$this->sess["IDNo"]."','SYS04::ลบประวัติลูกค้า','".$CUSCOD."'+' ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
+					
+					insert into #custmastTemp select 'Y' as id,'ลบประวัติลูกค้าเลขที่ :: '+'".$CUSCOD."'+' เรียบร้อยแล้ว' as msg;
+					commit tran custmastTran;
 				end
-				
-				insert into #custmastTemp select 'Y' as id,'ลบประวัติลูกค้าเลขที่ :: '+'".$CUSCOD."'+' เรียบร้อยแล้ว' as msg;
-				commit tran custmastTran;
-				
 			end try
 			begin catch
 				rollback tran custmastTran;
-				insert into #custmastTemp select 'N' as id,'บันทึกข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				insert into #custmastTemp select 'N' as id,'ลบข้อมูลไม่สำเร็จ : กรุณาติดต่อฝ่ายไอที' as msg;
+				return;
 			end catch
 		";
 		//echo $sql; exit;
@@ -1759,7 +1762,6 @@ class CUSTOMERS extends MY_Controller {
 		}
 		echo json_encode($response);
 	}
-	
 	function dateselectshow($date){
         if ($date!=""){
             return substr($date,8,2)."/".substr($date,5,2)."/".(substr($date,0,4)+543);

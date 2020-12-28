@@ -517,46 +517,52 @@ class SetCarPriceSpecial extends MY_Controller {
 				$arrs["old"] = $row;
 			}
 		}
+		//print_r($arr_data); exit;
+		//$data = array();
 		$datasize = sizeof($arr_data);
 		$html = "";
 		for($i=1;$i<=$datasize;$i++){
-			$sql = "
-				select case when STRNO <> '' then 'จองแล้ว' end as status
-				from {$this->MAuth->getdb('ARRESV')} where STRNO = '".$arr_data[$i]["F"]."' 
-				union
-				select case when STRNO <> '' then 'ขายผ่อน' end as status
-				from {$this->MAuth->getdb('ARMAST')} where STRNO = '".$arr_data[$i]["F"]."' 
-			";
-			//echo $sql; exit;
-			$query = $this->db->query($sql);
-			$status = ""; $color = "";
-			if($query->row()){
-				foreach($query->result() as $row){
-					$status = $row->status;
-					$color = "style='background-color:#F1948A;'";
+			if(isset($arr_data[$i]["F"])){
+				$sql = "
+					select case when STRNO <> '' then 'จองแล้ว' end as status
+					from {$this->MAuth->getdb('ARRESV')} where STRNO = '".$arr_data[$i]["F"]."' 
+					union
+					select case when STRNO <> '' then 'ขายผ่อน' end as status
+					from {$this->MAuth->getdb('ARMAST')} where STRNO = '".$arr_data[$i]["F"]."' 
+				";
+				//echo $sql; exit;
+				$query = $this->db->query($sql);
+				$status = ""; $color = "";
+				if($query->row()){
+					foreach($query->result() as $row){
+						$status = $row->status;
+						$color = "style='background-color:#F1948A;'";
+					}
+				}else{
+					$status = "ยังไม่ขาย";
+					$color  = "";
 				}
-			}else{
-				$status = "ยังไม่ขาย";
-				$color  = "";
+				$html .="
+					<tr class='listSpecial' {$color}
+						STRNO = '".$arr_data[$i]["F"]."' PRICE = '".$arr_data[$i]["G"]."'
+						STARTDT = '".$arr_data[$i]["H"]."' MODEL = '".$arr_data[$i]["B"]."' 
+						IDKEY = '".$arr_data[$i]["A"]."'
+					>
+						<td>".$arr_data[$i]["A"]."</td>
+						<td>".$arr_data[$i]["B"]."</td>
+						<td>".$arr_data[$i]["C"]."</td>
+						<td>".$arr_data[$i]["D"]."</td>
+						<td>".$arr_data[$i]["E"]."</td>
+						<td>".$arr_data[$i]["F"]."</td>
+						<td>".$arr_data[$i]["G"]."</td>
+						<td>".$arr_data[$i]["H"]."</td>
+						<td>".$status."</td>
+					</tr>
+				";
 			}
-			$html .="
-				<tr class='listSpecial' {$color}
-					STRNO = '".$arr_data[$i]["F"]."' PRICE = '".$arr_data[$i]["G"]."'
-					STARTDT = '".$arr_data[$i]["H"]."' MODEL = '".$arr_data[$i]["B"]."' 
-					IDKEY = '".$arr_data[$i]["A"]."'
-				>
-					<td>".$arr_data[$i]["A"]."</td>
-					<td>".$arr_data[$i]["B"]."</td>
-					<td>".$arr_data[$i]["C"]."</td>
-					<td>".$arr_data[$i]["D"]."</td>
-					<td>".$arr_data[$i]["E"]."</td>
-					<td>".$arr_data[$i]["F"]."</td>
-					<td>".$arr_data[$i]["G"]."</td>
-					<td>".$arr_data[$i]["H"]."</td>
-					<td>".$status."</td>
-				</tr>
-			";
 		}
+		//print_r($data); exit;
+		
 		$html = "
 			<div style='width:100%;height:calc(100% - 30px);overflow:auto;'>
 				<table border=1 style='border-collapse:collapse;width:100%;'>
@@ -672,7 +678,7 @@ class SetCarPriceSpecial extends MY_Controller {
 				}
 			}
 		}
-		//echo $startDT; exit;
+		//echo $insertdb; exit;
 		$sql = "
 			if OBJECT_ID('tempdb..#checkspecial') is not null drop table #checkspecial
 			create table #checkspecial (
@@ -688,7 +694,7 @@ class SetCarPriceSpecial extends MY_Controller {
 			select distinct b.IDKEY from {$this->MAuth->getdb('STDSpecial')} a
 			inner join #checkspecial b on a.STRNO = b.STRNO collate Thai_CI_AS
 			where a.StartDT is not null 
-			and a.StartDT >= b.StartDT
+			and CONVERT(varchar(8),a.StartDT,112) >= CONVERT(varchar(8),b.StartDT,112)
 			order by b.IDKEY
 		";
 		//echo $sql; exit;

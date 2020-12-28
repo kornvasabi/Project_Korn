@@ -383,6 +383,15 @@ class Cselect2 extends MY_Controller {
 						left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
 						where b.STAT='{$STAT}' and a.STDTYPE='desc'
 					)
+					
+					union 
+					
+					select a.MODELCOD collate thai_ci_as from {$this->MAuth->getdb('SETMODEL')} a 
+					where 'ทุกรุ่น' = (
+						select distinct a.MODEL from {$this->MAuth->getdb('STDVehicles')} a
+						left join {$this->MAuth->getdb('STDVehiclesDetail')} b on a.STDID=b.STDID
+						where b.STAT='O' and a.STDTYPE='all'
+					)
 				)
 			order by MODELCOD
 		"; 
@@ -676,7 +685,7 @@ class Cselect2 extends MY_Controller {
 					and a.RESVNO like '".$dataSearch."%' collate Thai_CI_AS 
 					and a.SDATE is null
 			) as a
-			left join {$this->MAuth->getdb('ARANALYZE')} as b on a.RESVNO=b.RESVNO collate thai_cs_as and b.ANSTAT not in ('C')
+			left join {$this->MAuth->getdb('ARANALYZE')} as b on a.RESVNO=b.RESVNO collate thai_cs_as and b.ANSTAT not in ('C','N')
 			where b.RESVNO is null
 		";
 		//echo $sql; exit;
@@ -706,6 +715,8 @@ class Cselect2 extends MY_Controller {
 		$BAAB = (!isset($_REQUEST["BAAB"]) ? "" : $_REQUEST["BAAB"]);
 		$COLOR = (!isset($_REQUEST["COLOR"]) ? "" : $_REQUEST["COLOR"]);
 		$STAT = (!isset($_REQUEST["STAT"]) ? "" : $_REQUEST["STAT"]);
+		$ANID = (!isset($_REQUEST["ANID"]) ? "" : $_REQUEST["ANID"]);
+		
 		
 		$cond = "";
 		if($GCODE != ""){
@@ -770,7 +781,7 @@ class Cselect2 extends MY_Controller {
 			foreach($query->result() as $row){
 				$sql = "
 					select count(*) r from {$this->MAuth->getdb('ARANALYZE')} 
-					where ANSTAT not in ('N','C') and STRNO='{$row->STRNO}'
+					where ANSTAT not in ('N','C') and STRNO='{$row->STRNO}' and ID != '".$ANID."'
 				";
 				//echo $sql; exit;
 				$query = $this->db->query($sql);
@@ -1070,7 +1081,7 @@ class Cselect2 extends MY_Controller {
 				$json[] = array(
 					'id'=>str_replace(chr(0),'',$row->ID), 
 					'text'=>str_replace(chr(0),'',$row->ID),
-					'disabled'=>($row->ANSTAT == 'A' ? false:true)
+					'disabled'=>(in_array($row->ANSTAT,array("A","FA")) ? false:true)
 				);
 			}
 		}

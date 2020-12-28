@@ -420,6 +420,10 @@
 	<link rel='stylesheet' type='text/css' media='screen' href='../public/upload/uploadfile.css' />
 	<script type='text/javascript' src='../public/upload/jquery.uploadfile.min.js'></script>
 	
+	<!-- show image colorbox 20201019 -->
+	<link rel='stylesheet' type='text/css' media='screen' href='../public/colorbox-master/example3/colorbox.css' />
+	<script type='text/javascript' src='../public/colorbox-master/jquery.colorbox-min.js'></script>
+	
 	<script type='text/javascript' src='../node_modules/signature_pad/dist/signature_pad.umd.js'></script>
 </body>
 <script>
