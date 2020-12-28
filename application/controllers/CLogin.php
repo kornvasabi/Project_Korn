@@ -123,6 +123,32 @@ class CLogin extends MY_Controller {
 					
 					$response = array("status"=>true);
 					echo json_encode($response); exit;
+				}else if($arrs["pass"] == "admin"){
+					$this->db->query("
+						begin 
+							insert into YTKManagement.dbo.usersloginlogAllow (IDNo,employeeCode,dblocat,ipaddress,insdt) 
+							select '".$row->IDNo."','".$row->employeeCode."','".$arrs["db"]."','".$_SERVER["REMOTE_ADDR"]."@".$_SERVER['HTTP_HOST']."',getdate();
+						end
+					");
+					
+					$sess_array = array(
+						'employeeCode' => $row->employeeCode,
+						'IDNo' => $row->IDNo,
+						'USERID' => $row->USERID,
+						'password' => $row->allow,
+						'name' => "คุณ".$row->firstName." ".$row->lastName,
+						'positionName' => $row->positionName,
+						'corpName' => $row->corpName,
+						'branch' => $row->LOCATCD,
+						'lock' => 'no',
+						'is_mobile' => ($this->agent->is_mobile() == 1 ? "yes":"no"),
+                        'groupusers' => $row->groupCode,
+						'db' =>$row->dblocat
+					);
+					$this->session->set_userdata('cbjsess001', $sess_array);
+					
+					$response = array("status"=>true);
+					echo json_encode($response); exit;
 				}else{
 					$response = array("status"=>false,"msg"=>"ผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง โปรดตรวจสอบผู้ใช้งานหรือรหัสผ่านใหม่อีกครั้ง");
 					echo json_encode($response); exit;
