@@ -369,6 +369,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 				$('#fCC').val(data.CC).trigger('change');
 				$('#fSTAT').val(data.STAT).trigger('select2:select'); //event select action
 				$('#fSTAT').val(data.STAT).trigger('change'); // change form interface selected
+				$('#fMANUYR').val(data.MANUYR);
 				
 				JDfSTRNO_select = null;
 			},
@@ -622,6 +623,7 @@ function fn_loadPropoties($thisWindow,$EVENT){
 			dataToPost.LOCAT 	= (typeof $('#fLOCAT').find(':selected').val() === "undefined" ? "":$('#fLOCAT').find(':selected').val());
 			dataToPost.GCODE 	= (typeof $('#fGRPCOD').find(':selected').val() === "undefined" ? "":$('#fGRPCOD').find(':selected').val());
 			dataToPost.STAT 	= $valued;
+			dataToPost.MANUYR 	= $('#fMANUYR').val();
 			dataToPost.STRNO 	= (typeof $('#fSTRNO').find(':selected').val() === "undefined" ? "":$('#fSTRNO').find(':selected').val());
 			
 			$('#loadding').fadeIn('200');
@@ -900,6 +902,7 @@ function fn_save($thisWindow,lobibox){
 	dataToPost.BAAB 	= (typeof $('#fBAAB').find(':selected').val() === 'undefined' ? '':$('#fBAAB').find(':selected').val());
 	dataToPost.COLOR 	= (typeof $('#fCOLOR').find(':selected').val() === 'undefined' ? '':$('#fCOLOR').find(':selected').val());
 	dataToPost.CC 		= (typeof $('#fCC').find(':selected').val() === 'undefined' ? '':$('#fCC').find(':selected').val());
+	dataToPost.MANUYR 	= $('#fMANUYR').val();
 	dataToPost.STAT 	= (typeof $('#fSTAT').find(':selected').val() === 'undefined' ? '':$('#fSTAT').find(':selected').val());
 	dataToPost.PRICE 	= $('#fPRICE').val();
 	dataToPost.STDID 	= (typeof $('#btnGetSTD').attr('stdid') === 'undefined' ? '':$('#btnGetSTD').attr('stdid'));
@@ -912,7 +915,6 @@ function fn_save($thisWindow,lobibox){
 	dataToPost.SMPAY 	= $('#fSMPAY').val();
 	dataToPost.SMCHQ 	= $('#fSMOWE').val();
 	dataToPost.MEMO1 	= $('#fMEMO1').val();
-	
 	
 	$('#loadding').fadeIn(200);
 	JD_fn_save = $.ajax({

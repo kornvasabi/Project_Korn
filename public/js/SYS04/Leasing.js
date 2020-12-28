@@ -1488,9 +1488,8 @@ function wizard($param,$dataLoad,$thisWindowLeasing){
 						if($('#add_contno').val() == "Auto Genarate"){
 							var FNANALYZE = (typeof $('#add_approve').attr('FNANALYZE') === 'undefined' ? '' : $('#add_approve').attr('FNANALYZE'));
 							var APPROVE   = (typeof $('#add_approve').find(':selected').val() === 'undefined' ? '' : $('#add_approve').find(':selected').val());
-							if(FNANALYZE == 'N' && APPROVE == ""){
-								msg = "ไม่พบเลขที่ใบอนุมัติ โปรดตรวจสอบข้อมูลอีกครั้ง"; 
-							}
+							// if(FNANALYZE == 'N' && APPROVE == ""){ //allow finance not approve อนุญาติให้คีย์ขายกรณ๊ืตั้งไฟแนนท์โดยไม่มีใบวิเคราะห์
+							if(APPROVE == ""){ msg = "ไม่พบเลขที่ใบอนุมัติ โปรดตรวจสอบข้อมูลอีกครั้ง"; }
 						}
 						
 						if(msg != ""){

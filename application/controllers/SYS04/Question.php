@@ -1904,6 +1904,9 @@ class Question extends MY_Controller {
 								
 								<br>
 								<button id='calc' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> คำนวณ</span></button>
+								
+								<br>
+								<button id='btn_penalty' class='btn btn-primary btn-block'><span class='glyphicon glyphicon-search'> ตรวจสอบเบี้ยปรับ</span></button>
 							</div>
 						</div>
 						<div class='col-sm-10' id='result' style='border:0.1px dotted red;background-color:red;'></div>
@@ -1914,6 +1917,119 @@ class Question extends MY_Controller {
 		
 		$html.= "<script src='".base_url('public/js/SYS04/QuestionCalcurate.js')."'></script>";
 		echo $html;
+	}
+	
+	function CalPenalty(){
+		$CONTNO = $_POST["CONTNO"];
+		$CALDT	= $this->Convertdate(1,$_POST["CALDT"]);
+		
+		$sql = "
+			declare @CONTNO varchar(20) = '{$CONTNO}';
+			declare @CALDT datetime = '{$CALDT}'
+			
+			select * from {$this->MAuth->getdb('fn_JDLatePenalty_20200930')}(@CONTNO,@CALDT)			
+		";
+		//echo $sql; exit;
+		$query = $this->db->query($sql);
+		
+		$html = "";
+		$NOPAY 	= 1;
+		$bg 	= "style='background-color:#ddd;'";
+		$DAMT	= 0;
+		$sumINTAMT 	  = 0;
+		$sumINTAMTCal = 0;
+		if($query->row()){
+			foreach($query->result() as $row){
+				if($NOPAY == $row->NOPAY){
+					if($bg == "style='background-color:#ddd;'"){
+						$bg = "style='background-color:#ddd;'";
+					}else{
+						$bg = "style='background-color:#fff;'";
+					}
+					$NOPAY = $row->NOPAY;
+				}else{
+					if($bg == "style='background-color:#ddd;'"){
+						$bg = "style='background-color:#fff;'";
+					}else{
+						$bg = "style='background-color:#ddd;'";
+					}
+					$NOPAY = $row->NOPAY;
+				}
+				
+				if($row->NOPAY==1 && $row->rNOPAY==1){
+					$DAMT = $row->DAMT;
+				}
+				
+				if($DAMT != $row->DAMT){
+					$bg = "style='background-color:yellow;'";
+				}
+				
+				$html .= "<tr {$bg}>";
+				foreach($row as $key => $val){
+					switch($key){
+						case 'NOPAY':
+						case 'rNOPAY':
+						case 'DELYRT':
+						case 'DLDAY': $html .= "<td align='center'>".$val."</td>"; break;
+						case 'DAMT': 
+						case 'BILLPAY': 
+						case 'bl': 
+						case 'total': 
+						case 'ddiff': 
+						case 'INTAMTCal': $html .= "<td align='right'>".number_format($val,0)."</td>"; break;
+						case 'INTAMTCalD': $html .= "<td align='right'>".number_format($val,3)."</td>"; break;
+						case 'INTAMT': 
+							$html .= "<td align='right'>".($row->rNOPAY == 1 ? number_format($val,0):"#####")."</td>";	
+							break;
+						case 'SYSTVER': $html .= "<td align='center'>".$val."</td>"; break;
+						default: $html .= "<td>".$val."</td>"; break;
+					}
+				}
+				$html .= "</tr>";
+				
+				$sumINTAMT += $row->INTAMT;
+				$sumINTAMTCal += $row->INTAMTCal;
+			}
+		}
+		
+		$html = "
+			<table id='tbCalPenalty' class='table table-border'>
+				<thead>
+					<tr>
+						<th>สัญญา </th>
+						<th>สาขา</th>
+						<th>งวด</th>
+						<th>งวด<br>ครั้งที่ชำระ</th>
+						<th>ดอกเบี้ย</th>
+						<th>ล่าช้า<br>ไม่เกิน<br>(วัน)</th>
+						<th>ดิวเดต</th>
+						<th>ค่างวด</th>
+						<th>เลขที่บิล</th>
+						<th>วันที่บิล</th>
+						<th>ชำระ<br>ค่างวด</th>
+						<th>ชำระ<br>ต่องวด</th>
+						<th>เงินต้น<br>คงเหลือ</th>
+						<th>ขาด<br>กตต.</th>
+						<th>เบี้ยปรับ<br>คำนวณ<br>ทศนิยม</th>
+						<th>เบี้ยปรับ<br>คำนวณ</th>
+						<th>เบี้ยปรับ<br>senior</th>
+						<th>ช่องทาง</th>
+					</tr>
+				</thead>
+				<tbody>".$html."</tbody>
+				<tfoot>
+					<tr>
+						<th colspan='15'></th>
+						<th align='left'>".$sumINTAMTCal."</th>
+						<th align='left'>".$sumINTAMT."</th>
+						<th ></th>
+					</tr>
+				</tfoot>
+			</table>			
+		";
+		
+		$this->response["html"] = $html;
+		echo json_encode($this->response);
 	}
 	
 	function CalcuratePrice(){

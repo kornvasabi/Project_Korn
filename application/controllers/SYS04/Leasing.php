@@ -139,7 +139,7 @@ class Leasing extends MY_Controller {
 		
 		$sql = "
 			SELECT ".($cond == "" ? "top 20":"")." A.CONTNO,A.LOCAT,convert(varchar(8),A.SDATE,112) as SDATE
-				,A.CUSCOD,B.SNAM+B.NAME1+' '+B.NAME2 as NAME,A.STRNO,A.RESVNO
+				,A.CUSCOD,B.SNAM+B.NAME1+' '+B.NAME2 as NAME,A.STRNO,A.RESVNO,A.APPVNO
 			FROM {$this->MAuth->getdb('ARMAST')} A
 			left join {$this->MAuth->getdb('CUSTMAST')} B on A.CUSCOD=B.CUSCOD
 			where 1=1 ".$cond."
@@ -165,6 +165,7 @@ class Leasing extends MY_Controller {
 						</td>
 						<td style='vertical-align:middle;'>".$row->CONTNO."</td>
 						<td style='vertical-align:middle;'>".$row->LOCAT."</td>
+						<td style='vertical-align:middle;'>".$row->APPVNO."</td>
 						<td style='vertical-align:middle;'>".$this->Convertdate(2,$row->SDATE)."</td>
 						<td style='vertical-align:middle;'>".$row->CUSCOD."</td>
 						<td style='vertical-align:middle;'>".$row->NAME."</td>
@@ -182,7 +183,7 @@ class Leasing extends MY_Controller {
 				<table id='table-LeasingCar' class='col-sm-12 display table table-striped table-bordered' cellspacing='0' width='100%' border=1>
 					<thead style='background: rgba(0, 0, 0, 0) url(&#39;../public/lobiadmin-master/version/1.0/ajax/img/bg/bg6.png&#39;) repeat scroll 0% 0%;'>						
 						<tr style='line-height:20px;'>
-							<td style='vertical-align:middle;text-align:center;font-size:8pt;' colspan='8'>
+							<td style='vertical-align:middle;text-align:center;font-size:8pt;' colspan='9'>
 								เงื่อนไข :: {$condDesc}
 							</td>
 						</tr>
@@ -190,6 +191,7 @@ class Leasing extends MY_Controller {
 							<th style='vertical-align:middle;'>#</th>
 							<th style='vertical-align:middle;'>เลขที่สัญญา</th>
 							<th style='vertical-align:middle;'>สาขา</th>
+							<th style='vertical-align:middle;'>ใบอนุมัติ</th>
 							<th style='vertical-align:middle;'>วันที่ขาย</th>
 							<th style='vertical-align:middle;'>รหัสลูกค้า</th>
 							<th style='vertical-align:middle;'>ชื่อ-สกุล</th>
@@ -3431,7 +3433,7 @@ class Leasing extends MY_Controller {
 				begin
 					if exists (
 						select * from {$this->MAuth->getdb('ARANALYZE')}
-						where ID='".$arrs["approve"]."' and ANSTAT='A' and isnull(CONTNO,'')=''
+						where ID='".$arrs["approve"]."' and ANSTAT in ('A','FA') and isnull(CONTNO,'')=''
 					)
 					begin 
 						update {$this->MAuth->getdb('ARANALYZE')}
@@ -4350,7 +4352,8 @@ class Leasing extends MY_Controller {
 				--,a.STRNO
 				,case when isnull(i.STRNO,'') != '' then i.STRNO collate thai_cs_as else a.STRNO end as STRNO
 				,a.MODEL,a.BAAB,a.COLOR,a.STAT
-				,a.PRICE - isnull(a.PRICE_DIS,0) as PRICE
+				--,a.PRICE - isnull(a.PRICE_DIS,0) as PRICE
+				,(a.PRICE + ISNULL(a.PRICE_ADD,0)) - isnull(a.PRICE_DIS,0) as PRICE
 				,(case when isnull(h.INTEREST_RT,0) = 0 then a.INTEREST_RT else h.INTEREST_RT end) as INTEREST_RT
 				,b.CUSCOD
 				,c.SNAM+c.NAME1+' '+c.NAME2+' ('+c.CUSCOD+')'+'-'+c.GRADE as CUSNAME
@@ -4365,7 +4368,7 @@ class Leasing extends MY_Controller {
 				--,((case when a.INSURANCE_TYP = 1 then isnull(g.insurance,0) else 0 end)
 				,((case when a.INSURANCE_TYP = 1 then (
 						case when isnull(h.INSURANCE,0) > 0 
-						then h.INSURANCE else g.INSURANCE end
+						then isnull(h.INSURANCE,0) else isnull(g.INSURANCE,0) end
 					) else 0 end)
 					+(case when a.CALTRANS = 'Y' then isnull(g.transfers,0) else 0 end)
 					+(case when a.CALREGIST = 'Y' then isnull(g.regist,0) else 0 end)
@@ -4425,10 +4428,14 @@ class Leasing extends MY_Controller {
 			left join {$this->MAuth->getdb('CUSTADDR')} d on b.CUSCOD=d.CUSCOD collate thai_cs_as and b.ADDRDOCNO=d.ADDRNO collate thai_cs_as
 			left join {$this->MAuth->getdb('SETAUMP')} e on d.AUMPCOD=e.AUMPCOD
 			left join {$this->MAuth->getdb('SETPROV')} f on d.PROVCOD=f.PROVCOD
-			left join {$this->MAuth->getdb('STDVehiclesDown')} g on a.STDID=g.STDID and a.SUBID=g.SUBID and a.DWN between g.DOWNS and g.DOWNE
+			left join {$this->MAuth->getdb('STDVehiclesDown')} g on a.STDID=g.STDID 
+				and a.SUBID=g.SUBID and a.DWN between g.DOWNS and g.DOWNE
+				and ((a.STAT!='N' and a.PRICE between g.PRICE2 and g.PRICE3) or (a.STAT='N'))
 			left join {$this->MAuth->getdb('ARANALYZEAPPR')} h on a.ID=h.ID collate thai_cs_as
 			left join {$this->MAuth->getdb('ARRESV')} i on a.RESVNO=i.RESVNO collate thai_cs_as
-			left join {$this->MAuth->getdb('STDVehiclesDown')} j on a.STDID=j.STDID and a.SUBID=j.SUBID and h.DWN between j.DOWNS and j.DOWNE
+			left join {$this->MAuth->getdb('STDVehiclesDown')} j on a.STDID=j.STDID 
+				and a.SUBID=j.SUBID and h.DWN between j.DOWNS and j.DOWNE
+				and ((a.STAT!='N' and a.PRICE between j.PRICE2 and j.PRICE3) or (a.STAT='N'))
 			where a.ID='".$ANID."'
 		";
 		//echo $sql; exit;
@@ -5058,7 +5065,10 @@ class Leasing extends MY_Controller {
 					
 					,1 as NOPAYPerMonth
 					,'{$STRNO}' as STRNO,a.MODEL,a.BAAB,a.COLOR,a.STAT
-					,case when isnull(@PRICE,0) > 0 then @PRICE else a.PRICE end as PRICE
+					,case when isnull(@PRICE,0) > 0 
+						then @PRICE-isnull(a.PRICE_DIS,0) 
+						else (a.PRICE + ISNULL(a.PRICE_ADD,0)) - isnull(a.PRICE_DIS,0)
+					 end as PRICE
 					,(case when isnull(h.INTEREST_RT,0) = 0 then a.INTEREST_RT else h.INTEREST_RT end) as INTEREST_RT
 					,b.CUSCOD
 					,c.SNAM+c.NAME1+' '+c.NAME2+' ('+c.CUSCOD+')'+'-'+c.GRADE as CUSNAME

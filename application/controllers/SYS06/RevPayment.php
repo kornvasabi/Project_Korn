@@ -2139,6 +2139,7 @@ class RevPayment extends MY_Controller {
 				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
 				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
 				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
+
 				set @TSALE  = (select TSALE from {$this->MAuth->getdb('ARCRED')} where CONTNO=@CONTNO collate thai_cs_as);
 				set @VATRT  = (select VATRT from {$this->MAuth->getdb('ARCRED')} where CONTNO=@CONTNO collate thai_cs_as);
 				set @TAXRT  = @VATRT;
@@ -2184,7 +2185,7 @@ class RevPayment extends MY_Controller {
 			";
 		}else if($event == "cancel"){
 			$CHQTRANQ_001 = "
-				DISABLE TRIGGER AFTINS_PAY001 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
+				DISABLE TRIGGER AFTUPD_PAY001 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 				
 				if exists (select * from {$this->MAuth->getdb('ARCRED')} where CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as)
 				begin
@@ -2210,7 +2211,7 @@ class RevPayment extends MY_Controller {
 				where 1=1 and TMBILL='{$req["TMBILL"]}' and LOCATRECV='{$req["LOCATRECV"]}' 
 					and CONTNO='{$datatable["opt_contno"]}' collate thai_cs_as and PAYFOR='".$datatable["opt_payfor"]."';  
 				
-				ENABLE TRIGGER AFTINS_PAY001 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
+				ENABLE TRIGGER AFTUPD_PAY001 ON {$this->param("checkmaindb")[$this->sess['db']]}.dbo.CHQTRAN;
 			";
 		}
 		
@@ -3509,10 +3510,10 @@ class RevPayment extends MY_Controller {
 				set @PAYINT = ".str_replace(",","",$datatable["opt_payint"]).";
 				set @DSCINT = ".str_replace(",","",$datatable["opt_dscint"]).";
 				set @NETPAY = ".str_replace(",","",$datatable["opt_netpay"]).";
-				set @TSALE  = 'R';
+				set @TSALE  = (select TSALE from {$this->MAuth->getdb('AR_INVOI')} where CONTNO=@CONTNO collate thai_cs_as);
 				set @VATRT  = (select VATRT from {$this->MAuth->getdb('AR_INVOI')} where CONTNO=@CONTNO collate thai_cs_as);
 				set @TAXRT  = @VATRT;
-				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('AR_INVOI')} where RESVNO=@CONTNO collate thai_cs_as); 
+				set @LOCATPAY = (select LOCAT from {$this->MAuth->getdb('AR_INVOI')} where CONTNO=@CONTNO collate thai_cs_as); 
 				set @NOPAY  = null;
 				set @FNOPAY = null;
 				set @LNOPAY = null;

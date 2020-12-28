@@ -81,11 +81,11 @@ function afterSearch(){
 			type:'POST',
 			dataType:'json',
 			success:function(data){
-				$('#tab2save').attr('action','edit');
 				
 				$('#tab2_main').find('.spinner, .spinner-backdrop').remove();
 				$('#tab2_main').html(data.html);
 				
+				$('#tab2save').attr('action','edit');
 				$('#t2BKCODE').attr('readonly',true);
 				
 				if($('.tab1[name="home"]').attr('cup') == 'T'){

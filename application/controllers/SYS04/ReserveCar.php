@@ -212,10 +212,12 @@ class ReserveCar extends MY_Controller {
 		$arrs["fBAAB"] 		= "";
 		$arrs["fCOLOR"] 	= "";
 		$arrs["fCC"] 		= $this->opt('CC','');
+		$arrs["fMANUYR"]  	= "";
 		$arrs["fSTAT"] 		= $this->opt('STAT','');
 		$arrs["fPRICE"] 	= "";
 		$arrs["fSTDID"] 	= "";
 		$arrs["fSUBID"] 	= "";
+		$arrs["fSHCID"] 	= "";
 		$arrs["fRESPAY"] 	= "";
 		$arrs["fBALANCE"] 	= "";
 		$arrs["fRECVDUE"] 	= "";
@@ -236,7 +238,7 @@ class ReserveCar extends MY_Controller {
 				 ) as ACTIDES
 				,a.GRPCOD ,'('+a.GRPCOD+') '+c.GDESC as GRPDESC
 				,a.TYPE ,a.MODEL ,a.BAAB ,a.COLOR ,a.CC ,a.STAT 
-				,a.PRICE ,d.STDID ,d.SUBID,a.RESPAY ,a.BALANCE 
+				,a.PRICE ,d.STDID ,d.SUBID ,d.SHCID ,a.RESPAY ,a.BALANCE 
 				,convert(varchar(8),a.RECVDUE,112) as RECVDUE 
 				,convert(varchar(8),a.RECVDT,112) as RECVDT 
 				,a.SMPAY ,a.SMCHQ ,a.MEMO1
@@ -272,10 +274,12 @@ class ReserveCar extends MY_Controller {
 				$arrs["fBAAB"] 		= "<option value='".$row->BAAB."'>".$row->BAAB."</option>";
 				$arrs["fCOLOR"] 	= "<option value='".$row->COLOR."'>".$row->COLOR."</option>";
 				$arrs["fCC"] 		= $this->opt('CC',$row->CC);
+				$arrs["fMANUYR"]  	= "";
 				$arrs["fSTAT"] 		= $this->opt('STAT',$row->STAT);
 				$arrs["fPRICE"]  	= number_format($row->PRICE,2);
 				$arrs["fSTDID"]		= $row->STDID;
 				$arrs["fSUBID"]		= $row->SUBID;
+				$arrs["fSHCID"]		= $row->SHCID;
 				$arrs["fRESPAY"]  	= number_format($row->RESPAY,2);
 				$arrs["fBALANCE"]  	= number_format($row->BALANCE,2);
 				$arrs["fRECVDUE"]  	= $this->Convertdate(2,$row->RECVDUE);
@@ -448,15 +452,27 @@ class ReserveCar extends MY_Controller {
 						</select>
 					</div>
 				</div>
-				<div class='col-sm-3'>	
-					<div class='form-group'>
-						<span class='text-red'>*</span>
-						ขนาด
-						<select id='fCC' class='form-control input-sm'>
-							{$arrs["fCC"]}
-						</select>
+				<div class='col-sm-3'>
+					<div class='row'>	
+						<div class='col-sm-6'>	
+							<div class='form-group'>
+								<span class='text-red'>*</span>
+								ขนาด
+								<select id='fCC' class='form-control input-sm'>
+									{$arrs["fCC"]}
+								</select>
+							</div>
+						</div>
+						<div class='col-sm-6'>	
+							<div class='form-group'>
+								<span class='text-red'>*</span>
+								ปีผลิต
+								<input type='text' id='fMANUYR' class='form-control input-sm' value='{$arrs["fMANUYR"]}'>
+							</div>
+						</div>
 					</div>
 				</div>
+				
 				
 				<div class='col-sm-3'>	
 					<div class='form-group'>
@@ -482,7 +498,7 @@ class ReserveCar extends MY_Controller {
 				<div class='col-sm-3'>	
 					<div class='form-group'>
 						&emsp;
-						<button id='btnGetSTD' class='btn btn-sm btn-info btn-block' stdid='".$arrs["fSTDID"]."' subid='".$arrs["fSUBID"]."'>
+						<button id='btnGetSTD' class='btn btn-sm btn-info btn-block' stdid='".$arrs["fSTDID"]."' subid='".$arrs["fSUBID"]."' shcid='".$arrs["fSHCID"]."'>
 							<span class='glyphicon glyphicon-refresh'> ดึงสแตนดาร์ด</span>
 						</button>
 					</div>
@@ -571,6 +587,7 @@ class ReserveCar extends MY_Controller {
 		$arrs["STAT"]	 = (isset($_POST["STAT"]) ? $_POST["STAT"] : "");
 		$arrs["LOCAT"]	 = $_POST["LOCAT"];
 		$arrs["GCODE"]	 = $_POST["GCODE"];
+		$arrs["MANUYR"]	 = $_POST["MANUYR"];
 		$arrs["STRNO"]	 = $_POST["STRNO"];
 		
 		$sql = "
@@ -638,30 +655,45 @@ class ReserveCar extends MY_Controller {
 			foreach($query->result() as $row){
 				if($row->STAT == "N"){
 					$qsql = "
+						/* ราคาพิเศษ */
+						declare @PRICE_SPECIAL decimal(18,2) = (
+							select PRICE from {$this->MAuth->getdb('STDSpecial')} 
+							where STRNO='".$arrs["STRNO"]."'
+								and '".$arrs["RESVDT"]."' between StartDT and isnull(EndDT,'".$arrs["RESVDT"]."')
+						);
+						
 						select STDID,SUBID,'' as SHCID
-							,case when '{$arrs["ACTICOD"]}' in (37,38) then PRICES else PRICE end PRICE
+							,case when '{$arrs["ACTICOD"]}' in (37,38) then isnull(@PRICE_SPECIAL,PRICE2) else isnull(@PRICE_SPECIAL,PRICE3) end PRICE
 						from {$this->MAuth->getdb('STDVehiclesPRICE')}
 						where STDID='".$row->STDID."' and SUBID='".$row->SUBID."' and ACTIVE='yes'
 					";
 				}else{
 					$qsql = "
+						/* ราคาพิเศษ */
+						declare @PRICE_SPECIAL decimal(18,2) = (
+							select PRICE from {$this->MAuth->getdb('STDSpecial')} 
+							where STRNO='".$arrs["STRNO"]."'
+								and '".$arrs["RESVDT"]."' between StartDT and isnull(EndDT,'".$arrs["RESVDT"]."')
+						);
+						
 						select ".$row->STDID." as STDID
 							,".$row->SUBID." as SUBID
 							,a.ID as SHCID
-							,b.OPRICE as PRICE
+							,isnull(@PRICE_SPECIAL,b.OPRICE) as PRICE
 						from {$this->MAuth->getdb('STDSHCAR')} a
 						left join {$this->MAuth->getdb('STDSHCARDetails')} b on a.ID=b.ID
 						left join {$this->MAuth->getdb('STDSHCARColors')} c on a.ID=c.ID
 						left join {$this->MAuth->getdb('STDSHCARLocats')} d on a.ID=d.ID
-						where b.ACTIVE='yes' collate thai_ci_as 
-							and a.MODEL='".$row->MODEL."' collate thai_cs_as
-							and a.BAAB='".$row->BAAB."' collate thai_cs_as 
+						where b.ACTIVE	 = 'yes' collate thai_ci_as 
+							and a.MODEL	 = '".$row->MODEL."' collate thai_cs_as
+							and a.BAAB	 = '".$row->BAAB."' collate thai_cs_as 
 							and (case when c.COLOR = 'ALL' then '".$row->COLOR."' else c.COLOR end) = '".$row->COLOR."' collate thai_cs_as 
 							and (case when d.LOCAT = 'ALL' then '".$row->LOCAT."' else d.LOCAT end) = '".$row->LOCAT."' collate thai_cs_as
-							and a.GCODE='".$arrs["GCODE"]."'
+							and a.GCODE	 = '".$arrs["GCODE"]."'
+							and a.MANUYR = '".$arrs["MANUYR"]."'
 					";
 				}
-				//echo $sql; exit;
+				//echo $qsql; exit;
 				$qquery = $this->db->query($qsql);
 				
 				if($qquery->row()){
@@ -709,7 +741,7 @@ class ReserveCar extends MY_Controller {
 		
 		$sql = "
 			select a.STRNO,a.GCODE,'('+a.GCODE+') '+b.GDESC as GDESC
-				,a.TYPE,a.MODEL,a.BAAB,a.COLOR,a.CC,a.STAT 
+				,a.TYPE,a.MODEL,a.BAAB,a.COLOR,a.CC,a.STAT ,a.MANUYR
 			from {$this->MAuth->getdb('INVTRAN')} a
 			left join {$this->MAuth->getdb('SETGROUP')} b on a.GCODE=b.GCODE
 			where STRNO='".$arrs["STRNO"]."'
@@ -761,6 +793,7 @@ class ReserveCar extends MY_Controller {
 		$arrs["BAAB"] 		= $_POST["BAAB"];
 		$arrs["COLOR"] 		= $_POST["COLOR"];
 		$arrs["CC"] 		= $_POST["CC"];
+		$arrs["MANUYR"] 	= $_POST["MANUYR"];
 		$arrs["STAT"] 		= $_POST["STAT"];
 		$arrs["PRICE"] 		= $_POST["PRICE"];
 		$arrs["STDID"] 		= $_POST["STDID"];
@@ -902,9 +935,9 @@ class ReserveCar extends MY_Controller {
 						)
 						
 						insert into {$this->MAuth->getdb('ARRESVOTH')} ( 
-							RESVNO ,ACTICOD ,STDID ,SUBID ,REF ,INSBY ,INSDT 
+							RESVNO ,MANUYR ,ACTICOD ,STDID ,SUBID ,REF ,INSBY ,INSDT 
 						) values (
-							@RESVNO,'".$arrs["ACTICOD"]."','".$arrs["STDID"]."','".$arrs["SUBID"]."','".strtoupper($this->sess["db"])."','".$this->sess["IDNo"]."',getdate()
+							@RESVNO,'".$arrs["MANUYR"]."','".$arrs["ACTICOD"]."','".$arrs["STDID"]."','".$arrs["SUBID"]."','".strtoupper($this->sess["db"])."','".$this->sess["IDNo"]."',getdate()
 						)
 						
 						if ('".$arrs["STRNO"]."' != '')
@@ -938,7 +971,7 @@ class ReserveCar extends MY_Controller {
 				begin try 
 					if exists (
 						select * from {$this->MAuth->getdb('ARANALYZE')}
-						where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as and ANSTAT not in ('C','I','P') 
+						where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as and ANSTAT not in ('C','I','P','N') 
 					) 
 					begin
 						rollback tran tst;
@@ -958,7 +991,7 @@ class ReserveCar extends MY_Controller {
 				
 					declare @STRNO varchar(50) = (
 						select STRNO from {$this->MAuth->getdb('ARRESV')} 
-						where RESVNO='".$arrs["RESVNO"]."'
+						where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as
 					);
 					
 					if ('".$arrs["STRNO"]."' = '')
@@ -969,7 +1002,7 @@ class ReserveCar extends MY_Controller {
 							set RESVNO	= NULL,
 								RESVDT	= NULL,
 								CURSTAT	= ''
-							where STRNO=@STRNO and RESVNO='".$arrs["RESVNO"]."'
+							where STRNO=@STRNO and RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as
 						end
 					end
 					else 
@@ -978,7 +1011,7 @@ class ReserveCar extends MY_Controller {
 						set RESVNO	= NULL,
 							RESVDT	= NULL,
 							CURSTAT	= ''
-						where STRNO=@STRNO and RESVNO='".$arrs["RESVNO"]."'
+						where STRNO=@STRNO and RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as
 						
 						update {$this->MAuth->getdb('INVTRAN')}
 						set RESVNO	= '".$arrs["RESVNO"]."',
@@ -989,23 +1022,24 @@ class ReserveCar extends MY_Controller {
 					
 					if exists (
 						select * from {$this->MAuth->getdb('ARRESVOTH')}
-						where RESVNO='".$arrs["RESVNO"]."'
+						where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as
 					)
 					begin 
 						update {$this->MAuth->getdb('ARRESVOTH')}
 						set ACTICOD='".$arrs["ACTICOD"]."'
+							,MANUYR='".$arrs["MANUYR"]."'
 							,STDID='".$arrs["STDID"]."'
 							,SUBID='".$arrs["SUBID"]."'
 							,SHCID='".$arrs["SHCID"]."'
 							,REF='".strtoupper($this->sess["db"])."'
-						where RESVNO='".$arrs["RESVNO"]."'
+						where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as
 					end 
 					else 
 					begin
 						insert into {$this->MAuth->getdb('ARRESVOTH')} ( 
-							RESVNO ,ACTICOD ,STDID ,SUBID ,REF ,INSBY ,INSDT 
+							RESVNO ,MANUYR ,ACTICOD ,STDID ,SUBID ,REF ,INSBY ,INSDT 
 						) values (
-							'".$arrs["RESVNO"]."','".$arrs["ACTICOD"]."','".$arrs["STDID"]."','".$arrs["SUBID"]."','".strtoupper($this->sess["db"])."','".$this->sess["IDNo"]."',getdate()
+							'".$arrs["RESVNO"]."','".$arrs["MANUYR"]."','".$arrs["ACTICOD"]."','".$arrs["STDID"]."','".$arrs["SUBID"]."','".strtoupper($this->sess["db"])."','".$this->sess["IDNo"]."',getdate()
 						)
 					end 
 					
@@ -1022,11 +1056,11 @@ class ReserveCar extends MY_Controller {
 						,MEMO1 	 = '".$arrs["MEMO1"]."'
 						,PRICE	 = '".$arrs["PRICE"]."'
 						,BALANCE = '".$arrs["BALANCE"]."'
-					where RESVNO='".$arrs["RESVNO"]."'
+					where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as
 					
 					if exists(
 						select * from {$this->MAuth->getdb('ARANALYZE')}
-						where RESVNO='".$arrs["RESVNO"]."' and ANSTAT in ('C','I','P') 
+						where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as and ANSTAT in ('C','I','P') 
 					)
 					begin
 						
@@ -1052,7 +1086,7 @@ class ReserveCar extends MY_Controller {
 									where sa.STDID='".$arrs["STDID"]."' and sa.SUBID='".$arrs["SUBID"]."' 
 										and DWN between sa.DOWNS and sa.DOWNE
 								)
-							where RESVNO='".$arrs["RESVNO"]."' and ANSTAT in ('C','I','P') 
+							where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as and ANSTAT in ('C','I','P') 
 						end
 						else if exists (
 							select * from {$this->MAuth->getdb('STDVehicles')} sa
@@ -1075,9 +1109,9 @@ class ReserveCar extends MY_Controller {
 									select INTERESTRT from {$this->MAuth->getdb('STDVehiclesDown')} sa
 									where sa.STDID='".$arrs["STDID"]."' and sa.SUBID='".$arrs["SUBID"]."' 
 										and DWN between sa.DOWNS and sa.DOWNE
-										and ".$arrs["PRICE"]." between sa.PRICES and sa.PRICEE
+										and ".$arrs["PRICE"]." between sa.PRICE2 and sa.PRICE3
 								)
-							where RESVNO='".$arrs["RESVNO"]."' and ANSTAT in ('C','I','P') 
+							where RESVNO='".$arrs["RESVNO"]."' collate thai_cs_as and ANSTAT in ('C','I','P') 
 						end
 					end
 					
@@ -1121,7 +1155,7 @@ class ReserveCar extends MY_Controller {
 			
 			begin tran tst
 			begin try 
-				if exists (select * from {$this->MAuth->getdb('CHQTRAN')} where PAYFOR='008' and CONTNO='".$RESVNO."' and FLAG <> 'C')
+				if exists (select * from {$this->MAuth->getdb('CHQTRAN')} where PAYFOR='008' and CONTNO='".$RESVNO."' collate thai_cs_as and FLAG <> 'C')
 				begin
 					rollback tran tst;
 					insert into #transaction select 'Y' as id,'','ผิดพลาด เลขที่บิลจองมีการรับชำระเงินแล้ว ไม่สามารถลบบิลจองได้' as msg;
@@ -1129,9 +1163,9 @@ class ReserveCar extends MY_Controller {
 				end
 				
 				if exists (
-					select 1 from {$this->MAuth->getdb('ARANALYZE')} where RESVNO='".$RESVNO."'
+					select 1 from {$this->MAuth->getdb('ARANALYZE')} where RESVNO='".$RESVNO."' collate thai_cs_as
 					union
-					select 1 from {$this->MAuth->getdb('ARMAST')} where RESVNO='".$RESVNO."'
+					select 1 from {$this->MAuth->getdb('ARMAST')} where RESVNO='".$RESVNO."' collate thai_cs_as
 				)
 				begin
 					rollback tran tst;
@@ -1139,18 +1173,18 @@ class ReserveCar extends MY_Controller {
 					return;
 				end
 				
-				declare @STRNO varchar(50) = (select STRNO from {$this->MAuth->getdb('ARRESV')} where RESVNO='".$RESVNO."');
+				declare @STRNO varchar(50) = (select STRNO from {$this->MAuth->getdb('ARRESV')} where RESVNO='".$RESVNO."' collate thai_cs_as);
 				if isnull(@STRNO,'') <> ''
 				begin
 					update {$this->MAuth->getdb('INVTRAN')}
 					set RESVNO	= NULL,
 						RESVDT	= NULL,
 						CURSTAT	= ''
-					where STRNO=@STRNO and RESVNO='".$RESVNO."'
+					where STRNO=@STRNO and RESVNO='".$RESVNO."' collate thai_cs_as
 				end
 				
-				delete {$this->MAuth->getdb('ARRESVOTH')} where RESVNO='".$RESVNO."'
-				delete {$this->MAuth->getdb('ARRESV')} where RESVNO='".$RESVNO."'
+				delete {$this->MAuth->getdb('ARRESVOTH')} where RESVNO='".$RESVNO."' collate thai_cs_as
+				delete {$this->MAuth->getdb('ARRESV')} where RESVNO='".$RESVNO."' collate thai_cs_as
 				
 				insert into {$this->MAuth->getdb('hp_UserOperationLog')} (userId,descriptions,postReq,dateTimeTried,ipAddress,functionName)
 				values ('".$this->sess["IDNo"]."','SYS04::ลบบิลจองแล้ว','".$RESVNO." :: ".str_replace("'","",var_export($_REQUEST, true))."',getdate(),'".$_SERVER["REMOTE_ADDR"]."','".(__METHOD__)."');
